@@ -138,7 +138,7 @@ public class TTree {
    *
    * @param p the p
    * @param q the q
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean isSameTree(TreeNode p, TreeNode q) {
     if (p == null && q == null) return true;
@@ -378,6 +378,21 @@ class BBFS {
       }
     }
     return true;
+  }
+
+  /**
+   * 二叉树的最大距离，即任意两个节点之间可填充的最大节点数
+   *
+   * @param root the root
+   * @return int
+   */
+  public int maxWidth(TreeNode root) {
+    if (root == null) return 0;
+    int res = 0;
+    Deque<TreeNode> queue = new LinkedList<>();
+    queue.add(root);
+    while (!queue.isEmpty()) {}
+    return res;
   }
 }
 /**
