@@ -24,4 +24,6 @@ public class PPool {
 
     pool1.shutdown();
   }
+
+    public static class AAtomic {}
 }
