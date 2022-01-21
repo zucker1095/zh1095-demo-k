@@ -303,6 +303,40 @@ class BBST {
   }
 
   /**
+   * 删除二叉搜索树中的节点
+   *
+   * <p>1.寻找 target
+   *
+   * <p>2.寻找其右子树的最左结点 cur 并赋值 target
+   *
+   * <p>3.删除 cur
+   *
+   * @param root the root
+   * @param key the key
+   * @return tree node
+   */
+  public TreeNode deleteNode(TreeNode root, int key) {
+    if (root == null) return null;
+    if (key < root.val) root.left = deleteNode(root.left, key);
+    else if (key > root.val) root.right = deleteNode(root.right, key);
+    else {
+      // target 左右结点分三种情况
+      if (root.left == null) return root.right;
+      else if (root.right == null) return root.left;
+      TreeNode pre = root, cur = root.right;
+      while (cur.left != null) {
+        pre = cur;
+        cur = cur.left;
+      }
+      root.val = cur.val;
+      // 将下一个值的节点删除
+      if (pre.left.val == cur.val) pre.left = cur.right;
+      else pre.right = cur.right;
+    }
+    return root;
+  }
+
+  /**
    * 二叉树搜索的最小绝对差，中序，框架等同上方 inorderTraversal
    *
    * @param root the root
@@ -351,6 +385,25 @@ class BBST {
     int tmp = firstNode.val;
     firstNode.val = secondNode.val;
     secondNode.val = tmp;
+  }
+
+  /**
+   * 将有序数组转换为二叉搜索树，以升序数组的中间元素作 root
+   *
+   * @param nums the nums
+   * @return tree node
+   */
+  public TreeNode sortedArrayToBST(int[] nums) {
+    return dfs(nums, 0, nums.length - 1);
+  }
+
+  private TreeNode dfs(int[] nums, int lo, int hi) {
+    if (lo > hi) return null;
+    int mid = lo + (hi - lo) / 2;
+    TreeNode root = new TreeNode(nums[mid]);
+    root.left = dfs(nums, lo, mid - 1);
+    root.right = dfs(nums, mid + 1, hi);
+    return root;
   }
 }
 
@@ -723,6 +776,37 @@ class BBacktracking extends DDFS {
     visited[r][c] = false;
     return false;
   }
+
+  /**
+   * 路径总和III，返回路径总数，但从任意点出发，回溯 & 前缀和
+   *
+   * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
+   *
+   * @param root the root
+   * @param targetSum the target sum
+   * @return int
+   */
+  public int _pathSum(TreeNode root, int targetSum) {
+    Map<Long, Integer> prefix =
+        new HashMap<>() {
+          {
+            put(0L, 1); // base case
+          }
+        };
+    return backtracking9(root, prefix, 0, targetSum);
+  }
+
+  private int backtracking9(TreeNode root, Map<Long, Integer> prefix, long cur, int targetSum) {
+    if (root == null) return 0;
+    cur += root.val;
+    int res = prefix.getOrDefault(cur - targetSum, 0);
+    prefix.put(cur, prefix.getOrDefault(cur, 0) + 1);
+    res +=
+        backtracking9(root.left, prefix, cur, targetSum)
+            + backtracking9(root.right, prefix, cur, targetSum);
+    prefix.put(cur, prefix.getOrDefault(cur, 0) - 1);
+    return res;
+  }
 }
 
 /**
@@ -841,6 +925,49 @@ class DDFS {
    */
   protected boolean inArea(char[][] board, int i, int j) {
     return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
+  }
+
+  /**
+   * 二叉树中所有距离为k的结点
+   *
+   * <p>建图，从 root 出发 DFS 记录每个结点的父结点
+   *
+   * <p>从 target 出发 DFS 寻找相距为 k 的点
+   *
+   * @param root the root
+   * @param target the target
+   * @param k the k
+   * @return list list
+   */
+  public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
+    List<Integer> res = new ArrayList<>();
+    Map<Integer, TreeNode> parents = new HashMap<>();
+    findParents(root, parents);
+    dfs4(parents, res, target, null, k);
+    return res;
+  }
+
+  private void findParents(TreeNode node, Map<Integer, TreeNode> parents) {
+    if (node.left != null) {
+      parents.put(node.left.val, node);
+      findParents(node.left, parents);
+    }
+    if (node.right != null) {
+      parents.put(node.right.val, node);
+      findParents(node.right, parents);
+    }
+  }
+
+  private void dfs4(
+      Map<Integer, TreeNode> parents, List<Integer> res, TreeNode node, TreeNode from, int left) {
+    if (node == null) return;
+    if (left == 0) {
+      res.add(node.val);
+      return;
+    }
+    if (node.left != from) dfs4(parents, res, node.left, node, left - 1);
+    if (node.right != from) dfs4(parents, res, node.right, node, left - 1);
+    if (parents.get(node.val) != from) dfs4(parents, res, parents.get(node.val), node, left - 1);
   }
 }
 

@@ -59,7 +59,7 @@ IOC = Inversion of Control 反转资源获取的方向 DI Dependency Injection �
 通俗/代码解释
 
 原来: 我的service 需要调用 DAO(repository), service 就需要创建 DAO 现在: Spring 发现 你的 service 依赖于 dao, 于是 直接把 dao 注入到你的 service 里面
-当前对象如果需要依赖另一个对象，只要打一个"@Autowired"注解，Spring就会自动帮你安装上。
+当前对象如果需要依赖另一个对象，只要打一个"`@Autowired`"注解，Spring就会自动帮你安装上。
 
 核心原理: 就是 "工厂模式 + 反射 + 配置文件"
 就是 我需要的配置文件 通过反射 放到容器里(工厂里可以创建不同的容器(说白了就是个map))

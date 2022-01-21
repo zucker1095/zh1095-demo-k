@@ -16,13 +16,13 @@ public class Application {
     new CountDownLatch(1).await();
   }
 
-  private static final String RPC_PSM = "zh1095.demo.j";
-  private static final String zookeeperHost = System.getProperty("zookeeper.address", "127.0.0.1");
+  private static final String PSM = "zh1095.demo.j";
+  private static final String ZookeeperHost = System.getProperty("zookeeper.address", "127.0.0.1");
   private static final int RPC_PORT = 2181;
 
   private static void setupService(ServiceConfig<?> service) {
-    service.setApplication(new ApplicationConfig(RPC_PSM));
-    service.setRegistry(new RegistryConfig("zookeeper://" + zookeeperHost + ":" + RPC_PORT));
+    service.setApplication(new ApplicationConfig(PSM));
+    service.setRegistry(new RegistryConfig("zookeeper://" + ZookeeperHost + ":" + RPC_PORT));
   }
 
   private static void registerGreet() {
