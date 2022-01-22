@@ -13,6 +13,10 @@ import java.util.Deque;
  * @author cenghui
  */
 public class LList {
+  protected int getVal(ListNode node) {
+    return node == null ? 0 : node.val;
+  }
+
   /**
    * 反转链表，三步曲，暂存 & 变向 & 步进
    *
@@ -139,13 +143,12 @@ class DDoublePointerList extends LList {
     int carry = 0;
     ListNode p1 = l1, p2 = l2, cur = dummy;
     while (p1 != null || p2 != null || carry != 0) {
-      int n1 = p1 != null ? p1.val : 0;
-      int n2 = p2 != null ? p2.val : 0;
+      int n1 = getVal(p1), n2 = getVal(p2);
       int tmp = n1 + n2 + carry;
       carry = tmp / base;
       cur.next = new ListNode(tmp % base);
-      p1 = p1 != null ? p1.next : null;
-      p2 = p2 != null ? p2.next : null;
+      p1 = p1 == null ? null : p1.next;
+      p2 = p2 == null ? null : p2.next;
       cur = cur.next;
     }
     if (carry == 1) cur.next = new ListNode(1);
@@ -165,12 +168,13 @@ class DDoublePointerList extends LList {
       p2 = p2.next;
     }
     while (!stack1.isEmpty() || !stack2.isEmpty() || carry > 0) {
-      carry += stack1.isEmpty() ? 0 : stack1.removeLast();
-      carry += stack2.isEmpty() ? 0 : stack2.removeLast();
+      carry +=
+          (stack1.isEmpty() ? 0 : stack1.removeLast())
+              + (stack2.isEmpty() ? 0 : stack2.removeLast());
       ListNode node = new ListNode(carry % 10);
       node.next = cur;
       cur = node;
-      carry = carry / 10;
+      carry /= 10;
     }
     return cur;
   }

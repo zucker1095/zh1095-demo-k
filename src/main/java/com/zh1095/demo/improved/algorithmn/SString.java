@@ -142,68 +142,81 @@ public class SString extends DefaultSString {
     for (Map.Entry<Character, Boolean> d : hash.entrySet()) if (d.getValue()) return d.getKey();
     return ' ';
   }
+
   /**
    * 字符串解码，类似压缩字符串 & 原子的数量
+   *
+   * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
+   *
+   * <p>Integer.parseInt(c + "") 改为 c - '0'
    *
    * @param s the s
    * @return string string
    */
   public String decodeString(String s) {
-    StringBuilder res = new StringBuilder();
-    int multi = 0;
-    LinkedList<Integer> stack_multi = new LinkedList<>();
-    LinkedList<String> stack_res = new LinkedList<>();
-    for (Character c : s.toCharArray()) {
-      if (c == '[') {
-        stack_multi.addLast(multi);
-        stack_res.addLast(res.toString());
-        multi = 0;
-        res = new StringBuilder();
-      } else if (c == ']') {
-        StringBuilder tmp = new StringBuilder();
-        int cur_multi = stack_multi.removeLast();
-        for (int i = 0; i < cur_multi; i++) tmp.append(res);
-        res = new StringBuilder(stack_res.removeLast() + tmp);
-      } else if (c >= '0' && c <= '9') multi = multi * 10 + Integer.parseInt(c + "");
-      else res.append(c);
+    int curCount = 0;
+    StringBuilder curStr = new StringBuilder();
+    LinkedList<Integer> countStack = new LinkedList<>();
+    LinkedList<String> strStack = new LinkedList<>();
+    for (int i = 0; i < s.length(); i++) {
+      char ch = s.charAt(i);
+      if (ch == '[') {
+        countStack.addLast(curCount);
+        strStack.addLast(curStr.toString());
+        curCount = 0;
+        curStr = new StringBuilder();
+      } else if (ch == ']') {
+        int preCount = countStack.removeLast();
+        String preStr = strStack.removeLast();
+        curStr = new StringBuilder(preStr + curStr.toString().repeat(preCount));
+      } else if (ch >= '0' && ch <= '9') {
+        curCount = curCount * 10 + (ch - '0');
+      } else {
+        curStr.append(ch);
+      }
     }
-    return res.toString();
+    return curStr.toString();
   }
+
   /**
    * 字符串转换整数
+   *
+   * <p>去空格 & 特判 & 判断正负 & 逐位相加 & 判断溢出
    *
    * @param s the s
    * @return the int
    */
   public int myAtoi(String s) {
-    // 1.去除前导空格
-    int cur = 0, sign = 1, res = 0;
-    while (cur < s.length() && s.charAt(cur) == ' ') cur += 1;
-    // 2.如果已经遍历完成（针对极端用例 "      "）
-    if (cur == s.length()) return 0;
-    // 3.如果出现符号字符，仅第 1 个有效，并记录正负
-    if (s.charAt(cur) == '+') cur += 1;
-    else if (s.charAt(cur) == '-') {
-      cur += 1;
+    // 指针 & 符号
+    int idx = 0, sign = 1;
+    // last 记录上一次的 res 以判断溢出
+    int res = 0, pre = 0;
+    // 1.去空格
+    while (idx < s.length() && s.charAt(idx) == ' ') {
+      idx += 1;
+    }
+    // 特判全空串
+    if (idx == s.length()) {
+      return 0;
+    }
+    if (s.charAt(idx) == '-') {
+      idx += 1;
       sign = -1;
+    } else if (s.charAt(idx) == '+') {
+      idx += 1;
     }
-    // 4、将后续出现的数字字符进行转换，题设不能使用 long 类型
-    for (; cur < s.length(); cur++) {
-      char ch = s.charAt(cur);
-      // 4.1 先判断不合法的情况
-      if (ch > '9' || ch < '0') break;
-      //  res * 10 + cur > Integer.MAX_VALUE
-      if (res > Integer.MAX_VALUE / 10
-          || (res == Integer.MAX_VALUE / 10 && (ch - '0') > Integer.MAX_VALUE % 10))
-        return Integer.MAX_VALUE;
-      if (res < Integer.MIN_VALUE / 10
-          || (res == Integer.MIN_VALUE / 10 && (ch - '0') > -(Integer.MIN_VALUE % 10)))
-        return Integer.MIN_VALUE;
-      // 4.2 合法的情况下，才考虑转换，每一步都把符号位乘进去
-      res = res * 10 + sign * (ch - '0');
+    while (idx < s.length()) {
+      char ch = s.charAt(idx);
+      if (ch < '0' || ch > '9') break;
+      pre = res;
+      res = res * 10 + ch - '0';
+      if (pre != res / 10) // //如果不相等就是溢出了
+      return (sign == (-1)) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      idx += 1;
     }
-    return res;
+    return res * sign;
   }
+
   /**
    * 压缩字符串
    *
@@ -215,24 +228,26 @@ public class SString extends DefaultSString {
    * @return int int
    */
   public int compress(char[] chars) {
-    int lo = 0, size = 0;
+    int lo = 0, len = 0;
     for (int hi = 0; hi < chars.length; hi++) {
-      if (hi < chars.length - 1 && chars[hi] == chars[hi + 1]) continue;
+      if (hi < chars.length - 1 && chars[hi] == chars[hi + 1]) {
+        continue;
+      }
       chars[lo] = chars[hi];
       lo += 1;
-      int num = hi - size + 1;
-      if (num > 1) {
+      int curLen = hi - len + 1;
+      if (curLen > 1) {
         int start = lo;
-        // 为达到 O(1) space，需要自行实现将数字转化为字符串写入到原字符串的功能
-        // 这里采用短除法将子串长度倒序写入原字符串中，然后再将其反转即可
-        while (num > 0) {
-          chars[lo] = (char) (num % 10 + '0');
+        // 为达到 O(1) space 需要自行实现将数字转化为字符串写入到原字符串的功能
+        // 此处采用短除法将子串长度倒序写入原字符串中，然后再将其反转即可
+        while (curLen > 0) {
+          chars[lo] = (char) (curLen % 10 + '0');
           lo += 1;
-          num /= 10;
+          curLen /= 10;
         }
         reverseString(chars, start, lo - 1);
       }
-      size = hi + 1;
+      len = hi + 1;
     }
     return lo;
   }
@@ -558,14 +573,34 @@ class SStack {
     }
     return minCount == 0;
   }
+
+  /**
+   * 每日温度，单调栈，递减
+   *
+   * @param temperatures the t
+   * @return int [ ]
+   */
+  public int[] dailyTemperatures(int[] temperatures) {
+    Deque<Integer> stack = new ArrayDeque<>();
+    int[] res = new int[temperatures.length];
+    for (int i = 0; i < temperatures.length; i++) {
+      while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
+        int pre = stack.removeLast();
+        res[pre] = i - pre;
+      }
+      stack.addLast(i);
+    }
+    return res;
+  }
+
   /**
    * 最小栈
    *
    * @author cenghui
    */
   public class MinStack {
-    private int min;
     private final Deque<Integer> stack = new ArrayDeque<>();
+    private int min;
 
     /**
      * Push.
@@ -605,24 +640,6 @@ class SStack {
     public int getMin() {
       return min;
     }
-  }
-  /**
-   * 每日温度，单调栈，递减
-   *
-   * @param temperatures the t
-   * @return int [ ]
-   */
-  public int[] dailyTemperatures(int[] temperatures) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int[] res = new int[temperatures.length];
-    for (int i = 0; i < temperatures.length; i++) {
-      while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
-        int pre = stack.removeLast();
-        res[pre] = i - pre;
-      }
-      stack.addLast(i);
-    }
-    return res;
   }
   /**
    * 基本计算器 I & II 统一模板

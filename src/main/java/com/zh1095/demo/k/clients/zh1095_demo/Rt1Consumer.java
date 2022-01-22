@@ -12,10 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Rt1Consumer extends Rt1 {
   // subscribe relation: consumer group 1->1 topic 1->n consumer group
 
-  public static void main(String[] args) throws MQClientException {
-    consume();
-  }
-
   private static DefaultMQPushConsumer consumer = null;
 
   Rt1Consumer() {
@@ -26,6 +22,27 @@ public class Rt1Consumer extends Rt1 {
     // Subscribe one more more topics to consume.
   }
 
+  public static void main(String[] args) throws MQClientException {
+    consume();
+  }
+
+  public static void consume() throws MQClientException {
+    consumer.subscribe(Rt1TopicName, TagWildcard);
+    // Register callback to execute on arrival of messages fetched from brokers.
+    consumer.registerMessageListener(new MessageHandlerCon());
+    // Launch the consumer instance.
+    consumer.start();
+    System.out.printf("Consumer Started.%n");
+  }
+
+  public static void consumeOrderly() throws MQClientException {
+    consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+    consumer.subscribe(Rt1TopicName, addTag(TagA, TagB));
+    consumer.registerMessageListener(new MessageHandlerOrder());
+    consumer.start();
+    System.out.printf("Consumer Started.%n");
+  }
+
   private static class MessageHandlerCon implements MessageListenerConcurrently {
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(
@@ -33,15 +50,6 @@ public class Rt1Consumer extends Rt1 {
       System.out.printf("%s Receive New Messages: %s %n", Thread.currentThread().getName(), list);
       return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
-  }
-
-  private static void consume() throws MQClientException {
-    consumer.subscribe(Rt1TopicName, TagWildcard);
-    // Register callback to execute on arrival of messages fetched from brokers.
-    consumer.registerMessageListener(new MessageHandlerCon());
-    // Launch the consumer instance.
-    consumer.start();
-    System.out.printf("Consumer Started.%n");
   }
 
   private static class MessageHandlerOrder implements MessageListenerOrderly {
@@ -65,13 +73,5 @@ public class Rt1Consumer extends Rt1 {
       }
       return ConsumeOrderlyStatus.SUCCESS;
     }
-  }
-
-  private static void consumeOrderly() throws MQClientException {
-    consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-    consumer.subscribe(Rt1TopicName, addTag(TagA, TagB));
-    consumer.registerMessageListener(new MessageHandlerOrder());
-    consumer.start();
-    System.out.printf("Consumer Started.%n");
   }
 }

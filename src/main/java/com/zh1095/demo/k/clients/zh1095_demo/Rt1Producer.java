@@ -16,17 +16,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class Rt1Producer extends Rt1 {
-  // Message Size < 512k
-  // producer is thread-safe
-  // default timeout is 3000 milliseconds
-  // SendStatus
-  public static void main(String[] args)
-      throws MQBrokerException, RemotingException, UnsupportedEncodingException,
-          InterruptedException, MQClientException {
-    produce();
-    // produceOrderly();
-  }
-
   private static DefaultMQProducer producer = null;
 
   Rt1Producer() throws MQClientException {
@@ -38,7 +27,18 @@ public class Rt1Producer extends Rt1 {
     producer.start();
   }
 
-  private static void produce()
+  // Message Size < 512k
+  // producer is thread-safe
+  // default timeout is 3000 milliseconds
+  // SendStatus
+  public static void main(String[] args)
+      throws MQBrokerException, RemotingException, UnsupportedEncodingException,
+          InterruptedException, MQClientException {
+    produce();
+    // produceOrderly();
+  }
+
+  public static void produce()
       throws UnsupportedEncodingException, MQBrokerException, RemotingException,
           InterruptedException, MQClientException {
     for (int i = 0; i < 100; i++) {
@@ -54,36 +54,19 @@ public class Rt1Producer extends Rt1 {
     producer.shutdown();
   }
 
-  private record SendCallbacker(CountDownLatch countDownLatch, int index) implements SendCallback {
-
-    @Override
-      public void onSuccess(SendResult res) {
-      countDownLatch.countDown();
-      System.out.printf("%-10d OK %s %n", index, res.getMsgId());
-      }
-
-      @Override
-      public void onException(Throwable e) {
-        countDownLatch.countDown();
-        System.out.printf("%-10d Exception %s %n", index, e);
-        e.printStackTrace();
-      }
-  }
-
-  private static void produceAsync() throws InterruptedException {
+  public static void produceAsync() throws InterruptedException {
     producer.setRetryTimesWhenSendAsyncFailed(0);
     int messageCount = 100;
     CountDownLatch countDownLatch = new CountDownLatch(messageCount);
     for (int i = 0; i < messageCount; i++) {
       try {
-        final int index = i;
         Message msg =
             new Message(
                 Rt1TopicName,
                 TagA,
                 "OrderID188",
                 "Hello world".getBytes(RemotingHelper.DEFAULT_CHARSET));
-        producer.send(msg, new SendCallbacker(countDownLatch, index));
+        producer.send(msg, new SendCallbacker(countDownLatch, i));
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -92,7 +75,7 @@ public class Rt1Producer extends Rt1 {
     producer.shutdown();
   }
 
-  private static void produceOrderly()
+  public static void produceOrderly()
       throws MQClientException, UnsupportedEncodingException, MQBrokerException, RemotingException,
           InterruptedException {
     String[] tags = new String[] {TagA, TagB};
@@ -120,7 +103,7 @@ public class Rt1Producer extends Rt1 {
   }
 
   // 建议总体积 < 512k
-  private static void produceBatch() {
+  public static void produceBatch() {
     List<Message> messages = new ArrayList<>();
     messages.add(new Message(Rt1TopicName, TagA, "OrderID001", "Hello world 0".getBytes()));
     messages.add(new Message(Rt1TopicName, TagA, "OrderID002", "Hello world 1".getBytes()));
@@ -131,5 +114,21 @@ public class Rt1Producer extends Rt1 {
       e.printStackTrace();
       // handle the error
     }
+  }
+
+  private record SendCallbacker(CountDownLatch countDownLatch, int index) implements SendCallback {
+
+    @Override
+      public void onSuccess(SendResult res) {
+      countDownLatch.countDown();
+      System.out.printf("%-10d OK %s %n", index, res.getMsgId());
+      }
+
+      @Override
+      public void onException(Throwable e) {
+        countDownLatch.countDown();
+        System.out.printf("%-10d Exception %s %n", index, e);
+        e.printStackTrace();
+      }
   }
 }

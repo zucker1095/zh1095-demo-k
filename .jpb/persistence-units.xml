@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit name="zh1095">
+        <packages>
+          <package value="com.zh1095.demo.k" />
+        </packages>
+      </persistence-unit>
+    </persistence-units>
+  </component>
+</project>
