@@ -17,8 +17,14 @@
         <java.version>17</java.version>
         <spring-cloud.version>2021.0.0</spring-cloud.version>
         <dubbo.version>3.0.5</dubbo.version>
+        <rocketmq-client.version>4.9.2</rocketmq-client.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>4.9.2</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>
@@ -45,6 +51,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter</artifactId>
+            <version>3.1.0</version>
         </dependency>
 
         <dependency>

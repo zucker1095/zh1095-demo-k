@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+//                   accept()
+// ServerSocketChannel -> SocketChannel
 public class BIOClient {
     public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = new ServerSocket(6789);
