@@ -665,19 +665,26 @@ class FFind extends DefaultAArray {
   /**
    * 寻找重复数，抽屉原理
    *
+   * <p>据抽屉原理，小于等于 4 的个数如果严格大于 4 个，此时重复元素一定出现在 [1..4] 区间里
+   *
    * @param nums the nums
    * @return int int
    */
   public int findDuplicate(int[] nums) {
-    int lo = 1, hi = nums.length - 1; // 非索引而是值，因此相当于索引的 0
+    // 非索引而是值，因此相当于索引的 0
+    int lo = 1, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + ((hi - lo) >> 1);
       int count = 0;
       // 统计更小的个数
-      for (int num : nums) count += num > mid ? 0 : 1;
-      // 根据抽屉原理，小于等于 4 的个数如果严格大于 4 个，此时重复元素一定出现在 [1..4] 区间里
-      if (count > mid) hi = mid;
-      else lo = mid + 1;
+      for (int num : nums) {
+        count += num > mid ? 0 : 1;
+      }
+      if (count > mid) {
+        hi = mid;
+      } else {
+        lo = mid + 1;
+      }
     }
     return lo;
   }
@@ -820,6 +827,34 @@ class DDelete extends DefaultAArray {
     }
     return last;
   }
+
+  /**
+   * 删除字符串中的所有相邻重复项，不保留，且需要反复执行
+   *
+   * <p>类似有效的括号，即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
+   *
+   * <p>匹配指当前 char 与栈顶不同，即入栈，否则出栈，且 skip 当前 char
+   *
+   * <p>最终栈内即为最终结果
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String removeDuplicates(String s) {
+    char[] chs = s.toCharArray();
+    int stackTop = -1;
+    for (int i = 0; i < s.length(); i++) {
+      if (stackTop == -1 || chs[stackTop] != chs[i]) {
+        // 入栈
+        stackTop += 1;
+        chs[stackTop] = chs[i];
+      } else {
+        // 出栈
+        stackTop -= 1;
+      }
+    }
+    return String.valueOf(chs, 0, stackTop + 1);
+  }
 }
 
 /** 字典序相关 */
@@ -856,13 +891,18 @@ class DDicOrder extends DefaultAArray {
    * @return string string
    */
   public String minNumber(int[] nums) {
-    List<String> strList = new ArrayList<>(nums.length);
-    for (int num : nums) strList.add(String.valueOf(num));
-    strList.sort((s1, s2) -> (s1 + s2).compareTo(s2 + s1));
-    StringBuilder sb = new StringBuilder();
-    for (String str : strList) sb.append(str);
-    return sb.toString();
+    List<String> strs = new ArrayList<>(nums.length);
+    for (int num : nums) {
+      strs.add(String.valueOf(num));
+    }
+    strs.sort((s1, s2) -> (s1 + s2).compareTo(s2 + s1));
+    StringBuilder res = new StringBuilder();
+    for (String str : strs) {
+      res.append(str);
+    }
+    return res.toString();
   }
+
   /**
    * 移掉k位数字，字典序，单调栈
    *
@@ -887,6 +927,7 @@ class DDicOrder extends DefaultAArray {
     for (char c : stack) res.append(c);
     return res.length() == 0 ? "0" : res.toString();
   }
+
   /**
    * 下一个更大元素II，单调栈 & 循环数组
    *

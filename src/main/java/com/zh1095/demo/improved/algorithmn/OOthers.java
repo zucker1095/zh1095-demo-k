@@ -355,22 +355,47 @@ class DData {
 /** 数学类 */
 class MMath {
   /**
-   * 跳跃游戏，判断能否到达最后一个格
+   * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
    *
    * @param nums the nums
    * @return boolean boolean
    */
   public boolean canJump(int[] nums) {
-    if (nums == null) return false;
-    int farthest = 0; // 前 n-1 个元素能够跳到的最远距离
-    for (int i = 0; i <= farthest; i++) {
-      int cur = i + nums[i]; // 第 i 个元素能够跳到的最远距离
-      farthest = Math.max(farthest, cur); // 更新最远距离
+    int furthest = 0; // 前 n-1 个元素能够跳到的最远距离
+    for (int i = 0; i <= furthest; i++) {
+      int curFurthest = i + nums[i]; // 第 i 个元素能够跳到的最远距离
+      furthest = Math.max(furthest, curFurthest); // 更新最远距离
       // 如果最远距离已经大于或等于最后一个元素的下标，则说明能跳过去，结束
-      if (farthest >= nums.length - 1) return true;
+      if (furthest >= nums.length - 1) {
+        return true;
+      }
     }
     return false; // 最远距离 k 不再改变,且没有到末尾元素
   }
+
+  /**
+   * 跳跃游戏 II，返回到达最后一位到最少跳跃数
+   *
+   * <p>分别记录第 res+1 步可以到达的上下界，直到上界超过终点即结束迭代，此时的步数即为最少
+   *
+   * @param nums the nums
+   * @return int
+   */
+  public int jump(int[] nums) {
+    int res = 0;
+    int curLo = 0, curHi = 0;
+    while (curHi < nums.length - 1) {
+      int tmp = 0;
+      for (int i = curLo; i <= curHi; i++) {
+        tmp = Math.max(nums[i] + i, tmp);
+      }
+      curLo = curHi + 1;
+      curHi = tmp;
+      res += 1;
+    }
+    return res;
+  }
+
   /**
    * Sqrt(x)，二分
    *
@@ -490,20 +515,29 @@ class MMath {
   }
 
   /**
-   * 回文数，每次进行取余操作取出最低的数字，并加到取出数的末尾
+   * 回文数
+   *
+   * <p>0.特判负数 & 个位为 0
+   *
+   * <p>1.为取出 x 的左右部分，每次进行取余操作取出最低的数字，并加到取出数的末尾
+   *
+   * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
    *
    * @param x the x
    * @return boolean boolean
    */
   public boolean isPalindrome(int x) {
-    if (x < 0 || (x % 10 == 0 && x != 0)) return false;
-    int comparison = 0, cur = x;
-    while (cur > comparison) {
-      comparison = comparison * 10 + cur % 10;
-      cur /= 10;
+    if (x < 0 || (x % 10 == 0 && x != 0)) {
+      return false;
     }
-    return cur == comparison || cur == comparison / 10;
+    int left = x, right = 0;
+    while (left > right) {
+      right = right * 10 + left % 10;
+      left /= 10;
+    }
+    return left == right || left == right / 10;
   }
+
   /**
    * 颠倒二进制位，题设 32 位下，对于 Java need treat n as an unsigned value
    *
@@ -531,7 +565,7 @@ class MMath {
    * <p>逐位与判断即可
    *
    * @param n the n
-   * @return int
+   * @return int int
    */
   public int hammingWeight(int n) {
     int res = 0;

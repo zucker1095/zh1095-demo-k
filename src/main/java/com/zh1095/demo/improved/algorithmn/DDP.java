@@ -388,9 +388,9 @@ class SSub {
    *
    * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
    *
-   * <p>建议理解为，sum > 0 说明 sum 对结果有增益效果，则 sum 保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
+   * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
    *
-   * <p>扩展，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
+   * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
    *
    * @param nums the nums
    * @return int int
@@ -400,6 +400,16 @@ class SSub {
     for (int num : nums) {
       curSum = curSum > 0 ? curSum + num : num;
       res = Math.max(res, curSum);
+      // int lo = 0, hi = 0;
+      //      while (hi < nums.length-1) {
+      //      if (curSum > 0) {
+      //        curSum += num;
+      //      } else {
+      //        curSum = num;
+      //        lo = hi;
+      //      }
+      //      hi += 1;
+      // }
     }
     return res;
   }
@@ -573,5 +583,43 @@ class SSub {
                 : minDistance;
       }
     return dp[n1][n2];
+  }
+
+  /**
+   * 正则表达式匹配，以下均基于 p 判定
+   *
+   * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
+   *
+   * @param s
+   * @param p
+   * @return
+   */
+  public boolean isMatch(String s, String p) {
+    boolean[][] dp = new boolean[s.length() + 1][p.length() + 1];
+    dp[0][0] = true;
+    for (int i = 0; i < p.length(); i++) {
+      dp[0][i + 1] = (p.charAt(i) == '*' && dp[0][i - 1]);
+    }
+    for (int i = 0; i < s.length(); i++) {
+      for (int j = 0; j < p.length(); j++) {
+        // 如果是任意元素 or 是对于元素匹配
+        if (p.charAt(j) == s.charAt(i) || p.charAt(j) == '.') {
+          dp[i + 1][j + 1] = dp[i][j];
+        }
+        // 如果前一个元素不匹配且不为任意元素
+        if (p.charAt(j) == '*') {
+          /*
+          dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
+          or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
+          or dp[i][j] = dp[i][j-2] // 没有匹配的情况
+           */
+          dp[i + 1][j + 1] =
+              (p.charAt(j - 1) == s.charAt(i) || p.charAt(j - 1) == '.')
+                  ? dp[i + 1][j] || dp[i][j + 1] || dp[i + 1][j - 1]
+                  : dp[i + 1][j - 1];
+        }
+      }
+    }
+    return dp[s.length()][p.length()];
   }
 }

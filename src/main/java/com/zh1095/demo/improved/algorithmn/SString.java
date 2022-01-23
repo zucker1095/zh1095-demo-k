@@ -479,27 +479,16 @@ class SStack {
   /**
    * 有效的括号
    *
-   * <p>扩展，需要保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，在出入栈时更新
+   * <p>扩展1，需要保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，在出入栈时更新
    *
    * @param s the s
    * @return the boolean
    */
   public boolean isValid(String s) {
-    //    ArrayList<Character> priorities =
-    //        new ArrayList<Character>() {
-    //          {
-    //            add('(');
-    //            add(')');
-    //            add('[');
-    //            add(']');
-    //            add('{');
-    //            add('}');
-    //          }
-    //        };
-    // 第一层括弧定义了一个 Anonymous Inner Class
+    // 第一层括弧定义一个 Anonymous Inner Class
     // 第二层括弧上是一个 instance initializer block，在内部匿名类构造时被执行
     Map<Character, Character> pairs =
-        new HashMap<Character, Character>(4) {
+        new HashMap<>(4) {
           {
             put('[', ']');
             put('(', ')');
@@ -516,33 +505,13 @@ class SStack {
         // level = Math.max((priorities.indexOf(ch) + 1) % 3, level);
         continue;
       }
-      if (stack.size() == 0 || stack.getLast() == pairs.get(ch)) return false;
+      if (stack.size() == 0 || stack.getLast() == pairs.get(ch)) {
+        return false;
+      }
       // level = Math.max((priorities.indexOf(stack.get(stack.size() - 1)) + 1) % 3, level);
       stack.removeLast();
     }
     return stack.size() == 0;
-  }
-
-  /**
-   * 删除字符串中的所有相邻重复项，不保留，且需要反复执行
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String removeDuplicates(String s) {
-    StringBuilder stack = new StringBuilder();
-    int top = -1;
-    for (int i = 0; i < s.length(); i++) {
-      char cur = s.charAt(i);
-      if (top >= 0 && stack.charAt(top) == cur) {
-        stack.deleteCharAt(top);
-        top -= 1;
-      } else {
-        stack.append(cur);
-        top += 1;
-      }
-    }
-    return stack.toString();
   }
 
   /**

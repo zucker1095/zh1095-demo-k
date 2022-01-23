@@ -145,6 +145,29 @@ public class TTree {
     else if (p == null || q == null) return false;
     return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
   }
+
+  /**
+   * 另一棵树的子树
+   *
+   * <p>特判匹配树 & 主树为空两种情况
+   *
+   * <p>当然，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
+   *
+   * @param root the root
+   * @param subRoot the sub root
+   * @return boolean
+   */
+  public boolean isSubtree(TreeNode root, TreeNode subRoot) {
+    if (subRoot == null) {
+      return true;
+    }
+    if (root == null) {
+      return false;
+    }
+    return isSubtree(root.left, subRoot)
+        || isSubtree(root.right, subRoot)
+        || isSameTree(root, subRoot);
+  }
 }
 
 /** 后序相关，常见为统计 */
@@ -784,7 +807,7 @@ class BBacktracking extends DDFS {
    *
    * @param root the root
    * @param targetSum the target sum
-   * @return int
+   * @return int int
    */
   public int _pathSum(TreeNode root, int targetSum) {
     Map<Long, Integer> prefix =
@@ -974,13 +997,38 @@ class DDFS {
 /** 收集图相关 */
 class GGraph {
   /**
-   * 课程表，拓扑排序
+   * 课程表，判断连通性，拓扑排序
    *
    * @param numCourses the num courses
    * @param prerequisites the prerequisites
    * @return boolean boolean
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
+    int[] flags = new int[numCourses];
+    List<List<Integer>> adjacency = new ArrayList<>();
+    for (int i = 0; i < numCourses; i++) {
+      adjacency.add(new ArrayList<>());
+    }
+    for (int[] cp : prerequisites) {
+      adjacency.get(cp[1]).add(cp[0]);
+    }
+    for (int i = 0; i < numCourses; i++) {
+      if (!dfs(adjacency, flags, i)) return false;
+    }
+    return true;
+  }
+
+  private boolean dfs(List<List<Integer>> adjacency, int[] flags, int i) {
+    if (flags[i] == 1) {
+      return false;
+    } else if (flags[i] == -1) {
+      return true;
+    }
+    flags[i] = 1;
+    for (int j : adjacency.get(i)) {
+      if (!dfs(adjacency, flags, j)) return false;
+    }
+    flags[i] = -1;
     return true;
   }
 
