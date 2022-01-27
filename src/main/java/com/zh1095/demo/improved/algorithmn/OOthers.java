@@ -379,7 +379,7 @@ class MMath {
    * <p>分别记录第 res+1 步可以到达的上下界，直到上界超过终点即结束迭代，此时的步数即为最少
    *
    * @param nums the nums
-   * @return int
+   * @return int int
    */
   public int jump(int[] nums) {
     int res = 0;
@@ -502,14 +502,15 @@ class MMath {
    * @return int int
    */
   public int reverse(int x) {
-    int res = 0;
-    while (x != 0) {
-      // 每次取末尾数字
-      int tmp = x % 10;
+    // 暂存已反转的和剩余待反转的部分
+    int res = 0, left = x;
+    while (left != 0) {
       // 判断是否溢出 32 位整数
       if (res < Integer.MIN_VALUE / 10 || res > Integer.MAX_VALUE / 10) return 0;
-      res = res * 10 + tmp;
-      x /= 10;
+      // 每次取末尾数字
+      int tail = left % 10;
+      left /= 10;
+      res = res * 10 + tail;
     }
     return res;
   }

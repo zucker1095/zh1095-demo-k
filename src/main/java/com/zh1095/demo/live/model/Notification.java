@@ -17,12 +17,12 @@ public class Notification {
     /**
      * The Created time stamp.
      */
-    int createdTimeStamp,
-    /**
+    public int createdTimeStamp;
+    int /**
      * The Begin time stamp.
      */
-    beginTimeStamp,
-    /**
+    beginTimeStamp;
+    int /**
      * The Updated time stamp.
      */
     updatedTimeStamp;

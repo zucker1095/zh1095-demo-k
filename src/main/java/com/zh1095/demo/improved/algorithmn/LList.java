@@ -123,7 +123,7 @@ public class LList {
 }
 
 /** 收集合并 & 删除相关 */
-class DDoublePointerList extends LList {
+class DoublePointerList extends LList {
   /**
    * 两数相加，模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
@@ -356,7 +356,7 @@ class DDoublePointerList extends LList {
 }
 
 /** 收集环形相关 */
-class CCycle extends LList {
+class Cycle extends LList {
   /**
    * 环形链表I，判断即可
    *
@@ -421,7 +421,7 @@ class CCycle extends LList {
 }
 
 /** 收集反转相关 */
-class RReverseList extends LList {
+class ReverseList extends LList {
   /**
    * k个一组反转链表，三步曲，暂存 & 变向 & 步进
    *

@@ -3,6 +3,7 @@ package com.zh1095.demo.improved.algorithmn;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 收集 DP 相关
@@ -10,6 +11,8 @@ import java.util.List;
  * <p>以下均为右闭期间
  *
  * <p>状态压缩尽量用具体含义，如 buy & sell 而非 dp1 & dp2
+ *
+ * <p>区分「以 nums[i] 结尾」&「在 [0,i-1] 区间」的 dp 定义差异
  *
  * @author cenghui
  */
@@ -216,6 +219,41 @@ class OOptimalSolution {
       Math.max(left[0], left[1]) + Math.max(right[0], right[1]), left[0] + right[0] + root.val
     };
   }
+
+  /**
+   * 最大正方形，找到只包含 1 的最大正方形
+   *
+   * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
+   *
+   * <p>递推 dp[i + 1][j + 1]=min(min(dp[i+1][j], dp[i][j+1]), dp[i][j])+1
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalSquare(char[][] matrix) {
+    if (matrix == null || matrix.length < 1 || matrix[0].length < 1) {
+      return 0;
+    }
+    int maxSide = 0;
+    // 相当于已经预处理新增第一行、第一列均为0
+    int[] dp = new int[matrix[0].length + 1];
+    int northwest = 0;
+    for (char[] chs : matrix) {
+      northwest = 0; // 遍历每行时，还原回辅助的原值0
+      for (int col = 0; col < matrix[0].length; col++) {
+        int nextNorthwest = dp[col + 1];
+        if (chs[col] == '1') {
+          dp[col + 1] = Math.min(Math.min(dp[col], dp[col + 1]), northwest) + 1;
+          // maxSide = max(maxSide, dp[row+1][col+1]);
+          maxSide = Math.max(maxSide, dp[col + 1]);
+        } else {
+          dp[col + 1] = 0;
+        }
+        northwest = nextNorthwest;
+      }
+    }
+    return maxSide * maxSide;
+  }
 }
 
 /** 统计 */
@@ -369,8 +407,10 @@ class PPath {
   }
 }
 
+class SSubSequence {}
+
 /**
- * 子数组，连续，子序列，不连续
+ * 子数组，连续，子序列，不连续，即子数组相当于连续子序列
  *
  * <p>最长上升子序列(LIS):Longest Increasing Subsequence
  *
@@ -382,7 +422,7 @@ class PPath {
  *
  * @author cenghui
  */
-class SSub {
+class SSubArray {
   /**
    * 最大子数组和 / 最大子序和 / 连续子数组的最大和
    *
@@ -436,8 +476,9 @@ class SSub {
     }
     return res;
   }
+
   /**
-   * 最长有效括号
+   * 最长有效括号，需要考虑上一个成对的括号区间
    *
    * <p>dp[i] 表示 s[0,i-1] 的最长有效括号
    *
@@ -450,11 +491,15 @@ class SSub {
     int res = 0;
     int[] dp = new int[s.length()];
     for (int i = 1; i < s.length(); i++) {
-      if (s.charAt(i) == '(') continue;
+      if (s.charAt(i) == '(') {
+        continue;
+      }
       int preCount = i - dp[i - 1];
-      if (s.charAt(i - 1) == '(') dp[i] = (i >= 2 ? dp[i - 2] : 0) + 2;
-      else if (preCount > 0 && s.charAt(preCount - 1) == '(')
+      if (s.charAt(i - 1) == '(') {
+        dp[i] = (i >= 2 ? dp[i - 2] : 0) + 2;
+      } else if (preCount > 0 && s.charAt(preCount - 1) == '(') {
         dp[i] = dp[i - 1] + ((preCount) >= 2 ? dp[preCount - 2] : 0) + 2;
+      }
       res = Math.max(res, dp[i]);
     }
     return res;
@@ -474,19 +519,50 @@ class SSub {
    * @return int int
    */
   public int findLength(int[] nums1, int[] nums2) {
-    //    int[][] dp = new int[nums1.length + 1][nums2.length + 1];
+    // int[][] dp = new int[nums1.length + 1][nums2.length + 1];
     int[] dp = new int[nums2.length + 1];
     int res = 0;
     for (int i = 1; i <= nums1.length; i++) {
       for (int j = nums2.length; j >= 1; j--) {
-        if (nums1[i - 1] == nums2[j - 1]) dp[j] = dp[j - 1];
-        //        dp[j] = (nums1[i - 1] == nums2[j - 1]) ? dp[j - 1] + 1 : 0;
+        if (nums1[i - 1] == nums2[j - 1]) {
+          dp[j] = dp[j - 1];
+        }
+        // dp[j] = (nums1[i - 1] == nums2[j - 1]) ? dp[j - 1] + 1 : 0;
         res = Math.max(res, dp[j]);
       }
-      //      for (int j = 1; j <= nums2.length; j++) {
-      //        dp[i][j] = (nums1[i - 1] == nums2[j - 1]) ? dp[i - 1][j - 1] + 1 : 0;
-      //        res = Math.max(res, dp[i][j]);
-      //      }
+      // for (int j = 1; j <= nums2.length; j++) {
+      //   dp[i][j] = (nums1[i - 1] == nums2[j - 1]) ? dp[i - 1][j - 1] + 1 : 0;
+      //   res = Math.max(res, dp[i][j]);
+      //  }
+    }
+    return res;
+  }
+
+  /**
+   * 乘积最大子数组，可能存在负数，因此至少需要引入两个状态
+   *
+   * <p>dp[i][0] 表示以 nums[i] 结尾的子数组的乘积的最小值，dp[i][1] 为最大
+   *
+   * <p>递推需要根据 nums[i] 判断
+   *
+   * <p>递归关系只与前一个相关，因此滚动变量，即状态压缩第一维，而保留 0 & 1 两个状态
+   *
+   * @param nums
+   * @return
+   */
+  public int maxProduct(int[] nums) {
+    int res = Integer.MIN_VALUE;
+    int multiMax = 1, multiMin = 1;
+    for (int i = 0; i < nums.length; i++) {
+      // 以该点结尾的乘积大小调换
+      if (nums[i] < 0) {
+        int tmp = multiMax;
+        multiMax = multiMin;
+        multiMin = tmp;
+      }
+      multiMax = Math.max(multiMax * nums[i], nums[i]);
+      multiMin = Math.min(multiMin * nums[i], nums[i]);
+      res = Math.max(res, multiMax);
     }
     return res;
   }
@@ -500,19 +576,22 @@ class SSub {
    * @return int int
    */
   public int longestConsecutive(int[] nums) {
-    HashMap<Integer, Integer> map = new HashMap<>(nums.length);
+    Map<Integer, Integer> lenAsVertex = new HashMap<>(nums.length);
     int res = 0;
     for (int num : nums) {
-      int left = map.get(num - 1), right = map.get(num + 1);
-      if (map.containsKey(num)) continue;
+      int left = lenAsVertex.get(num - 1), right = lenAsVertex.get(num + 1);
+      if (lenAsVertex.containsKey(num)) {
+        continue;
+      }
       int cur = 1 + left + right;
-      if (cur > res) res = cur;
-      map.put(num, cur);
-      map.put(num - left, cur);
-      map.put(num + right, cur);
+      res = Math.max(res, cur);
+      lenAsVertex.put(num, cur);
+      lenAsVertex.put(num - left, cur);
+      lenAsVertex.put(num + right, cur);
     }
     return res;
   }
+
   /**
    * 最长公共子序列
    *
@@ -535,6 +614,7 @@ class SSub {
                 : Math.max(dp[i - 1][j], dp[i][j - 1]);
     return dp[n1][n2];
   }
+
   /**
    * 编辑距离 & 两个字符串的删除操作，均是 LCS 最长公共子序列的问题
    *

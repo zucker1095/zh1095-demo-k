@@ -9,10 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** 收集所有场景设计 & 系统设计类 */
-public class DDesign {}
+public class Design {}
 
 /** 缓存类，LRU & LFU 参考 OOthers */
-class CCache {
+class Cache {
   private final int capacity;
   private final Map<String, CacheItem> data = new HashMap<String, CacheItem>();
 
@@ -127,7 +127,7 @@ class CCache {
 }
 
 /** 容器类 */
-class CContainer {
+class Container {
   /**
    * 实现 HashMap
    *
@@ -206,7 +206,7 @@ class CContainer {
 }
 
 /** 压缩类 */
-class CCompress {
+class Compress {
   /**
    * 字典树，适用于动态添加
    *
@@ -508,7 +508,7 @@ class CCompress {
 }
 
 /** 三种常用的限流算法 */
-class LLimiter {
+class Limiter {
   /** The interface L limiter. */
   public interface LLimiterImpl {
     /**
@@ -666,7 +666,7 @@ class LLimiter {
  *
  * <p>Bottleneck2 a celebrity
  */
-class TTwitter {
+class Twitter {
 
   /** The type Handler. */
   public class Handler {
@@ -762,7 +762,7 @@ class TTwitter {
 class Dropbox {}
 
 /** 参考 CMU 15445 https://zhenghe.gitbook.io/open-courses/cmu-15-445-645-database-systems */
-class DDatabases {
+class Databases {
   /** 存储层 */
   public class Storage {
     /** The type Index. */
@@ -798,7 +798,7 @@ class DDatabases {
 }
 
 /** Nginx 提供的三种负载均衡算法 */
-class LLoadBalancing {
+class LoadBalancing {
   /** 轮询 */
   public class RoundRobin {}
   /** 哈希取模 */

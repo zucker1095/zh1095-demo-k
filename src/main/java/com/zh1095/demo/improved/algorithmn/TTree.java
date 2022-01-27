@@ -714,7 +714,10 @@ class BBacktracking extends DDFS {
    */
   public List<String> restoreIpAddresses(String s) {
     List<String> res = new ArrayList<>();
-    if (s.length() > 12 || s.length() < 4) return res; // 特判
+    // 特判
+    if (s.length() > 12 || s.length() < 4) {
+      return res;
+    }
     backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
     return res;
   }
@@ -722,28 +725,40 @@ class BBacktracking extends DDFS {
   private void backtracking6(
       String s, Deque<String> path, List<String> res, int start, int residue) {
     if (start == s.length()) {
-      if (residue == 0) res.add(String.join(".", path));
+      if (residue == 0) {
+        res.add(String.join(".", path));
+      }
       return;
     }
     for (int i = start; i < start + 3 && i < s.length(); i++) {
-      if (residue * 3 < s.length() - i) continue;
-      if (isValidIpSegment(s, start, i)) {
-        path.addLast(s.substring(start, i + 1));
-        backtracking6(s, path, res, i + 1, residue - 1);
-        path.removeLast();
+      if (residue * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
+        continue;
       }
+      path.addLast(s.substring(start, i + 1));
+      backtracking6(s, path, res, i + 1, residue - 1);
+      path.removeLast();
     }
   }
 
   private boolean isValidIpSegment(String s, int lo, int hi) {
     int res = 0;
-    if (hi > lo && s.charAt(lo) == '0') return false;
+    if (hi > lo && s.charAt(lo) == '0') {
+      return false;
+    }
     while (lo <= hi) {
       res = res * 10 + s.charAt(lo) - '0';
       lo += 1;
     }
     return res >= 0 && res <= 255;
   }
+
+  /**
+   * 验证IP地址
+   *
+   * @param queryIP
+   * @return
+   */
+  // public String validIPAddress(String queryIP) {}
 
   /**
    * 括号生成
@@ -768,6 +783,7 @@ class BBacktracking extends DDFS {
     if (left > 0) backtracking7(left - 1, right, path + "(", res);
     if (right > 0) backtracking7(left, right - 1, path + ")", res);
   }
+
   /**
    * 单词搜索
    *
@@ -776,7 +792,9 @@ class BBacktracking extends DDFS {
    * @return boolean boolean
    */
   public boolean exist(char[][] board, String word) {
-    if (board.length == 0) return false;
+    if (board.length == 0) {
+      return false;
+    }
     int rows = board.length, cols = board[0].length;
     boolean[][] visited = new boolean[rows][cols];
     for (int i = 0; i < rows; i++)

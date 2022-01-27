@@ -3,6 +3,7 @@ package com.zh1095.demo.live.clients.message;
 import com.zh1095.demo.live.model.Notification;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
@@ -14,7 +15,8 @@ public class Controller {}
 class Plan1 {
   // as followed
   private final int uid;
-  private final List<Integer> followedIDs = new ArrayList<>(), followerIDs = new ArrayList<>();
+  // 微博类的 feed 流单向，而朋友圈则双向，直播关注为前者，因此区分 from -> to
+  private final List<Integer> fromIDs = new ArrayList<>(), toIDs = new ArrayList<>();
   private final List<ThreadPoolExecutor> avaPool = new ArrayList<>();
 
   Plan1(int uid) {
@@ -44,25 +46,23 @@ class Plan1 {
    *
    * @return
    */
-  public List<Notification> acceptPull() {
+  public List<Notification> acceptPull(int page) {
     List<Notification> res = new ArrayList<>();
-    int len = followerIDs.size();
-    // bottleneck1 O(n)
+    // 是否有下一页内容
+    boolean hasMore;
+    // 下一页起始游标
+    int nextCursor;
+    // bottleneck1 O(n)，即使有缓存，如何更新
     reloadFollowerIDs();
-    // bottleneck2
+    // bottleneck2，活跃用户
     // 并发拉取 & 塞入 res
-    ThreadPoolExecutor pool = newThreadPool(len / 4, len / 2, 0);
-    for (int followerID : followerIDs) {
-      Runnable task =
-          () -> {
-            Notification notification = Inbox.read(followerID);
-            synchronized (res) {
-              res.add(notification);
-            }
-          };
-      pool.execute(task);
+    for (int toID : toIDs) {
+      // bottleneck3，深分页
+      Notification notification = Inbox.read(toID, page);
+      res.add(notification);
     }
-    pool.shutdown();
+    // bottleneck4，排序
+    res.sort((o1, o2) -> o1.createdTimeStamp > o2.createdTimeStamp ? 1 : -1);
     return res;
   }
 
@@ -71,22 +71,19 @@ class Plan1 {
   /**
    * 保证发送成功，写扩散
    *
+   * <p>需要维护两个 inbox
+   *
    * @param notification
    */
   public void sendPush(Notification notification) {
     // bottleneck1 O(n)
     reloadFollowedIDs();
     // bottleneck2
+    Inbox.write(uid, notification);
     // 并发发送
-    int len = followedIDs.size();
-    ThreadPoolExecutor pool = newThreadPool(len / 4, len / 2, 1);
-    for (int followedID : followedIDs) {
-      pool.execute(
-          () -> {
-            Inbox.write(followedID, notification);
-          });
+    for (int fromID : fromIDs) {
+      Inbox.write(fromID, notification);
     }
-    pool.shutdown();
   }
 
   private void reloadFollowedIDs() {}
@@ -96,8 +93,9 @@ class Plan1 {
    *
    * @return
    */
-  public List<Notification> acceptPush() {
-    List<Notification> res = Inbox.read(uid);
+  public List<Notification> acceptPush(int page) {
+    // bottleneck1
+    List<Notification> res = Inbox.read(uid, page);
     return res;
   }
 }

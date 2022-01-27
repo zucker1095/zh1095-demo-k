@@ -46,12 +46,42 @@ public class SString extends DefaultSString {
   }
 
   private char getChar(int n) {
-    return (char) n;
-    // return n <= 9 ? (char) (n + '0') : (char) (n - 10 + 'a');
+    // return (char) n;
+    return n <= 9 ? (char) (n + '0') : (char) (n - 10 + 'a');
   }
 
   private int getInt(char ch) {
     return ('0' <= ch && ch <= '9') ? ch - '0' : ch - 'a' + 10;
+  }
+
+  /**
+   * 数字转换为十六进制数，上方为十六进制转换为数字
+   *
+   * <p>补码
+   *
+   * @param num the num
+   * @return string
+   */
+  public String toHex(int num) {
+    if (num == 0) {
+      return "0";
+    }
+    long cur = num;
+    final int hex = 16;
+    StringBuilder res = new StringBuilder();
+    if (cur < 0) {
+      cur = (long) (Math.pow(2, 32) + cur);
+    }
+    while (cur != 0) {
+      long u = cur % hex;
+      char c = (char) (u + '0');
+      if (u >= 10) {
+        c = (char) (u - 10 + 'a');
+      }
+      res.append(c);
+      cur /= hex;
+    }
+    return res.reverse().toString();
   }
 
   /**
@@ -80,7 +110,6 @@ public class SString extends DefaultSString {
     }
     return result.toString();
   }
-
   /**
    * 最长公共前缀，纵向扫描
    *
@@ -88,12 +117,16 @@ public class SString extends DefaultSString {
    * @return string string
    */
   public String longestCommonPrefix(String[] strs) {
-    if (strs == null || strs.length == 0) return "";
+    if (strs == null || strs.length == 0) {
+      return "";
+    }
     int count = strs.length;
     for (int i = 0; i < strs[0].length(); i++) {
       char pivot = strs[0].charAt(i);
       for (int j = 1; j < count; j++) {
-        if (i == strs[j].length() || strs[j].charAt(i) != pivot) return strs[0].substring(0, i);
+        if (i == strs[j].length() || strs[j].charAt(i) != pivot) {
+          return strs[0].substring(0, i);
+        }
       }
     }
     return strs[0];
@@ -126,6 +159,33 @@ public class SString extends DefaultSString {
     }
     return right - left - 1;
   }
+
+  /**
+   * 验证回文串，忽略空格
+   *
+   * @param s the s
+   * @return boolean boolean
+   */
+  public boolean isPalindrome(String s) {
+    int lo = 0, hi = s.length() - 1;
+    while (lo < hi) {
+      while (lo < hi && !Character.isLetterOrDigit(s.charAt(lo))) {
+        lo += 1;
+      }
+      while (lo < hi && !Character.isLetterOrDigit(s.charAt(hi))) {
+        hi -= 1;
+      }
+      if (lo < hi) {
+        if (Character.toLowerCase(s.charAt(lo)) != Character.toLowerCase(s.charAt(hi))) {
+          return false;
+        }
+        lo += 1;
+        hi -= 1;
+      }
+    }
+    return true;
+  }
+
   /**
    * 第一个只出现一次的字符
    *
@@ -339,21 +399,23 @@ class WWord extends DefaultSString {
    * @return int int
    */
   public int compareVersion(String version1, String version2) {
-    int n = version1.length(), m = version2.length();
+    int m = version1.length(), n = version2.length();
     int p1 = 0, p2 = 0;
-    while (p1 < n || p2 < m) {
-      int num1 = 0, num2 = 0; // 逐个区间计算
-      while (p1 < n && version1.charAt(p1) != '.') {
-        num1 = num1 * 10 + version1.charAt(p1) - '0';
+    while (p1 < m || p2 < n) {
+      int n1 = 0, n2 = 0; // 逐个区间计算
+      while (p1 < m && version1.charAt(p1) != '.') {
+        n1 = n1 * 10 + version1.charAt(p1) - '0';
         p1 += 1;
       }
       p1 += 1; // 跳过点号
-      while (p2 < m && version2.charAt(p2) != '.') {
-        num2 = num2 * 10 + version2.charAt(p2) - '0';
+      while (p2 < n && version2.charAt(p2) != '.') {
+        n2 = n2 * 10 + version2.charAt(p2) - '0';
         p2 += 1;
       }
       p2 += 1; // 同上
-      if (num1 != num2) return num1 > num2 ? 1 : -1;
+      if (n1 != n2) {
+        return n1 > n2 ? 1 : -1;
+      }
     }
     return 0;
   }
@@ -368,15 +430,20 @@ class WWindow {
    * @return the int
    */
   public int lengthOfLongestSubstring(String s) {
-    if (s.length() == 0) return 0;
-    Map<Character, Integer> window = new HashMap<>();
-    int max = 0, lo = 0;
-    for (int hi = 0; hi < s.length(); hi++) {
-      if (window.containsKey(s.charAt(hi))) lo = Math.max(lo, window.get(s.charAt(hi)) + 1);
-      window.put(s.charAt(hi), hi);
-      max = Math.max(max, hi - lo + 1);
+    if (s.length() == 0) {
+      return 0;
     }
-    return max;
+    Map<Character, Integer> window = new HashMap<>();
+    int res = 0, lo = 0, hi = 0;
+    while (hi < s.length()) {
+      if (window.containsKey(s.charAt(hi))) {
+        lo = Math.max(lo, window.get(s.charAt(hi)) + 1);
+      }
+      window.put(s.charAt(hi), hi);
+      res = Math.max(res, hi - lo + 1);
+      hi += 1;
+    }
+    return res;
   }
 
   /**
@@ -388,7 +455,9 @@ class WWindow {
    */
   public String minWindow(String s, String t) {
     Map<Character, Integer> need = new HashMap<>();
-    for (char c : s.toCharArray()) need.put(c, 0);
+    for (char c : s.toCharArray()) {
+      need.put(c, 0);
+    }
     for (char c : t.toCharArray()) {
       if (need.containsKey(c)) need.put(c, need.get(c) + 1);
       else return "";
@@ -399,7 +468,9 @@ class WWindow {
     while (hi < s.length()) {
       char add = s.charAt(hi);
       hi += 1;
-      if (need.get(add) > 0) counter -= 1;
+      if (need.get(add) > 0) {
+        counter -= 1;
+      }
       need.put(add, need.get(add) - 1);
       while (counter == 0) {
         if (length > hi - lo) {
@@ -408,11 +479,47 @@ class WWindow {
         }
         char out = s.charAt(lo);
         lo += 1;
-        if (need.get(out) == 0) counter += 1;
+        if (need.get(out) == 0) {
+          counter += 1;
+        }
         need.put(out, need.get(out) + 1);
       }
     }
     return res;
+  }
+
+  /**
+   * 长度最小的子数组，满足和不少于 target，滑窗
+   *
+   * <p>扩展1，列出所有满足和为 target 的连续子序列
+   *
+   * <p>扩展2，里边有负数，参考下方「和至少为k的最短子数组」
+   *
+   * <p>则不能使用滑窗，因为下方缩窗的条件是整体满足 >= target，但可能已经满足的局部无法被收入
+   *
+   * @param target the target
+   * @param nums the nums
+   * @return int int
+   */
+  public int minSubArrayLen(int target, int[] nums) {
+    if (nums.length == 0) {
+      return 0;
+    }
+    // List<List<Integer>> list = new ArrayList<>();
+    int res = Integer.MAX_VALUE, lo = 0, hi = 0;
+    int sum = 0;
+    while (hi < nums.length) {
+      sum += nums[hi];
+      while (sum >= target) {
+        res = Math.min(res, hi - lo + 1);
+        sum -= nums[lo];
+        lo += 1;
+      }
+      // 结束迭代即刚好不满足 >= target 时判断是否满足和为 target 即可
+      // if (sum + nums[lo] == target) {}
+      hi += 1;
+    }
+    return res == Integer.MAX_VALUE ? 0 : res;
   }
 
   /**
@@ -466,6 +573,38 @@ class WWindow {
     public int max() {
       return monotonicQueue.getFirst();
     }
+  }
+
+  /**
+   * 和至少为k的最短子数组，单调队列 & 前缀和
+   *
+   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int int
+   */
+  public int shortestSubarray(int[] nums, int k) {
+    int len = nums.length;
+    long[] prefix = new long[len + 1];
+    for (int i = 0; i < len; i++) {
+      prefix[i + 1] = prefix[i] + (long) nums[i];
+    }
+    // len+1 is impossible
+    int res = len + 1;
+    // 保保索引，通过单调队列维护窗口
+    Deque<Integer> mq = new ArrayDeque<>();
+    for (int i = 0; i < prefix.length; i++) {
+      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
+      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
+        mq.removeLast();
+      }
+      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
+        res = Math.min(res, i - mq.removeFirst());
+      }
+      mq.addLast(i);
+    }
+    return res < len + 1 ? res : -1;
   }
 }
 
