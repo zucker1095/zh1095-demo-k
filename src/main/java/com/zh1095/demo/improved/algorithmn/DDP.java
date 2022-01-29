@@ -1,9 +1,6 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 收集 DP 相关
@@ -170,6 +167,67 @@ class OOptimalSolution {
     }
     return sell2;
   }
+
+  /**
+   * 最小路径和，题设自然数
+   *
+   * <p>dp[i][j] 表示直到走到 (i,j) 的最小路径和
+   *
+   * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
+   *
+   * <p>扩展1，记录路径，则需要自顶向下
+   *
+   * @param grid
+   * @return
+   */
+  public int minPathSum(int[][] grid) {
+    int len = grid[0].length;
+    int[] dp = new int[len];
+    dp[0] = grid[0][0];
+    for (int i = 1; i < len; i++) {
+      dp[i] = dp[i - 1] + grid[0][i];
+    }
+    for (int i = 1; i < grid.length; i++) {
+      dp[0] = dp[0] + grid[i][0];
+      for (int j = 1; j < len; j++) {
+        dp[j] = Math.min(dp[j - 1] + grid[i][j], dp[j] + grid[i][j]);
+      }
+    }
+    //    List<Integer> res = new ArrayList<>();
+    //    int i = grid.length - 1, j = grid[0].length - 1;
+    //    res.add(grid[i][j]);
+    //    int sum = dp[i][j];
+    //    while (i > 0 || j > 0) {
+    //      sum -= grid[i][j];
+    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
+    //        res.add(grid[i][j - 1]);
+    //        j -=1;
+    //      } else {
+    //        res.add(grid[i - 1][j]);
+    //        i -=1;
+    //      }
+    //    }
+    //    return res;
+    return dp[len - 1];
+  }
+
+  /**
+   * 三角形的最小路径和
+   *
+   * <p>dp[i][j] 表示由 triangle[0][0] 达到 triangle[i][j] 的最小路径长度
+   *
+   * @param triangle the triangle
+   * @return int int
+   */
+  public int minimumTotal(List<List<Integer>> triangle) {
+    int n = triangle.get(triangle.size() - 1).size();
+    int[] dp = new int[n + 1];
+    // bottom to up
+    for (int i = n - 1; i >= 0; i--)
+      for (int j = 0; j <= i; j++) dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
+    return dp[0];
+  }
+
   /**
    * 打家劫舍
    *
@@ -388,22 +446,6 @@ class PPath {
       }
     }
     return dp[m - 1];
-  }
-  /**
-   * 三角形的最小路径和
-   *
-   * <p>dp[i][j] 表示由 triangle[0][0] 达到 triangle[i][j] 的最小路径长度
-   *
-   * @param triangle the triangle
-   * @return int int
-   */
-  public int minimumTotal(List<List<Integer>> triangle) {
-    int n = triangle.get(triangle.size() - 1).size();
-    int[] dp = new int[n + 1];
-    // bottom to up
-    for (int i = n - 1; i >= 0; i--)
-      for (int j = 0; j <= i; j++) dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
-    return dp[0];
   }
 }
 
@@ -631,6 +673,7 @@ class SSubArray {
   // 编辑距离
   // dp[i][j] 表示由 A[0:i] 转移为 B[0:j] 的最少步数
   // 递推 min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])+1
+  // 扩展1，三个操作权重不同，求最少的总权重
   private int editDistance(String word1, String word2) {
     int n1 = word1.length(), n2 = word2.length();
     int[][] dp = new int[n1 + 1][n2 + 1];
@@ -642,6 +685,20 @@ class SSubArray {
             (word1.charAt(i - 1) == word2.charAt(j - 1))
                 ? dp[i - 1][j - 1]
                 : Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]) + 1;
+
+    //    int dp[len2+1];
+    //    //初始化第一行
+    //    for(int i = 1;i<=len2;i++) dp[i] = i*ic;
+    //    for(int i = 1;i<=len1;i++){
+    //      int pre = dp[0];
+    //      dp[0] = i*dc;
+    //      for(int j = 1;j<=len2;++j){
+    //        int tmp = dp[j];  // 上一轮的dp[i-1][j]
+    //        if(str1[i-1]==str2[j-1]) dp[j] = pre;
+    //        else  dp[j] = min(pre+rc,min(dp[j-1]+ic,tmp+dc));
+    //        pre = tmp;//更新dp[i-1][j-1]
+    //      }
+
     return dp[n1][n2];
   }
 

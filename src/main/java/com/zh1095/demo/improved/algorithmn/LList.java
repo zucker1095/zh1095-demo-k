@@ -33,6 +33,7 @@ public class LList {
     }
     return pre;
   }
+
   /**
    * 合并两个有序链表，正向，参考合并两个有序数组
    *
@@ -59,6 +60,7 @@ public class LList {
     else if (l2 != null) cur.next = l2;
     return dummy.next;
   }
+
   /**
    * 链表的中间结点，快慢指针
    *
@@ -73,6 +75,7 @@ public class LList {
     }
     return lo;
   }
+
   /**
    * 回文链表，找中点 & 反转前半部分 & 逐一对比
    *
@@ -242,7 +245,9 @@ class DoublePointerList extends LList {
    *
    * <p>https://leetcode-cn.com/problems/sort-list/solution/148-pai-xu-lian-biao-bottom-to-up-o1-kong-jian-by-/
    *
-   * <p>下方合并k个有序链表则 up-to-bottom
+   * <p>下方合并 k 个有序链表则 up-to-bottom
+   *
+   * <p>扩展1，再去重
    *
    * @param head the head
    * @return list node
@@ -251,34 +256,41 @@ class DoublePointerList extends LList {
     ListNode dummy = new ListNode();
     dummy.next = head;
     int len = 0;
-    for (ListNode cur = dummy.next; cur != null; cur = cur.next) len += 1;
-    for (int size = 1; size < len; size <<= 1) { // 循环开始切割和合并
+    for (ListNode cur = dummy.next; cur != null; cur = cur.next) {
+      len += 1;
+    }
+    for (int size = 1; size < len; size /= 2) { // 循环开始切割和合并
       ListNode tail = dummy, cur = dummy.next;
       while (cur != null) {
         ListNode left = cur, right = cut(cur, size); // 链表切掉 size 剩下的返还给 right
         cur = cut(right, size); // 链表切掉 size 剩下的返还给 cur
         tail.next = mergeTwoLists(left, right);
-        while (tail.next != null) tail = tail.next; // 保持最尾端
+        // 保持最尾端
+        while (tail.next != null) {
+          tail = tail.next;
+        }
       }
     }
     return dummy.next;
   }
-  /**
-   * 将链表L切掉前n个节点 并返回后半部分的链表头
-   *
-   * @param head
-   * @param n
-   * @return
-   */
+
+  // 将链表 L 切掉前 n 个节点 并返回后半部分的链表头
   private ListNode cut(ListNode head, int n) {
-    if (n <= 0) return head;
+    if (n <= 0) {
+      return head;
+    }
     ListNode cur = head;
-    for (int i = n; i > 0 && cur != null; i--) cur = cur.next;
-    if (cur == null) return null;
+    for (int i = n; i > 0 && cur != null; i--) {
+      cur = cur.next;
+    }
+    if (cur == null) {
+      return null;
+    }
     ListNode nxt = cur.next;
     cur.next = null;
     return nxt;
   }
+
   /**
    * 删除排序链表中的重复元素
    *

@@ -419,6 +419,7 @@ class MMath {
     }
     return res;
   }
+
   /**
    * Pow(x,n)，快速幂
    *
@@ -496,6 +497,32 @@ class MMath {
   }
 
   /**
+   * 多数元素，摩尔投票，类比 Raft
+   *
+   * <p>尽管不通用，但对于本题方便理解和记忆
+   *
+   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
+   *
+   * @param nums the nums
+   * @return int
+   */
+  public int majorityElement(int[] nums) {
+    // 当前遍历的元素即 candidate 及其个数即 votes
+    int num = nums[0], count = 1;
+    for (int i = 1; i < nums.length; ++i) {
+      if (count == 0) {
+        num = nums[i];
+        count = 1;
+      } else if (nums[i] == num) {
+        count += 1;
+      } else {
+        count -= 1;
+      }
+    }
+    return num;
+  }
+
+  /**
    * 整数反转，32 位
    *
    * @param x the x
@@ -560,6 +587,7 @@ class MMath {
     n = ((n & 0xFFFF0000) >>> 16) | ((n & 0x0000FFFF) << 16);
     return n;
   }
+
   /**
    * 位1的个数，you need to treat n as an unsigned value
    *
@@ -576,6 +604,7 @@ class MMath {
     }
     return res;
   }
+
   /**
    * 只出现一次的数字，只出现一次的字符参考 SString
    *

@@ -184,19 +184,6 @@ public class AArray extends DefaultArray {
   }
 
   /**
-   * 旋转数组，反转三次，全部 & [0,k-1] & [k,end]
-   *
-   * @param nums the nums
-   * @param k the k
-   */
-  public void rotate(int[] nums, int k) {
-    k %= nums.length;
-    reverse(nums, 0, nums.length - 1);
-    reverse(nums, 0, k - 1);
-    reverse(nums, k, nums.length - 1);
-  }
-
-  /**
    * 扑克牌中的顺子，A1，J11，Q12，K13，而大小王 0 ，可以看成任意数字，相当于判断无序数组是否完全连续，两类思路
    *
    * <p>Set后遍历
@@ -544,13 +531,13 @@ class MMerge extends DefaultArray {
 }
 
 /**
- * 参考上方 AArray.search 的写法，即
+ * 二分，参考上方 AArray.search 的写法，即
  *
  * <p>lo<=hi
  *
  * <p>明确碰撞的含义
  */
-class Find extends DefaultArray {
+class BinarySearch extends DefaultArray {
   /**
    * 寻找两个有序数组的中位数
    *
@@ -573,10 +560,14 @@ class Find extends DefaultArray {
     int l1 = nums1.length, l2 = nums2.length;
     int p1 = 0, p2 = 0, cur = k;
     while (true) {
-      // 边界情况
-      if (p1 == l1) return nums2[p2 + cur - 1];
-      if (p2 == l2) return nums1[p1 + cur - 1];
-      if (cur == 1) return Math.min(nums1[p1], nums2[p2]);
+      // 三种边界
+      if (p1 == l1) {
+        return nums2[p2 + cur - 1];
+      } else if (p2 == l2) {
+        return nums1[p1 + cur - 1];
+      } else if (cur == 1) {
+        return Math.min(nums1[p1], nums2[p2]);
+      }
       int half = cur / 2;
       int newIdx1 = Math.min(p1 + half, l1) - 1, newIdx2 = Math.min(p2 + half, l2) - 1;
       int num1 = nums1[newIdx1], num2 = nums2[newIdx2];
@@ -599,9 +590,13 @@ class Find extends DefaultArray {
    */
   public int[] searchRange(int[] nums, int target) {
     int[] res = new int[] {-1, -1};
-    if (nums.length < 1 || nums[0] > target || nums[nums.length - 1] < target) return res;
+    if (nums.length < 1 || nums[0] > target || nums[nums.length - 1] < target) {
+      return res;
+    }
     int lower = lowerBound(nums, target);
-    if (lower == -1) return res;
+    if (lower == -1) {
+      return res;
+    }
     int upper = upperBound(nums, target, lower);
     return new int[] {lower, upper};
   }
@@ -610,8 +605,11 @@ class Find extends DefaultArray {
     int lo = 0, hi = nums.length - 1;
     while (lo <= hi) {
       int mid = lo + ((hi - lo) >> 1);
-      if (nums[mid] < target) lo = mid + 1;
-      else if (nums[mid] >= target) hi = mid - 1;
+      if (nums[mid] < target) {
+        lo = mid + 1;
+      } else if (nums[mid] >= target) {
+        hi = mid - 1;
+      }
     }
     return (lo > nums.length - 1 || nums[lo] != target) ? -1 : lo;
   }
@@ -688,7 +686,7 @@ class Find extends DefaultArray {
 
   private int findMinII(int[] nums) {
     int lo = 0, hi = nums.length - 1;
-    while (lo < hi) {
+    while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       if (nums[mid] > nums[hi]) {
         lo = mid + 1;
@@ -704,20 +702,22 @@ class Find extends DefaultArray {
   /**
    * 寻找峰值，比较相邻
    *
+   * <p>对比其余二分，此处需要 lo < hi
+   *
    * @param nums the nums
    * @return int int
    */
   public int findPeakElement(int[] nums) {
     int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) {
-      int mid = lo + hi >> 1;
-      if (nums[mid] >= nums[mid + 1]) {
-        hi = mid;
-      } else {
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      if (nums[mid] < nums[mid + 1]) {
         lo = mid + 1;
+      } else {
+        hi = mid;
       }
     }
-    return hi;
+    return lo;
   }
 
   /**
@@ -731,7 +731,8 @@ class Find extends DefaultArray {
   public int findDuplicate(int[] nums) {
     // 值，相当于索引的 0
     int lo = 1, hi = nums.length - 1;
-    while (lo < hi) {
+    // int res = -1;
+    while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       int count = 0;
       // 统计更小的个数
@@ -739,7 +740,7 @@ class Find extends DefaultArray {
         count += num > mid ? 0 : 1;
       }
       if (count > mid) {
-        hi = mid;
+        hi = mid - 1;
       } else {
         lo = mid + 1;
       }
@@ -1146,6 +1147,44 @@ class DicOrder extends DefaultArray {
 
 /** 遍历相关 */
 class Travesal extends DefaultArray {
+  /**
+   * 旋转数组，反转三次，全部 & [0,k-1] & [k,end]
+   *
+   * @param nums the nums
+   * @param k the k
+   */
+  public void rotate(int[] nums, int k) {
+    k %= nums.length;
+    reverse(nums, 0, nums.length - 1);
+    reverse(nums, 0, k - 1);
+    reverse(nums, k, nums.length - 1);
+  }
+
+  /**
+   * 旋转图像
+   *
+   * <p>依次沿斜对角线 & 垂直中线翻转
+   *
+   * @param matrix
+   */
+  public void rotate(int[][] matrix) {
+    int len = matrix.length;
+    for (int i = 0; i < len; i++) {
+      for (int j = 0; j < i; j++) {
+        int tmp = matrix[i][j];
+        matrix[i][j] = matrix[j][i];
+        matrix[j][i] = tmp;
+      }
+    }
+    for (int i = 0; i < len; i++) {
+      for (int j = 0, k = len - 1; j < k; j++, k--) {
+        int tmp = matrix[i][k];
+        matrix[i][k] = matrix[i][j];
+        matrix[i][j] = tmp;
+      }
+    }
+  }
+
   /**
    * 螺旋矩阵，遍历
    *

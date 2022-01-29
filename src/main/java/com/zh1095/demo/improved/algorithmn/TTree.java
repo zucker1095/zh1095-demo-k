@@ -79,6 +79,7 @@ public class TTree {
     root.right = buildTree(preorder, preLo + countLeft + 1, preHi, idxByValInorder, idx + 1);
     return root;
   }
+
   /**
    * 求根节点到叶子节点数字之和，前序
    *
@@ -155,7 +156,7 @@ public class TTree {
    *
    * @param root the root
    * @param subRoot the sub root
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean isSubtree(TreeNode root, TreeNode subRoot) {
     if (subRoot == null) {
@@ -535,7 +536,36 @@ class BBFS {
     }
     return res;
   }
+
+  /**
+   * 翻转二叉树，迭代
+   *
+   * @param root the root
+   * @return tree node
+   */
+  public TreeNode invertTree(TreeNode root) {
+    if (root == null) {
+      return null;
+    }
+    Deque<TreeNode> queue = new ArrayDeque<>();
+    queue.addLast(root);
+    while (!queue.isEmpty()) {
+      // 每次都从队列中拿一个节点，并交换这个节点的左右子树
+      TreeNode cur = queue.removeFirst();
+      TreeNode tmp = cur.left;
+      cur.left = cur.right;
+      cur.right = tmp;
+      if (cur.left != null) {
+        queue.addLast(cur.left);
+      }
+      if (cur.right != null) {
+        queue.addLast(cur.right);
+      }
+    }
+    return root;
+  }
 }
+
 /**
  * 回溯，前序与后序结合，遵从如下规范
  *

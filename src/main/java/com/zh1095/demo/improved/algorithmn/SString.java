@@ -85,14 +85,17 @@ public class SString extends DefaultSString {
   }
 
   /**
-   * 字符串相乘，竖式
+   * 字符串相乘，竖式，区分当前位和高位即可，最终需跳过前导零
    *
    * @param num1 the num 1
    * @param num2 the num 2
    * @return string string
    */
   public String multiply(String num1, String num2) {
-    if (num1.equals("0") || num2.equals("0")) return "0";
+    // 特判
+    if (num1.equals("0") || num2.equals("0")) {
+      return "0";
+    }
     int[] res = new int[num1.length() + num2.length()];
     for (int i = num1.length() - 1; i >= 0; i--) {
       int n1 = num1.charAt(i) - '0';
@@ -103,13 +106,17 @@ public class SString extends DefaultSString {
         res[i + j] += sum / 10;
       }
     }
-    StringBuilder result = new StringBuilder();
+    StringBuilder ans = new StringBuilder();
     for (int i = 0; i < res.length; i++) {
-      if (i == 0 && res[i] == 0) continue; // 跳过前导零
-      result.append(res[i]);
+      // 跳过前导零
+      if (i == 0 && res[i] == 0) {
+        continue;
+      }
+      ans.append(res[i]);
     }
-    return result.toString();
+    return ans.toString();
   }
+
   /**
    * 最长公共前缀，纵向扫描
    *
