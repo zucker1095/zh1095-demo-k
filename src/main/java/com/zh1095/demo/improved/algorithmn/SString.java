@@ -340,33 +340,39 @@ class WWord extends DefaultSString {
    * @return string string
    */
   public String reverseWords(String s) {
-    StringBuilder sb = trimSpaces(s);
-    reverse(sb, 0, sb.length() - 1);
-    reverseEachWord(sb);
-    return sb.toString();
+    StringBuilder res = trimSpaces(s);
+    reverse(res, 0, res.length() - 1);
+    reverseEachWord(res);
+    return res.toString();
   }
 
-  // 1.定位字符串首个非空的字符
-  // 2.逆向定位字符串首个非空的字符
-  // 3.字符串间的空白字符只保留一个
+  // 去除字符首尾空格，并只保留单词间一个空格
   private StringBuilder trimSpaces(String s) {
     int lo = 0, hi = s.length() - 1;
-    while (lo <= hi && s.charAt(lo) == ' ') lo += 1;
-    while (lo <= hi && s.charAt(hi) == ' ') hi -= 1;
-    StringBuilder sb = new StringBuilder();
-    while (lo <= hi) {
-      char c = s.charAt(lo);
-      if (c != ' ' || sb.charAt(sb.length() - 1) != ' ') sb.append(c);
+    while (lo <= hi && s.charAt(lo) == ' ') {
       lo += 1;
     }
-    return sb;
+    while (lo <= hi && s.charAt(hi) == ' ') {
+      hi -= 1;
+    }
+    StringBuilder res = new StringBuilder();
+    while (lo <= hi) {
+      char ch = s.charAt(lo);
+      if (ch != ' ' || res.charAt(res.length() - 1) != ' ') {
+        res.append(ch);
+      }
+      lo += 1;
+    }
+    return res;
   }
 
   // 循环至单词的末尾 & 翻转单词 & 步进
   private void reverseEachWord(StringBuilder sb) {
     int lo = 0, hi = 0;
     while (lo < sb.length()) {
-      while (hi < sb.length() && sb.charAt(hi) != ' ') hi += 1;
+      while (hi < sb.length() && sb.charAt(hi) != ' ') {
+        hi += 1;
+      }
       reverse(sb, lo, hi - 1);
       lo = hi + 1;
       hi += 1;
@@ -541,15 +547,17 @@ class WWindow {
     MonotonicQueue mq = new MonotonicQueue();
     for (int i = 0; i < nums.length; i++) {
       mq.push(nums[i]);
-      if (i < k - 1) continue;
+      if (i < k - 1) {
+        continue;
+      }
       res[i - k + 1] = mq.max();
       mq.pop(nums[i - k + 1]);
     }
     return res;
   }
-  /** The type Monotonic queue. */
+
   private static class MonotonicQueue {
-    private final Deque<Integer> monotonicQueue = new LinkedList<>();
+    private final Deque<Integer> mq = new LinkedList<>();
 
     /**
      * Push.
@@ -557,9 +565,10 @@ class WWindow {
      * @param num the num
      */
     public void push(int num) {
-      while (monotonicQueue.size() > 0 && monotonicQueue.getLast() < num)
-        monotonicQueue.removeLast();
-      monotonicQueue.addLast(num);
+      while (mq.size() > 0 && mq.getLast() < num) {
+        mq.removeLast();
+      }
+      mq.addLast(num);
     }
 
     /**
@@ -568,8 +577,9 @@ class WWindow {
      * @param num the num
      */
     public void pop(int num) {
-      if (monotonicQueue.size() > 0 && monotonicQueue.getFirst() == num)
-        monotonicQueue.removeFirst();
+      if (mq.size() > 0 && mq.getFirst() == num) {
+        mq.removeFirst();
+      }
     }
 
     /**
@@ -578,7 +588,7 @@ class WWindow {
      * @return the int
      */
     public int max() {
-      return monotonicQueue.getFirst();
+      return mq.getFirst();
     }
   }
 

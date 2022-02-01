@@ -641,6 +641,10 @@ class SSubArray {
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
+   * <p>扩展1，求最长公共子串的长度，即最长连续序列，参上
+   *
+   * <p>扩展2，输出该子序列
+   *
    * @param text1 the text 1
    * @param text2 the text 2
    * @return int int
@@ -648,12 +652,19 @@ class SSubArray {
   public int longestCommonSubsequence(String text1, String text2) {
     int n1 = text1.length(), n2 = text2.length();
     int[][] dp = new int[n1 + 1][n2 + 1];
-    for (int i = 1; i <= n1; i++)
-      for (int j = 1; j <= n2; j++)
+    //    int lo = 0, hi = 0;
+    for (int i = 1; i <= n1; i++) {
+      for (int j = 1; j <= n2; j++) {
         dp[i][j] =
             (text1.charAt(i - 1) == text2.charAt(j - 1))
                 ? dp[i - 1][j - 1] + 1
                 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+        //        if (hi - lo + 1 < j - i + 1) {
+        //          i = lo;
+        //          j = hi;
+        //        }
+      }
+    }
     return dp[n1][n2];
   }
 
@@ -677,28 +688,40 @@ class SSubArray {
   private int editDistance(String word1, String word2) {
     int n1 = word1.length(), n2 = word2.length();
     int[][] dp = new int[n1 + 1][n2 + 1];
-    for (int i = 0; i <= n1; i++) dp[i][0] = i;
-    for (int j = 0; j <= n2; j++) dp[0][j] = j;
-    for (int i = 1; i <= n1; i++)
-      for (int j = 1; j <= n2; j++)
+    for (int i = 0; i <= n1; i++) {
+      dp[i][0] = i;
+    }
+    for (int j = 0; j <= n2; j++) {
+      dp[0][j] = j;
+    }
+    for (int i = 1; i <= n1; i++) {
+      for (int j = 1; j <= n2; j++) {
         dp[i][j] =
             (word1.charAt(i - 1) == word2.charAt(j - 1))
                 ? dp[i - 1][j - 1]
                 : Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]) + 1;
+      }
+    }
 
-    //    int dp[len2+1];
-    //    //初始化第一行
-    //    for(int i = 1;i<=len2;i++) dp[i] = i*ic;
-    //    for(int i = 1;i<=len1;i++){
-    //      int pre = dp[0];
-    //      dp[0] = i*dc;
-    //      for(int j = 1;j<=len2;++j){
-    //        int tmp = dp[j];  // 上一轮的dp[i-1][j]
-    //        if(str1[i-1]==str2[j-1]) dp[j] = pre;
-    //        else  dp[j] = min(pre+rc,min(dp[j-1]+ic,tmp+dc));
-    //        pre = tmp;//更新dp[i-1][j-1]
+    //    int ic, rc, dc;
+    //    int[] dp2 = new int[n2 + 1];
+    //    // 初始化第一行
+    //    for (int i = 1; i <= n2; i++) {
+    //      dp2[i] = i * ic;
+    //    }
+    //    for (int i = 1; i <= n1; i++) {
+    //      int pre = dp2[0];
+    //      dp2[0] = i * dc;
+    //      for (int j = 1; j <= n2; ++j) {
+    //        int tmp = dp2[j]; // 上一轮 dp[i-1][j]
+    //        if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
+    //          dp2[j] = pre;
+    //        } else {
+    //          dp2[j] = Math.min(pre + rc, Math.min(dp2[j - 1] + ic, tmp + dc));
+    //        }
+    //        pre = tmp; // 更新 dp[i-1][j-1]
     //      }
-
+    //    }
     return dp[n1][n2];
   }
 
@@ -709,9 +732,13 @@ class SSubArray {
   private int deleteOperationForTwoStrings(String s1, String s2) {
     int n1 = s1.length(), n2 = s2.length();
     int[][] dp = new int[n1 + 1][n2 + 1];
-    for (int i = 0; i <= n1; i++) dp[i][0] = i;
-    for (int j = 0; j <= n2; j++) dp[0][j] = j;
-    for (int i = 1; i <= n1; i++)
+    for (int i = 0; i <= n1; i++) {
+      dp[i][0] = i;
+    }
+    for (int j = 0; j <= n2; j++) {
+      dp[0][j] = j;
+    }
+    for (int i = 1; i <= n1; i++) {
       for (int j = 1; j <= n2; j++) {
         int minDistance = Math.min(dp[i - 1][j], dp[i][j - 1]) + 1;
         dp[i][j] =
@@ -719,6 +746,7 @@ class SSubArray {
                 ? Math.min(minDistance, dp[i - 1][j - 1])
                 : minDistance;
       }
+    }
     return dp[n1][n2];
   }
 

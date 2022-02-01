@@ -8,7 +8,7 @@ import java.util.*;
  * <p>关于 Java 模拟 stack 的选型
  * https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
  *
- * <p>前序，本类
+ * <p>前序，本类，尽可能将同时掌握迭代 &递归
  *
  * <p>中序，基本即是 BST
  *
@@ -35,13 +35,36 @@ public class TTree {
       while (cur != null) {
         // res = append(res, cur.Val) // pre & post
         stack.addLast(cur); // 1.traverse
-        cur = cur.left; // right pre & left post
+        cur = cur.left; // left pre & right post
       }
       cur = stack.removeLast(); // 2.handle
-      res.add(cur.val);
-      cur = cur.right; // 3.下一跳 left pre & right post
+      res.add(cur.val); // only in
+      cur = cur.right; // 3.下一跳 right pre & left post
     }
     // Collections.reverse(res); // post
+    return res;
+  }
+
+  /**
+   * 二叉树的后序遍历
+   *
+   * @param root the root
+   * @return list
+   */
+  public List<Integer> postorderTraversal(TreeNode root) {
+    List<Integer> res = new ArrayList<>();
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    TreeNode cur = root;
+    while (cur != null || !stack.isEmpty()) {
+      while (cur != null) {
+        res.add(cur.val);
+        stack.addLast(cur);
+        cur = cur.right;
+      }
+      cur = stack.removeLast();
+      cur = cur.left;
+    }
+    Collections.reverse(res);
     return res;
   }
 
@@ -245,7 +268,6 @@ class Postorder {
     res2 = Math.max(res2, left + right + 1);
     return Math.max(left, right) + 1;
   }
-
   /**
    * 二叉树的最大深度，后序遍历
    *
@@ -253,9 +275,39 @@ class Postorder {
    * @return int int
    */
   public int maxDepth(TreeNode root) {
+    return maxDepth2(root);
+  }
+
+  private int maxDepth1(TreeNode root) {
     if (root == null) return 0;
-    int left = maxDepth(root.left), right = maxDepth(root.right);
+    int left = maxDepth1(root.left), right = maxDepth1(root.right);
     return left > right ? left + 1 : right + 1;
+  }
+
+  private int maxDepth2(TreeNode root) {
+    if (root == null) {
+      return 0;
+    }
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    // 下方先更新 depth 再赋值，因此 root 高度初始化此处可略
+    TreeNode cur = root;
+    int res = 0, depth = 0;
+    while (!stack.isEmpty() || cur != null) {
+      while (cur != null) {
+        depth += 1;
+        cur.val = depth;
+        stack.push(cur);
+        cur = cur.left;
+      }
+      // 若左边无路，就预备右拐。右拐之前，记录右拐点的基本信息
+      cur = stack.removeLast();
+      // 将右拐点出栈；此时栈顶为右拐点的前一个结点。在右拐点的右子树全被遍历完后，会预备在这个节点右拐
+      depth = cur.val;
+      // 预备右拐时，比较当前节点深度和之前存储的最大深度
+      res = Math.max(res, depth);
+      cur = cur.right;
+    }
+    return res;
   }
 }
 
@@ -547,7 +599,7 @@ class BBFS {
     if (root == null) {
       return null;
     }
-    Deque<TreeNode> queue = new ArrayDeque<>();
+    Deque<TreeNode> queue = new LinkedList<>();
     queue.addLast(root);
     while (!queue.isEmpty()) {
       // 每次都从队列中拿一个节点，并交换这个节点的左右子树
@@ -798,7 +850,9 @@ class BBacktracking extends DDFS {
    */
   public List<String> generateParenthesis(int n) {
     List<String> res = new ArrayList<>();
-    if (n <= 0) return res; // 特判
+    if (n <= 0) {
+      return res;
+    }
     backtracking7(n, n, "", res);
     return res;
   }
@@ -809,9 +863,15 @@ class BBacktracking extends DDFS {
       res.add(path);
       return;
     }
-    if (left > right) return;
-    if (left > 0) backtracking7(left - 1, right, path + "(", res);
-    if (right > 0) backtracking7(left, right - 1, path + ")", res);
+    if (left > right) {
+      return;
+    }
+    if (left > 0) {
+      backtracking7(left - 1, right, path + "(", res);
+    }
+    if (right > 0) {
+      backtracking7(left, right - 1, path + ")", res);
+    }
   }
 
   /**

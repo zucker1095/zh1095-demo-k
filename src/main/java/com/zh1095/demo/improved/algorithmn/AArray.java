@@ -90,6 +90,7 @@ public class AArray extends DefaultArray {
     }
     return res;
   }
+
   /**
    * 两数之和
    *
@@ -110,6 +111,7 @@ public class AArray extends DefaultArray {
     }
     return res;
   }
+
   /**
    * 最接近的三数之和，题设解唯一
    *
@@ -539,28 +541,32 @@ class MMerge extends DefaultArray {
  */
 class BinarySearch extends DefaultArray {
   /**
-   * 寻找两个有序数组的中位数
+   * 寻找两个有序数组的中位数，有重复，分别二分两个数组求 topk 为 log(m+n)
+   *
+   * <p>扩展1，单纯求两个有序数组 topk，上方求中位数本质是对排位进行二分，此处需要对值
+   *
+   * <p>扩展2，两个逆序数组
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2
    * @return double double
    */
   public double findMedianSortedArrays(int[] nums1, int[] nums2) {
-    int len = nums1.length + nums2.length;
-    if (len % 2 == 1) {
-      int mid = len / 2;
-      return getKthElement(nums1, nums2, mid + 1);
-    } else {
-      int mid = len / 2 - 1;
-      return (getKthElement(nums1, nums2, mid + 1) + getKthElement(nums1, nums2, mid + 2)) / 2.0;
-    }
+    int n = nums1.length, m = nums2.length;
+    int left = (n + m + 1) / 2, right = (n + m + 2) / 2;
+    // 将偶数和奇数的情况合并，如果是奇数，会求两次同样的 k
+    //    return (getKthElement2(nums1, 0, n - 1, nums2, 0, m - 1, left)
+    //            + getKthElement2(nums1, 0, n - 1, nums2, 0, m - 1, right))
+    //        * 0.5;
+    return (getKthElement1(nums1, nums2, left) + getKthElement1(nums1, nums2, right)) * 0.5;
   }
 
-  private int getKthElement(int[] nums1, int[] nums2, int k) {
+  // 迭代
+  // 特判其一为空 & 其一遍历结束 & k 为 1
+  private int getKthElement1(int[] nums1, int[] nums2, int k) {
     int l1 = nums1.length, l2 = nums2.length;
     int p1 = 0, p2 = 0, cur = k;
     while (true) {
-      // 三种边界
       if (p1 == l1) {
         return nums2[p2 + cur - 1];
       } else if (p2 == l2) {
@@ -570,6 +576,7 @@ class BinarySearch extends DefaultArray {
       }
       int half = cur / 2;
       int newIdx1 = Math.min(p1 + half, l1) - 1, newIdx2 = Math.min(p2 + half, l2) - 1;
+      // 扩展1 需要在此处去重
       int num1 = nums1[newIdx1], num2 = nums2[newIdx2];
       if (num1 <= num2) {
         cur -= (newIdx1 - p1 + 1);
@@ -579,6 +586,25 @@ class BinarySearch extends DefaultArray {
         p2 = newIdx2 + 1;
       }
     }
+  }
+
+  // 尾递归
+  // 特判 k=1 & 其一为空
+  private int getKthElement2(int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
+    if (k == 1) {
+      return Math.min(nums1[lo1], nums2[lo2]);
+    }
+    int len1 = hi1 - lo1 + 1, len2 = hi2 - lo2 + 1;
+    // 让 len1 的长度小于 len2，这样就能保证如果有数组空了，一定是 len1
+    if (len1 > len2) {
+      return getKthElement2(nums2, lo2, hi2, nums1, lo1, hi1, k);
+    } else if (len1 == 0) {
+      return nums2[lo2 + k - 1];
+    }
+    int p1 = lo1 + Math.min(len1, k / 2) - 1, p2 = lo2 + Math.min(len2, k / 2) - 1;
+    return (nums1[p1] > nums2[p2])
+        ? getKthElement2(nums1, lo1, hi1, nums2, p2 + 1, hi2, k - (p2 - lo2 + 1))
+        : getKthElement2(nums1, p1 + 1, hi1, nums2, lo2, hi2, k - (p1 - lo1 + 1));
   }
 
   /**
@@ -932,14 +958,22 @@ class DicOrder extends DefaultArray {
    *
    * <p>找 & 排 & 找 & 换 & 排
    *
+   * <p>扩展1，上一个排列，从 n-2 开始找到首个峰 & 峰右边调为降序 & 从 n-1 开始找到首个比峰小的数，交换
+   *
    * @param nums the nums
    */
   public void nextPermutation(int[] nums) {
+    // for (int i = nums.length - 2; i > 0; i--) {
     for (int i = nums.length - 1; i > 0; i--) {
-      if (nums[i] <= nums[i - 1]) continue;
-      Arrays.sort(nums, i, nums.length); // 左闭右开
+      if (nums[i] <= nums[i - 1]) {
+        continue;
+      }
+      // 左闭右开
+      Arrays.sort(nums, i, nums.length);
       for (int j = i; j < nums.length; j++) {
-        if (nums[j] <= nums[i - 1]) continue;
+        if (nums[j] <= nums[i - 1]) {
+          continue;
+        }
         swap(nums, i - 1, j);
         return;
       }
