@@ -751,6 +751,48 @@ class SSubArray {
   }
 
   /**
+   * 判断子序列
+   *
+   * <p>扩展1，依次检查海量 s 是否均为 t 的子序列
+   *
+   * <p>KMP 思想，类似于用伪链表把相同的字符给链接起来，如对于 abac
+   *
+   * <p>1、算法实现过程如下： 1.1 填充字符 " " => ' abac' 1.2 对其中的字符a链表而言（a-z每个字符都执行一次下述操作,共26次） dp[3]['a'-'a'] =>
+   * dp[3][0] = -1 记录a最近的一次位置为，nexPos = 3 dp[1]['a'-'a'] => dp[1][0] = 3 记录a最近的一次位置为，nexPos = 1
+   * dp[0][0] = 1 (预处理填充的空字符意义所在，否则初始位置的a就找不到了)
+   *
+   * <p>2、查找子串过程（） 2.1 初始索引为0,遍历待查找子串 2.2 查找 aa 的过程如下 idx = 0 （从idx+1以及之后的位置开始查找） idx = dp[0][c-'a']
+   * => idx = dp[0][0] => idx = 1 idx = dp[idx][c-'a'] => dp[1][0] = 3 此时 aa 已经遍历完，返回true 上述过程，只要idx
+   * = -1,表示找不到字符，则返回false
+   *
+   * @param s pattern
+   * @param t main
+   * @return
+   */
+  public boolean isSubsequence(String s, String t) {
+    // 预处理以保证 t[0] 也被正确表示，即 dp[0][..]
+    t = " " + t;
+    int[][] dp = new int[t.length()][26];
+    for (int ch = 0; ch < 26; ch++) { // 每一轮处理一个字符
+      int nxtPos = -1;
+      for (int i = t.length() - 1; i > -1; i--) {
+        dp[i][ch] = nxtPos;
+        nxtPos = (t.charAt(i) == ch + 'a') ? nxtPos : i;
+      }
+    }
+    // 起始位置是空字符（idx = 0）
+    // dp[0][p] 表示从 1 开始查找 p+'a' 在 t 中的位置
+    int idx = 0;
+    for (char ch : s.toCharArray()) {
+      idx = dp[idx][ch - 'a'];
+      if (idx == -1) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * 正则表达式匹配，以下均基于 p 判定
    *
    * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配

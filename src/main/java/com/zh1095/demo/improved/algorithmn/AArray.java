@@ -805,8 +805,11 @@ class BinarySearch extends DefaultArray {
     for (int num : nums) {
       num *= num < 0 ? -1 : 1;
       int idx = num - 1;
-      if (nums[idx] < 0) res.add(num);
-      else nums[idx] *= -1;
+      if (nums[idx] < 0) {
+        res.add(num);
+      } else {
+        nums[idx] *= -1;
+      }
     }
     return res;
   }
@@ -856,7 +859,7 @@ class Delete extends DefaultArray {
    *
    * <p>需要移除的目标为 0
    *
-   * <p>扩展，移除字符串中指定字符，同模板
+   * <p>扩展，移除字符串中指定字符，同模板，参下
    *
    * @param nums the nums
    */
@@ -864,10 +867,25 @@ class Delete extends DefaultArray {
     final int target = 0; // diff 1
     int last = 0, k = 0;
     for (int hi = 0; hi < nums.length; hi++) {
-      if (last >= k && target == nums[hi]) continue;
+      if (last >= k && target == nums[hi]) {
+        continue;
+      }
       swap(nums, last, hi); // diff 2
       last += 1;
     }
+  }
+
+  public String moveChars(String str, char target) {
+    char[] res = str.toCharArray();
+    int last = 0;
+    for (int hi = 0; hi < str.length(); hi++) {
+      if (target == str.charAt(hi)) {
+        continue;
+      }
+      res[last] = str.charAt(hi);
+      last += 1;
+    }
+    return String.valueOf(Arrays.copyOfRange(res, 0, last));
   }
 
   /**

@@ -291,6 +291,30 @@ class DoublePointerList extends LList {
     return nxt;
   }
 
+  // head, null
+  private ListNode quickSort(ListNode head, ListNode end) {
+    if (head == end || head.next == end) {
+      return head;
+    }
+    ListNode ltHead = head, gteTail = head;
+    ListNode cur = head.next, nxt;
+    while (cur != end) {
+      nxt = cur.next;
+      if (cur.val < head.val) { // 头插
+        cur.next = ltHead;
+        ltHead = cur;
+      } else { // 尾插
+        gteTail.next = cur;
+        gteTail = cur;
+      }
+      cur = nxt;
+    }
+    gteTail.next = end;
+    ListNode node = quickSort(ltHead, head);
+    head.next = quickSort(head.next, end);
+    return node;
+  }
+
   /**
    * 删除排序链表中的重复元素
    *
