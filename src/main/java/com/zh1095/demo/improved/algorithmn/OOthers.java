@@ -1,6 +1,10 @@
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 收集非五大基本类型的
@@ -102,253 +106,6 @@ public class OOthers {
       }
     }
     return res.toString();
-  }
-}
-
-/** 构建新数据结构 */
-class DData {
-
-  /**
-   * LRU缓存机制
-   *
-   * <p>hash 保证 O(1) 寻址 & 链表保证 DML 有序
-   *
-   * <p>双向保证将一个节点移到双向链表的头部，可以分成「删除该节点」和「在双向链表的头部添加节点」两步操作，都可以在 O(1) 时间内完成
-   */
-  public class LRUCache {
-    private class DLinkedNode {
-      /** The Key. */
-      int key;
-      /** The Value. */
-      int value;
-
-      /** The Prev. */
-      DLinkedNode prev;
-
-      /** The Next. */
-      DLinkedNode next;
-      /** Instantiates a new D linked node. */
-      public DLinkedNode() {}
-
-      /**
-       * Instantiates a new D linked node.
-       *
-       * @param _key the key
-       * @param _value the value
-       */
-      public DLinkedNode(int _key, int _value) {
-        key = _key;
-        value = _value;
-      }
-    }
-
-    private final Map<Integer, DLinkedNode> cache = new HashMap<Integer, DLinkedNode>();
-    private int size;
-    private final int capacity;
-    private final DLinkedNode head, tail; // dummy
-
-    /**
-     * Instantiates a new Lru cache.
-     *
-     * @param capacity the capacity
-     */
-    public LRUCache(int capacity) {
-      this.capacity = capacity;
-      head = new DLinkedNode();
-      tail = new DLinkedNode();
-      head.next = tail;
-      tail.prev = head;
-    }
-
-    /**
-     * get & moveToHead
-     *
-     * @param key the key
-     * @return the int
-     */
-    public int get(int key) {
-      DLinkedNode node = cache.get(key);
-      if (node == null) return -1;
-      moveToHead(node);
-      return node.value;
-    }
-
-    /**
-     * 1.有则 set & moveToHead，否则 put & addToHead
-     *
-     * <p>2.溢出则 removeTail
-     *
-     * @param key the key
-     * @param value the value
-     */
-    public void put(int key, int value) {
-      DLinkedNode node = cache.get(key);
-      if (node != null) {
-        node.value = value;
-        moveToHead(node);
-        return;
-      }
-      DLinkedNode newNode = new DLinkedNode(key, value);
-      cache.put(key, newNode);
-      addToHead(newNode);
-      size += 1;
-      if (size > capacity) {
-        DLinkedNode tail = removeTail();
-        cache.remove(tail.key);
-        size -= 1;
-      }
-    }
-
-    private void addToHead(DLinkedNode node) {
-      node.prev = head;
-      node.next = head.next;
-      head.next.prev = node;
-      head.next = node;
-    }
-
-    private void moveToHead(DLinkedNode node) {
-      removeNode(node);
-      addToHead(node);
-    }
-
-    private DLinkedNode removeTail() {
-      DLinkedNode res = tail.prev;
-      removeNode(res);
-      return res;
-    }
-
-    private void removeNode(DLinkedNode node) {
-      node.prev.next = node.next;
-      node.next.prev = node.prev;
-    }
-  }
-  /**
-   * 用栈实现队列，双栈，in & out，均摊可以认为时间复制度为 O(1)
-   *
-   * <p>记忆，out & in & out & in
-   */
-  public class MyQueue {
-    private final Deque<Integer> out = new ArrayDeque<>(), in = new ArrayDeque<>();
-    /**
-     * Push.
-     *
-     * @param x the x
-     */
-    public void push(int x) {
-      in.addLast(x);
-    }
-
-    /**
-     * Pop int.
-     *
-     * @return the int
-     */
-    public int pop() {
-      peek(); // 仅为复用
-      return out.removeLast();
-    }
-
-    /**
-     * Peek int.
-     *
-     * @return the int
-     */
-    public int peek() {
-      if (out.isEmpty()) while (!in.isEmpty()) out.addLast(in.removeLast());
-      return out.getLast();
-    }
-
-    /**
-     * Empty boolean.
-     *
-     * @return the boolean
-     */
-    public boolean empty() {
-      return out.isEmpty() && in.isEmpty();
-    }
-  }
-
-  /**
-   * 设计循环队列
-   *
-   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
-   */
-  public class MyCircularQueue {
-    private int front, rear;
-    private final int capacity;
-    private final int[] data;
-
-    /**
-     * Instantiates a new My circular queue.
-     *
-     * @param k the k
-     */
-    public MyCircularQueue(int k) {
-      // 循环数组中任何时刻一定至少有一个位置不存放有效元素
-      // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
-      capacity = k + 1;
-      data = new int[capacity];
-    }
-
-    /**
-     * En queue boolean.
-     *
-     * @param value the value
-     * @return the boolean
-     */
-    public boolean enQueue(int value) {
-      if (isFull()) return false;
-      data[rear] = value;
-      rear = (rear + 1) % capacity;
-      return true;
-    }
-
-    /**
-     * De queue boolean.
-     *
-     * @return the boolean
-     */
-    public boolean deQueue() {
-      if (isEmpty()) return false;
-      front = (front + 1) % capacity;
-      return true;
-    }
-
-    /**
-     * Front int.
-     *
-     * @return the int
-     */
-    public int Front() {
-      return isEmpty() ? -1 : data[front];
-    }
-
-    /**
-     * Rear int.
-     *
-     * @return the int
-     */
-    public int Rear() {
-      return isEmpty() ? -1 : data[(rear - 1 + capacity) % capacity];
-    }
-
-    /**
-     * Is empty boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isEmpty() {
-      return front == rear;
-    }
-
-    /**
-     * Is full boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isFull() {
-      return (rear + 1) % capacity == front;
-    }
   }
 }
 
@@ -615,5 +372,256 @@ class MMath {
     int res = 0;
     for (int num : nums) res ^= num;
     return res;
+  }
+}
+
+/** 构建新数据结构 */
+class DData {
+  /**
+   * LRU缓存机制
+   *
+   * <p>hash 保证 O(1) 寻址 & 链表保证 DML 有序
+   *
+   * <p>双向保证将一个节点移到双向链表的头部，可以分成「删除该节点」和「在双向链表的头部添加节点」两步操作，都可以在 O(1) 时间内完成
+   *
+   * <p>扩展1，处理输入输出
+   *
+   * <p>扩展2，线程安全，空结点 throw exception，分别对 hash & 双向链表改用 ConcurrentHashMap & 读写锁，前者可以使用另一把锁代替
+   *
+   * <p>扩展3，带超时
+   */
+  public class LRUCache {
+    private class DLinkedNode {
+      public int key, value;
+      public DLinkedNode prev, next;
+      /** Instantiates a new D linked node. */
+      public DLinkedNode() {}
+
+      /**
+       * Instantiates a new D linked node.
+       *
+       * @param _key the key
+       * @param _value the value
+       */
+      public DLinkedNode(int _key, int _value) {
+        key = _key;
+        value = _value;
+      }
+    }
+
+    private final Map<Integer, DLinkedNode> cache = new HashMap<Integer, DLinkedNode>();
+    private int size;
+    private final int capacity;
+    private final DLinkedNode head, tail; // dummy
+    //    private final Lock rl, wl;
+
+    /**
+     * Instantiates a new Lru cache.
+     *
+     * @param capacity the capacity
+     */
+    public LRUCache(int capacity) {
+      this.capacity = capacity;
+      head = new DLinkedNode();
+      tail = new DLinkedNode();
+      head.next = tail;
+      tail.prev = head;
+      //      ReadWriteLock lock = new ReentrantReadWriteLock();
+      //      rl = lock.readLock();
+      //      wl = lock.writeLock();
+    }
+
+    /**
+     * get & moveToHead
+     *
+     * @param key the key
+     * @return the int
+     */
+    public int get(int key) {
+      DLinkedNode node = cache.get(key);
+      if (node == null) {
+        return -1;
+      }
+      moveToHead(node);
+      return node.value;
+    }
+
+    /**
+     * 1.有则 set & moveToHead，否则 put & addToHead
+     *
+     * <p>2.溢出则 removeTail
+     *
+     * @param key the key
+     * @param value the value
+     */
+    public void put(int key, int value) {
+      DLinkedNode node = cache.get(key);
+      if (node != null) {
+        node.value = value;
+        moveToHead(node);
+        return;
+      }
+      DLinkedNode newNode = new DLinkedNode(key, value);
+      cache.put(key, newNode);
+      addToHead(newNode);
+      size += 1;
+      if (size > capacity) {
+        DLinkedNode tail = removeTail();
+        cache.remove(tail.key);
+        size -= 1;
+      }
+    }
+
+    private void addToHead(DLinkedNode node) {
+      node.prev = head;
+      node.next = head.next;
+      head.next.prev = node;
+      head.next = node;
+    }
+
+    private void moveToHead(DLinkedNode node) {
+      removeNode(node);
+      addToHead(node);
+    }
+
+    private DLinkedNode removeTail() {
+      DLinkedNode res = tail.prev;
+      removeNode(res);
+      return res;
+    }
+
+    private void removeNode(DLinkedNode node) {
+      node.prev.next = node.next;
+      node.next.prev = node.prev;
+    }
+  }
+
+  /**
+   * 用栈实现队列，双栈，in & out，均摊可以认为时间复制度为 O(1)
+   *
+   * <p>记忆，out & in & out & in
+   */
+  public class MyQueue {
+    private final Deque<Integer> out = new ArrayDeque<>(), in = new ArrayDeque<>();
+    /**
+     * Push.
+     *
+     * @param x the x
+     */
+    public void push(int x) {
+      in.addLast(x);
+    }
+
+    /**
+     * Pop int.
+     *
+     * @return the int
+     */
+    public int pop() {
+      peek(); // 仅为复用
+      return out.removeLast();
+    }
+
+    /**
+     * Peek int.
+     *
+     * @return the int
+     */
+    public int peek() {
+      if (out.isEmpty()) while (!in.isEmpty()) out.addLast(in.removeLast());
+      return out.getLast();
+    }
+
+    /**
+     * Empty boolean.
+     *
+     * @return the boolean
+     */
+    public boolean empty() {
+      return out.isEmpty() && in.isEmpty();
+    }
+  }
+
+  /**
+   * 设计循环队列
+   *
+   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
+   */
+  public class MyCircularQueue {
+    private int front, rear;
+    private final int capacity;
+    private final int[] data;
+
+    /**
+     * Instantiates a new My circular queue.
+     *
+     * @param k the k
+     */
+    public MyCircularQueue(int k) {
+      // 循环数组中任何时刻一定至少有一个位置不存放有效元素
+      // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
+      capacity = k + 1;
+      data = new int[capacity];
+    }
+
+    /**
+     * En queue boolean.
+     *
+     * @param value the value
+     * @return the boolean
+     */
+    public boolean enQueue(int value) {
+      if (isFull()) return false;
+      data[rear] = value;
+      rear = (rear + 1) % capacity;
+      return true;
+    }
+
+    /**
+     * De queue boolean.
+     *
+     * @return the boolean
+     */
+    public boolean deQueue() {
+      if (isEmpty()) return false;
+      front = (front + 1) % capacity;
+      return true;
+    }
+
+    /**
+     * Front int.
+     *
+     * @return the int
+     */
+    public int Front() {
+      return isEmpty() ? -1 : data[front];
+    }
+
+    /**
+     * Rear int.
+     *
+     * @return the int
+     */
+    public int Rear() {
+      return isEmpty() ? -1 : data[(rear - 1 + capacity) % capacity];
+    }
+
+    /**
+     * Is empty boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isEmpty() {
+      return front == rear;
+    }
+
+    /**
+     * Is full boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isFull() {
+      return (rear + 1) % capacity == front;
+    }
   }
 }

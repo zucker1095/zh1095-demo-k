@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Design {}
 
 /** 缓存类，LRU & LFU 参考 OOthers */
-class Cache {
+class CCache {
   private final int capacity;
   private final Map<String, CacheItem> data = new HashMap<String, CacheItem>();
 

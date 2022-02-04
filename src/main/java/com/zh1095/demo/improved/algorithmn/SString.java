@@ -60,7 +60,7 @@ public class SString extends DefaultSString {
    * <p>补码
    *
    * @param num the num
-   * @return string
+   * @return string string
    */
   public String toHex(int num) {
     if (num == 0) {
@@ -434,10 +434,20 @@ class WWord extends DefaultSString {
   }
 }
 
-/** 滑动窗口相关 */
+/**
+ * 滑动窗口相关
+ *
+ * TODO
+ *
+ * <p>https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/solution/hua-dong-chuang-kou-by-powcai/
+ */
 class WWindow {
   /**
    * 无重复字符的最长子串，sliding window
+   *
+   * <p>扩展1，不使用 HashMap 则使用数组代替，索引通过 ASCII 取
+   *
+   * <p>扩展2，允许重复 k 次，即字符的个数，下方「至少有k个重复字符的最长子串」指种类
    *
    * @param s the s
    * @return the int
@@ -447,8 +457,11 @@ class WWindow {
       return 0;
     }
     Map<Character, Integer> window = new HashMap<>();
+    //    char[] window = new char[26];
+    //    int[] window = new int[128];
     int res = 0, lo = 0, hi = 0;
     while (hi < s.length()) {
+      char add = s.charAt(hi);
       if (window.containsKey(s.charAt(hi))) {
         lo = Math.max(lo, window.get(s.charAt(hi)) + 1);
       }
@@ -462,41 +475,64 @@ class WWindow {
   /**
    * 最小覆盖字串，sliding window
    *
-   * @param s the s
-   * @param t the t
+   * @param s main
+   * @param t pattern
    * @return string string
    */
   public String minWindow(String s, String t) {
-    Map<Character, Integer> need = new HashMap<>();
-    for (char c : s.toCharArray()) {
-      need.put(c, 0);
+    int[] need = new int[128];
+    //    Map<Character,Integer> need = new HashMap<>();
+    for (int i = 0; i < t.length(); i++) {
+      need[t.charAt(i)] += 1;
     }
-    for (char c : t.toCharArray()) {
-      if (need.containsKey(c)) need.put(c, need.get(c) + 1);
-      else return "";
-    }
-    String res = "";
-    int length = Integer.MAX_VALUE, counter = t.length();
-    int lo = 0, hi = 0;
+    int lo = 0, hi = 0, left = t.length(), start = 0, end = Integer.MAX_VALUE;
     while (hi < s.length()) {
       char add = s.charAt(hi);
+      if (need[add] > 0) {
+        left -= 1;
+      }
+      need[add] -= 1;
       hi += 1;
-      if (need.get(add) > 0) {
-        counter -= 1;
-      }
-      need.put(add, need.get(add) - 1);
-      while (counter == 0) {
-        if (length > hi - lo) {
-          length = hi - lo;
-          res = s.substring(lo, hi);
-        }
+      while (left == 0) {
         char out = s.charAt(lo);
-        lo += 1;
-        if (need.get(out) == 0) {
-          counter += 1;
+        if (end - start > hi - lo) {
+          start = lo;
+          end = hi;
         }
-        need.put(out, need.get(out) + 1);
+        if (need[out] == 0) {
+          left += 1;
+        }
+        need[out] += 1;
+        lo += 1;
       }
+    }
+    return end == Integer.MAX_VALUE ? "" : s.substring(start, end);
+  }
+
+  /**
+   * 至多包含K个不同字符的最长子串
+   *
+   * @param s the s
+   * @param k the k
+   * @return int
+   */
+  public int lengthOfLongestSubstringKDistinct(String s, int k) {
+    int res = 0;
+    int lo = 0, hi = 0;
+    Map<Character, Integer> window = new HashMap<>();
+    while (hi < s.length()) {
+      char add = s.charAt(hi);
+      window.put(add, window.get(add) + 1);
+      hi += 1;
+      while (window.size() > k) {
+        char out = s.charAt(lo);
+        window.put(out, window.get(out) - 1);
+        if (window.get(out) == 0) {
+          window.remove(out);
+        }
+        lo += 1;
+      }
+      res = Math.max(res, hi - lo + 1);
     }
     return res;
   }
@@ -590,6 +626,42 @@ class WWindow {
     public int max() {
       return mq.getFirst();
     }
+  }
+
+  /**
+   * 至少有k个重复字符的最长子串，要求次数非种类，即每个字符均需要 k 次
+   *
+   * <p>用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
+   *
+   * <p>剪枝
+   *
+   * @param s
+   * @param k
+   * @return
+   */
+  public int longestSubstring(String s, int k) {
+    if (s.length() < k) {
+      return 0;
+    }
+    Map<Character, Integer> counter = new HashMap();
+    for (int i = 0; i < s.length(); i++) {
+      char ch = s.charAt(i);
+      counter.put(ch, counter.get(ch) + 1);
+    }
+    for (char ch : counter.keySet()) {
+      // 找到次数少于 k 的字符串
+      if (counter.get(ch) >= k) {
+        continue;
+      }
+      int res = 0;
+      // 切分 s 为多个小段分治求解
+      for (String t : s.split(String.valueOf(ch))) {
+        res = Math.max(res, longestSubstring(t, k));
+      }
+      return res;
+    }
+    // 原字符串没有小于 k 的字符串 直接返回字符串长度
+    return s.length();
   }
 
   /**

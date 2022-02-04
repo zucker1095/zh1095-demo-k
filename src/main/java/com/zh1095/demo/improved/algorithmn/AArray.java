@@ -20,6 +20,10 @@ import java.util.*;
  *
  * <p>s.charAt(i) 会检查字符串的下标是否越界，因此非随机遍历直接 s.toCharArray() 即可
  *
+ * <p>array to list Arrays.stream(nums).boxed().collect(Collectors.toList());
+ *
+ * <p>list to array list.stream().mapToInt(i -> i).toArray();
+ *
  * @author cenghui
  */
 public class AArray extends DefaultArray {
@@ -491,8 +495,7 @@ class MMerge extends DefaultArray {
    * @return int int
    */
   public int reversePairs(int[] nums) {
-    int[] tmp = new int[nums.length];
-    divide2(nums, tmp, 0, nums.length - 1);
+    divide2(nums, new int[nums.length], 0, nums.length - 1);
     return res;
   }
 
@@ -509,8 +512,10 @@ class MMerge extends DefaultArray {
   }
 
   private int mergeAndCount(int[] nums, int[] tmp, int lo, int mid, int hi) {
-    int res = 0;
-    if (hi + 1 - lo >= 0) System.arraycopy(nums, lo, tmp, lo, hi - lo + 1);
+    int cur = 0;
+    if (hi - lo + 1 >= 0) {
+      System.arraycopy(nums, lo, tmp, lo, hi - lo + 1);
+    }
     int p1 = lo, p2 = mid + 1;
     for (int i = lo; i <= hi; i++) {
       if (p1 == mid + 1) {
@@ -525,10 +530,10 @@ class MMerge extends DefaultArray {
       } else if (tmp[p1] > tmp[p2]) {
         nums[i] = tmp[p2];
         p2 += 1;
-        res += mid - p1 + 1;
+        cur += mid - p1 + 1;
       }
     }
-    return res;
+    return cur;
   }
 }
 
@@ -772,6 +777,28 @@ class BinarySearch extends DefaultArray {
       }
     }
     return lo;
+  }
+
+  /**
+   * 对有序数组找到重复数超过 k 的序列，滑窗，双指针间距超过 k-1 即可
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public int[] findDuplicatesK(int[] nums, int k) {
+    List<Integer> res = new ArrayList<>();
+    int lo = 0;
+    for (int hi = 1; hi < nums.length; hi++) {
+      if (nums[hi] == nums[lo]) {
+        continue;
+      }
+      if (hi - lo >= k) {
+        res.add(nums[lo]);
+      }
+      lo = hi;
+    }
+    return res.stream().mapToInt(i -> i).toArray();
   }
 
   /**
@@ -1084,21 +1111,24 @@ class DicOrder extends DefaultArray {
   /**
    * 下一个更大元素II，单调栈 & 循环数组
    *
+   * <p>TODO
+   *
    * @param nums the nums
    * @return int [ ]
    */
-  //  public int[] nextGreaterElements(int[] nums) {
-  //    int len = nums.length;
-  //    int[] res = new int[len];
-  //    Arrays.fill(res, -1);
-  //    Deque<Integer> stack = new ArrayDeque<>();
-  //    for (int i = 0; i < 2 * len; i++) {
-  //      while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()])
-  //        res[stack.removeLast()] = nums[i % len];
-  //      stack.addLast(i % len);
-  //    }
-  //    return res;
-  //  }
+  public int[] nextGreaterElements(int[] nums) {
+    int len = nums.length;
+    int[] res = new int[len];
+    //      Arrays.fill(res, -1);
+    //      Deque<Integer> stack = new ArrayDeque<>();
+    //      for (int i = 0; i < 2 * len; i++) {
+    //        while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()])
+    //          res[stack.removeLast()] = nums[i % len];
+    //        stack.addLast(i % len);
+    //      }
+    return res;
+  }
+
   /**
    * 字典序的第k小数字，找到 [1,n] 内，前序
    *
@@ -1184,8 +1214,11 @@ class DicOrder extends DefaultArray {
     for (char c : stack) res.append(c);
     return res.toString();
   }
+
   /**
    * 拼接最大数
+   *
+   * <p>TODO
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2

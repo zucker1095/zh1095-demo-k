@@ -34,6 +34,17 @@ public class LList {
     return pre;
   }
 
+  // 递归只 focus 当前结点的指向，后序 & 变向 & 断链
+  private ListNode reverseList2(ListNode head) {
+    if (head == null || head.next == null) {
+      return head;
+    }
+    ListNode cur = reverseList(head.next);
+    head.next.next = head;
+    head.next = null;
+    return cur;
+  }
+
   /**
    * 合并两个有序链表，正向，参考合并两个有序数组
    *

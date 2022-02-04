@@ -948,6 +948,9 @@ class BBacktracking extends DDFS {
  * <p>因此后者不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复，因为要避免环路
  */
 class DDFS {
+  /** The Directions. */
+  protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
   /**
    * 岛屿数量
    *
@@ -975,6 +978,18 @@ class DDFS {
       grid[r][c] = '0';
       for (int[] dir : DIRECTIONS) dfs1(grid, r + dir[0], c + dir[1]);
     }
+  }
+
+  /**
+   * In area boolean.
+   *
+   * @param board the board
+   * @param i the
+   * @param j the j
+   * @return the boolean
+   */
+  protected boolean inArea(char[][] board, int i, int j) {
+    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
   }
 
   /**
@@ -1031,9 +1046,6 @@ class DDFS {
     return memo[r][c];
   }
 
-  /** The Directions. */
-  protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-
   /**
    * In area boolean.
    *
@@ -1043,18 +1055,6 @@ class DDFS {
    * @return the boolean
    */
   protected boolean inArea(int[][] board, int i, int j) {
-    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
-  }
-
-  /**
-   * In area boolean.
-   *
-   * @param board the board
-   * @param i the
-   * @param j the j
-   * @return the boolean
-   */
-  protected boolean inArea(char[][] board, int i, int j) {
     return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
   }
 
