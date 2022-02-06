@@ -30,16 +30,18 @@ public class AArray extends DefaultArray {
   /**
    * 二分查找，下方 FFind 统一该写法
    *
+   * <p>扩展1，重复，改为 nextIdx
+   *
    * @param nums the nums
    * @param target the target
    * @return int int
    */
   public int search(int[] nums, int target) {
-    // 避免当 target 小于 nums[0] & nums[end] 时多次循环运算
+    // 特判，避免当 target 小于 nums[0] & nums[end] 时多次循环运算
     if (target < nums[0] || target > nums[nums.length - 1]) return -1;
     int lo = 0, hi = nums.length - 1;
     while (lo <= hi) { // 目标可能位于碰撞点
-      int mid = lo + (hi - lo) >> 1;
+      int mid = lo + (hi - lo) / 2;
       if (nums[mid] < target) lo = mid + 1;
       else if (nums[mid] == target) return mid;
       else if (nums[mid] > target) hi = mid - 1;
@@ -50,7 +52,7 @@ public class AArray extends DefaultArray {
   /**
    * 合并两个有序数组，题设不需要滤重，逆向，参考合并两个有序链表
    *
-   * <p>假如需要滤重，则取代为 nextIdx
+   * <p>扩展1，滤重，取代为 nextIdx
    *
    * @param nums1 the nums 1
    * @param m the m
@@ -218,6 +220,7 @@ class Sort extends DefaultArray {
    * @param nums the nums
    */
   public void sortArray(int[] nums) {}
+
   /**
    * 快速排序，循环不变量
    *
@@ -226,11 +229,16 @@ class Sort extends DefaultArray {
    * @param hi the hi
    */
   public void quickSort(int[] nums, int lo, int hi) {
-    if (lo >= hi) return;
-    int pivotIdx = lo + new Random().nextInt(hi - lo + 1); // [lo, hi]
-    swap(nums, pivotIdx, lo); // 不能省略，因为下方需要确保虚拟头也满足 < pivot
+    if (lo >= hi) {
+      return;
+    }
+    // [lo, hi]
+    int pivotIdx = lo + new Random().nextInt(hi - lo + 1);
+    // 不能省略，因为下方需要确保虚拟头也满足 < pivot
+    swap(nums, pivotIdx, lo);
     int pivot = nums[lo];
-    int lt = lo, gt = hi + 1; // 虚拟头尾，保证界外
+    // 虚拟头尾，保证界外
+    int lt = lo, gt = hi + 1;
     int cur = lt + 1;
     while (cur < gt) {
       if (nums[cur] < pivot) {
@@ -244,7 +252,8 @@ class Sort extends DefaultArray {
         swap(nums, cur, gt);
       }
     }
-    swap(nums, lo, lt); // 扰动，保证等概率分布
+    // 扰动，保证等概率分布
+    swap(nums, lo, lt);
     quickSort(nums, lo, lt - 1);
     quickSort(nums, gt, hi);
   }
@@ -318,6 +327,74 @@ class Sort extends DefaultArray {
 
 class HHeap extends DefaultArray {
   /**
+   * 数组中的第k个最大元素，原地建小根堆，也可以额外维护一个数组存放
+   *
+   * <p>循环里面判断小根堆里面的 size() 是否大于 k 个数，是的话就 poll() 出去，循环结束之后剩下来的就是 k 个数的小根堆
+   *
+   * <p>扩展1，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均
+   *
+   * <p>扩展2，判断 num 是否为第 k 大，有重复，partition 如果在 K 位置的左边和右边都遇到该数，直接结束，否则直到找到第 k 大的元素比较是否为同一个数
+   *
+   * <p>扩展3，如何只选出 [n, m]，分别建两个长度为 n & m-n 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
+   *
+   * <p>扩展4，寻找两个有序数组的第 k 大，参考「寻找两个有序数组的中位数」
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return the int
+   */
+  public int findKthLargest(int[] nums, int k) {
+    //    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+    //    for (int num : nums) {
+    //      minHeap.add(num);
+    //      if (minHeap.size() > k) minHeap.poll();
+    //    }
+    //    return minHeap.peek();
+    buildHeap(nums, k); // 前 K 个元素原地建小顶堆
+    // 遍历剩下元素，比堆顶小，跳过；比堆顶大，交换后重新堆化
+    for (int i = k; i < nums.length; i++) {
+      if (less(nums, i, 0)) continue;
+      swap(nums, i, 0);
+      heapify(nums, k, 0);
+    }
+    return nums[0];
+  }
+
+  // 从倒数第一个非叶子节点开始堆化即索引 k/2-1
+  private void buildHeap(int[] nums, int k) {
+    for (int i = (k / 2) - 1; i >= 0; i--) {
+      heapify(nums, k, i);
+    }
+  }
+
+  // down，父节点下标i，左右子节点的下标分别为 2*i+1 和 2*i+2
+  private void heapify(int[] nums, int k, int i) {
+    // minPos 用于存储最小值的下标，先假设父节点最小
+    int cur = i, minPos = i;
+    while (true) {
+      // 依次和左右结点比较
+      if (i * 2 + 1 < k && less(nums, i * 2 + 1, minPos)) {
+        minPos = i * 2 + 1;
+      }
+      if (i * 2 + 2 < k && less(nums, i * 2 + 2, minPos)) {
+        minPos = i * 2 + 2;
+      }
+      // 如果 minPos 没有发生变化，说明父节点已经是优先级最高，小顶堆即最小，直接跳出
+      if (minPos == i) {
+        break;
+      }
+      // 否则交换
+      swap(nums, i, minPos);
+      // 父节点下标进行更新，继续堆化
+      i = minPos;
+    }
+  }
+
+  private boolean less(int[] nums, int i, int j) {
+    return nums[i] < nums[j];
+  }
+
+  /**
    * 堆排序，以下代码参考 container/heap in Go
    *
    * <p>堆是具有以下性质的完全二叉树，每个结点的值都大于或等于其左右孩子结点的值，称为大顶堆，反之，小顶堆
@@ -376,74 +453,11 @@ class HHeap extends DefaultArray {
       }
     }
   }
-
-  /**
-   * 数组中的第k个最大元素，原地建小顶堆，也可以额外维护一个数组存放
-   *
-   * <p>循环里面判断小顶堆里面的 size() 是否大于 k 个数，是的话就 poll() 出去，循环结束之后剩下来的就是 k 个数的小顶堆
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return the int
-   */
-  public int findKthLargest(int[] nums, int k) {
-    //    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-    //    for (int num : nums) {
-    //      minHeap.add(num);
-    //      if (minHeap.size() > k) minHeap.poll();
-    //    }
-    //    return minHeap.peek();
-    // 额外空间
-    //    int[] heap = new int[k];
-    //    System.arraycopy(nums, 0, heap, 0, k);
-    buildHeap(nums, k); // 前 K 个元素原地建小顶堆
-    // 遍历剩下元素，比堆顶小，跳过；比堆顶大，交换后重新堆化
-    for (int i = k; i < nums.length; i++) {
-      if (less(nums, i, 0)) {
-        continue;
-      }
-      swap(nums, i, 0);
-      heapify(nums, k, 0);
-    }
-    return nums[0];
-  }
-
-  // 从倒数第一个非叶子节点开始堆化，其下标为 k/2-1
-  private void buildHeap(int[] nums, int k) {
-    for (int i = (k / 2) - 1; i >= 0; i--) {
-      heapify(nums, k, i);
-    }
-  }
-
-  // down，父节点下标i，左右子节点的下标分别为 2*i+1 和 2*i+2
-  private void heapify(int[] nums, int k, int i) {
-    // minPos 用于存储最小值的下标，先假设父节点最小
-    int cur = i, minPos = i;
-    while (true) {
-      // 依次和左右结点比较
-      if (i * 2 + 1 < k && less(nums, i * 2 + 1, minPos)) {
-        minPos = i * 2 + 1;
-      }
-      if (i * 2 + 2 < k && less(nums, i * 2 + 2, minPos)) {
-        minPos = i * 2 + 2;
-      }
-      // 如果 minPos 没有发生变化，说明父节点已经是优先级最高，小顶堆即最小，直接跳出
-      if (minPos == i) {
-        break;
-      }
-      // 否则交换
-      swap(nums, i, minPos);
-      // 父节点下标进行更新，继续堆化
-      i = minPos;
-    }
-  }
-
-  private boolean less(int[] nums, int i, int j) {
-    return nums[i] < nums[j];
-  }
 }
 
 class MMerge extends DefaultArray {
+  private int res = 0;
+
   /**
    * 归并排序，up-to-bottom 递归
    *
@@ -467,6 +481,7 @@ class MMerge extends DefaultArray {
     // curing 因为此时 [lo,mid]&[mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
     merge1(nums, tmp, lo, mid, hi); // 区间两两相邻合并
   }
+
   // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
   private void merge1(int[] nums, int[] tmp, int lo, int mid, int hi) {
     if (hi + 1 - lo >= 0) System.arraycopy(nums, lo, tmp, lo, hi + 1 - lo);
@@ -498,8 +513,6 @@ class MMerge extends DefaultArray {
     divide2(nums, new int[nums.length], 0, nums.length - 1);
     return res;
   }
-
-  private int res = 0;
 
   private void divide2(int[] nums, int[] tmp, int lo, int hi) {
     if (lo == hi) return;
@@ -660,6 +673,10 @@ class BinarySearch extends DefaultArray {
    *
    * <p>目标分别与中点 & 左右边界的值对比，有序的一边的边界值可能等于目标值
    *
+   * <p>33-查找旋转数组不重复；81-查找旋转数组可重复复；153-旋转数组最小值不重复；154旋转数字最小值重复
+   *
+   * <p>扩展1，旋转 k 次，无论旋转几次，最多只有俩段递增序列
+   *
    * @param nums the nums
    * @param target the target
    * @return int int
@@ -667,16 +684,16 @@ class BinarySearch extends DefaultArray {
   public int search(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo <= hi) {
-      int mid = (lo + hi) >> 1;
+      int mid = lo + (hi - lo) / 2;
       if (target == nums[mid]) {
         return mid;
       }
-      if (nums[lo] <= nums[mid]) { // 中点的值与右边界对比，右边有序
+      // 中点的值与右边界对比，右边有序
+      if (nums[lo] <= nums[mid]) {
+        // 目标在左 or 右
         if (target >= nums[lo] && target < nums[mid]) {
-          // 目标在左
           hi = mid - 1;
         } else {
-          // 目标在右
           lo = mid + 1;
         }
       } else {
@@ -1393,8 +1410,10 @@ abstract class DefaultArray {
    */
   protected final int nextIdx(int[] nums, int start, boolean upper) {
     int step = upper ? 1 : -1;
-    for (int i = start + 1; i < nums.length && i > -1; i += step)
-      if (nums[i] != nums[start]) return i;
+    for (int i = start + 1; i < nums.length && i > -1; i += step) {
+      if (nums[i] == nums[start]) continue;
+      return i;
+    }
     return -1;
   }
 

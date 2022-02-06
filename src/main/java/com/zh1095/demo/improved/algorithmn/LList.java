@@ -2,6 +2,8 @@ package com.zh1095.demo.improved.algorithmn;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 /**
  * 收集所有链表相关
@@ -67,8 +69,11 @@ public class LList {
       }
       cur = cur.next;
     }
-    if (l1 != null) cur.next = l1;
-    else if (l2 != null) cur.next = l2;
+    if (l1 != null) {
+      cur.next = l1;
+    } else if (l2 != null) {
+      cur.next = l2;
+    }
     return dummy.next;
   }
 
@@ -202,14 +207,48 @@ class DoublePointerList extends LList {
    * @return the list node
    */
   public ListNode mergeKLists(ListNode[] lists) {
-    return (lists.length == 0) ? null : divide(lists, 0, lists.length - 1);
+    if (lists == null || lists.length == 0) {
+      return null;
+    }
+    Queue<ListNode> pq =
+        new PriorityQueue<>(
+            lists.length,
+            (ListNode o1, ListNode o2) -> {
+              if (o1.val < o2.val) return -1;
+              else if (o1.val == o2.val) return 0;
+              else return 1;
+            });
+    for (ListNode node : lists) {
+      if (node == null) continue;
+      pq.add(node);
+    }
+    ListNode dummy = new ListNode(0), cur = dummy;
+    while (!pq.isEmpty()) {
+      cur.next = pq.poll();
+      cur = cur.next;
+      if (cur.next != null) {
+        pq.add(cur.next);
+      }
+    }
+    return dummy.next;
+    //    return (lists.length == 0) ? null : divide(lists, 0, lists.length - 1);
   }
 
   private ListNode divide(ListNode[] lists, int lo, int hi) {
-    if (lo == hi) return lists[lo];
-    int mid = lo + (hi - lo) >> 1;
+    if (lo == hi) {
+      return lists[lo];
+    }
+    int mid = lo + (hi - lo) / 2;
     return mergeTwoLists(divide(lists, lo, mid), divide(lists, mid + 1, hi));
   }
+
+  private void buildHeap(ListNode[] lists, int k) {
+    for (int i = (k / 2) - 1; i >= 0; i--) {
+      heapify(lists, k, i);
+    }
+  }
+
+  private void heapify(ListNode[] nums, int k, int i) {}
 
   /**
    * 删除链表的倒数第 N 个结点
@@ -407,6 +446,8 @@ class Cycle extends LList {
   /**
    * 环形链表I，判断即可
    *
+   * <p>扩展1，打印首尾
+   *
    * @param head the head
    * @return the boolean
    */
@@ -426,6 +467,8 @@ class Cycle extends LList {
 
   /**
    * 环形链表II，前半部分与环形链表 I 一致
+   *
+   * <p>扩展1，是否有环 & 找入口 & 求点个数，找到入口后，遍历回到入口即可
    *
    * @param head the head
    * @return the list node
@@ -449,6 +492,7 @@ class Cycle extends LList {
     }
     return start;
   }
+
   /**
    * 相交链表 / 两个链表的第一个公共节点，获取两个链表的首个交点，不存在则返空
    *
@@ -472,6 +516,10 @@ class ReverseList extends LList {
   /**
    * k个一组反转链表，三步曲，暂存 & 变向 & 步进
    *
+   * <p>扩展1，不足 k 个也反转，参下 annotate
+   *
+   * <p>扩展2，从尾部开始计数，如 12345 & k=2 为 13254，先遍历一趟获取长度
+   *
    * @param head the head
    * @param k the k
    * @return the list node
@@ -481,13 +529,23 @@ class ReverseList extends LList {
     dummy.next = head;
     ListNode tail = dummy, cur = dummy;
     while (cur.next != null) {
-      for (int i = 0; i < k && cur != null; i++) cur = cur.next;
-      if (cur == null) break;
-      ListNode first = tail.next, nxt = cur.next; // 1.暂存
-      cur.next = null; // 2.此时 cur 是 last，断开
-      tail.next = reverseList(first); // 3.变向两次
+      // 改为 cur.next != null 并统计 i 是否为 k 因为可能刚好 =k
+      for (int i = 0; i < k && cur != null; i++) {
+        cur = cur.next;
+      }
+      // 移除下行
+      if (cur == null) {
+        break;
+      }
+      // 1.暂存
+      ListNode first = tail.next, nxt = cur.next;
+      // 2.此时 cur 是 last，断开
+      cur.next = null;
+      // 3.变向两次
+      tail.next = reverseList(first);
       first.next = nxt;
-      tail = first; // 4.步进
+      // 4.步进
+      tail = first;
       cur = first;
     }
     return dummy.next;

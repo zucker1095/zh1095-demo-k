@@ -1,6 +1,9 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 收集 DP 相关
@@ -502,6 +505,8 @@ class SSubArray {
    * <p>[0,m-1] & [0,j-1]
    *
    * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
+   *
+   * <p>扩展1，时间复杂度为 nlogn 参考 https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
    *
    * @param nums the nums
    * @return int int

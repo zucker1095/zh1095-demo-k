@@ -23,6 +23,8 @@ public class SString extends DefaultSString {
    *
    * <p>扩展2，相减，同理维护一个高位，负责减，注意前导零
    *
+   * <p>扩展3，其一为负，则提前判断首位再移除
+   *
    * @param num1 the s 1
    * @param num2 the s 2
    * @return the string
@@ -41,7 +43,9 @@ public class SString extends DefaultSString {
       p1 -= 1;
       p2 -= 1;
     }
-    if (carry == 1) res.append(1);
+    if (carry == 1) {
+      res.append(1);
+    }
     return res.reverse().toString();
   }
 
@@ -437,7 +441,7 @@ class WWord extends DefaultSString {
 /**
  * 滑动窗口相关
  *
- * TODO
+ * <p>TODO
  *
  * <p>https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/solution/hua-dong-chuang-kou-by-powcai/
  */
@@ -592,42 +596,6 @@ class WWindow {
     return res;
   }
 
-  private static class MonotonicQueue {
-    private final Deque<Integer> mq = new LinkedList<>();
-
-    /**
-     * Push.
-     *
-     * @param num the num
-     */
-    public void push(int num) {
-      while (mq.size() > 0 && mq.getLast() < num) {
-        mq.removeLast();
-      }
-      mq.addLast(num);
-    }
-
-    /**
-     * Pop.
-     *
-     * @param num the num
-     */
-    public void pop(int num) {
-      if (mq.size() > 0 && mq.getFirst() == num) {
-        mq.removeFirst();
-      }
-    }
-
-    /**
-     * Max int.
-     *
-     * @return the int
-     */
-    public int max() {
-      return mq.getFirst();
-    }
-  }
-
   /**
    * 至少有k个重复字符的最长子串，要求次数非种类，即每个字符均需要 k 次
    *
@@ -695,6 +663,42 @@ class WWindow {
     }
     return res < len + 1 ? res : -1;
   }
+
+  private static class MonotonicQueue {
+    private final Deque<Integer> mq = new LinkedList<>();
+
+    /**
+     * Push.
+     *
+     * @param num the num
+     */
+    public void push(int num) {
+      while (mq.size() > 0 && mq.getLast() < num) {
+        mq.removeLast();
+      }
+      mq.addLast(num);
+    }
+
+    /**
+     * Pop.
+     *
+     * @param num the num
+     */
+    public void pop(int num) {
+      if (mq.size() > 0 && mq.getFirst() == num) {
+        mq.removeFirst();
+      }
+    }
+
+    /**
+     * Max int.
+     *
+     * @return the int
+     */
+    public int max() {
+      return mq.getFirst();
+    }
+  }
 }
 
 /**
@@ -708,6 +712,9 @@ class SStack {
    * 有效的括号
    *
    * <p>扩展1，需要保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，在出入栈时更新
+   *
+   * <p>扩展2，左括号可不以正确的任意闭合，如 ([)] 返回true，同时不能视作同一种即只统计数量，如 {{][}}
+   * 非法，即放弃对顺序的要求，而只要求同种的数量，因此使用三个变量统计数目而无需栈
    *
    * @param s the s
    * @return the boolean
@@ -739,6 +746,14 @@ class SStack {
       // level = Math.max((priorities.indexOf(stack.get(stack.size() - 1)) + 1) % 3, level);
       stack.removeLast();
     }
+    //    int curLeft1 = 0, curLeft2 = 0, curLeft3 = 0;
+    //    for (char ch : s.toCharArray()) {
+    //      int weight = pairs.containsKey(ch) ? 1 : -1;
+    //      if (ch == ')' || ch == '(') curLeft1 += weight;
+    //      else if (ch == '}' || ch == '{') curLeft2 += weight;
+    //      else if (ch == ']' || ch == '[') curLeft3 += weight;
+    //      if (curLeft1 < 0 || curLeft2 < 0 || curLeft3 < 0) return false;
+    //    }
     return stack.size() == 0;
   }
 

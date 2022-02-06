@@ -17,6 +17,8 @@ import java.util.*;
  * @author cenghui
  */
 public class TTree {
+  private int res3 = 0;
+
   /**
    * 中序遍历迭代，注意区分遍历 & 处理两个 step
    *
@@ -39,7 +41,7 @@ public class TTree {
       }
       cur = stack.removeLast(); // 2.handle
       res.add(cur.val); // only in
-      cur = cur.right; // 3.下一跳 right pre & left post
+      cur = cur.right; // 3.step forward right pre & left post
     }
     // Collections.reverse(res); // post
     return res;
@@ -113,8 +115,6 @@ public class TTree {
     preOrdering(root, 0);
     return res3;
   }
-
-  private int res3 = 0;
 
   private void preOrdering(TreeNode root, int path) {
     if (root == null) return;
@@ -197,6 +197,9 @@ public class TTree {
 /** 后序相关，常见为统计 */
 class Postorder {
 
+  private int res1 = Integer.MIN_VALUE;
+  private int res2 = 0;
+
   /**
    * 二叉树的最近公共祖先，后序遍历
    *
@@ -206,10 +209,19 @@ class Postorder {
    * @return tree node
    */
   public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
-    if (root == null || p == root || q == root) return root;
-    TreeNode left = lowestCommonAncestor(root.left, p, q),
-        right = lowestCommonAncestor(root.right, p, q);
-    return left == null ? right : (right == null ? left : root);
+    if (root == null || root == p || root == q) {
+      return root;
+    }
+    TreeNode left = lowestCommonAncestor(root.left, p, q);
+    // 剪枝，p & q 均在左子树内
+    if (left != null && left != q && left != p) {
+      return left;
+    }
+    TreeNode right = lowestCommonAncestor(root.right, p, q);
+    if (left != null && right != null) {
+      return root;
+    }
+    return left == null ? right : left;
   }
 
   /**
@@ -240,8 +252,6 @@ class Postorder {
     return res1;
   }
 
-  private int res1 = Integer.MIN_VALUE;
-
   private int singleSide1(TreeNode root) {
     if (root == null) return 0;
     int left = Math.max(0, singleSide1(root.left)), right = Math.max(0, singleSide1(root.right));
@@ -259,8 +269,6 @@ class Postorder {
     singleSide2(root);
     return res2 - 1;
   }
-
-  private int res2 = 0;
 
   private int singleSide2(TreeNode root) {
     if (root == null) return 0;
@@ -314,6 +322,8 @@ class Postorder {
 /** 二叉搜索树，中序为主 */
 class BBST {
 
+  private int count, res4;
+
   /**
    * 二叉搜索树中的第k小的元素，对 k 做减法，第 k 大则 right & root & left 做中序，参下
    *
@@ -343,8 +353,6 @@ class BBST {
     inordering(root);
     return res4;
   }
-
-  private int count, res4;
 
   private void inordering(TreeNode root) {
     if (root == null || count <= 0) return;
@@ -486,6 +494,25 @@ class BBST {
 /** BFS */
 class BBFS {
   /**
+   * 二叉树的层序遍历，递归实现，前序
+   *
+   * @param root
+   * @return
+   */
+  public List<List<Integer>> levelOrder(TreeNode root) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (root != null) dfs(res, root, 0);
+    return res;
+  }
+
+  private void dfs(List<List<Integer>> res, TreeNode node, int level) {
+    if (res.size() - 1 < level) res.add(new ArrayList<Integer>());
+    res.get(level).add(node.val);
+    if (node.left != null) dfs(res, node.left, level + 1);
+    if (node.right != null) dfs(res, node.right, level + 1);
+  }
+
+  /**
    * 二叉树的右视图
    *
    * @param root the root
@@ -515,20 +542,28 @@ class BBFS {
    */
   public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
     List<List<Integer>> res = new ArrayList<>();
-    if (root == null) return res;
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.add(root);
+    if (root != null) {
+      queue.add(root);
+    }
     boolean isOdd = true;
     while (!queue.isEmpty()) {
-      Deque<Integer> levelList = new LinkedList<Integer>();
+      Deque<Integer> levelList = new LinkedList<>();
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
-        if (isOdd) levelList.addLast(cur.val);
-        else levelList.addFirst(cur.val);
-        if (cur.left != null) queue.add(cur.left);
-        if (cur.right != null) queue.add(cur.right);
+        if (isOdd) {
+          levelList.addLast(cur.val);
+        } else {
+          levelList.addFirst(cur.val);
+        }
+        if (cur.left != null) {
+          queue.add(cur.left);
+        }
+        if (cur.right != null) {
+          queue.add(cur.right);
+        }
       }
-      res.add(new LinkedList<>(levelList));
+      res.add(new ArrayList<>(levelList));
       isOdd = !isOdd;
     }
     return res;
@@ -540,7 +575,7 @@ class BBFS {
    * @param root the root
    * @return boolean boolean
    */
-  public boolean isCompleteTree(TreeNode root) {
+  private boolean isCompleteTree(TreeNode root) {
     if (root == null) return true;
     Queue<TreeNode> queue = new LinkedList<>();
     queue.add(root);
@@ -621,7 +656,7 @@ class BBFS {
 /**
  * 回溯，前序与后序结合，遵从如下规范
  *
- * <p>入参顺序为 nums, path, res(if need), ...args
+ * <p>入参顺序为 selection, path, res(if need), ...args
  *
  * <p>按照子组列的顺序，建议按照表格记忆
  */
@@ -943,7 +978,9 @@ class BBacktracking extends DDFS {
 /**
  * 深度优先搜索
  *
- * <p>回溯和 dfs 框架基本一致，但前者适用 tree 这类不同分支互不连通的结构，而后者更适合 graph 这类各个分支都可能连通的
+ * <p>对于树，按照遍历的次序，dfs 即前序遍历，而回溯相当于前序 & 后序
+ *
+ * <p>回溯 & dfs 框架基本一致，但前者适用 tree 这类不同分支互不连通的结构，而后者更适合 graph 这类各个分支都可能连通的
  *
  * <p>因此后者不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复，因为要避免环路
  */
@@ -955,8 +992,6 @@ class DDFS {
    * 岛屿数量
    *
    * <p>https://leetcode-cn.com/problems/number-of-islands/solution/dao-yu-lei-wen-ti-de-tong-yong-jie-fa-dfs-bian-li-/
-   *
-   * <p>扩展，假如岛屿有权重，要求路径递增
    *
    * @param grid the grid
    * @return int int
@@ -974,9 +1009,10 @@ class DDFS {
   }
 
   private void dfs1(char[][] grid, int r, int c) {
-    if (inArea(grid, r, c) && grid[r][c] != '0') {
-      grid[r][c] = '0';
-      for (int[] dir : DIRECTIONS) dfs1(grid, r + dir[0], c + dir[1]);
+    if (!inArea(grid, r, c) || grid[r][c] == '0') return;
+    grid[r][c] = '0';
+    for (int[] dir : DIRECTIONS) {
+      dfs1(grid, r + dir[0], c + dir[1]);
     }
   }
 
@@ -1010,13 +1046,36 @@ class DDFS {
   }
 
   private int dfs2(int[][] grid, int r, int c) {
-    if (inArea(grid, r, c) && grid[r][c] != 0) {
-      grid[r][c] = 0;
-      int res = 1;
-      for (int[] dir : DIRECTIONS) res += dfs2(grid, r + dir[0], c + dir[1]);
-      return res;
+    if (!inArea(grid, r, c) || grid[r][c] == 0) return 0;
+    grid[r][c] = 0;
+    int res = 1;
+    for (int[] dir : DIRECTIONS) {
+      res += dfs2(grid, r + dir[0], c + dir[1]);
     }
-    return 0;
+    return res;
+  }
+
+  public int numDistinctIslands(int[][] grid) {
+    Set<String> res = new HashSet<>();
+    for (int i = 0; i < grid.length; i++) {
+      for (int j = 0; j < grid[0].length; j++) {
+        if (grid[i][j] != 1) continue;
+        StringBuilder path = new StringBuilder();
+        dfs5(grid, path, i, j, i, j);
+        res.add(path.toString());
+      }
+    }
+    return res.size();
+  }
+
+  private void dfs5(int[][] grid, StringBuilder path, int x, int y, int preX, int preY) {
+    if (!inArea(grid, x, y) || grid[x][y] == 0) return;
+    grid[x][y] = 0;
+    path.append(x - preX); // 记录相对横坐标
+    path.append(y - preY); // 记录相对纵坐标
+    for (int[] dir : DIRECTIONS) {
+      dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
+    }
   }
 
   /**
@@ -1104,6 +1163,8 @@ class DDFS {
 
 /** 收集图相关 */
 class GGraph {
+  private int order;
+
   /**
    * 课程表，判断连通性，拓扑排序
    *
@@ -1171,8 +1232,6 @@ class GGraph {
     }
     return (order == numCourses) ? visitOrder : new int[0];
   }
-
-  private int order;
 
   private void dfs(int pos, int[] inDegree, int[] visitOrder, Map<Integer, List<Integer>> graph) {
     visitOrder[order] = pos;
