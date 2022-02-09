@@ -252,17 +252,16 @@ public class SString extends DefaultSString {
   /**
    * 字符串转换整数
    *
-   * <p>去空格 & 特判 & 判断正负 & 逐位相加 & 判断溢出
+   * <p>去空格 & 特判，可无 & 判断正负 & 逐位相加 & 判断溢出
    *
    * @param s the s
    * @return the int
    */
   public int myAtoi(String s) {
-    // 指针 & 符号
-    int idx = 0, sign = 1;
-    // last 记录上一次的 res 以判断溢出
+    int idx = 0;
+    boolean isNegative = false;
+    // 记录上一次的 res 以判断溢出
     int res = 0, pre = 0;
-    // 1.去空格
     while (idx < s.length() && s.charAt(idx) == ' ') {
       idx += 1;
     }
@@ -272,20 +271,24 @@ public class SString extends DefaultSString {
     }
     if (s.charAt(idx) == '-') {
       idx += 1;
-      sign = -1;
+      isNegative = true;
     } else if (s.charAt(idx) == '+') {
       idx += 1;
     }
     while (idx < s.length()) {
       char ch = s.charAt(idx);
-      if (ch < '0' || ch > '9') break;
+      if (ch < '0' || ch > '9') {
+        break;
+      }
       pre = res;
       res = res * 10 + ch - '0';
-      if (pre != res / 10) // //如果不相等就是溢出了
-      return (sign == (-1)) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      // 如果不相等就是溢出了
+      if (pre != res / 10) {
+        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      }
       idx += 1;
     }
-    return res * sign;
+    return res * (isNegative ? -1 : 1);
   }
 
   /**

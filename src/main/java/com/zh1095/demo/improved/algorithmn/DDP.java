@@ -506,7 +506,10 @@ class SSubArray {
    *
    * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
    *
-   * <p>扩展1，时间复杂度为 nlogn 参考 https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+   * <p>扩展1，时间复杂度为 nlogn 参考
+   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+   *
+   * <p>扩展2，输出，分别记录 i & j 即可，参下 annotate
    *
    * @param nums the nums
    * @return int int
@@ -518,7 +521,16 @@ class SSubArray {
     Arrays.fill(dp, 1); // base case
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
-      for (int j = 0; j < i; j++) if (nums[j] < pivot) dp[i] = Math.max(dp[i], dp[j] + 1);
+      //      int idx = 0;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] < pivot) {
+          //          idx = j;
+          dp[i] = Math.max(dp[i], dp[j] + 1);
+        }
+      }
+      //      if (dp[i] >= res) {
+      //        // 记录 i & j
+      //      }
       res = Math.max(res, dp[i]);
     }
     return res;

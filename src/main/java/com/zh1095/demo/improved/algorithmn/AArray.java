@@ -7,7 +7,7 @@ import java.util.*;
  *
  * <p>排序
  *
- * <p>寻找 & 统计
+ * <p>寻找 & 统计，二分参考 https://www.zhihu.com/question/36132386/answer/530313852
  *
  * <p>相加 & 相乘
  *
@@ -32,6 +32,8 @@ public class AArray extends DefaultArray {
    *
    * <p>扩展1，重复，改为 nextIdx
    *
+   * <p>扩展2，参下「在排序数组中查找元素的第一个和最后一个位置」
+   *
    * @param nums the nums
    * @param target the target
    * @return int int
@@ -46,6 +48,11 @@ public class AArray extends DefaultArray {
       else if (nums[mid] == target) return mid;
       else if (nums[mid] > target) hi = mid - 1;
     }
+    //      while (l < r) {
+    //        if ok(m) r = m;
+    //        else l = m + 1
+    //      }
+    //      return l;
     return -1;
   }
 
@@ -457,7 +464,6 @@ class HHeap extends DefaultArray {
 
 class MMerge extends DefaultArray {
   private int res = 0;
-
   /**
    * 归并排序，up-to-bottom 递归
    *
@@ -547,6 +553,28 @@ class MMerge extends DefaultArray {
       }
     }
     return cur;
+  }
+
+  /**
+   * 合并区间，逐一比较上一段尾 & 当前段首
+   *
+   * @param intervals
+   * @return
+   */
+  public int[][] merge(int[][] intervals) {
+    int[][] res = new int[intervals.length][2];
+    // 按照区间起始位置排序
+    Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
+    int idx = -1;
+    for (int[] interval : intervals) {
+      if (idx == -1 || interval[0] > res[idx][1]) {
+        idx += 1;
+        res[idx] = interval;
+      } else {
+        res[idx][1] = Math.max(res[idx][1], interval[1]);
+      }
+    }
+    return Arrays.copyOf(res, idx + 1);
   }
 }
 

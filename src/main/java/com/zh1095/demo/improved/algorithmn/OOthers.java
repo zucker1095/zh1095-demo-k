@@ -1,10 +1,9 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 收集非五大基本类型的
@@ -154,26 +153,46 @@ class MMath {
   }
 
   /**
-   * Sqrt(x)，二分
+   * x的平方根，二分只能精确至后二位
    *
    * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid - 1] 与 [mid..right]
    *
    * <p>如果 mid 下取整，在区间只有 22 个数的时候有 mid 的值等于 left，一旦进入分支 [mid..right] 区间不会再缩小，出现死循环
    *
+   * <p>扩展1，精确至 k 位，只能使用牛顿迭代法，参考
+   * https://leetcode-cn.com/problems/sqrtx/solution/niu-dun-die-dai-fa-by-loafer/
+   *
+   * <p>扩展2，误差小于 1*10^(-k)，即精确至 k+1 位，同上
+   *
    * @param x the x
    * @return int int
    */
   public int mySqrt(int x) {
-    if (x == 0 || x == 1) return x;
+    if (x == 0 || x == 1) {
+      return x;
+    }
     int lo = 0, hi = x, res = 0;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
-      if (mid > x / mid) hi = mid - 1;
-      else {
+      if (mid > x / mid) {
+        hi = mid - 1;
+      } else {
         res = mid;
         lo = mid + 1;
       }
     }
+    //    if (x == 0) {
+    //      return 0;
+    //    }
+    //    double ori = x, res = x;
+    //    while (true) {
+    //      double xi = 0.5 * (res + ori / res);
+    //      // 1e-7
+    //      if (Math.abs(res - xi) < Integer.MIN_VALUE) break;
+    //      res = xi;
+    //    }
+    //    return (int) res;
+
     return res;
   }
 
@@ -391,30 +410,10 @@ class DData {
    * <p>扩展3，带超时
    */
   public class LRUCache {
-    private class DLinkedNode {
-      public int key, value;
-      public DLinkedNode prev, next;
-      /** Instantiates a new D linked node. */
-      public DLinkedNode() {}
-
-      /**
-       * Instantiates a new D linked node.
-       *
-       * @param _key the key
-       * @param _value the value
-       */
-      public DLinkedNode(int _key, int _value) {
-        key = _key;
-        value = _value;
-      }
-    }
-
     private final Map<Integer, DLinkedNode> cache = new HashMap<Integer, DLinkedNode>();
-    private int size;
     private final int capacity;
     private final DLinkedNode head, tail; // dummy
-    //    private final Lock rl, wl;
-
+    private int size;
     /**
      * Instantiates a new Lru cache.
      *
@@ -430,6 +429,7 @@ class DData {
       //      rl = lock.readLock();
       //      wl = lock.writeLock();
     }
+    //    private final Lock rl, wl;
 
     /**
      * get & moveToHead
@@ -494,6 +494,24 @@ class DData {
       node.prev.next = node.next;
       node.next.prev = node.prev;
     }
+
+    private class DLinkedNode {
+      public int key, value;
+      public DLinkedNode prev, next;
+      /** Instantiates a new D linked node. */
+      public DLinkedNode() {}
+
+      /**
+       * Instantiates a new D linked node.
+       *
+       * @param _key the key
+       * @param _value the value
+       */
+      public DLinkedNode(int _key, int _value) {
+        key = _key;
+        value = _value;
+      }
+    }
   }
 
   /**
@@ -548,9 +566,9 @@ class DData {
    * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
    */
   public class MyCircularQueue {
-    private int front, rear;
     private final int capacity;
     private final int[] data;
+    private int front, rear;
 
     /**
      * Instantiates a new My circular queue.

@@ -261,12 +261,15 @@ class DoublePointerList extends LList {
     ListNode dummy = new ListNode();
     dummy.next = head;
     ListNode lo = dummy, hi = head;
-    for (int i = 0; i < n; i++) hi = hi.next;
+    for (int i = 0; i < n; i++) {
+      hi = hi.next;
+    }
     while (hi != null) {
       hi = hi.next;
       lo = lo.next;
     }
-    lo.next = lo.next.next; // lo.next 即倒数第 n 个
+    // lo.next 即倒数第 n 个
+    lo.next = lo.next.next;
     return dummy.next;
   }
 
@@ -468,7 +471,9 @@ class Cycle extends LList {
   /**
    * 环形链表II，前半部分与环形链表 I 一致
    *
-   * <p>扩展1，是否有环 & 找入口 & 求点个数，找到入口后，遍历回到入口即可
+   * <p>扩展1，求环路长度，遍历回到入口即可
+   *
+   * <p>扩展2，打印环首尾，后者指 tail.next=entry
    *
    * @param head the head
    * @return the list node
