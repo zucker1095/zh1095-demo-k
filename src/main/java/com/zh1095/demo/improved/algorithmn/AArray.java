@@ -1154,27 +1154,6 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 下一个更大元素II，单调栈 & 循环数组
-   *
-   * <p>TODO
-   *
-   * @param nums the nums
-   * @return int [ ]
-   */
-  public int[] nextGreaterElements(int[] nums) {
-    int len = nums.length;
-    int[] res = new int[len];
-    //      Arrays.fill(res, -1);
-    //      Deque<Integer> stack = new ArrayDeque<>();
-    //      for (int i = 0; i < 2 * len; i++) {
-    //        while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()])
-    //          res[stack.removeLast()] = nums[i % len];
-    //        stack.addLast(i % len);
-    //      }
-    return res;
-  }
-
-  /**
    * 字典序的第k小数字，找到 [1,n] 内，前序
    *
    * @param n the n

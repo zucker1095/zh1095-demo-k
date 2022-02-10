@@ -294,13 +294,14 @@ class DoublePointerList extends LList {
   }
 
   /**
-   * 排序链表，bottom-to-up，即从 2 步长开始分割为 len/2 个 & 合并，最终才把整个分为两端
+   * 排序链表，bottom-to-up 即从两步长开始分割为 len/2 个 & 合并
    *
-   * <p>https://leetcode-cn.com/problems/sort-list/solution/148-pai-xu-lian-biao-bottom-to-up-o1-kong-jian-by-/
+   * <p>参考
+   * https://leetcode-cn.com/problems/sort-list/solution/148-pai-xu-lian-biao-bottom-to-up-o1-kong-jian-by-/
    *
    * <p>下方合并 k 个有序链表则 up-to-bottom
    *
-   * <p>扩展1，再去重
+   * <p>扩展1，再去重，模板参考
    *
    * @param head the head
    * @return list node
@@ -312,13 +313,13 @@ class DoublePointerList extends LList {
     for (ListNode cur = dummy.next; cur != null; cur = cur.next) {
       len += 1;
     }
-    for (int size = 1; size < len; size /= 2) { // 循环开始切割和合并
+    // 循环开始切割和合并
+    for (int size = 1; size < len; size <<= 1) {
       ListNode tail = dummy, cur = dummy.next;
       while (cur != null) {
-        ListNode left = cur, right = cut(cur, size); // 链表切掉 size 剩下的返还给 right
-        cur = cut(right, size); // 链表切掉 size 剩下的返还给 cur
+        ListNode left = cur, right = cut(cur, size);
+        cur = cut(right, size);
         tail.next = mergeTwoLists(left, right);
-        // 保持最尾端
         while (tail.next != null) {
           tail = tail.next;
         }
@@ -327,21 +328,21 @@ class DoublePointerList extends LList {
     return dummy.next;
   }
 
-  // 将链表 L 切掉前 n 个节点 并返回后半部分的链表头
+  // 将链表 L 切掉前 n 个节点 并返回后半部分的链表头，因此是往前走 n-1 步
   private ListNode cut(ListNode head, int n) {
     if (n <= 0) {
       return head;
     }
     ListNode cur = head;
-    for (int i = n; i > 0 && cur != null; i--) {
+    for (int i = n - 1; i > 0 && cur != null; i--) {
       cur = cur.next;
     }
     if (cur == null) {
       return null;
     }
-    ListNode nxt = cur.next;
+    ListNode next = cur.next;
     cur.next = null;
-    return nxt;
+    return next;
   }
 
   // head, null

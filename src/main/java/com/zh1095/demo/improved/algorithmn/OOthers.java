@@ -515,6 +515,55 @@ class DData {
   }
 
   /**
+   * 最小栈
+   *
+   * @author cenghui
+   */
+  public class MinStack {
+    private final Deque<Integer> stack = new ArrayDeque<>();
+    private int min;
+
+    /**
+     * Push.
+     *
+     * @param x the x
+     */
+    public void push(int x) {
+      if (stack.isEmpty()) min = x;
+      stack.push(x - min); // 存差
+      if (x < min) min = x; // 更新
+    }
+
+    /** Pop. */
+    public void pop() {
+      if (stack.isEmpty()) return;
+      int pop = stack.pop();
+      // 弹出的是负值，要更新 min
+      if (pop < 0) min -= pop;
+    }
+
+    /**
+     * Top int.
+     *
+     * @return the int
+     */
+    public int top() {
+      int top = stack.peek();
+      // 负数的话，出栈的值保存在 min 中，出栈元素加上最小值即可
+      return top < 0 ? min : top + min;
+    }
+
+    /**
+     * Gets min.
+     *
+     * @return the min
+     */
+    public int getMin() {
+      return min;
+    }
+  }
+
+  /**
    * 用栈实现队列，双栈，in & out，均摊可以认为时间复制度为 O(1)
    *
    * <p>记忆，out & in & out & in

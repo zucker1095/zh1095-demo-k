@@ -790,7 +790,7 @@ class SStack {
   }
 
   /**
-   * 每日温度，单调栈，递减
+   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
    *
    * @param temperatures the t
    * @return int [ ]
@@ -799,6 +799,7 @@ class SStack {
     Deque<Integer> stack = new ArrayDeque<>();
     int[] res = new int[temperatures.length];
     for (int i = 0; i < temperatures.length; i++) {
+      // 更新 res[pre] 直到满足其数字超过 temperatures[i]
       while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
         int pre = stack.removeLast();
         res[pre] = i - pre;
@@ -809,53 +810,25 @@ class SStack {
   }
 
   /**
-   * 最小栈
+   * 下一个更大元素II，题设循环数组因此下方取索引均需取余，单调栈
    *
-   * @author cenghui
+   * @param nums the nums
+   * @return int [ ]
    */
-  public class MinStack {
-    private final Deque<Integer> stack = new ArrayDeque<>();
-    private int min;
-
-    /**
-     * Push.
-     *
-     * @param x the x
-     */
-    public void push(int x) {
-      if (stack.isEmpty()) min = x;
-      stack.push(x - min); // 存差
-      if (x < min) min = x; // 更新
+  public int[] nextGreaterElements(int[] nums) {
+    int len = nums.length;
+    int[] res = new int[len];
+    Arrays.fill(res, -1);
+    Deque<Integer> stack = new ArrayDeque<>();
+    for (int i = 0; i < 2 * len; i++) {
+      while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()]) {
+        res[stack.removeLast()] = nums[i % len];
+      }
+      stack.addLast(i % len);
     }
-
-    /** Pop. */
-    public void pop() {
-      if (stack.isEmpty()) return;
-      int pop = stack.pop();
-      // 弹出的是负值，要更新 min
-      if (pop < 0) min -= pop;
-    }
-
-    /**
-     * Top int.
-     *
-     * @return the int
-     */
-    public int top() {
-      int top = stack.peek();
-      // 负数的话，出栈的值保存在 min 中，出栈元素加上最小值即可
-      return top < 0 ? min : top + min;
-    }
-
-    /**
-     * Gets min.
-     *
-     * @return the min
-     */
-    public int getMin() {
-      return min;
-    }
+    return res;
   }
+
   /**
    * 基本计算器 I & II 统一模板
    *
