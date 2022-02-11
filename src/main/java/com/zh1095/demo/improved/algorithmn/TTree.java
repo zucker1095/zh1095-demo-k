@@ -1161,86 +1161,97 @@ class DDFS {
   }
 }
 
-/** 收集图相关 */
+/**
+ * 收集图相关
+ *
+ * <p>拓扑排序，相当于 BFS，思想是贪心，每一次都从图中删除没有前驱的顶点
+ *
+ * <p>并不需要真正删除，而设置一个入度数组，每一轮都输出入度为 0 的点，并移除它、修改它指向的结点的入度 -1 即可，依次得到的结点序列就是拓扑排序的结点序列
+ *
+ * <p>如果图中还有点没有被移除，说明整个图非全连通
+ *
+ * <p>因此，至少需要入度数组 & 图 & 遍历队列三种数据结构
+ */
 class GGraph {
-  private int order;
-
   /**
    * 课程表，判断连通性，拓扑排序
+   *
+   * <p>1.建图并记录入度
+   *
+   * <p>2.收集入度为 0 的点
+   *
+   * <p>3.拓扑排序，遍历队列，出队处理，并收集其入度为 0 的邻接点
    *
    * @param numCourses the num courses
    * @param prerequisites the prerequisites
    * @return boolean boolean
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
-    int[] flags = new int[numCourses];
-    List<List<Integer>> adjacency = new ArrayList<>();
+    // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
+    int[] indegrees = new int[numCourses];
+    List<List<Integer>> graph = new ArrayList<>(numCourses);
     for (int i = 0; i < numCourses; i++) {
-      adjacency.add(new ArrayList<>());
+      graph.add(new ArrayList<>());
     }
+    Queue<Integer> queue = new LinkedList<>();
+    // [1,0] 即 0->1
     for (int[] cp : prerequisites) {
-      adjacency.get(cp[1]).add(cp[0]);
+      int fromID = cp[0], toID = cp[1];
+      indegrees[fromID] += 1;
+      graph.get(toID).add(fromID);
     }
     for (int i = 0; i < numCourses; i++) {
-      if (!dfs(adjacency, flags, i)) return false;
+      if (indegrees[i] == 0) queue.add(i);
     }
-    return true;
-  }
-
-  private boolean dfs(List<List<Integer>> adjacency, int[] flags, int i) {
-    if (flags[i] == 1) {
-      return false;
-    } else if (flags[i] == -1) {
-      return true;
+    // BFS TopSort.
+    while (!queue.isEmpty()) {
+      int pre = queue.poll();
+      // handle it
+      numCourses -= 1;
+      // traverse its adjacency
+      for (int cur : graph.get(pre)) {
+        indegrees[cur] -= 1;
+        if (indegrees[cur] == 0) queue.add(cur);
+      }
     }
-    flags[i] = 1;
-    for (int j : adjacency.get(i)) {
-      if (!dfs(adjacency, flags, j)) return false;
-    }
-    flags[i] = -1;
-    return true;
+    return numCourses == 0;
   }
 
   /**
-   * 课程表II，拓扑排序
+   * 课程表II，为上方新增 res 记录即可
    *
-   * <p>DFS遍历，在选择下一步的结点的时候只能选择入度为 0 即更新后的结点
-   *
-   * <p>可能最外层循环中会重复出现入度为 0 的结点，因此可在遍历了入度为 0 的结点之后将其入度修改为 -1 以避免重复遍历
-   *
-   * <p>扩展1，检测循环依赖，只检测
-   *
-   * @param numCourses the num courses
-   * @param prerequisites the prerequisites
-   * @return int [ ]
+   * @param numCourses
+   * @param prerequisites
+   * @return
    */
   public int[] findOrder(int numCourses, int[][] prerequisites) {
-    int[] inDegree = new int[numCourses];
-    // 根据有向关系建图并记录每个结点的入度大小
-    int[] visitOrder = new int[numCourses];
-    Map<Integer, List<Integer>> graph = new HashMap<>(prerequisites.length);
+    int[] res = new int[numCourses];
+    int[] indegrees = new int[numCourses];
+    List<List<Integer>> graph = new ArrayList<>(numCourses);
     for (int i = 0; i < numCourses; i++) {
-      for (int[] prerequisite : prerequisites) {
-        int first = prerequisite[1], next = prerequisite[0];
-        inDegree[next] += 1;
-        if (!graph.containsKey(first)) graph.put(first, new ArrayList<>());
-        graph.get(first).add(next);
+      graph.add(new ArrayList<>());
+    }
+    Queue<Integer> queue = new LinkedList<>();
+    for (int[] cp : prerequisites) {
+      int fromID = cp[0], toID = cp[1];
+      indegrees[fromID] += 1;
+      graph.get(toID).add(fromID);
+    }
+    for (int i = 0; i < numCourses; i++) {
+      if (indegrees[i] == 0) queue.add(i);
+    }
+    // 当前结果集的元素个数，正好可作为下标
+    int count = 0;
+    while (!queue.isEmpty()) {
+      int pre = queue.poll();
+      res[count] = pre;
+      count += 1;
+      for (int cur : graph.get(pre)) {
+        indegrees[cur] -= 1;
+        if (indegrees[cur] == 0) queue.add(cur);
       }
-      if (order == numCourses) break;
-      // 仅入度为 0 的结点可被立刻遍历
-      if (inDegree[i] == 0) dfs(i, inDegree, visitOrder, graph);
     }
-    return (order == numCourses) ? visitOrder : new int[0];
-  }
-
-  private void dfs(int pos, int[] inDegree, int[] visitOrder, Map<Integer, List<Integer>> graph) {
-    visitOrder[order] = pos;
-    order += 1;
-    // 将入度为 0 的结点入度改为 -1 以剪枝
-    inDegree[pos] -= 1;
-    for (int next : graph.getOrDefault(pos, new ArrayList<>())) {
-      inDegree[next] -= 1;
-      if (inDegree[next] == 0) dfs(next, inDegree, visitOrder, graph);
-    }
+    // 如果结果集中的数量不等于结点的数量，就不能完成课程任务，这一点是拓扑排序的结论
+    return count == numCourses ? res : new int[0];
   }
 }
