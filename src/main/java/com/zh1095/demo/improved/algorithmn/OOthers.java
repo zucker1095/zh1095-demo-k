@@ -35,6 +35,7 @@ public class OOthers {
     }
     return count;
   }
+
   /**
    * 划分字母区间
    *
@@ -46,7 +47,9 @@ public class OOthers {
   /**
    * 罗马数字转整数
    *
-   * <p>扩展，汉字转阿拉伯数字
+   * <p>扩展1，汉字转阿拉伯数字
+   *
+   * <p>扩展2，IP 与 integer 互转，参下
    *
    * @param s the s
    * @return int int
@@ -85,10 +88,11 @@ public class OOthers {
     }
     return res;
   }
+
   /**
    * 整数转罗马数字，greedy 尽可能先选出大的数字进行转换
    *
-   * <p>扩展，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
+   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
    *
    * @param num the num
    * @return string string
@@ -106,10 +110,27 @@ public class OOthers {
     }
     return res.toString();
   }
+
+  public int ipToInt(String s) {
+    String[] ipList = s.split("\\.");
+    int res = 0;
+    for (String seg : ipList) {
+      res = res << 8 | Integer.parseInt(seg, 10);
+    }
+    return res;
+  }
+
+  public String intToIP(int num) {
+    String res = "";
+
+    return res;
+  }
 }
 
 /** 数学类 */
 class MMath {
+  final String CHARS = "0123456789ABCDEF";
+
   /**
    * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
    *
@@ -248,6 +269,35 @@ class MMath {
 
   private int rand7() {
     return 0;
+  }
+
+  /**
+   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
+   *
+   * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   *
+   * @param num
+   * @param radix
+   * @return
+   */
+  public String baseConvert(int num, int radix) {
+    if (num == 0) {
+      return "0";
+    }
+    StringBuilder res = new StringBuilder();
+    boolean f = false;
+    if (num < 0) {
+      f = true;
+      num = -num;
+    }
+    while (num != 0) {
+      res.append(CHARS.charAt(num % radix));
+      num /= radix;
+    }
+    if (f) {
+      res.append("-");
+    }
+    return res.reverse().toString();
   }
 
   /**

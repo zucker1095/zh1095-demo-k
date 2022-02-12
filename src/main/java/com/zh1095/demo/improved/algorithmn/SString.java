@@ -19,7 +19,7 @@ public class SString extends DefaultSString {
    *
    * <p>模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
-   * <p>扩展1，36 进制，转换为 10 进制
+   * <p>扩展1，36 进制则先转 10 再转 36
    *
    * <p>扩展2，相减，同理维护一个高位，负责减，注意前导零
    *
@@ -49,13 +49,12 @@ public class SString extends DefaultSString {
     return res.reverse().toString();
   }
 
-  private char getChar(int n) {
-    // return (char) n;
-    return n <= 9 ? (char) (n + '0') : (char) (n - 10 + 'a');
+  private char getChar(int num) {
+    return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
   }
 
-  private int getInt(char ch) {
-    return ('0' <= ch && ch <= '9') ? ch - '0' : ch - 'a' + 10;
+  private int getInt(char num) {
+    return '0' <= num && num <= '9' ? num - '0' : num - 'a' + 10;
   }
 
   /**
