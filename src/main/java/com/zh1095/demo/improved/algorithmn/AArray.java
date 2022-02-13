@@ -357,10 +357,14 @@ class HHeap extends DefaultArray {
     //      if (minHeap.size() > k) minHeap.poll();
     //    }
     //    return minHeap.peek();
-    buildHeap(nums, k); // 前 K 个元素原地建小顶堆
+    // 寻找最小
+    // k = (k > nums.length / 2) ? nums.length - k + 1 : k;
+    buildHeap(nums, k);
     // 遍历剩下元素，比堆顶小，跳过；比堆顶大，交换后重新堆化
     for (int i = k; i < nums.length; i++) {
-      if (less(nums, i, 0)) continue;
+      if (less(nums, i, 0)) {
+        continue;
+      }
       swap(nums, i, 0);
       heapify(nums, k, 0);
     }
@@ -399,6 +403,51 @@ class HHeap extends DefaultArray {
 
   private boolean less(int[] nums, int i, int j) {
     return nums[i] < nums[j];
+  }
+
+  /**
+   * 字符串出现次数 topk，参考
+   * https://www.nowcoder.com/practice/fd711bdfa0e840b381d7e1b82183b3ee?tpId=196&tqId=37142&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   *
+   * @param strings string字符串一维数组 strings
+   * @param k int整型 the k
+   * @return string字符串二维数组
+   */
+  public String[][] topKstrings(String[] strings, int k) {
+    if (k == 0) {
+      return new String[][] {};
+    }
+    String[][] res = new String[k][2];
+    Comparator compa = new DescComparator();
+    Map<String, Integer> counter = new HashMap<>();
+    for (String str : strings) {
+      counter.put(str, counter.get(str) + 1);
+    }
+    PriorityQueue pq = new PriorityQueue<>(k, compa);
+    for (Map.Entry<String, Integer> countByStr : counter.entrySet()) {
+      if (pq.size() < k) {
+        pq.add(countByStr);
+      } else if (compa.compare(pq.peek(), countByStr) < 0) {
+        pq.remove();
+        pq.add(countByStr);
+      }
+    }
+    for (int i = k - 1; i >= 0; i--) {
+      Map.Entry<String, Integer> entry = (Map.Entry<String, Integer>) pq.poll();
+      res[i][0] = entry.getKey();
+      res[i][1] = String.valueOf(entry.getValue());
+    }
+    return res;
+  }
+
+  private class DescComparator implements Comparator<Map.Entry<String, Integer>> {
+    @Override
+    public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+      // 字典序小的在前
+      return (o1.getValue().equals(o2.getValue()))
+          ? o2.getKey().compareTo(o1.getKey())
+          : o1.getValue() - o2.getValue();
+    }
   }
 
   /**

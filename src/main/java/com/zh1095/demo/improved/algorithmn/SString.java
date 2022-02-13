@@ -207,9 +207,14 @@ public class SString extends DefaultSString {
   public char firstUniqChar(String s) {
     // 只需要遍历一轮 s & hash，而 HashMap 需要两轮 s
     Map<Character, Boolean> hash = new LinkedHashMap<>();
-    char[] sc = s.toCharArray();
-    for (char c : sc) hash.put(c, !hash.containsKey(c));
-    for (Map.Entry<Character, Boolean> d : hash.entrySet()) if (d.getValue()) return d.getKey();
+    for (char ch : s.toCharArray()) {
+      hash.put(ch, !hash.containsKey(ch));
+    }
+    for (Map.Entry<Character, Boolean> d : hash.entrySet()) {
+      if (d.getValue()) {
+        return d.getKey();
+      }
+    }
     return ' ';
   }
 
@@ -326,6 +331,254 @@ public class SString extends DefaultSString {
   }
 }
 
+/**
+ * 滑动窗口相关
+ *
+ * <p>TODO
+ *
+ * <p>https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/solution/hua-dong-chuang-kou-by-powcai/
+ */
+class WWindow {
+  /**
+   * 无重复字符的最长子串，sliding window
+   *
+   * <p>扩展1，不使用 HashMap 则使用数组代替，索引通过 ASCII 取
+   *
+   * <p>扩展2，允许重复 k 次，即字符的个数，下方「至少有k个重复字符的最长子串」指种类
+   *
+   * @param s the s
+   * @return the int
+   */
+  public int lengthOfLongestSubstring(String s) {
+    int[] window = new int[128];
+    int lo = 0, hi = 0;
+    int res = 1;
+    while (hi < s.length()) {
+      char add = s.charAt(hi);
+      window[add] += 1;
+      while (window[add] == 2) {
+        char out = s.charAt(lo);
+        window[out] -= 1;
+        lo += 1;
+      }
+      res = Math.max(res, hi - lo + 1);
+      hi += 1;
+    }
+    return s.length() < 1 ? 0 : res;
+  }
+
+  /**
+   * 最小覆盖字串，判断频率 & 计数 & 步进
+   *
+   * @param s main
+   * @param t pattern
+   * @return string string
+   */
+  public String minWindow(String s, String t) {
+    int[] need = new int[128];
+    //    Map<Character,Integer> need = new HashMap<>();
+    for (int i = 0; i < t.length(); i++) {
+      need[t.charAt(i)] += 1;
+    }
+    int lo = 0, hi = 0, counter = t.length(), start = 0, end = Integer.MAX_VALUE;
+    while (hi < s.length()) {
+      char add = s.charAt(hi);
+      if (need[add] > 0) counter -= 1;
+      need[add] -= 1;
+      hi += 1;
+      while (counter == 0) {
+        if (end - start > hi - lo) {
+          start = lo;
+          end = hi;
+        }
+        char out = s.charAt(lo);
+        if (need[out] == 0) counter += 1;
+        need[out] += 1;
+        lo += 1;
+      }
+    }
+    return end == Integer.MAX_VALUE ? "" : s.substring(start, end);
+  }
+
+  /**
+   * 至多包含K个不同字符的最长子串，三步同上
+   *
+   * @param s the s
+   * @param k the k
+   * @return int
+   */
+  public int lengthOfLongestSubstringKDistinct(String s, int k) {
+    int res = 0;
+    int lo = 0, hi = 0, counter = k;
+    int[] window = new int[128];
+    while (hi < s.length()) {
+      char add = s.charAt(hi);
+      if (window[add] == 0) counter -= 1;
+      window[add] += 1;
+      hi += 1;
+      while (counter < 0) {
+        char out = s.charAt(lo);
+        if (window[out] == 1) counter += 1;
+        window[out] -= 1;
+        lo += 1;
+      }
+      res = Math.max(res, hi - lo + 1);
+    }
+    return res;
+  }
+
+  /**
+   * 长度最小的子数组，满足和不少于 target，滑窗
+   *
+   * <p>扩展1，列出所有满足和为 target 的连续子序列
+   *
+   * <p>扩展2，里边有负数，参考下方「和至少为k的最短子数组」
+   *
+   * <p>则不能使用滑窗，因为下方缩窗的条件是整体满足 >= target，但可能已经满足的局部无法被收入
+   *
+   * @param target the target
+   * @param nums the nums
+   * @return int int
+   */
+  public int minSubArrayLen(int target, int[] nums) {
+    // List<List<Integer>> list = new ArrayList<>();
+    int res = Integer.MAX_VALUE, lo = 0, hi = 0;
+    int sum = 0;
+    while (hi < nums.length) {
+      sum += nums[hi];
+      while (sum >= target) {
+        res = Math.min(res, hi - lo + 1);
+        sum -= nums[lo];
+        lo += 1;
+      }
+      // 结束迭代即刚好不满足 >= target 时判断是否满足和为 target 即可
+      // if (sum + nums[lo] == target) {}
+      hi += 1;
+    }
+    return res == Integer.MAX_VALUE ? 0 : res;
+  }
+
+  /**
+   * 滑动窗口的最大值
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int [ ]
+   */
+  public int[] maxSlidingWindow(int[] nums, int k) {
+    int[] res = new int[nums.length - k + 1];
+    MonotonicQueue mq = new MonotonicQueue();
+    for (int i = 0; i < nums.length; i++) {
+      mq.push(nums[i]);
+      if (i < k - 1) {
+        continue;
+      }
+      res[i - k + 1] = mq.max();
+      mq.pop(nums[i - k + 1]);
+    }
+    return res;
+  }
+
+  /**
+   * 至少有k个重复字符的最长子串，要求次数非种类，即每个字符均需要 k 次
+   *
+   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
+   *
+   * @param s
+   * @param k
+   * @return
+   */
+  public int longestSubstring(String s, int k) {
+    // 特判
+    if (s.length() < k) return 0;
+    int[] counter = new int[128];
+    for (int i = 0; i < s.length(); i++) {
+      counter[s.charAt(i)] += 1;
+    }
+    for (int ch : counter) {
+      if (counter[ch] >= k) {
+        continue;
+      }
+      // 找到次数少于 k 的字符串，则切分为多个小段分治
+      int res = 0;
+      for (String seg : s.split(String.valueOf(ch))) {
+        res = Math.max(res, longestSubstring(seg, k));
+      }
+      return res;
+    }
+    // 原字符串没有小于 k 的字符串
+    return s.length();
+  }
+
+  /**
+   * 和至少为k的最短子数组，单调队列 & 前缀和
+   *
+   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int int
+   */
+  public int shortestSubarray(int[] nums, int k) {
+    int len = nums.length;
+    long[] prefix = new long[len + 1];
+    for (int i = 0; i < len; i++) {
+      prefix[i + 1] = prefix[i] + (long) nums[i];
+    }
+    // len+1 is impossible
+    int res = len + 1;
+    // 保保索引，通过单调队列维护窗口
+    Deque<Integer> mq = new ArrayDeque<>();
+    for (int i = 0; i < prefix.length; i++) {
+      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
+      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
+        mq.removeLast();
+      }
+      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
+        res = Math.min(res, i - mq.removeFirst());
+      }
+      mq.addLast(i);
+    }
+    return res < len + 1 ? res : -1;
+  }
+
+  private static class MonotonicQueue {
+    private final Deque<Integer> mq = new LinkedList<>();
+
+    /**
+     * Push.
+     *
+     * @param num the num
+     */
+    public void push(int num) {
+      while (mq.size() > 0 && mq.getLast() < num) {
+        mq.removeLast();
+      }
+      mq.addLast(num);
+    }
+
+    /**
+     * Pop.
+     *
+     * @param num the num
+     */
+    public void pop(int num) {
+      if (mq.size() > 0 && mq.getFirst() == num) {
+        mq.removeFirst();
+      }
+    }
+
+    /**
+     * Max int.
+     *
+     * @return the int
+     */
+    public int max() {
+      return mq.getFirst();
+    }
+  }
+}
+
 /** 子串相关，单词搜索参考 TTree */
 class WWord extends DefaultSString {
   /**
@@ -437,269 +690,6 @@ class WWord extends DefaultSString {
       }
     }
     return 0;
-  }
-}
-
-/**
- * 滑动窗口相关
- *
- * <p>TODO
- *
- * <p>https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/solution/hua-dong-chuang-kou-by-powcai/
- */
-class WWindow {
-  /**
-   * 无重复字符的最长子串，sliding window
-   *
-   * <p>扩展1，不使用 HashMap 则使用数组代替，索引通过 ASCII 取
-   *
-   * <p>扩展2，允许重复 k 次，即字符的个数，下方「至少有k个重复字符的最长子串」指种类
-   *
-   * @param s the s
-   * @return the int
-   */
-  public int lengthOfLongestSubstring(String s) {
-    if (s.length() == 0) {
-      return 0;
-    }
-    Map<Character, Integer> window = new HashMap<>();
-    //    char[] window = new char[26];
-    //    int[] window = new int[128];
-    int res = 0, lo = 0, hi = 0;
-    while (hi < s.length()) {
-      char add = s.charAt(hi);
-      if (window.containsKey(s.charAt(hi))) {
-        lo = Math.max(lo, window.get(s.charAt(hi)) + 1);
-      }
-      window.put(s.charAt(hi), hi);
-      res = Math.max(res, hi - lo + 1);
-      hi += 1;
-    }
-    return res;
-  }
-
-  /**
-   * 最小覆盖字串，sliding window
-   *
-   * @param s main
-   * @param t pattern
-   * @return string string
-   */
-  public String minWindow(String s, String t) {
-    int[] need = new int[128];
-    //    Map<Character,Integer> need = new HashMap<>();
-    for (int i = 0; i < t.length(); i++) {
-      need[t.charAt(i)] += 1;
-    }
-    int lo = 0, hi = 0, left = t.length(), start = 0, end = Integer.MAX_VALUE;
-    while (hi < s.length()) {
-      char add = s.charAt(hi);
-      if (need[add] > 0) {
-        left -= 1;
-      }
-      need[add] -= 1;
-      hi += 1;
-      while (left == 0) {
-        char out = s.charAt(lo);
-        if (end - start > hi - lo) {
-          start = lo;
-          end = hi;
-        }
-        if (need[out] == 0) {
-          left += 1;
-        }
-        need[out] += 1;
-        lo += 1;
-      }
-    }
-    return end == Integer.MAX_VALUE ? "" : s.substring(start, end);
-  }
-
-  /**
-   * 至多包含K个不同字符的最长子串
-   *
-   * @param s the s
-   * @param k the k
-   * @return int
-   */
-  public int lengthOfLongestSubstringKDistinct(String s, int k) {
-    int res = 0;
-    int lo = 0, hi = 0;
-    Map<Character, Integer> window = new HashMap<>();
-    while (hi < s.length()) {
-      char add = s.charAt(hi);
-      window.put(add, window.get(add) + 1);
-      hi += 1;
-      while (window.size() > k) {
-        char out = s.charAt(lo);
-        window.put(out, window.get(out) - 1);
-        if (window.get(out) == 0) {
-          window.remove(out);
-        }
-        lo += 1;
-      }
-      res = Math.max(res, hi - lo + 1);
-    }
-    return res;
-  }
-
-  /**
-   * 长度最小的子数组，满足和不少于 target，滑窗
-   *
-   * <p>扩展1，列出所有满足和为 target 的连续子序列
-   *
-   * <p>扩展2，里边有负数，参考下方「和至少为k的最短子数组」
-   *
-   * <p>则不能使用滑窗，因为下方缩窗的条件是整体满足 >= target，但可能已经满足的局部无法被收入
-   *
-   * @param target the target
-   * @param nums the nums
-   * @return int int
-   */
-  public int minSubArrayLen(int target, int[] nums) {
-    if (nums.length == 0) {
-      return 0;
-    }
-    // List<List<Integer>> list = new ArrayList<>();
-    int res = Integer.MAX_VALUE, lo = 0, hi = 0;
-    int sum = 0;
-    while (hi < nums.length) {
-      sum += nums[hi];
-      while (sum >= target) {
-        res = Math.min(res, hi - lo + 1);
-        sum -= nums[lo];
-        lo += 1;
-      }
-      // 结束迭代即刚好不满足 >= target 时判断是否满足和为 target 即可
-      // if (sum + nums[lo] == target) {}
-      hi += 1;
-    }
-    return res == Integer.MAX_VALUE ? 0 : res;
-  }
-
-  /**
-   * 滑动窗口的最大值
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int [ ]
-   */
-  public int[] maxSlidingWindow(int[] nums, int k) {
-    int[] res = new int[nums.length - k + 1];
-    MonotonicQueue mq = new MonotonicQueue();
-    for (int i = 0; i < nums.length; i++) {
-      mq.push(nums[i]);
-      if (i < k - 1) {
-        continue;
-      }
-      res[i - k + 1] = mq.max();
-      mq.pop(nums[i - k + 1]);
-    }
-    return res;
-  }
-
-  /**
-   * 至少有k个重复字符的最长子串，要求次数非种类，即每个字符均需要 k 次
-   *
-   * <p>用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
-   *
-   * <p>剪枝
-   *
-   * @param s
-   * @param k
-   * @return
-   */
-  public int longestSubstring(String s, int k) {
-    if (s.length() < k) {
-      return 0;
-    }
-    Map<Character, Integer> counter = new HashMap();
-    for (int i = 0; i < s.length(); i++) {
-      char ch = s.charAt(i);
-      counter.put(ch, counter.get(ch) + 1);
-    }
-    for (char ch : counter.keySet()) {
-      // 找到次数少于 k 的字符串
-      if (counter.get(ch) >= k) {
-        continue;
-      }
-      int res = 0;
-      // 切分 s 为多个小段分治求解
-      for (String t : s.split(String.valueOf(ch))) {
-        res = Math.max(res, longestSubstring(t, k));
-      }
-      return res;
-    }
-    // 原字符串没有小于 k 的字符串 直接返回字符串长度
-    return s.length();
-  }
-
-  /**
-   * 和至少为k的最短子数组，单调队列 & 前缀和
-   *
-   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int int
-   */
-  public int shortestSubarray(int[] nums, int k) {
-    int len = nums.length;
-    long[] prefix = new long[len + 1];
-    for (int i = 0; i < len; i++) {
-      prefix[i + 1] = prefix[i] + (long) nums[i];
-    }
-    // len+1 is impossible
-    int res = len + 1;
-    // 保保索引，通过单调队列维护窗口
-    Deque<Integer> mq = new ArrayDeque<>();
-    for (int i = 0; i < prefix.length; i++) {
-      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
-      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
-        mq.removeLast();
-      }
-      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
-        res = Math.min(res, i - mq.removeFirst());
-      }
-      mq.addLast(i);
-    }
-    return res < len + 1 ? res : -1;
-  }
-
-  private static class MonotonicQueue {
-    private final Deque<Integer> mq = new LinkedList<>();
-
-    /**
-     * Push.
-     *
-     * @param num the num
-     */
-    public void push(int num) {
-      while (mq.size() > 0 && mq.getLast() < num) {
-        mq.removeLast();
-      }
-      mq.addLast(num);
-    }
-
-    /**
-     * Pop.
-     *
-     * @param num the num
-     */
-    public void pop(int num) {
-      if (mq.size() > 0 && mq.getFirst() == num) {
-        mq.removeFirst();
-      }
-    }
-
-    /**
-     * Max int.
-     *
-     * @return the int
-     */
-    public int max() {
-      return mq.getFirst();
-    }
   }
 }
 
