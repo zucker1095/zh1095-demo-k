@@ -15,10 +15,6 @@ import java.util.Queue;
  * @author cenghui
  */
 public class LList {
-  protected int getVal(ListNode node) {
-    return node == null ? 0 : node.val;
-  }
-
   /**
    * 反转链表，三步曲，暂存 & 变向 & 步进
    *
@@ -26,22 +22,25 @@ public class LList {
    * @return the list node
    */
   public ListNode reverseList(ListNode head) {
-    ListNode pre = null, cur = head;
+    ListNode pre = null, cur = head, nxt;
     while (cur != null) {
-      ListNode nxt = cur.next; // 1.暂存
-      cur.next = pre; // 2.变向
-      pre = cur; // 3.步进
+      // 1.暂存
+      nxt = cur.next;
+      // 2.变向
+      cur.next = pre;
+      // 3.步进
+      pre = cur;
       cur = nxt;
     }
     return pre;
   }
 
   // 递归只 focus 当前结点的指向，后序 & 变向 & 断链
-  private ListNode reverseList2(ListNode head) {
+  private ListNode _reverseList(ListNode head) {
     if (head == null || head.next == null) {
       return head;
     }
-    ListNode cur = reverseList(head.next);
+    ListNode cur = _reverseList(head.next);
     head.next.next = head;
     head.next = null;
     return cur;
@@ -102,16 +101,22 @@ public class LList {
     ListNode dummy = new ListNode(); // cur 指向当前要反转的节点，dummy 作为头插法的头
     ListNode lo = head, hi = head;
     while (hi != null && hi.next != null) {
-      ListNode cur = lo; // 1.暂存
+      ListNode cur = lo;
       lo = lo.next;
-      hi = hi.next.next; // 步进
-      cur.next = dummy.next; // 2.变向
+      hi = hi.next.next;
+      cur.next = dummy.next;
       dummy.next = cur;
     }
-    if (hi != null) lo = lo.next; // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一个
-    ListNode l1 = dummy.next, l2 = lo; // 分别指向反转后链表的头 & 后半部分链表的头
+    // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一个
+    if (hi != null) {
+      lo = lo.next;
+    }
+    // 分别指向反转后链表的头 & 后半部分链表的头
+    ListNode l1 = dummy.next, l2 = lo;
     while (l1 != null && l2 != null) {
-      if (l1.val != l2.val) return false;
+      if (l1.val != l2.val) {
+        return false;
+      }
       l1 = l1.next;
       l2 = l2.next;
     }
@@ -124,7 +129,9 @@ public class LList {
    * @param head the head
    */
   public void reorderList(ListNode head) {
-    if (head == null || head.next == null || head.next.next == null) return;
+    if (head == null || head.next == null || head.next.next == null) {
+      return;
+    }
     ListNode lo = middleNode(head);
     ListNode first = lo.next;
     lo.next = null;
@@ -138,6 +145,139 @@ public class LList {
       head = first.next;
       first = nxt;
     }
+  }
+
+  protected int getVal(ListNode node) {
+    return node == null ? 0 : node.val;
+  }
+}
+
+/** 收集反转相关 */
+class ReverseList extends LList {
+  /**
+   * k个一组反转链表，三步曲，暂存 & 变向 & 步进
+   *
+   * <p>扩展1，不足 k 个也反转，参下 annotate
+   *
+   * <p>扩展2，从尾部开始计数，如 12345 & k=2 为 13254，先遍历一趟获取长度
+   *
+   * @param head the head
+   * @param k the k
+   * @return the list node
+   */
+  public ListNode reverseKGroup(ListNode head, int k) {
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    ListNode tail = dummy, cur = dummy;
+    while (cur.next != null) {
+      for (int i = 0; i < k && cur != null; i++) {
+        cur = cur.next;
+      }
+      if (cur == null) {
+        break;
+      }
+      // 扩展1，改为 cur.next!=null 并统计 i 是否为 k 因为可能刚好 =k 并不用判空当前结点
+      //      for (int i = 0; i < k && cur.next != null; i++) {
+      //        cur = cur.next;
+      //      }
+      // 暂存
+      ListNode first = tail.next, nxt = cur.next;
+      // 此时 cur 是 last，断开
+      cur.next = null;
+      // 变向两次
+      tail.next = reverseList(first);
+      first.next = nxt;
+      // 4.步进
+      tail = first;
+      cur = first;
+    }
+    return dummy.next;
+  }
+
+  /**
+   * 两两交换链表中的节点，暂存 & 变向 & 步进，亦可复用 reverseKGroup
+   *
+   * @param head the head
+   * @return list node
+   */
+  public ListNode swapPairs(ListNode head) {
+    // return reverseKGroup(head, 2);
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    ListNode cur = dummy;
+    while (cur.next != null && cur.next.next != null) {
+      // 暂存
+      ListNode first = cur.next, second = cur.next.next;
+      // 变向
+      cur.next = second;
+      first.next = second.next;
+      second.next = first;
+      // 步进
+      cur = first;
+    }
+    return dummy.next;
+  }
+
+  /**
+   * 反转链表II，尾插，三步曲，暂存 & 变向三次 & 步进
+   *
+   * @param head the head
+   * @param left the left
+   * @param right the right
+   * @return the list node
+   */
+  public ListNode reverseBetween(ListNode head, int left, int right) {
+    ListNode dummy = new ListNode(0);
+    dummy.next = head;
+    ListNode tail = dummy;
+    // 1.找到反转区间前一个
+    for (int step = 0; step < left - 1; step++) {
+      tail = tail.next;
+    }
+    // 2.tail first cur nxt
+    ListNode first = tail.next;
+    ListNode cur = first.next, nxt = null;
+    for (int i = 0; i < right - left; i++) {
+      nxt = cur.next;
+      cur.next = tail.next;
+      tail.next = cur;
+      first.next = nxt;
+      cur = nxt;
+    }
+    return dummy.next;
+  }
+
+  /**
+   * 旋转链表，闭环后断开
+   *
+   * @param head the head
+   * @param k the k
+   * @return list node
+   */
+  public ListNode rotateRight(ListNode head, int k) {
+    // 0.特判三空
+    if (head == null || head.next == null || k == 0) {
+      return head;
+    }
+    // 1.获取链尾 & 总长
+    int len = 1;
+    ListNode cur = head;
+    while (cur.next != null) {
+      cur = cur.next;
+      len += 1;
+    }
+    int count = len - k % len;
+    if (count == len) {
+      return head;
+    }
+    // 2.先闭环，再断点
+    cur.next = head;
+    for (int i = count; i > 0; i--) {
+      cur = cur.next;
+    }
+    ListNode newHead = cur.next;
+    cur.next = null;
+    return newHead;
   }
 }
 
@@ -242,14 +382,6 @@ class DoublePointerList extends LList {
     return mergeTwoLists(divide(lists, lo, mid), divide(lists, mid + 1, hi));
   }
 
-  private void buildHeap(ListNode[] lists, int k) {
-    for (int i = (k / 2) - 1; i >= 0; i--) {
-      heapify(lists, k, i);
-    }
-  }
-
-  private void heapify(ListNode[] nums, int k, int i) {}
-
   /**
    * 删除链表的倒数第 N 个结点
    *
@@ -274,21 +406,24 @@ class DoublePointerList extends LList {
   }
 
   /**
-   * 奇偶链表，先奇后偶 & 变向 & 步进
+   * 奇偶链表，如 1234 至 1324，暂存偶头 & 奇偶 & 变向步进
    *
    * @param head the head
    * @return list node
    */
   public ListNode oddEvenList(ListNode head) {
-    if (head == null) return null;
+    if (head == null) {
+      return null;
+    }
+    ListNode odd = head, even = head.next;
     ListNode evenHead = head.next;
-    ListNode odd = head, even = evenHead;
     while (even != null && even.next != null) {
       odd.next = even.next;
       odd = odd.next;
       even.next = odd.next;
       even = even.next;
     }
+    // 奇尾连偶头
     odd.next = evenHead;
     return head;
   }
@@ -307,6 +442,7 @@ class DoublePointerList extends LList {
    * @return list node
    */
   public ListNode sortList(ListNode head) {
+    //    return quickSort(head,null);
     ListNode dummy = new ListNode();
     dummy.next = head;
     int len = 0;
@@ -345,25 +481,27 @@ class DoublePointerList extends LList {
     return next;
   }
 
-  // head, null
+  // 链表快排，时间复杂度炸裂
   private ListNode quickSort(ListNode head, ListNode end) {
     if (head == end || head.next == end) {
       return head;
     }
+    // 分别为头插与尾插，变向 & 步进
     ListNode ltHead = head, gteTail = head;
     ListNode cur = head.next, nxt;
     while (cur != end) {
       nxt = cur.next;
-      if (cur.val < head.val) { // 头插
+      if (cur.val < head.val) {
         cur.next = ltHead;
         ltHead = cur;
-      } else { // 尾插
+      } else {
         gteTail.next = cur;
         gteTail = cur;
       }
       cur = nxt;
     }
     gteTail.next = end;
+    // 顺序要求先 lt 再 gte
     ListNode node = quickSort(ltHead, head);
     head.next = quickSort(head.next, end);
     return node;
@@ -514,116 +652,5 @@ class Cycle extends LList {
       l2 = l2 == null ? headA : l2.next;
     }
     return l1;
-  }
-}
-
-/** 收集反转相关 */
-class ReverseList extends LList {
-  /**
-   * k个一组反转链表，三步曲，暂存 & 变向 & 步进
-   *
-   * <p>扩展1，不足 k 个也反转，参下 annotate
-   *
-   * <p>扩展2，从尾部开始计数，如 12345 & k=2 为 13254，先遍历一趟获取长度
-   *
-   * @param head the head
-   * @param k the k
-   * @return the list node
-   */
-  public ListNode reverseKGroup(ListNode head, int k) {
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    ListNode tail = dummy, cur = dummy;
-    while (cur.next != null) {
-      // 改为 cur.next != null 并统计 i 是否为 k 因为可能刚好 =k
-      for (int i = 0; i < k && cur != null; i++) {
-        cur = cur.next;
-      }
-      // 移除下行
-      if (cur == null) {
-        break;
-      }
-      // 1.暂存
-      ListNode first = tail.next, nxt = cur.next;
-      // 2.此时 cur 是 last，断开
-      cur.next = null;
-      // 3.变向两次
-      tail.next = reverseList(first);
-      first.next = nxt;
-      // 4.步进
-      tail = first;
-      cur = first;
-    }
-    return dummy.next;
-  }
-
-  /**
-   * 两两交换链表中的节点，暂存 & 变向 & 步进，亦可复用 reverseKGroup
-   *
-   * @param head the head
-   * @return list node
-   */
-  public ListNode swapPairs(ListNode head) {
-    // return reverseKGroup(head, 2);
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    ListNode cur = dummy;
-    while (cur.next != null && cur.next.next != null) {
-      ListNode first = cur.next, second = cur.next.next; // 暂存
-      cur.next = second; // 步进
-      first.next = second.next;
-      second.next = first;
-      cur = first; // 步进
-    }
-    return dummy.next;
-  }
-
-  /**
-   * 反转链表II，尾插，三步曲，暂存 & 变向
-   *
-   * @param head the head
-   * @param left the left
-   * @param right the right
-   * @return the list node
-   */
-  public ListNode reverseBetween(ListNode head, int left, int right) {
-    ListNode dummy = new ListNode(0);
-    dummy.next = head;
-    ListNode tail = dummy;
-    for (int step = 0; step < left - 1; step++) tail = tail.next;
-    ListNode first = tail.next; // tail first cur nxt
-    ListNode cur = first.next, nxt = null;
-    for (int i = 0; i < right - left; i++) { // 尾插
-      nxt = cur.next; // 1.暂存
-      cur.next = tail.next; // 2.变向三次
-      tail.next = cur;
-      first.next = nxt;
-      cur = nxt; // 3.步进
-    }
-    return dummy.next;
-  }
-
-  /**
-   * 旋转链表，闭环后断开
-   *
-   * @param head the head
-   * @param k the k
-   * @return list node
-   */
-  public ListNode rotateRight(ListNode head, int k) {
-    if (head == null || head.next == null || k == 0) return head;
-    int len = 1;
-    ListNode cur = head;
-    while (cur.next != null) {
-      cur = cur.next;
-      len += 1;
-    }
-    int add = len - k % len;
-    if (add == len) return head;
-    cur.next = head; // 闭环
-    while (add-- > 0) cur = cur.next; // 断点
-    ListNode res = cur.next;
-    cur.next = null; // 断开
-    return res;
   }
 }

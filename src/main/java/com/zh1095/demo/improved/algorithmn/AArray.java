@@ -5,7 +5,8 @@ import java.util.*;
 /**
  * 收集数组相关，包括如下类型，部分查找不到则至 DDP
  *
- * <p>排序
+ * <p>排序，掌握快速 & 归并 & 堆即可，参考
+ * https://leetcode-cn.com/problems/sort-an-array/solution/fu-xi-ji-chu-pai-xu-suan-fa-java-by-liweiwei1419/
  *
  * <p>寻找 & 统计，二分参考 https://www.zhihu.com/question/36132386/answer/530313852
  *
@@ -219,33 +220,33 @@ public class AArray extends DefaultArray {
   }
 }
 
-/** 排序类 */
-class Sort extends DefaultArray {
+/**
+ * 基于比较的排序的时间复杂度下界均是 nlogn
+ *
+ * <p>数组全排列共有 n! 种情况，而二分每次最多能排除一半的情况，根据斯特林级数，算法的渐进复杂度为 O(log(n!)) = O(nlogn)
+ *
+ * <p>链表快排参考「排序链表」
+ *
+ * <p>TODO 快排最优 & 平均 & 最坏的复杂度分别如何计算
+ */
+class QQuick extends DefaultArray {
+  private final Random random = new Random();
   /**
-   * 数组排序，掌握快速 & 归并 & 堆即可
+   * 快速排序，三路，循环不变量
    *
-   * @param nums the nums
-   */
-  public void sortArray(int[] nums) {}
-
-  /**
-   * 快速排序，循环不变量
+   * <p>选哨 & 虚拟头尾 & 遍历
    *
    * @param nums the nums
    * @param lo the lo
    * @param hi the hi
    */
   public void quickSort(int[] nums, int lo, int hi) {
-    if (lo >= hi) {
-      return;
-    }
-    // [lo, hi]
-    int pivotIdx = lo + new Random().nextInt(hi - lo + 1);
-    // 不能省略，因为下方需要确保虚拟头也满足 < pivot
+    if (lo >= hi) return;
+    int pivotIdx = lo + random.nextInt(hi - lo + 1);
+    // 下方需要确保虚拟头也满足 <pivot，因此从 lt+1 开始遍历
     swap(nums, pivotIdx, lo);
-    int pivot = nums[lo];
-    // 虚拟头尾，保证界外
-    int lt = lo, gt = hi + 1;
+    // 哨兵 & 虚拟头尾，保证界外
+    int pivot = nums[lo], lt = lo, gt = hi + 1;
     int cur = lt + 1;
     while (cur < gt) {
       if (nums[cur] < pivot) {
@@ -295,11 +296,8 @@ class Sort extends DefaultArray {
    * @author cenghui
    */
   public class Solution {
-    /** The Nums. */
-    final int[] nums;
-
-    /** The Random. */
-    final Random random = new Random();
+    private final int[] nums;
+    private final Random random = new Random();
 
     /**
      * Instantiates a new Solution.
@@ -326,7 +324,9 @@ class Sort extends DefaultArray {
      */
     public int[] shuffle() {
       int[] res = nums.clone();
-      for (int i = 0; i < nums.length; i++) swap(res, i, i + random.nextInt(nums.length - i));
+      for (int i = 0; i < nums.length; i++) {
+        swap(res, i, i + random.nextInt(nums.length - i));
+      }
       return res;
     }
   }
@@ -334,9 +334,28 @@ class Sort extends DefaultArray {
 
 class HHeap extends DefaultArray {
   /**
-   * 数组中的第k个最大元素，原地建小根堆，也可以额外维护一个数组存放
+   * 堆是具有以下性质的完全二叉树，每个结点的值都大于或等于其左右孩子结点的值，称为大顶堆，反之，小顶堆
    *
-   * <p>循环里面判断小根堆里面的 size() 是否大于 k 个数，是的话就 poll() 出去，循环结束之后剩下来的就是 k 个数的小根堆
+   * @param nums the nums
+   */
+  public void heapSort(int[] nums) {
+    int idx = nums.length - 1;
+    heapify(nums, nums.length);
+    // 循环不变量，区间 [0, idx] 堆有序
+    while (idx >= 1) {
+      // 把堆顶元素（当前最大）交换到数组末尾
+      swap(nums, 0, idx);
+      // 逐步减少堆有序的部分
+      idx -= 1;
+      // 下标 0 位置下沉操作，使得区间 [0, i] 堆有序
+      down(nums, 0, idx);
+    }
+  }
+
+  /**
+   * 数组中的第k个最大元素，原地维护小根堆
+   *
+   * <p>堆化 [0,k] & 依次入堆 [k+1,l-1] 的元素 & 最终堆顶即 [0]
    *
    * <p>扩展1，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均
    *
@@ -351,58 +370,37 @@ class HHeap extends DefaultArray {
    * @return the int
    */
   public int findKthLargest(int[] nums, int k) {
-    //    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-    //    for (int num : nums) {
-    //      minHeap.add(num);
-    //      if (minHeap.size() > k) minHeap.poll();
-    //    }
-    //    return minHeap.peek();
-    // 寻找最小
-    // k = (k > nums.length / 2) ? nums.length - k + 1 : k;
-    buildHeap(nums, k);
-    // 遍历剩下元素，比堆顶小，跳过；比堆顶大，交换后重新堆化
-    for (int i = k; i < nums.length; i++) {
-      if (less(nums, i, 0)) {
-        continue;
-      }
-      swap(nums, i, 0);
-      heapify(nums, k, 0);
+    int idx = nums.length - 1;
+    heapify(nums, nums.length);
+    while (idx >= nums.length - k + 1) {
+      swap(nums, 0, idx);
+      idx -= 1;
+      down(nums, 0, idx - 1);
     }
     return nums[0];
   }
 
-  // 从倒数第一个非叶子节点开始堆化即索引 k/2-1
-  private void buildHeap(int[] nums, int k) {
-    for (int i = (k / 2) - 1; i >= 0; i--) {
-      heapify(nums, k, i);
+  // 从 (len-1)/2 即首个叶结点开始逐层下沉
+  private void heapify(int[] nums, int capcacity) {
+    for (int i = capcacity / 2; i >= 0; i--) {
+      down(nums, i, capcacity - 1);
     }
   }
 
-  // down，父节点下标i，左右子节点的下标分别为 2*i+1 和 2*i+2
-  private void heapify(int[] nums, int k, int i) {
-    // minPos 用于存储最小值的下标，先假设父节点最小
-    int cur = i, minPos = i;
-    while (true) {
-      // 依次和左右结点比较
-      if (i * 2 + 1 < k && less(nums, i * 2 + 1, minPos)) {
-        minPos = i * 2 + 1;
+  // [0, hi] 是 nums 的有效部分，闭区间
+  private void down(int[] nums, int lo, int hi) {
+    int cur = lo;
+    while (2 * cur + 1 <= hi) {
+      int idx = 2 * cur + 1;
+      if (idx + 1 <= hi && nums[idx + 1] > nums[idx]) {
+        idx += 1;
       }
-      if (i * 2 + 2 < k && less(nums, i * 2 + 2, minPos)) {
-        minPos = i * 2 + 2;
-      }
-      // 如果 minPos 没有发生变化，说明父节点已经是优先级最高，小顶堆即最小，直接跳出
-      if (minPos == i) {
+      if (nums[idx] <= nums[cur]) {
         break;
       }
-      // 否则交换
-      swap(nums, i, minPos);
-      // 父节点下标进行更新，继续堆化
-      i = minPos;
+      swap(nums, idx, cur);
+      cur = idx;
     }
-  }
-
-  private boolean less(int[] nums, int i, int j) {
-    return nums[i] < nums[j];
   }
 
   /**
@@ -423,7 +421,7 @@ class HHeap extends DefaultArray {
     for (String str : strings) {
       counter.put(str, counter.get(str) + 1);
     }
-    PriorityQueue pq = new PriorityQueue<>(k, compa);
+    Queue<Map.Entry<String, Integer>> pq = new PriorityQueue<>(k, compa);
     for (Map.Entry<String, Integer> countByStr : counter.entrySet()) {
       if (pq.size() < k) {
         pq.add(countByStr);
@@ -433,9 +431,8 @@ class HHeap extends DefaultArray {
       }
     }
     for (int i = k - 1; i >= 0; i--) {
-      Map.Entry<String, Integer> entry = (Map.Entry<String, Integer>) pq.poll();
-      res[i][0] = entry.getKey();
-      res[i][1] = String.valueOf(entry.getValue());
+      Map.Entry<String, Integer> entry = pq.poll();
+      res[i] = new String[] {entry.getKey(), String.valueOf(entry.getValue())};
     }
     return res;
   }
@@ -447,66 +444,6 @@ class HHeap extends DefaultArray {
       return (o1.getValue().equals(o2.getValue()))
           ? o2.getKey().compareTo(o1.getKey())
           : o1.getValue() - o2.getValue();
-    }
-  }
-
-  /**
-   * 堆排序，以下代码参考 container/heap in Go
-   *
-   * <p>堆是具有以下性质的完全二叉树，每个结点的值都大于或等于其左右孩子结点的值，称为大顶堆，反之，小顶堆
-   */
-  public class HeapSort {
-    /**
-     * Instantiates a new Heap sort.
-     *
-     * @param nums the nums
-     */
-    public HeapSort(int[] nums) {
-      int len = nums.length;
-      // 将原数组整理成堆
-      heapify(nums);
-      // 最大的放在末尾依次向前排序
-      // 循环不变量：区间 [0, i] 堆有序
-      for (int i = len - 1; i >= 1; ) {
-        // 把堆顶元素（当前最大）交换到数组末尾
-        // 把目前最大的数放到数组末尾, 最大的沉下去了，肯定是升序数组
-        swap(nums, 0, i);
-        // 逐步减少堆有序的部分
-        i -= 1;
-        // 下标 0 位置下沉操作，使得区间 [0, i] 堆有序
-        // 从头部开始，到已经放过的数的前一个，恢复大顶堆，再次找到最大的那个数
-        down(nums, 0, i);
-      }
-    }
-
-    // 将数组整理成堆（堆有序）
-    private void heapify(int[] nums) {
-      // 只需要从 i = (len - 1) / 2 开始逐层下移
-      // 从第一个非叶子节点开始，让倒数第二层开始依次往前保证自己是个大顶堆
-      // 最终到了根节点后，就全是大顶堆了
-      // 此时的大顶堆，不能保证左右孩子有序
-      // 数学角度考虑，完全二叉树放到数组后，各层之间的数学关系
-      for (int i = (nums.length - 1) / 2; i >= 0; i--) {
-        down(nums, i, nums.length - 1);
-      }
-    }
-
-    // k 指当前下沉元素的下标，[0, end] 是 nums 的有效部分
-    private void down(int[] nums, int k, int end) {
-      // n表示数组最右位的下标，防越界
-      // 如果 j > n 说明当前节点是倒数第一层，所以退出循环。
-      while (2 * k + 1 <= end) {
-        int j = 2 * k + 1;
-        // 保证后面比较且交换的是更大的那个子节点。
-        // 并且从这段代码可以猜测，大顶堆从 0 开始建的话，任意节点的子节点都是 2x 和 2x+1
-        if (j + 1 <= end && nums[j + 1] > nums[j]) j += 1;
-        // 大于 大的那个子节点，就可以调出循环，结束down()，不用沉了
-        if (nums[j] <= nums[k]) break;
-        // 如果比子节点中 大的 那个 小，则交换大的到当前位置
-        swap(nums, j, k);
-        // 更新标记游标，再次循环计算是否需要和子节点发生交换
-        k = j;
-      }
     }
   }
 }
@@ -539,7 +476,10 @@ class MMerge extends DefaultArray {
 
   // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
   private void merge1(int[] nums, int[] tmp, int lo, int mid, int hi) {
-    if (hi + 1 - lo >= 0) System.arraycopy(nums, lo, tmp, lo, hi + 1 - lo);
+    // 前后指针未逾界且数组至少有两个元素
+    if (hi - lo >= 1) {
+      System.arraycopy(nums, lo, tmp, lo, hi + 1 - lo);
+    }
     int p1 = lo, p2 = mid + 1;
     for (int i = lo; i <= hi; i++) {
       if (p1 == mid + 1) {
@@ -630,17 +570,19 @@ class MMerge extends DefaultArray {
 /**
  * 二分，参考上方 AArray.search 的写法，即
  *
- * <p>lo<=hi
- *
- * <p>明确碰撞的含义
+ * <p>lo<=hi 明确碰撞的含义
  */
 class BinarySearch extends DefaultArray {
   /**
-   * 寻找两个有序数组的中位数，有重复，分别二分两个数组求 topk 为 log(m+n)
+   * 寻找两个有序数组的中位数，有重复，联合对两个数组二分求 topk 则复杂度为 log(m+n)
    *
-   * <p>扩展1，单纯求两个有序数组 topk，上方求中位数本质是对排位进行二分，此处需要对值
+   * <p>对于两个有序数组，逆序则顺序遍历求第 k 大，正序则顺序遍历求第 k 小，反之，二者均需要逆序遍历
    *
-   * <p>扩展2，两个逆序数组
+   * <p>对于 123 & 334 的中位数和 top3 分别是 3 & 2
+   *
+   * <p>扩展1，单纯求两个有序数组 topk，需要对值，而本题求中位数本质是对排位进行二分
+   *
+   * <p>扩展2，两个逆序数组，则双指针从尾开始遍历即可
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2
@@ -648,17 +590,18 @@ class BinarySearch extends DefaultArray {
    */
   public double findMedianSortedArrays(int[] nums1, int[] nums2) {
     int n = nums1.length, m = nums2.length;
-    int left = (n + m + 1) / 2, right = (n + m + 2) / 2;
-    // 将偶数和奇数的情况合并，如果是奇数，会求两次同样的 k
-    //    return (getKthElement2(nums1, 0, n - 1, nums2, 0, m - 1, left)
-    //            + getKthElement2(nums1, 0, n - 1, nums2, 0, m - 1, right))
+    int ranking = (n + m + 1) / 2, rankingMore = (n + m + 2) / 2;
+    // 将偶数和奇数的情况合并，奇数则求两次同样的 k
+    //    return (getkSmallElement2(nums1, 0, n - 1, nums2, 0, m - 1, ranking)
+    //            + getkSmallElement2(nums1, 0, n - 1, nums2, 0, m - 1, rankingMore))
     //        * 0.5;
-    return (getKthElement1(nums1, nums2, left) + getKthElement1(nums1, nums2, right)) * 0.5;
+    return (getKSmallElement1(nums1, nums2, ranking) + getKSmallElement1(nums1, nums2, rankingMore))
+        * 0.5;
   }
 
   // 迭代
-  // 特判其一为空 & 其一遍历结束 & k 为 1
-  private int getKthElement1(int[] nums1, int[] nums2, int k) {
+  // 特判其一为空 7 其一遍历结束 & k 为 1
+  private int getKSmallElement1(int[] nums1, int[] nums2, int k) {
     int l1 = nums1.length, l2 = nums2.length;
     int p1 = 0, p2 = 0, cur = k;
     while (true) {
@@ -685,21 +628,22 @@ class BinarySearch extends DefaultArray {
 
   // 尾递归
   // 特判 k=1 & 其一为空
-  private int getKthElement2(int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
+  private int getkSmallElement2(
+      int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
     if (k == 1) {
       return Math.min(nums1[lo1], nums2[lo2]);
     }
     int len1 = hi1 - lo1 + 1, len2 = hi2 - lo2 + 1;
     // 让 len1 的长度小于 len2，这样就能保证如果有数组空了，一定是 len1
     if (len1 > len2) {
-      return getKthElement2(nums2, lo2, hi2, nums1, lo1, hi1, k);
+      return getkSmallElement2(nums2, lo2, hi2, nums1, lo1, hi1, k);
     } else if (len1 == 0) {
       return nums2[lo2 + k - 1];
     }
     int p1 = lo1 + Math.min(len1, k / 2) - 1, p2 = lo2 + Math.min(len2, k / 2) - 1;
     return (nums1[p1] > nums2[p2])
-        ? getKthElement2(nums1, lo1, hi1, nums2, p2 + 1, hi2, k - (p2 - lo2 + 1))
-        : getKthElement2(nums1, p1 + 1, hi1, nums2, lo2, hi2, k - (p1 - lo1 + 1));
+        ? getkSmallElement2(nums1, lo1, hi1, nums2, p2 + 1, hi2, k - (p2 - lo2 + 1))
+        : getkSmallElement2(nums1, p1 + 1, hi1, nums2, lo2, hi2, k - (p1 - lo1 + 1));
   }
 
   /**
@@ -955,12 +899,68 @@ class BinarySearch extends DefaultArray {
     }
     return false;
   }
+
+  /**
+   * 分割数组的最大值
+   *
+   * <p>TODO
+   *
+   * @param nums
+   * @param m
+   * @return
+   */
+  public int splitArray(int[] nums, int m) {
+    int max = 0, sum = 0;
+    // 计算「子数组各自的和的最大值」的上下界
+    for (int num : nums) {
+      max = Math.max(max, num);
+      sum += num;
+    }
+    // 使用「二分查找」确定一个恰当的「子数组各自的和的最大值」，
+    // 使得它对应的「子数组的分割数」恰好等于 m
+    int lo = max, hi = sum;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      int splits = split(nums, mid);
+      if (splits > m) {
+        // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要将「子数组各自的和的最大值」调大
+        // 下一轮搜索的区间是 [mid + 1, right]
+        lo = mid + 1;
+      } else {
+        // 下一轮搜索的区间是上一轮的反面区间 [left, mid]
+        hi = mid;
+      }
+    }
+    return lo;
+  }
+
+  /***
+   *
+   * @param nums 原始数组
+   * @param maxIntervalSum 子数组各自的和的最大值
+   * @return 满足不超过「子数组各自的和的最大值」的分割数
+   */
+  private int split(int[] nums, int maxIntervalSum) {
+    // 至少是一个分割 & 当前区间的和
+    int splits = 1, curIntervalSum = 0;
+    for (int num : nums) {
+      // 尝试加上当前遍历的这个数，如果加上去超过了「子数组各自的和的最大值」，就不加这个数，另起炉灶
+      if (curIntervalSum + num > maxIntervalSum) {
+        curIntervalSum = 0;
+        splits += 1;
+      }
+      curIntervalSum += num;
+    }
+    return splits;
+  }
 }
 
 /** 移除 */
 class Delete extends DefaultArray {
   /**
    * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
+   *
+   * <p>扩展1，链表参考「奇偶链表」
    *
    * @param nums
    * @return
@@ -1093,7 +1093,7 @@ class Delete extends DefaultArray {
 /** 字典序相关 */
 class DicOrder extends DefaultArray {
   /**
-   * 下一个排列，按照字典序
+   * 下一个排列，求按照字典序，该排列下一个大的
    *
    * <p>找 & 排 & 找 & 换 & 排
    *
@@ -1104,15 +1104,11 @@ class DicOrder extends DefaultArray {
   public void nextPermutation(int[] nums) {
     // for (int i = nums.length - 2; i > 0; i--) {
     for (int i = nums.length - 1; i > 0; i--) {
-      if (nums[i] <= nums[i - 1]) {
-        continue;
-      }
+      if (nums[i] <= nums[i - 1]) continue;
       // 左闭右开
       Arrays.sort(nums, i, nums.length);
       for (int j = i; j < nums.length; j++) {
-        if (nums[j] <= nums[i - 1]) {
-          continue;
-        }
+        if (nums[j] <= nums[i - 1]) continue;
         swap(nums, i - 1, j);
         return;
       }
@@ -1121,55 +1117,64 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 把数组排成最小的数，对 nums 按照 s1+s2>s2+s1 排序
+   * 最大数，把数组排成最大的数，排序 & 贪心
    *
-   * <p>1.先单独证明两个数需要满足该定律，比如 3 & 30 有 303<330 显然 30 需要安排至 3 前，即 30<3
+   * <p>对 nums 按照 ab>ba 排序为 ab
+   *
+   * <p>1.先单独证明两个数需要满足该定律，比如 3 & 30 有 303<330 显然 3 需要安排至 30 前，即权重表现为 3<30
    *
    * <p>2.然后证明传递性，即两两之间都要满足该性质
+   *
+   * <p>扩展1，最小数 / 把数组排成最小的数，调整上方的排序规则即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
    *
-   * @param nums the nums
-   * @return string string
-   */
-  public String minNumber(int[] nums) {
-    List<String> strs = new ArrayList<>(nums.length);
-    for (int num : nums) {
-      strs.add(String.valueOf(num));
-    }
-    strs.sort((s1, s2) -> (s1 + s2).compareTo(s2 + s1));
-    StringBuilder res = new StringBuilder();
-    for (String str : strs) {
-      res.append(str);
-    }
-    return res.toString();
-  }
-
-  /**
-   * 最大数，排序 & 贪心，ab > ba 则排序为 ab
+   * <p>TODO 最小数显然存在 03<30 即排序为 03 的情况，因此需要为排序结果去除前导零
    *
    * @param nums
    * @return
    */
   public String largestNumber(int[] nums) {
-    String[] strs = new String[nums.length];
-    for (int i = 0; i < nums.length; i++) {
-      strs[i] = String.valueOf(nums[i]);
+    List<String> strs = new ArrayList<>(nums.length);
+    for (int num : nums) {
+      strs.add(String.valueOf(num));
     }
-    Arrays.sort(
-        strs,
-        (a, b) -> {
-          return (b + a).compareTo(a + b);
-        });
+    strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
     StringBuilder res = new StringBuilder();
-    for (String s : strs) {
-      res.append(s);
+    for (String str : strs) {
+      res.append(str);
     }
-    // 去除前导零
     int begin = 0;
     while (begin < nums.length - 1 && res.charAt(begin) == '0') {
       begin += 1;
     }
     return res.substring(begin);
+  }
+
+  /**
+   * 最大交换，交换任意两位数，使得结果是所有方案中值最大
+   *
+   * <p>TODO
+   *
+   * @param num
+   * @return
+   */
+  public int maximumSwap(int num) {
+    char[] chs = Integer.toString(num).toCharArray();
+    int maxIdx = chs.length - 1;
+    int[] maxArr = new int[chs.length];
+    for (int i = chs.length - 1; i >= 0; i--) {
+      maxIdx = chs[i] > chs[maxIdx] ? i : maxIdx;
+      maxArr[i] = maxIdx;
+    }
+    for (int i = 0; i < chs.length; i++) {
+      if (chs[maxArr[i]] == chs[i]) continue;
+      //      swap(chs, maxArr[i], i);
+      char tmp = chs[maxArr[i]];
+      chs[maxArr[i]] = chs[i];
+      chs[i] = tmp;
+      break;
+    }
+    return Integer.parseInt(new String(chs));
   }
 
   /**
@@ -1194,7 +1199,9 @@ class DicOrder extends DefaultArray {
         stack.deleteCharAt(stack.length() - 1);
         k -= 1;
       }
-      if (ch == '0' && stack.length() == 0) continue;
+      if (ch == '0' && stack.length() == 0) {
+        continue;
+      }
       stack.append(ch);
     }
     // 判断是否移足 k 位

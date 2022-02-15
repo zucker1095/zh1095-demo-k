@@ -12,31 +12,6 @@ import java.util.Map;
  */
 public class OOthers {
   /**
-   * 和为k的子数组，前缀和 value：key 对应的前缀和的个数
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int int
-   */
-  public int subarraySum(int[] nums, int k) {
-    Map<Integer, Integer> freqByPreSum =
-        new HashMap() {
-          {
-            put(0, 1); // 对于下标为 0 的元素，前缀和为 0，个数为 1
-          }
-        };
-    int preSum = 0, count = 0;
-    for (int num : nums) {
-      preSum += num;
-      // 先获得前缀和为 preSum - k 的个数，加到计数变量里
-      if (freqByPreSum.containsKey(preSum - k)) count += freqByPreSum.get(preSum - k);
-      // 然后维护 preSumFreq 的定义
-      freqByPreSum.put(preSum, freqByPreSum.getOrDefault(preSum, 0) + 1);
-    }
-    return count;
-  }
-
-  /**
    * 划分字母区间
    *
    * @param s the s
@@ -111,6 +86,12 @@ public class OOthers {
     return res.toString();
   }
 
+  /**
+   * Ip to int int.
+   *
+   * @param s the s
+   * @return the int
+   */
   public int ipToInt(String s) {
     String[] ipList = s.split("\\.");
     int res = 0;
@@ -120,6 +101,12 @@ public class OOthers {
     return res;
   }
 
+  /**
+   * Int to ip string.
+   *
+   * @param num the num
+   * @return the string
+   */
   public String intToIP(int num) {
     String res = "";
 
@@ -129,6 +116,7 @@ public class OOthers {
 
 /** 数学类 */
 class MMath {
+  /** The Chars. */
   final String CHARS = "0123456789ABCDEF";
 
   /**
@@ -250,20 +238,30 @@ class MMath {
   }
 
   /**
-   * rand7生成rand10 即[1,10]
+   * rand7生成rand10 即[1,10]，等同进制转换的思路
    *
-   * <p>等同进制转换的思路
+   * <p>https://www.cnblogs.com/ymjyqsx/p/9561443.html
    *
    * <p>数学推论，记住即可 (randX-1)*Y+randY() -> 等概率[1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
    *
-   * <p>扩展，给一个硬币，求生成 1/5 的概率同理即 rand2 -> rand5
+   * <p>扩展1，比如 randX to randY，有三种情况
+   *
+   * <p>x<y && x^2<y 如 rand2 to rand5，则由 randX 生成 randZ 使得 z^2>y
+   *
+   * <p>x<y && x^2>y 如 rand5 to rand7，平方取余
+   *
+   * <p>x>y 如 rand rand5 to rand3，自旋
    *
    * @return the int
    */
   public int rand10() {
     while (true) {
-      int num = (rand7() - 1) * 7 + rand7(); // 等概率生成 [1,49] 范围的随机数
-      if (num <= 40) return num % 10 + 1; // 拒绝采样，并返回 [1,10] 范围的随机数
+      // 等概率生成 [1,49] 范围的随机数
+      int num = (rand7() - 1) * 7 + rand7();
+      // 拒绝采样，并返回 [1,10] 范围的随机数
+      if (num <= 40) {
+        return num % 10 + 1;
+      }
     }
   }
 
@@ -276,9 +274,9 @@ class MMath {
    *
    * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
    *
-   * @param num
-   * @param radix
-   * @return
+   * @param num the num
+   * @param radix the radix
+   * @return string
    */
   public String baseConvert(int num, int radix) {
     if (num == 0) {
@@ -330,7 +328,7 @@ class MMath {
    * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
    *
    * @param nums the nums
-   * @return int
+   * @return int int
    */
   public int majorityElement(int[] nums) {
     // 当前遍历的元素即 candidate 及其个数即 votes
@@ -442,6 +440,36 @@ class MMath {
     for (int num : nums) res ^= num;
     return res;
   }
+
+  /**
+   * 1~n整数中1出现的次数
+   *
+   * <p>TODO
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
+   *
+   * @param n the n
+   * @return int
+   */
+  public int countDigitOne(int n) {
+    int digit = 1, res = 0;
+    int high = n / 10, cur = n % 10, low = 0;
+    while (high != 0 || cur != 0) {
+      if (cur == 0) {
+        res += high * digit;
+      } else if (cur == 1) {
+        res += high * digit + low + 1;
+      } else {
+        res += (high + 1) * digit;
+      }
+      low += cur * digit;
+      cur = high % 10;
+      high /= 10;
+      digit *= 10;
+    }
+    return res;
+  }
 }
 
 /** 构建新数据结构 */
@@ -546,8 +574,15 @@ class DData {
     }
 
     private class DLinkedNode {
-      public int key, value;
-      public DLinkedNode prev, next;
+      /** The Key. */
+      public int key,
+          /** The Value. */
+          value;
+
+      /** The Prev. */
+      public DLinkedNode prev,
+          /** The Next. */
+          next;
       /** Instantiates a new D linked node. */
       public DLinkedNode() {}
 
@@ -746,6 +781,8 @@ class DData {
 /**
  * LFU
  *
+ * <p>TODO
+ *
  * <p>参考
  * https://leetcode-cn.com/problems/lfu-cache/solution/chao-xiang-xi-tu-jie-dong-tu-yan-shi-460-lfuhuan-c
  * 即可
@@ -754,14 +791,28 @@ class LFUCache {
   private final Map<Integer, Node> cache; // 存储缓存的内容
   private final Map<Integer, DoublyLinkedList> freqMap; // 存储每个频次对应的双向链表
   private final int capacity;
-  int size, min; // 存储当前最小频次
+  /** The Size. */
+  int size,
+      /** The Min. */
+      min; // 存储当前最小频次
 
+  /**
+   * Instantiates a new Lfu cache.
+   *
+   * @param capacity the capacity
+   */
   public LFUCache(int capacity) {
     cache = new HashMap<>(capacity);
     freqMap = new HashMap<>();
     this.capacity = capacity;
   }
 
+  /**
+   * Get int.
+   *
+   * @param key the key
+   * @return the int
+   */
   public int get(int key) {
     Node node = cache.get(key);
     if (node == null) {
@@ -771,6 +822,12 @@ class LFUCache {
     return node.value;
   }
 
+  /**
+   * Put.
+   *
+   * @param key the key
+   * @param value the value
+   */
   public void put(int key, int value) {
     if (capacity == 0) {
       return;
@@ -800,6 +857,11 @@ class LFUCache {
     }
   }
 
+  /**
+   * Freq inc.
+   *
+   * @param node the node
+   */
   void freqInc(Node node) {
     // 从原freq对应的链表里移除, 并更新min
     int freq = node.freq;
@@ -819,11 +881,27 @@ class LFUCache {
   }
 }
 
+/** The type Node. */
 class Node {
+  /** The Key. */
   final int key;
-  int value, freq;
-  Node pre, post;
 
+  /** The Value. */
+  int value,
+      /** The Freq. */
+      freq;
+
+  /** The Pre. */
+  Node pre,
+      /** The Post. */
+      post;
+
+  /**
+   * Instantiates a new Node.
+   *
+   * @param key the key
+   * @param value the value
+   */
   public Node(int key, int value) {
     this.key = key;
     this.value = value;
@@ -831,9 +909,14 @@ class Node {
   }
 }
 
+/** The type Doubly linked list. */
 class DoublyLinkedList {
-  Node head, tail;
+  /** The Head. */
+  Node head,
+      /** The Tail. */
+      tail;
 
+  /** Instantiates a new Doubly linked list. */
   public DoublyLinkedList() {
     head = new Node(Integer.MAX_VALUE, 0);
     tail = new Node(Integer.MAX_VALUE, 0);
@@ -841,11 +924,21 @@ class DoublyLinkedList {
     tail.pre = head;
   }
 
+  /**
+   * Remove node.
+   *
+   * @param node the node
+   */
   void removeNode(Node node) {
     node.pre.post = node.post;
     node.post.pre = node.pre;
   }
 
+  /**
+   * Add node.
+   *
+   * @param node the node
+   */
   void addNode(Node node) {
     node.post = head.post;
     head.post.pre = node;

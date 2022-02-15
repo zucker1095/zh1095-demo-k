@@ -18,11 +18,9 @@ import java.util.Map;
  */
 public class DDP {
   /**
-   * 零钱兑换，硬币可重复
+   * 零钱兑换，硬币可重复，与下方 II 保持外 coin 内 amount
    *
    * <p>dp[i] 表示凑成 i 元需要的最少的硬币数
-   *
-   * <p>与下方 II 保持外 coin 内 amount
    *
    * @param coins the coins
    * @param amount the amount
@@ -30,8 +28,10 @@ public class DDP {
    */
   public int coinChange(int[] coins, int amount) {
     int[] dp = new int[amount + 1];
-    Arrays.fill(dp, amount + 1); // 因为要比较的是最小值，这个不可能的值就得赋值成为一个最大值
-    dp[0] = 0; // 单独一枚硬币如果能够凑出面值，符合最优子结构
+    // 因为要比较的是最小值，这个不可能的值就得赋值成为一个最大值
+    Arrays.fill(dp, amount + 1);
+    // 单独一枚硬币如果能够凑出面值，符合最优子结构
+    dp[0] = 0;
     Arrays.sort(coins);
     for (int coin : coins) {
       for (int i = coin; i <= amount; i++) {
@@ -41,10 +41,11 @@ public class DDP {
     }
     return (dp[amount] == amount + 1) ? -1 : dp[amount];
   }
+
   /**
    * 分发糖果，求满足权重规则的最少所需糖果量
    *
-   * <p>扩展，成环
+   * <p>扩展1，成环
    *
    * @param ratings the ratings
    * @return the int
@@ -52,12 +53,13 @@ public class DDP {
   public int candy(int[] ratings) {
     int res = 0;
     int[] left = new int[ratings.length];
-    for (int i = 0; i < ratings.length; i++)
+    for (int i = 0; i < ratings.length; i++) {
       //      if (i == 0 && ratings[0] > ratings[ratings.length - 1]) {
       //        left[i] = left[ratings.length - 1] + 1;
       //        continue;
       //      }
       left[i] = (i > 0 && ratings[i] > ratings[i - 1]) ? left[i - 1] + 1 : 1;
+    }
     int right = 0;
     for (int i = ratings.length - 1; i >= 0; i--) {
       //      if (i == ratings.length - 1 && ratings[0] < ratings[i]) {
@@ -114,15 +116,6 @@ public class DDP {
     }
     return res;
   }
-
-  /**
-   * 正则表达式匹配
-   *
-   * @param main the main
-   * @param pattern the pattern
-   * @return boolean
-   */
-  //  public boolean isMatch(String main, String pattern) {}
 }
 
 /** 最优解，往状态压缩 & 双指针考量 */
@@ -142,8 +135,10 @@ class OOptimalSolution {
   private int maxProfitI(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
     for (int price : prices) {
-      buy = Math.max(buy, -price); // max(不买，买了)
-      sell = Math.max(sell, buy + price); // max(不卖，卖了)
+      // max(不买，买了)
+      buy = Math.max(buy, -price);
+      // max(不卖，卖了)
+      sell = Math.max(sell, buy + price);
     }
     return sell;
   }
@@ -163,10 +158,14 @@ class OOptimalSolution {
     int buy1 = Integer.MIN_VALUE, sell1 = 0;
     int buy2 = Integer.MIN_VALUE, sell2 = 0;
     for (int price : prices) {
-      buy1 = Math.max(buy1, -price); // 第一次买 -p
-      sell1 = Math.max(sell1, buy1 + price); // 第一次卖 buy1 + p
-      buy2 = Math.max(buy2, sell1 - price); // 第一次卖了后现在买 sell1 - p
-      sell2 = Math.max(sell2, buy2 + price); // 第二次买了后现在卖 buy2 + p
+      // 第一次买 -p
+      buy1 = Math.max(buy1, -price);
+      // 第一次卖 buy1+p
+      sell1 = Math.max(sell1, buy1 + price);
+      // 第一次卖了后现在买 sell1-p
+      buy2 = Math.max(buy2, sell1 - price);
+      // 第二次买了后现在卖 buy2+p
+      sell2 = Math.max(sell2, buy2 + price);
     }
     return sell2;
   }
@@ -215,7 +214,7 @@ class OOptimalSolution {
   }
 
   /**
-   * 三角形的最小路径和
+   * 三角形的最小路径和，bottom to up
    *
    * <p>dp[i][j] 表示由 triangle[0][0] 达到 triangle[i][j] 的最小路径长度
    *
@@ -223,11 +222,13 @@ class OOptimalSolution {
    * @return int int
    */
   public int minimumTotal(List<List<Integer>> triangle) {
-    int n = triangle.get(triangle.size() - 1).size();
-    int[] dp = new int[n + 1];
-    // bottom to up
-    for (int i = n - 1; i >= 0; i--)
-      for (int j = 0; j <= i; j++) dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
+    int len = triangle.get(triangle.size() - 1).size();
+    int[] dp = new int[len + 1];
+    for (int i = len - 1; i >= 0; i--) {
+      for (int j = 0; j <= i; j++) {
+        dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
+      }
+    }
     return dp[0];
   }
 
@@ -263,7 +264,7 @@ class OOptimalSolution {
   }
 
   /**
-   * 打家劫舍III，树状，后序遍历，两种选择
+   * 打家劫舍III，树状，后序遍历，两种选择，遍历与否当前点
    *
    * @param root the root
    * @return int int
@@ -286,12 +287,13 @@ class OOptimalSolution {
    *
    * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
    *
-   * <p>递推 dp[i + 1][j + 1]=min(min(dp[i+1][j], dp[i][j+1]), dp[i][j])+1
+   * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
    *
    * @param matrix
    * @return
    */
   public int maximalSquare(char[][] matrix) {
+    // 特判
     if (matrix == null || matrix.length < 1 || matrix[0].length < 1) {
       return 0;
     }
@@ -317,16 +319,20 @@ class OOptimalSolution {
   }
 }
 
-/** 统计 */
+/**
+ * 统计
+ *
+ * <p>区分统计排列 & 组合的区别
+ */
 class CCount {
   /**
    * 爬楼梯，对比零钱兑换 II，可选集为 [1,2] 需要返回凑成 n 的总数，元素可重，前者排列，后者组合
    *
-   * <p>先走 2 步再走 1 步 & 先 1 后 2 是两种爬楼梯的方案，而先拿 2 块再拿 1 块 & 相反是同种凑金额的方案
+   * <p>先走 2 步再走 1 步与先 1 后 2 是两种爬楼梯的方案，而先拿 2 块再拿 1 块 & 相反是同种凑金额的方案
    *
    * <p>扩展1，不能爬到 7 倍数的楼层
    *
-   * <p>扩展2，记录爬楼梯的路径，只能选用 dfs
+   * <p>扩展2，记录爬楼梯的路径，选用 dfs
    *
    * @param n the n
    * @return int int
@@ -345,7 +351,9 @@ class CCount {
   }
 
   private int dfs(int n, int[] memo) {
-    if (n == 0 || n == 1) return 1;
+    if (n == 0 || n == 1) {
+      return 1;
+    }
     return memo[n] == 0 ? dfs(n - 1, memo) + dfs(n - 2, memo) : memo[n];
   }
 
@@ -370,7 +378,7 @@ class CCount {
   }
 
   /**
-   * 圆环回原点，类似爬楼梯 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
+   * 圆环回原点，类似爬楼梯，参考 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
    *
    * <p>圆环上有 m 个点，编号为 0~m-1，从 0 点出发，每次可以逆时针和顺时针走一步，求 n 步回到 0 点的走法
    *
@@ -386,9 +394,13 @@ class CCount {
     // 便于从 1 开始递推
     int[][] dp = new int[m][n + 1];
     dp[0][0] = 1;
-    for (int i = 1; i < n + 1; i++)
-      // j+1 or j-1 可能越界 [0, m-1] 因此取余
-      for (int j = 0; j < m; j++) dp[i][j] = dp[i - 1][(j - 1 + m) % m] + dp[i - 1][(j + 1) % m];
+    // j+1 or j-1 可能越界 [0, m-1] 因此取余
+    for (int step = 1; step < n + 1; step++) {
+      for (int idx = 0; idx < m; idx++) {
+        int idxNxt = (idx + 1) % m, idxTail = (idx - 1 + m) % m;
+        dp[step][idx] = dp[step - 1][idxNxt] + dp[step - 1][idxTail];
+      }
+    }
     return dp[n][0];
   }
 
@@ -406,6 +418,40 @@ class CCount {
     dp[1] = 1;
     for (int i = 2; i < n + 1; i++) for (int j = 1; j < i + 1; j++) dp[i] += dp[j - 1] * dp[i - j];
     return dp[n];
+  }
+
+  /**
+   * 解码方法
+   *
+   * <p>TODO
+   *
+   * <p>dp[i] 表示 str[0,i] 的解码总数
+   *
+   * <p>递推关系
+   *
+   * @param s
+   * @return
+   */
+  public int numDecodings(String s) {
+    // 补充前导
+    s = " " + s;
+    char[] chs = s.toCharArray();
+    int[] dp = new int[s.length() + 1];
+    dp[0] = 1;
+    for (int i = 1; i <= s.length(); i++) {
+      // a 代表「当前位置」单独形成 item
+      // b 代表「当前位置」与「前一位置」共同形成 item
+      int a = chs[i] - '0', b = (chs[i - 1] - '0') * 10 + (chs[i] - '0');
+      // 如果 a 属于有效值，那么 dp[i] 可以由 dp[i - 1] 转移过来
+      if (1 <= a && a <= 9) {
+        dp[i] = dp[i - 1];
+      }
+      // 如果 b 属于有效值，则 dp[i] 可以由 dp[i - 2] 或者 dp[i - 1] & dp[i - 2] 转移过来
+      if (10 <= b && b <= 26) {
+        dp[i] += dp[i - 2];
+      }
+    }
+    return dp[s.length()];
   }
 }
 
@@ -430,6 +476,7 @@ class PPath {
     for (int i = 1; i < m; i++) for (int j = 1; j < n; j++) dp[j] += dp[j - 1];
     return dp[n - 1];
   }
+
   /**
    * 不同路径II
    *
@@ -452,8 +499,6 @@ class PPath {
   }
 }
 
-class SSubSequence {}
-
 /**
  * 子数组，连续，子序列，不连续，即子数组相当于连续子序列
  *
@@ -465,17 +510,21 @@ class SSubSequence {}
  *
  * <p>最长公共子序列(LCMS):Longest Common Subsequence
  *
+ * <p>前缀和参考 https://leetcode-cn.com/circle/discuss/SrePlc/
+ *
  * @author cenghui
  */
 class SSubArray {
   /**
-   * 最大子数组和 / 最大子序和 / 连续子数组的最大和
+   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，前缀和
    *
    * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
    *
    * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
    *
    * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
+   *
+   * <p>扩展2，返回最大和的子序列
    *
    * @param nums the nums
    * @return int int
@@ -485,63 +534,48 @@ class SSubArray {
     for (int num : nums) {
       curSum = curSum > 0 ? curSum + num : num;
       res = Math.max(res, curSum);
-      // int lo = 0, hi = 0;
-      //      while (hi < nums.length-1) {
-      //      if (curSum > 0) {
-      //        curSum += num;
-      //      } else {
-      //        curSum = num;
-      //        lo = hi;
-      //      }
-      //      hi += 1;
-      // }
     }
+    // int lo = 0, hi = 0;
+    //      while (hi < nums.length-1) {
+    //      if (curSum > 0) {
+    //        curSum += num;
+    //      } else {
+    //        curSum = num;
+    //        lo = hi;
+    //      }
+    //      hi += 1;
+    // }
     return res;
   }
 
   /**
-   * 最长递增子序列 / 最长上升子序列
-   *
-   * <p>[0,m-1] & [0,j-1]
-   *
-   * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
-   *
-   * <p>扩展1，时间复杂度为 nlogn 参考
-   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
-   *
-   * <p>扩展2，输出，分别记录 i & j 即可，参下 annotate
+   * 和为k的子数组，前缀和 value：key 对应的前缀和的个数
    *
    * @param nums the nums
+   * @param k the k
    * @return int int
    */
-  public int lengthOfLIS(int[] nums) {
-    if (nums.length == 0) return 0;
-    int[] dp = new int[nums.length];
-    int res = 0;
-    Arrays.fill(dp, 1); // base case
-    for (int i = 0; i < nums.length; i++) {
-      int pivot = nums[i];
-      //      int idx = 0;
-      for (int j = 0; j < i; j++) {
-        if (nums[j] < pivot) {
-          //          idx = j;
-          dp[i] = Math.max(dp[i], dp[j] + 1);
-        }
-      }
-      //      if (dp[i] >= res) {
-      //        // 记录 i & j
-      //      }
-      res = Math.max(res, dp[i]);
+  public int subarraySum(int[] nums, int k) {
+    Map<Integer, Integer> freqByPreSum = new HashMap() {};
+    // 对于下标为 0 的元素，前缀和为 0，个数为 1
+    freqByPreSum.put(0, 1);
+    int preSum = 0, count = 0;
+    for (int num : nums) {
+      preSum += num;
+      // 先获得前缀和为 preSum - k 的个数，加到计数变量里
+      if (freqByPreSum.containsKey(preSum - k)) count += freqByPreSum.get(preSum - k);
+      // 然后维护 preSumFreq 的定义
+      freqByPreSum.put(preSum, freqByPreSum.getOrDefault(preSum, 0) + 1);
     }
-    return res;
+    return count;
   }
 
   /**
    * 最长有效括号，需要考虑上一个成对的括号区间
    *
-   * <p>dp[i] 表示 s[0,i-1] 的最长有效括号
-   *
    * <p>三类题型，生成回溯，判断栈，找最长 dp
+   *
+   * <p>dp[i] 表示 s[0,i-1] 的最长有效括号
    *
    * @param s the s
    * @return int int
@@ -555,9 +589,9 @@ class SSubArray {
       }
       int preCount = i - dp[i - 1];
       if (s.charAt(i - 1) == '(') {
-        dp[i] = (i >= 2 ? dp[i - 2] : 0) + 2;
+        dp[i] = i >= 2 ? dp[i - 2] + 2 : 2;
       } else if (preCount > 0 && s.charAt(preCount - 1) == '(') {
-        dp[i] = dp[i - 1] + ((preCount) >= 2 ? dp[preCount - 2] : 0) + 2;
+        dp[i] = dp[i - 1] + (preCount >= 2 ? dp[preCount - 2] + 2 : 2);
       }
       res = Math.max(res, dp[i]);
     }
@@ -625,9 +659,48 @@ class SSubArray {
     }
     return res;
   }
+}
+
+class SSubSequence {
+  /**
+   * 最长递增子序列 / 最长上升子序列
+   *
+   * <p>[0,m-1] & [0,j-1]
+   *
+   * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
+   *
+   * <p>扩展1，时间复杂度为 nlogn 参考
+   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+   *
+   * <p>扩展2，输出，分别记录 i & j 即可，参下 annotate
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int lengthOfLIS(int[] nums) {
+    if (nums.length == 0) return 0;
+    int[] dp = new int[nums.length];
+    int res = 0;
+    Arrays.fill(dp, 1); // base case
+    for (int i = 0; i < nums.length; i++) {
+      int pivot = nums[i];
+      //      int idx = 0;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] < pivot) {
+          //          idx = j;
+          dp[i] = Math.max(dp[i], dp[j] + 1);
+        }
+      }
+      //      if (dp[i] >= res) {
+      //        // 记录 i & j
+      //      }
+      res = Math.max(res, dp[i]);
+    }
+    return res;
+  }
 
   /**
-   * 最长连续序列，哈希
+   * 最长连续序列，并查集 & 哈希
    *
    * <p>map[i] 表示以 i 为端点的最长连续序列
    *
@@ -639,9 +712,7 @@ class SSubArray {
     int res = 0;
     for (int num : nums) {
       int left = lenAsVertex.get(num - 1), right = lenAsVertex.get(num + 1);
-      if (lenAsVertex.containsKey(num)) {
-        continue;
-      }
+      if (lenAsVertex.containsKey(num)) continue;
       int cur = 1 + left + right;
       res = Math.max(res, cur);
       lenAsVertex.put(num, cur);
@@ -719,7 +790,7 @@ class SSubArray {
                 : Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]) + 1;
       }
     }
-
+    return dp[n1][n2];
     //    int ic, rc, dc;
     //    int[] dp2 = new int[n2 + 1];
     //    // 初始化第一行
@@ -739,7 +810,6 @@ class SSubArray {
     //        pre = tmp; // 更新 dp[i-1][j-1]
     //      }
     //    }
-    return dp[n1][n2];
   }
 
   // 两个字符串的删除操作
@@ -812,7 +882,15 @@ class SSubArray {
   /**
    * 正则表达式匹配，以下均基于 p 判定
    *
+   * <p>TODO
+   *
    * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
+   *
+   * <p>dp[i][j] = dp[i-1][j] 多个字符匹配的情况
+   *
+   * <p>dp[i][j] = dp[i][j-1] 单个字符匹配的情况
+   *
+   * <p>dp[i][j] = dp[i][j-2] 没有匹配的情况
    *
    * @param s
    * @param p
@@ -832,11 +910,6 @@ class SSubArray {
         }
         // 如果前一个元素不匹配且不为任意元素
         if (p.charAt(j) == '*') {
-          /*
-          dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
-          or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
-          or dp[i][j] = dp[i][j-2] // 没有匹配的情况
-           */
           dp[i + 1][j + 1] =
               (p.charAt(j - 1) == s.charAt(i) || p.charAt(j - 1) == '.')
                   ? dp[i + 1][j] || dp[i][j + 1] || dp[i + 1][j - 1]

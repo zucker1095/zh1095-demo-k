@@ -225,6 +225,8 @@ public class SString extends DefaultSString {
    *
    * <p>Integer.parseInt(c + "") 改为 c - '0'
    *
+   * <p>类似题意参考「解码方法」
+   *
    * @param s the s
    * @return string string
    */
@@ -340,7 +342,7 @@ public class SString extends DefaultSString {
  */
 class WWindow {
   /**
-   * 无重复字符的最长子串，sliding window
+   * 无重复字符的最长子串 / 最长无重复数组
    *
    * <p>扩展1，不使用 HashMap 则使用数组代替，索引通过 ASCII 取
    *
@@ -467,14 +469,22 @@ class WWindow {
    */
   public int[] maxSlidingWindow(int[] nums, int k) {
     int[] res = new int[nums.length - k + 1];
-    MonotonicQueue mq = new MonotonicQueue();
+    Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < nums.length; i++) {
-      mq.push(nums[i]);
+      //      mq.push(nums[i]);
+      while (mq.size() > 0 && mq.getLast() < nums[i]) {
+        mq.removeLast();
+      }
+      mq.addLast(nums[i]);
       if (i < k - 1) {
         continue;
       }
-      res[i - k + 1] = mq.max();
-      mq.pop(nums[i - k + 1]);
+      //      res[i - k + 1] = mq.max();
+      res[i - k + 1] = mq.getFirst();
+      //      mq.pop(nums[i - k + 1]);
+      if (mq.size() > 0 && mq.getFirst() == nums[i - k + 1]) {
+        mq.removeFirst();
+      }
     }
     return res;
   }
@@ -527,8 +537,8 @@ class WWindow {
     }
     // len+1 is impossible
     int res = len + 1;
-    // 保保索引，通过单调队列维护窗口
-    Deque<Integer> mq = new ArrayDeque<>();
+    // 单调队列
+    Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < prefix.length; i++) {
       // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
       while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
@@ -708,12 +718,14 @@ class SStack {
    * <p>扩展2，左括号可不以正确的任意闭合，如 ([)] 返回true，同时不能视作同一种即只统计数量，如 {{][}}
    * 非法，即放弃对顺序的要求，而只要求同种的数量，因此使用三个变量统计数目而无需栈
    *
+   * <p>扩展3，( & ) & * 三种符号，参下
+   *
    * @param s the s
    * @return the boolean
    */
   public boolean isValid(String s) {
-    // 第一层括弧定义一个 Anonymous Inner Class
-    // 第二层括弧上是一个 instance initializer block，在内部匿名类构造时被执行
+    // 外层括弧定义一个 Anonymous Inner Class
+    // 内层括弧上是一个 instance initializer block，在内部匿名类构造时被执行
     Map<Character, Character> pairs =
         new HashMap<>(4) {
           {
@@ -750,7 +762,7 @@ class SStack {
   }
 
   /**
-   * 有效的括号字符串，左加右减星减加
+   * 有效的括号字符串，贪心，左加右减星减加
    *
    * @param s the s
    * @return boolean boolean
@@ -769,7 +781,9 @@ class SStack {
         minCount = Math.max(minCount - 1, 0);
         maxCount -= 1;
         // 未匹配的左括号数量必须非负，因此当最大值变成负数时，说明没有左括号可以和右括号匹配，返回
-        if (maxCount < 0) return false;
+        if (maxCount < 0) {
+          return false;
+        }
       } else if (c == '*') {
         minCount = Math.max(minCount - 1, 0);
         maxCount += 1;
@@ -790,8 +804,8 @@ class SStack {
     for (int i = 0; i < temperatures.length; i++) {
       // 更新 res[pre] 直到满足其数字超过 temperatures[i]
       while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
-        int pre = stack.removeLast();
-        res[pre] = i - pre;
+        int preIdx = stack.removeLast();
+        res[preIdx] = i - preIdx;
       }
       stack.addLast(i);
     }
@@ -799,16 +813,16 @@ class SStack {
   }
 
   /**
-   * 下一个更大元素II，题设循环数组因此下方取索引均需取余，单调栈
+   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
    *
    * @param nums the nums
    * @return int [ ]
    */
   public int[] nextGreaterElements(int[] nums) {
+    Deque<Integer> stack = new ArrayDeque<>();
     int len = nums.length;
     int[] res = new int[len];
     Arrays.fill(res, -1);
-    Deque<Integer> stack = new ArrayDeque<>();
     for (int i = 0; i < 2 * len; i++) {
       while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()]) {
         res[stack.removeLast()] = nums[i % len];
@@ -820,6 +834,8 @@ class SStack {
 
   /**
    * 基本计算器 I & II 统一模板
+   *
+   * <p>TODO
    *
    * @param s the s
    * @return int int
