@@ -381,7 +381,7 @@ class BBST {
   private TreeNode pre, cur;
 
   /**
-   * 二叉搜索树中的第k小的元素，对 k 做减法，第 k 大则 right & root & left 做中序，参下
+   * 二叉搜索树中的第k小的元素，左中右，对 k 做减法
    *
    * @param root the root
    * @param k the k
@@ -419,7 +419,7 @@ class BBST {
   }
 
   /**
-   * 二叉搜索树中的第k大的元素
+   * 二叉搜索树中的第k大的元素，右中左
    *
    * @param root the root
    * @param k the k
@@ -456,22 +456,66 @@ class BBST {
    * @return tree node
    */
   public TreeNode deleteNode(TreeNode root, int key) {
-    if (root == null) return null;
-    if (key < root.val) root.left = deleteNode(root.left, key);
-    else if (key > root.val) root.right = deleteNode(root.right, key);
-    else {
-      // target 左右结点分三种情况
-      if (root.left == null) return root.right;
-      else if (root.right == null) return root.left;
+    if (root == null) {
+      return null;
+    }
+    if (key < root.val) {
+      root.left = deleteNode(root.left, key);
+    } else if (key > root.val) {
+      root.right = deleteNode(root.right, key);
+    } else {
+      // 2.1.target 左右结点分三种情况
+      if (root.left == null) {
+        return root.right;
+      } else if (root.right == null) {
+        return root.left;
+      }
+      // 2.2.target 左右均非空，则寻找 target 右子树的最左节点
       TreeNode pre = root, cur = root.right;
       while (cur.left != null) {
         pre = cur;
         cur = cur.left;
       }
       root.val = cur.val;
-      // 将下一个值的节点删除
-      if (pre.left.val == cur.val) pre.left = cur.right;
-      else pre.right = cur.right;
+      // 3.将下一个值的节点删除
+      if (pre.left.val == cur.val) {
+        pre.left = cur.right;
+      } else {
+        pre.right = cur.right;
+      }
+    }
+    return root;
+  }
+
+  /**
+   * 二叉搜索树中的插入操作，判断进入左或右，直到空
+   *
+   * @param root
+   * @param val
+   * @return
+   */
+  public TreeNode insertIntoBST(TreeNode root, int val) {
+    // 特判
+    if (root == null) {
+      return new TreeNode(val);
+    }
+    TreeNode cur = root;
+    while (cur != null) {
+      if (val < cur.val) {
+        if (cur.left == null) {
+          cur.left = new TreeNode(val);
+          break;
+        } else {
+          cur = cur.left;
+        }
+      } else {
+        if (cur.right == null) {
+          cur.right = new TreeNode(val);
+          break;
+        } else {
+          cur = cur.right;
+        }
+      }
     }
     return root;
   }

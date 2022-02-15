@@ -179,8 +179,8 @@ class OOptimalSolution {
    *
    * <p>扩展1，记录路径，则需要自顶向下
    *
-   * @param grid
-   * @return
+   * @param grid the grid
+   * @return int
    */
   public int minPathSum(int[][] grid) {
     int len = grid[0].length;
@@ -289,8 +289,8 @@ class OOptimalSolution {
    *
    * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
    *
-   * @param matrix
-   * @return
+   * @param matrix the matrix
+   * @return int
    */
   public int maximalSquare(char[][] matrix) {
     // 特判
@@ -429,8 +429,8 @@ class CCount {
    *
    * <p>递推关系
    *
-   * @param s
-   * @return
+   * @param s the s
+   * @return int
    */
   public int numDecodings(String s) {
     // 补充前导
@@ -612,15 +612,12 @@ class SSubArray {
    * @return int int
    */
   public int findLength(int[] nums1, int[] nums2) {
+    int res = 0;
     // int[][] dp = new int[nums1.length + 1][nums2.length + 1];
     int[] dp = new int[nums2.length + 1];
-    int res = 0;
     for (int i = 1; i <= nums1.length; i++) {
       for (int j = nums2.length; j >= 1; j--) {
-        if (nums1[i - 1] == nums2[j - 1]) {
-          dp[j] = dp[j - 1];
-        }
-        // dp[j] = (nums1[i - 1] == nums2[j - 1]) ? dp[j - 1] + 1 : 0;
+        dp[j] = nums1[i - 1] == nums2[j - 1] ? dp[j - 1] + 1 : 0;
         res = Math.max(res, dp[j]);
       }
       // for (int j = 1; j <= nums2.length; j++) {
@@ -640,27 +637,28 @@ class SSubArray {
    *
    * <p>递归关系只与前一个相关，因此滚动变量，即状态压缩第一维，而保留 0 & 1 两个状态
    *
-   * @param nums
-   * @return
+   * @param nums the nums
+   * @return int
    */
   public int maxProduct(int[] nums) {
     int res = Integer.MIN_VALUE;
     int multiMax = 1, multiMin = 1;
-    for (int i = 0; i < nums.length; i++) {
+    for (int num : nums) {
       // 以该点结尾的乘积大小调换
-      if (nums[i] < 0) {
+      if (num < 0) {
         int tmp = multiMax;
         multiMax = multiMin;
         multiMin = tmp;
       }
-      multiMax = Math.max(multiMax * nums[i], nums[i]);
-      multiMin = Math.min(multiMin * nums[i], nums[i]);
+      multiMax = Math.max(multiMax * num, num);
+      multiMin = Math.min(multiMin * num, num);
       res = Math.max(res, multiMax);
     }
     return res;
   }
 }
 
+/** The type S sub sequence. */
 class SSubSequence {
   /**
    * 最长递增子序列 / 最长上升子序列
@@ -678,10 +676,12 @@ class SSubSequence {
    * @return int int
    */
   public int lengthOfLIS(int[] nums) {
-    if (nums.length == 0) return 0;
-    int[] dp = new int[nums.length];
     int res = 0;
-    Arrays.fill(dp, 1); // base case
+    if (nums.length == 0) {
+      return res;
+    }
+    int[] dp = new int[nums.length];
+    Arrays.fill(dp, 1);
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
       //      int idx = 0;
@@ -731,7 +731,7 @@ class SSubSequence {
    *
    * <p>扩展1，求最长公共子串的长度，即最长连续序列，参上
    *
-   * <p>扩展2，输出该子序列
+   * <p>扩展2，输出该子序列，则补充首尾指针，参下 annotate
    *
    * @param text1 the text 1
    * @param text2 the text 2
@@ -744,7 +744,7 @@ class SSubSequence {
     for (int i = 1; i <= n1; i++) {
       for (int j = 1; j <= n2; j++) {
         dp[i][j] =
-            (text1.charAt(i - 1) == text2.charAt(j - 1))
+            text1.charAt(i - 1) == text2.charAt(j - 1)
                 ? dp[i - 1][j - 1] + 1
                 : Math.max(dp[i - 1][j], dp[i][j - 1]);
         //        if (hi - lo + 1 < j - i + 1) {
@@ -854,7 +854,7 @@ class SSubSequence {
    *
    * @param s pattern
    * @param t main
-   * @return
+   * @return boolean
    */
   public boolean isSubsequence(String s, String t) {
     // 预处理以保证 t[0] 也被正确表示，即 dp[0][..]
@@ -892,9 +892,9 @@ class SSubSequence {
    *
    * <p>dp[i][j] = dp[i][j-2] 没有匹配的情况
    *
-   * @param s
-   * @param p
-   * @return
+   * @param s the s
+   * @param p the p
+   * @return boolean
    */
   public boolean isMatch(String s, String p) {
     boolean[][] dp = new boolean[s.length() + 1][p.length() + 1];

@@ -14,6 +14,8 @@ public class OOthers {
   /**
    * 划分字母区间
    *
+   * <p>TODO
+   *
    * @param s the s
    * @return list
    */
@@ -31,7 +33,7 @@ public class OOthers {
    */
   public int romanToInt(String s) {
     Map<Character, Integer> hash =
-        new HashMap<Character, Integer>() {
+        new HashMap<>() {
           {
             //            put('一', 1);
             //            put('二', 2);
@@ -57,9 +59,12 @@ public class OOthers {
         };
     int res = 0;
     for (int i = 0; i < s.length(); i++) {
-      int num = hash.get(s.charAt(i));
-      if (i < s.length() - 1 && num < hash.get(s.charAt(i + 1))) res -= num;
-      else res += num;
+      int cur = hash.get(s.charAt(i)), nxt = hash.get(s.charAt(i + 1));
+      if (i < s.length() - 1 && cur < nxt) {
+        res -= cur;
+      } else {
+        res += cur;
+      }
     }
     return res;
   }
@@ -84,6 +89,20 @@ public class OOthers {
       }
     }
     return res.toString();
+  }
+
+  /**
+   * Excel表列序号，类似罗马数字转整数
+   *
+   * @param columnTitle the column title
+   * @return int int
+   */
+  public int titleToNumber(String columnTitle) {
+    int res = 0;
+    for (char ch : columnTitle.toCharArray()) {
+      res = res * 26 + (ch - 'A' + 1);
+    }
+    return res;
   }
 
   /**
@@ -276,7 +295,7 @@ class MMath {
    *
    * @param num the num
    * @param radix the radix
-   * @return string
+   * @return string string
    */
   public String baseConvert(int num, int radix) {
     if (num == 0) {
@@ -430,14 +449,20 @@ class MMath {
   }
 
   /**
-   * 只出现一次的数字，只出现一次的字符参考 SString
+   * 只出现一次的数字
+   *
+   * <p>扩展1，有序数组，参考「有序数组中的单一元素」
+   *
+   * <p>扩展2，只出现一次的字符，参考「第一个只出现一次的字符」
    *
    * @param nums the nums
    * @return int int
    */
   public int singleNumber(int[] nums) {
     int res = 0;
-    for (int num : nums) res ^= num;
+    for (int num : nums) {
+      res ^= num;
+    }
     return res;
   }
 
@@ -450,7 +475,7 @@ class MMath {
    * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
    *
    * @param n the n
-   * @return int
+   * @return int int
    */
   public int countDigitOne(int n) {
     int digit = 1, res = 0;

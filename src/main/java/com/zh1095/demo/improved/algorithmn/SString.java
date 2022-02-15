@@ -109,13 +109,12 @@ public class SString extends DefaultSString {
         res[i + j] += sum / 10;
       }
     }
+    // 跳过前导零
+    int idx = res[0] == 0 ? 1 : 0;
     StringBuilder ans = new StringBuilder();
-    for (int i = 0; i < res.length; i++) {
-      // 跳过前导零
-      if (i == 0 && res[i] == 0) {
-        continue;
-      }
-      ans.append(res[i]);
+    while (idx < res.length) {
+      ans.append(res[idx]);
+      idx += 1;
     }
     return ans.toString();
   }
@@ -197,35 +196,11 @@ public class SString extends DefaultSString {
   }
 
   /**
-   * 第一个只出现一次的字符
-   *
-   * <p>扩展，第二个则添加一个计数器即可
-   *
-   * @param s the s
-   * @return char char
-   */
-  public char firstUniqChar(String s) {
-    // 只需要遍历一轮 s & hash，而 HashMap 需要两轮 s
-    Map<Character, Boolean> hash = new LinkedHashMap<>();
-    for (char ch : s.toCharArray()) {
-      hash.put(ch, !hash.containsKey(ch));
-    }
-    for (Map.Entry<Character, Boolean> d : hash.entrySet()) {
-      if (d.getValue()) {
-        return d.getKey();
-      }
-    }
-    return ' ';
-  }
-
-  /**
-   * 字符串解码，类似压缩字符串 & 原子的数量
+   * 字符串解码，类似压缩字符串 & 原子的数量 & 解码方法
    *
    * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
    *
    * <p>Integer.parseInt(c + "") 改为 c - '0'
-   *
-   * <p>类似题意参考「解码方法」
    *
    * @param s the s
    * @return string string
@@ -233,8 +208,8 @@ public class SString extends DefaultSString {
   public String decodeString(String s) {
     int curCount = 0;
     StringBuilder curStr = new StringBuilder();
-    LinkedList<Integer> countStack = new LinkedList<>();
-    LinkedList<String> strStack = new LinkedList<>();
+    Deque<Integer> countStack = new ArrayDeque<>();
+    Deque<String> strStack = new ArrayDeque<>();
     for (int i = 0; i < s.length(); i++) {
       char ch = s.charAt(i);
       if (ch == '[') {
@@ -258,16 +233,15 @@ public class SString extends DefaultSString {
   /**
    * 字符串转换整数
    *
-   * <p>去空格 & 特判，可无 & 判断正负 & 逐位相加 & 判断溢出
+   * <p>去空格 & 特判 & 判断正负 & 逐位相加 & 判断溢出
    *
    * @param s the s
    * @return the int
    */
   public int myAtoi(String s) {
-    int idx = 0;
     boolean isNegative = false;
     // 记录上一次的 res 以判断溢出
-    int res = 0, pre = 0;
+    int idx = 0, res = 0, pre = 0;
     while (idx < s.length() && s.charAt(idx) == ' ') {
       idx += 1;
     }
@@ -287,7 +261,7 @@ public class SString extends DefaultSString {
         break;
       }
       pre = res;
-      res = res * 10 + ch - '0';
+      res = res * 10 + (ch - '0');
       // 如果不相等就是溢出了
       if (pre != res / 10) {
         return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
@@ -330,6 +304,28 @@ public class SString extends DefaultSString {
       len = hi + 1;
     }
     return lo;
+  }
+
+  /**
+   * 第一个只出现一次的字符
+   *
+   * <p>扩展1，第二个，下方找两次即可
+   *
+   * @param s the s
+   * @return char char
+   */
+  public char firstUniqChar(String s) {
+    int[] count = new int[26];
+    char[] chs = s.toCharArray();
+    for (char ch : chs) {
+      count[ch - 'a'] += 1;
+    }
+    for (char ch : chs) {
+      if (count[ch - 'a'] == 1) {
+        return ch;
+      }
+    }
+    return ' ';
   }
 }
 
@@ -674,27 +670,28 @@ class WWord extends DefaultSString {
   }
 
   /**
-   * 比较版本号
+   * 比较版本号，逐个区间统计并比对
    *
    * @param version1 the version 1
    * @param version2 the version 2
    * @return int int
    */
   public int compareVersion(String version1, String version2) {
-    int m = version1.length(), n = version2.length();
+    int len1 = version1.length(), len2 = version2.length();
     int p1 = 0, p2 = 0;
-    while (p1 < m || p2 < n) {
-      int n1 = 0, n2 = 0; // 逐个区间计算
-      while (p1 < m && version1.charAt(p1) != '.') {
+    while (p1 < len1 || p2 < len2) {
+      int n1 = 0, n2 = 0;
+      while (p1 < len1 && version1.charAt(p1) != '.') {
         n1 = n1 * 10 + version1.charAt(p1) - '0';
         p1 += 1;
       }
-      p1 += 1; // 跳过点号
-      while (p2 < n && version2.charAt(p2) != '.') {
+      // 跳过点号
+      p1 += 1;
+      while (p2 < len2 && version2.charAt(p2) != '.') {
         n2 = n2 * 10 + version2.charAt(p2) - '0';
         p2 += 1;
       }
-      p2 += 1; // 同上
+      p2 += 1;
       if (n1 != n2) {
         return n1 > n2 ? 1 : -1;
       }
@@ -762,29 +759,33 @@ class SStack {
   }
 
   /**
-   * 有效的括号字符串，贪心，左加右减星减加
+   * 有效的括号字符串，贪心，参考
+   * https://leetcode-cn.com/problems/valid-parenthesis-string/solution/you-xiao-de-gua-hao-zi-fu-chuan-by-leetc-osi3/
+   *
+   * <p>维护未匹配的左括号数量可能的上下界，未匹配的左括号数量必须非负
+   *
+   * <p>因此当最大值变成负数时，说明没有左括号可以和右括号匹配，返回
+   *
+   * <p>当最小值为 0 时，不应将最小值继续减少，以确保最小值非负
+   *
+   * <p>遍历结束时，所有的左括号都应和右括号匹配，因此只有当最小值为 0 时才满足
    *
    * @param s the s
    * @return boolean boolean
    */
   public boolean checkValidString(String s) {
-    // 令左括号的得分为 1，右为 −1，那么最终得分需为 0，由于存在 *，因此遍历 ing 只能估计最终值，即其区间
     int minCount = 0, maxCount = 0;
     int n = s.length();
     for (int i = 0; i < n; i++) {
-      char c = s.charAt(i);
-      if (c == '(') {
+      char ch = s.charAt(i);
+      if (ch == '(') {
         minCount += 1;
         maxCount += 1;
-      } else if (c == ')') {
-        // 当最小值为 0 时，不应将其继续减少，以确保其非负
+      } else if (ch == ')') {
         minCount = Math.max(minCount - 1, 0);
         maxCount -= 1;
-        // 未匹配的左括号数量必须非负，因此当最大值变成负数时，说明没有左括号可以和右括号匹配，返回
-        if (maxCount < 0) {
-          return false;
-        }
-      } else if (c == '*') {
+        if (maxCount < 0) return false;
+      } else if (ch == '*') {
         minCount = Math.max(minCount - 1, 0);
         maxCount += 1;
       }

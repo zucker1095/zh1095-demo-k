@@ -357,24 +357,36 @@ class HHeap extends DefaultArray {
    *
    * <p>堆化 [0,k] & 依次入堆 [k+1,l-1] 的元素 & 最终堆顶即 [0]
    *
-   * <p>扩展1，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均
+   * <p>扩展1，寻找两个有序数组的第 k 大，参考「寻找两个有序数组的中位数」
    *
    * <p>扩展2，判断 num 是否为第 k 大，有重复，partition 如果在 K 位置的左边和右边都遇到该数，直接结束，否则直到找到第 k 大的元素比较是否为同一个数
    *
    * <p>扩展3，如何只选出 [n, m]，分别建两个长度为 n & m-n 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
-   *
-   * <p>扩展4，寻找两个有序数组的第 k 大，参考「寻找两个有序数组的中位数」
    *
    * @param nums the nums
    * @param k the k
    * @return the int
    */
   public int findKthLargest(int[] nums, int k) {
+    //    PriorityQueue<Integer> minHeap =
+    //        new PriorityQueue<Integer>(
+    //            k,
+    //            (n1, n2) -> {
+    //              if (n1 < n2) return -1;
+    //              else if (n1 == n2) return 0;
+    //              else return 1;
+    //            });
+    //    for (int num : nums) {
+    //      minHeap.add(num);
+    //      if (minHeap.size() > k) minHeap.poll();
+    //    }
+    //    return minHeap.peek();
     int idx = nums.length - 1;
     heapify(nums, nums.length);
     while (idx >= nums.length - k + 1) {
       swap(nums, 0, idx);
       idx -= 1;
+      // 区间 [0,idx-1] 有序，对比上方，因为此处 heap capcacity 固定
       down(nums, 0, idx - 1);
     }
     return nums[0];
@@ -406,6 +418,8 @@ class HHeap extends DefaultArray {
   /**
    * 字符串出现次数 topk，参考
    * https://www.nowcoder.com/practice/fd711bdfa0e840b381d7e1b82183b3ee?tpId=196&tqId=37142&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   *
+   * <p>TODO
    *
    * @param strings string字符串一维数组 strings
    * @param k int整型 the k
@@ -466,15 +480,19 @@ class MMerge extends DefaultArray {
   private void divide1(int[] nums, int[] tmp, int lo, int hi) {
     // 对于双指针，假如迭代内部基于比较，则不需要=，假如需要统计每个元素，则需要
     if (lo >= hi) return;
-    int mid = lo + (hi - lo) >> 1;
+    int mid = lo + (hi - lo) / 2;
     divide1(nums, tmp, lo, mid);
     divide1(nums, tmp, mid + 1, hi);
-    if (nums[mid] <= nums[mid + 1]) return;
     // curing 因为此时 [lo,mid]&[mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
+    if (nums[mid] <= nums[mid + 1]) {
+      return;
+    }
     merge1(nums, tmp, lo, mid, hi); // 区间两两相邻合并
   }
 
+  // 合并 nums[lo:mid] & nums[mid+1:hi] 即排序区间 [lo,hi]
   // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
+  // 四种情况，其一遍历结束 & 比较
   private void merge1(int[] nums, int[] tmp, int lo, int mid, int hi) {
     // 前后指针未逾界且数组至少有两个元素
     if (hi - lo >= 1) {
@@ -499,7 +517,7 @@ class MMerge extends DefaultArray {
   }
 
   /**
-   * 数组中的逆序对，参考归并排序，只 diff 两行代码
+   * 数组中的逆序对，参考归并排序，基本一致
    *
    * @param nums the nums
    * @return int int
@@ -511,11 +529,12 @@ class MMerge extends DefaultArray {
 
   private void divide2(int[] nums, int[] tmp, int lo, int hi) {
     if (lo == hi) return;
-    int mid = lo + (hi - lo) >> 1;
+    int mid = lo + (hi - lo) / 2;
     divide2(nums, tmp, lo, mid);
     divide2(nums, tmp, mid + 1, hi);
-    if (nums[mid] <= nums[mid + 1]) return;
-    // diff 1
+    if (nums[mid] <= nums[mid + 1]) {
+      return;
+    }
     res += mergeAndCount(nums, tmp, lo, mid, hi);
   }
 
@@ -583,6 +602,8 @@ class BinarySearch extends DefaultArray {
    * <p>扩展1，单纯求两个有序数组 topk，需要对值，而本题求中位数本质是对排位进行二分
    *
    * <p>扩展2，两个逆序数组，则双指针从尾开始遍历即可
+   *
+   * <p>扩展3，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2
@@ -901,6 +922,33 @@ class BinarySearch extends DefaultArray {
   }
 
   /**
+   * 有序数组中的单一元素，参考
+   * https://leetcode-cn.com/problems/single-element-in-a-sorted-array/solution/tong-ge-lai-shua-ti-la-er-fen-cha-zhao-b-x8dd/
+   *
+   * <p>假设所有数字都成对，那么所有数字的下标必定同时偶数和奇数，因此比对 nums[mid]
+   *
+   * <p>说明前面半段没有缺失的数，反之，缺对者在前半段
+   *
+   * @param nums
+   * @return
+   */
+  public int singleNonDuplicate(int[] nums) {
+    int lo = 0, hi = nums.length - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      // 当前奇位，则判偶位
+      if (mid % 2 == 0) {
+        if (nums[mid] == nums[mid + 1]) lo = mid + 1;
+        else hi = mid;
+      } else {
+        if (nums[mid] == nums[mid - 1]) lo = mid + 1;
+        else hi = mid;
+      }
+    }
+    return nums[hi];
+  }
+
+  /**
    * 分割数组的最大值
    *
    * <p>TODO
@@ -1168,7 +1216,6 @@ class DicOrder extends DefaultArray {
     }
     for (int i = 0; i < chs.length; i++) {
       if (chs[maxArr[i]] == chs[i]) continue;
-      //      swap(chs, maxArr[i], i);
       char tmp = chs[maxArr[i]];
       chs[maxArr[i]] = chs[i];
       chs[i] = tmp;

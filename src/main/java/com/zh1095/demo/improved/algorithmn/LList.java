@@ -51,6 +51,8 @@ public class LList {
    *
    * <p>模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
+   * <p>扩展1，去重但不能合并，按顺序打印，则每次比对 res[res.length-1] 与二者更大即可
+   *
    * @param list1 the list 1
    * @param list2 the list 2
    * @return the list node
@@ -149,6 +151,55 @@ public class LList {
 
   protected int getVal(ListNode node) {
     return node == null ? 0 : node.val;
+  }
+
+  /**
+   * 复制带随机指针的链表，即深拷贝，三次遍历
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/copy-list-with-random-pointer/solution/liang-chong-shi-xian-tu-jie-138-fu-zhi-dai-sui-ji-/
+   *
+   * @param head
+   * @return
+   */
+  public Node copyRandomList(Node head) {
+    if (head == null) return null;
+    Node cur = head;
+    // 1.在每个原节点后面创建一个新节点
+    while (cur != null) {
+      Node newNode = new Node(cur.val);
+      newNode.next = cur.next;
+      cur.next = newNode;
+      cur = newNode.next;
+    }
+    // 2.依次设置新节点的随机节点
+    cur = head;
+    while (cur != null) {
+      if (cur.random != null) cur.next.random = cur.random.next;
+      cur = cur.next.next;
+    }
+    // 3.分离两个链表
+    Node dummy = new Node(-1), nxt = head;
+    cur = dummy;
+    while (nxt != null) {
+      cur.next = nxt.next;
+      cur = cur.next;
+      nxt.next = cur.next;
+      nxt = nxt.next;
+    }
+    return dummy.next;
+  }
+
+  private class Node {
+    int val;
+    Node next;
+    Node random;
+
+    public Node(int val) {
+      this.val = val;
+      this.next = null;
+      this.random = null;
+    }
   }
 }
 
