@@ -118,12 +118,13 @@ public class DDP {
   }
 }
 
-/** 最优解，往状态压缩 & 双指针考量 */
+/** 最优解，状态压缩 & 双指针 */
 class OOptimalSolution {
   /**
    * 买卖股票的最佳时机 I~III
    *
-   * <p>https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iii/solution/zui-jian-dan-2-ge-bian-liang-jie-jue-suo-71fe/
+   * <p>参考
+   * https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iii/solution/zui-jian-dan-2-ge-bian-liang-jie-jue-suo-71fe/
    *
    * @param prices the prices
    * @return int int
@@ -132,6 +133,7 @@ class OOptimalSolution {
     return maxProfitI(prices);
   }
 
+  // 限定一次
   private int maxProfitI(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
     for (int price : prices) {
@@ -143,6 +145,7 @@ class OOptimalSolution {
     return sell;
   }
 
+  // 不限次数
   private int maxProfitII(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
     for (int price : prices) {
@@ -153,6 +156,7 @@ class OOptimalSolution {
     return sell;
   }
 
+  // 限定两次
   private int maxProfitIII(int[] prices) {
     // 因为只能交易 2 次，所以定义 2 组 buy & sell
     int buy1 = Integer.MIN_VALUE, sell1 = 0;
@@ -416,7 +420,11 @@ class CCount {
     int[] dp = new int[n + 1];
     dp[0] = 1;
     dp[1] = 1;
-    for (int i = 2; i < n + 1; i++) for (int j = 1; j < i + 1; j++) dp[i] += dp[j - 1] * dp[i - j];
+    for (int i = 2; i < n + 1; i++) {
+      for (int j = 1; j < i + 1; j++) {
+        dp[i] += dp[j - 1] * dp[i - j];
+      }
+    }
     return dp[n];
   }
 
@@ -658,17 +666,17 @@ class SSubArray {
   }
 }
 
-/** The type S sub sequence. */
+/** 子序列 */
 class SSubSequence {
   /**
    * 最长递增子序列 / 最长上升子序列
    *
-   * <p>[0,m-1] & [0,j-1]
+   * <p>TODO
    *
    * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
    *
-   * <p>扩展1，时间复杂度为 nlogn 参考
-   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+   * <p>扩展1，时间复杂度 nlogn 参考
+   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
    *
    * <p>扩展2，输出，分别记录 i & j 即可，参下 annotate
    *
@@ -676,6 +684,10 @@ class SSubSequence {
    * @return int int
    */
   public int lengthOfLIS(int[] nums) {
+    return lengthOfLIS1(nums);
+  }
+
+  private int lengthOfLIS1(int[] nums) {
     int res = 0;
     if (nums.length == 0) {
       return res;
@@ -695,6 +707,49 @@ class SSubSequence {
       //        // 记录 i & j
       //      }
       res = Math.max(res, dp[i]);
+    }
+    return res;
+  }
+
+  // dp & 二分，参考
+  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?toCommentId=11635899
+  // tail[i] 表示长度为 i+1 的所有上升序列的结尾的最小值，如 [10,9,2,5,3,7,101,18] 中的 tail[1]=3 即 [2,3]
+  private int[] lengthOfLIS2(int[] nums) {
+    int n = nums.length;
+    int[] tail = new int[n + 1];
+    tail[0] = Integer.MIN_VALUE;
+    int end = 0;
+    // dp[i]表示以 arr[i] 结尾的最长递增子序列长度
+    int[] dp = new int[n];
+    for (int i = 0; i < n; i++) {
+      int num = nums[i];
+      if (num > tail[end]) {
+        end += 1;
+        tail[end] = num;
+        dp[i] = end;
+        continue;
+      }
+      // 在 tail 中找首个大于 num 的数字
+      int lo = 1, hi = end;
+      while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (tail[mid] < num) {
+          lo = mid + 1;
+        } else {
+          hi = mid;
+        }
+      }
+      tail[lo] = num;
+      // dp[i]表示i位置最长序列
+      dp[i] = lo;
+    }
+    // 字典序最小，若dp[i] = dp[j], i < j 那么一定有arr[j] < arr[i]
+    int[] res = new int[end];
+    int len = end;
+    for (int i = n - 1; i >= 0; i--) {
+      if (dp[i] != len) continue;
+      res[len - 1] = nums[i];
+      len -= 1;
     }
     return res;
   }
@@ -840,17 +895,21 @@ class SSubSequence {
   /**
    * 判断子序列
    *
+   * <p>TODO
+   *
    * <p>扩展1，依次检查海量 s 是否均为 t 的子序列
    *
    * <p>KMP 思想，类似于用伪链表把相同的字符给链接起来，如对于 abac
    *
-   * <p>1、算法实现过程如下： 1.1 填充字符 " " => ' abac' 1.2 对其中的字符a链表而言（a-z每个字符都执行一次下述操作,共26次） dp[3]['a'-'a'] =>
-   * dp[3][0] = -1 记录a最近的一次位置为，nexPos = 3 dp[1]['a'-'a'] => dp[1][0] = 3 记录a最近的一次位置为，nexPos = 1
-   * dp[0][0] = 1 (预处理填充的空字符意义所在，否则初始位置的a就找不到了)
+   * <p>1.填充字符 " " -> ' abac'
    *
-   * <p>2、查找子串过程（） 2.1 初始索引为0,遍历待查找子串 2.2 查找 aa 的过程如下 idx = 0 （从idx+1以及之后的位置开始查找） idx = dp[0][c-'a']
-   * => idx = dp[0][0] => idx = 1 idx = dp[idx][c-'a'] => dp[1][0] = 3 此时 aa 已经遍历完，返回true 上述过程，只要idx
-   * = -1,表示找不到字符，则返回false
+   * <p>2.对其中的字符a链表而言（a-z每个字符都执行一次下述操作,共26次） dp[3]['a'-'a'] => dp[3][0] = -1 记录a最近的一次位置为，nexPos = 3
+   * dp[1]['a'-'a'] => dp[1][0] =3 记录a最近的一次位置为，nexPos = 1 dp[0][0] = 1 (预处理填充的空字符意义所在，否则初始位置的a就找不到了)
+   *
+   * <p>3.初始索引为0,遍历待查找子串
+   *
+   * <p>4.查找 aa 的过程如下 idx = 0 （从idx+1以及之后的位置开始查找） idx = dp[0][c-'a'] => idx = dp[0][0] -> idx = 1
+   * idx = dp[idx][c-'a'] => dp[1][0] = 3 此时 aa 已经遍历完，返回true 上述过程，只要idx = -1,表示找不到字符，则返回false
    *
    * @param s pattern
    * @param t main
@@ -860,11 +919,11 @@ class SSubSequence {
     // 预处理以保证 t[0] 也被正确表示，即 dp[0][..]
     t = " " + t;
     int[][] dp = new int[t.length()][26];
-    for (int ch = 0; ch < 26; ch++) { // 每一轮处理一个字符
-      int nxtPos = -1;
+    for (int ch = 0; ch < 26; ch++) {
+      int nxt = -1;
       for (int i = t.length() - 1; i > -1; i--) {
-        dp[i][ch] = nxtPos;
-        nxtPos = (t.charAt(i) == ch + 'a') ? nxtPos : i;
+        dp[i][ch] = nxt;
+        nxt = (t.charAt(i) == ch + 'a') ? nxt : i;
       }
     }
     // 起始位置是空字符（idx = 0）

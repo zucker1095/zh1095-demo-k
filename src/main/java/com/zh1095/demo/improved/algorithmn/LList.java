@@ -16,7 +16,7 @@ import java.util.Queue;
  */
 public class LList {
   /**
-   * 反转链表，三步曲，暂存 & 变向 & 步进
+   * 反转链表，三步曲，暂存 & 变向 & 步进，pre cur nxt
    *
    * @param head the head
    * @return the list node
@@ -154,7 +154,7 @@ public class LList {
   }
 
   /**
-   * 复制带随机指针的链表，即深拷贝，三次遍历
+   * 复制带随机指针的链表，即深拷贝，三次遍历 O(n) & O(1)
    *
    * <p>参考
    * https://leetcode-cn.com/problems/copy-list-with-random-pointer/solution/liang-chong-shi-xian-tu-jie-138-fu-zhi-dai-sui-ji-/
@@ -172,10 +172,12 @@ public class LList {
       cur.next = newNode;
       cur = newNode.next;
     }
-    // 2.依次设置新节点的随机节点
+    // 2.逐一设置新节点的随机节点
     cur = head;
     while (cur != null) {
-      if (cur.random != null) cur.next.random = cur.random.next;
+      if (cur.random != null) {
+        cur.next.random = cur.random.next;
+      }
       cur = cur.next.next;
     }
     // 3.分离两个链表
@@ -206,7 +208,12 @@ public class LList {
 /** 收集反转相关 */
 class ReverseList extends LList {
   /**
-   * k个一组反转链表，三步曲，暂存 & 变向 & 步进
+   * k个一组反转链表，三步曲，暂存 & 变向 & 步进，tail [first ... cur] nxt
+   *
+   * <p>变向的顺序为 cur tail first，只需专注其后驱即可，下方反转区间同理
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/reverse-nodes-in-k-group/solution/tu-jie-kge-yi-zu-fan-zhuan-lian-biao-by-user7208t/
    *
    * <p>扩展1，不足 k 个也反转，参下 annotate
    *
@@ -224,21 +231,18 @@ class ReverseList extends LList {
       for (int i = 0; i < k && cur != null; i++) {
         cur = cur.next;
       }
-      if (cur == null) {
-        break;
-      }
+      if (cur == null) break;
       // 扩展1，改为 cur.next!=null 并统计 i 是否为 k 因为可能刚好 =k 并不用判空当前结点
       //      for (int i = 0; i < k && cur.next != null; i++) {
       //        cur = cur.next;
       //      }
       // 暂存
       ListNode first = tail.next, nxt = cur.next;
-      // 此时 cur 是 last，断开
+      // 变向三次
       cur.next = null;
-      // 变向两次
       tail.next = reverseList(first);
       first.next = nxt;
-      // 4.步进
+      // 步进
       tail = first;
       cur = first;
     }
@@ -246,31 +250,7 @@ class ReverseList extends LList {
   }
 
   /**
-   * 两两交换链表中的节点，暂存 & 变向 & 步进，亦可复用 reverseKGroup
-   *
-   * @param head the head
-   * @return list node
-   */
-  public ListNode swapPairs(ListNode head) {
-    // return reverseKGroup(head, 2);
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    ListNode cur = dummy;
-    while (cur.next != null && cur.next.next != null) {
-      // 暂存
-      ListNode first = cur.next, second = cur.next.next;
-      // 变向
-      cur.next = second;
-      first.next = second.next;
-      second.next = first;
-      // 步进
-      cur = first;
-    }
-    return dummy.next;
-  }
-
-  /**
-   * 反转链表II，尾插，三步曲，暂存 & 变向三次 & 步进
+   * 反转链表II，三步曲，暂存 & 变向三次 & 步进，tail [first cur...] nxt
    *
    * @param head the head
    * @param left the left
@@ -281,13 +261,11 @@ class ReverseList extends LList {
     ListNode dummy = new ListNode(0);
     dummy.next = head;
     ListNode tail = dummy;
-    // 1.找到反转区间前一个
     for (int step = 0; step < left - 1; step++) {
       tail = tail.next;
     }
-    // 2.tail first cur nxt
     ListNode first = tail.next;
-    ListNode cur = first.next, nxt = null;
+    ListNode cur = first.next, nxt = cur.next;
     for (int i = 0; i < right - left; i++) {
       nxt = cur.next;
       cur.next = tail.next;
@@ -329,6 +307,16 @@ class ReverseList extends LList {
     ListNode newHead = cur.next;
     cur.next = null;
     return newHead;
+  }
+
+  /**
+   * 两两交换链表中的节点，暂存 & 变向 & 步进，复用 reverseKGroup 即可
+   *
+   * @param head the head
+   * @return list node
+   */
+  public ListNode swapPairs(ListNode head) {
+    return reverseKGroup(head, 2);
   }
 }
 
@@ -489,6 +477,8 @@ class DoublePointerList extends LList {
    *
    * <p>扩展1，再去重，模板参考
    *
+   * <p>扩展2，排序一个奇数位升序而偶数位降序的链表，O(n) & O(1)，参下
+   *
    * @param head the head
    * @return list node
    */
@@ -556,6 +546,43 @@ class DoublePointerList extends LList {
     ListNode node = quickSort(ltHead, head);
     head.next = quickSort(head.next, end);
     return node;
+  }
+
+  /**
+   * 重排奇偶链表，参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
+   *
+   * <p>完全可以复用模板，三步曲如下
+   *
+   * <p>1.分别取出奇偶链表，奇数位链表需断尾
+   *
+   * <p>2.反转偶数位链表
+   *
+   * <p>3.合并二者即可
+   *
+   * @param head
+   * @return
+   */
+  public ListNode sortOddEvenList(ListNode head) {
+    ListNode oddHead = head, evenHead = _oddEvenList(head);
+    evenHead = reverseList(evenHead);
+    return mergeTwoLists(oddHead, evenHead);
+  }
+
+  // 分割奇偶数位，并返回后者首位
+  private ListNode _oddEvenList(ListNode head) {
+    if (head == null) {
+      return null;
+    }
+    ListNode odd = head, even = head.next;
+    ListNode evenHead = head.next;
+    while (even != null && even.next != null) {
+      odd.next = even.next;
+      odd = odd.next;
+      even.next = odd.next;
+      even = even.next;
+    }
+    odd.next = null;
+    return evenHead;
   }
 
   /**
@@ -640,6 +667,8 @@ class Cycle extends LList {
    * 环形链表I，判断即可
    *
    * <p>扩展1，打印首尾
+   *
+   * <p>扩展2，走三步能否判断有环
    *
    * @param head the head
    * @return the boolean

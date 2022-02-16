@@ -58,7 +58,7 @@ public class SString extends DefaultSString {
   }
 
   /**
-   * 数字转换为十六进制数，上方为十六进制转换为数字
+   * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
    *
    * <p>补码
    *
@@ -154,23 +154,24 @@ public class SString extends DefaultSString {
       int odd = findLongestPalindrome(s, i, i), even = findLongestPalindrome(s, i, i + 1);
       int len = Math.max(odd, even);
       if (len > end - start) {
-        start = i - ((len - 1) >> 1);
-        end = i + (len >> 1);
+        start = i - (len - 1) / 2;
+        end = i + len / 2;
       }
     }
     return s.substring(start, end + 1);
   }
 
-  private int findLongestPalindrome(String s, int left, int right) {
-    while (left > -1 && right < s.length() && s.charAt(left) == s.charAt(right)) {
-      left -= 1;
-      right += 1;
+  // 分别从 lo&hi 扩散，直到二者所在字符不同
+  private int findLongestPalindrome(String s, int lo, int hi) {
+    while (lo > -1 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
+      lo -= 1;
+      hi += 1;
     }
-    return right - left - 1;
+    return hi - lo - 1;
   }
 
   /**
-   * 验证回文串，忽略空格
+   * 验证回文串，忽略空格与大小写
    *
    * @param s the s
    * @return boolean boolean
@@ -196,118 +197,7 @@ public class SString extends DefaultSString {
   }
 
   /**
-   * 字符串解码，类似压缩字符串 & 原子的数量 & 解码方法
-   *
-   * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
-   *
-   * <p>Integer.parseInt(c + "") 改为 c - '0'
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String decodeString(String s) {
-    int curCount = 0;
-    StringBuilder curStr = new StringBuilder();
-    Deque<Integer> countStack = new ArrayDeque<>();
-    Deque<String> strStack = new ArrayDeque<>();
-    for (int i = 0; i < s.length(); i++) {
-      char ch = s.charAt(i);
-      if (ch == '[') {
-        countStack.addLast(curCount);
-        strStack.addLast(curStr.toString());
-        curCount = 0;
-        curStr = new StringBuilder();
-      } else if (ch == ']') {
-        int preCount = countStack.removeLast();
-        String preStr = strStack.removeLast();
-        curStr = new StringBuilder(preStr + curStr.toString().repeat(preCount));
-      } else if (ch >= '0' && ch <= '9') {
-        curCount = curCount * 10 + (ch - '0');
-      } else {
-        curStr.append(ch);
-      }
-    }
-    return curStr.toString();
-  }
-
-  /**
-   * 字符串转换整数
-   *
-   * <p>去空格 & 特判 & 判断正负 & 逐位相加 & 判断溢出
-   *
-   * @param s the s
-   * @return the int
-   */
-  public int myAtoi(String s) {
-    boolean isNegative = false;
-    // 记录上一次的 res 以判断溢出
-    int idx = 0, res = 0, pre = 0;
-    while (idx < s.length() && s.charAt(idx) == ' ') {
-      idx += 1;
-    }
-    // 特判全空串
-    if (idx == s.length()) {
-      return 0;
-    }
-    if (s.charAt(idx) == '-') {
-      idx += 1;
-      isNegative = true;
-    } else if (s.charAt(idx) == '+') {
-      idx += 1;
-    }
-    while (idx < s.length()) {
-      char ch = s.charAt(idx);
-      if (ch < '0' || ch > '9') {
-        break;
-      }
-      pre = res;
-      res = res * 10 + (ch - '0');
-      // 如果不相等就是溢出了
-      if (pre != res / 10) {
-        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-      }
-      idx += 1;
-    }
-    return res * (isNegative ? -1 : 1);
-  }
-
-  /**
-   * 压缩字符串
-   *
-   * <p>1.前指针遍历 & 找到同个字母的连续末尾并统计个数
-   *
-   * <p>2.后指针的下一位写入数量，注意数字需逆序写，并步进该指针
-   *
-   * @param chars the chars
-   * @return int int
-   */
-  public int compress(char[] chars) {
-    int lo = 0, len = 0;
-    for (int hi = 0; hi < chars.length; hi++) {
-      if (hi < chars.length - 1 && chars[hi] == chars[hi + 1]) {
-        continue;
-      }
-      chars[lo] = chars[hi];
-      lo += 1;
-      int curLen = hi - len + 1;
-      if (curLen > 1) {
-        int start = lo;
-        // 为达到 O(1) space 需要自行实现将数字转化为字符串写入到原字符串的功能
-        // 此处采用短除法将子串长度倒序写入原字符串中，然后再将其反转即可
-        while (curLen > 0) {
-          chars[lo] = (char) (curLen % 10 + '0');
-          lo += 1;
-          curLen /= 10;
-        }
-        reverseString(chars, start, lo - 1);
-      }
-      len = hi + 1;
-    }
-    return lo;
-  }
-
-  /**
-   * 第一个只出现一次的字符
+   * 第一个只出现一次的字符，对原串遍历两次
    *
    * <p>扩展1，第二个，下方找两次即可
    *
@@ -373,12 +263,12 @@ class WWindow {
    * @return string string
    */
   public String minWindow(String s, String t) {
+    int lo = 0, hi = 0;
+    int counter = t.length(), start = 0, end = Integer.MAX_VALUE;
     int[] need = new int[128];
-    //    Map<Character,Integer> need = new HashMap<>();
     for (int i = 0; i < t.length(); i++) {
       need[t.charAt(i)] += 1;
     }
-    int lo = 0, hi = 0, counter = t.length(), start = 0, end = Integer.MAX_VALUE;
     while (hi < s.length()) {
       char add = s.charAt(hi);
       if (need[add] > 0) counter -= 1;
@@ -406,8 +296,8 @@ class WWindow {
    * @return int
    */
   public int lengthOfLongestSubstringKDistinct(String s, int k) {
-    int res = 0;
-    int lo = 0, hi = 0, counter = k;
+    int lo = 0, hi = 0;
+    int res = 0, counter = k;
     int[] window = new int[128];
     while (hi < s.length()) {
       char add = s.charAt(hi);
@@ -439,17 +329,18 @@ class WWindow {
    * @return int int
    */
   public int minSubArrayLen(int target, int[] nums) {
-    // List<List<Integer>> list = new ArrayList<>();
-    int res = Integer.MAX_VALUE, lo = 0, hi = 0;
-    int sum = 0;
+    int lo = 0, hi = 0;
+    int res = Integer.MAX_VALUE, sum = 0;
     while (hi < nums.length) {
+      // add = nums[hi]
       sum += nums[hi];
       while (sum >= target) {
         res = Math.min(res, hi - lo + 1);
+        // out = nums[lo]
         sum -= nums[lo];
         lo += 1;
       }
-      // 结束迭代即刚好不满足 >= target 时判断是否满足和为 target 即可
+      // 结束迭代即刚好不满足 >=target 时判断是否满足和为 target 即可
       // if (sum + nums[lo] == target) {}
       hi += 1;
     }
@@ -593,7 +484,7 @@ class WWord extends DefaultSString {
    * @param s the s
    */
   public void reverseString(char[] s) {
-    reverseString(s, 0, s.length - 1);
+    reverseChs(s, 0, s.length - 1);
   }
 
   /**
@@ -843,6 +734,120 @@ class SStack {
    */
 }
 
+/** 字符串遍历与解析相关 */
+class StrTravesal extends SString {
+  /**
+   * 字符串解码，类似压缩字符串 & 原子的数量 & 解码方法
+   *
+   * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
+   *
+   * <p>Integer.parseInt(c + "") 改为 c - '0'
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String decodeString(String s) {
+    int curCount = 0;
+    StringBuilder curStr = new StringBuilder();
+    Deque<Integer> countStack = new ArrayDeque<>();
+    Deque<String> strStack = new ArrayDeque<>();
+    for (int i = 0; i < s.length(); i++) {
+      char ch = s.charAt(i);
+      if (ch == '[') {
+        countStack.addLast(curCount);
+        strStack.addLast(curStr.toString());
+        curCount = 0;
+        curStr = new StringBuilder();
+      } else if (ch == ']') {
+        int preCount = countStack.removeLast();
+        String preStr = strStack.removeLast();
+        curStr = new StringBuilder(preStr + curStr.toString().repeat(preCount));
+      } else if (ch >= '0' && ch <= '9') {
+        curCount = curCount * 10 + (ch - '0');
+      } else {
+        curStr.append(ch);
+      }
+    }
+    return curStr.toString();
+  }
+
+  /**
+   * 字符串转换整数
+   *
+   * <p>去空格 & 特判 & 判断正负 & 逐位相加 & 判断溢出
+   *
+   * @param s the s
+   * @return the int
+   */
+  public int myAtoi(String s) {
+    boolean isNegative = false;
+    // 记录上一次的 res 以判断溢出
+    int idx = 0, res = 0, pre = 0;
+    while (idx < s.length() && s.charAt(idx) == ' ') {
+      idx += 1;
+    }
+    // 特判全空串
+    if (idx == s.length()) {
+      return 0;
+    }
+    if (s.charAt(idx) == '-') {
+      idx += 1;
+      isNegative = true;
+    } else if (s.charAt(idx) == '+') {
+      idx += 1;
+    }
+    while (idx < s.length()) {
+      char ch = s.charAt(idx);
+      if (ch < '0' || ch > '9') {
+        break;
+      }
+      pre = res;
+      res = res * 10 + (ch - '0');
+      // 如果不相等就是溢出了
+      if (pre != res / 10) {
+        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      }
+      idx += 1;
+    }
+    return res * (isNegative ? -1 : 1);
+  }
+
+  /**
+   * 压缩字符串
+   *
+   * <p>1.前指针遍历 & 找到同个字母的连续末尾并统计个数
+   *
+   * <p>2.后指针的下一位写入数量，注意数字需逆序写，并步进该指针
+   *
+   * @param chars the chars
+   * @return int int
+   */
+  public int compress(char[] chars) {
+    int lo = 0, len = 0;
+    for (int hi = 0; hi < chars.length; hi++) {
+      if (hi < chars.length - 1 && chars[hi] == chars[hi + 1]) {
+        continue;
+      }
+      chars[lo] = chars[hi];
+      lo += 1;
+      int curLen = hi - len + 1;
+      if (curLen > 1) {
+        int start = lo;
+        // 为达到 O(1) space 需要自行实现将数字转化为字符串写入到原字符串的功能
+        // 此处采用短除法将子串长度倒序写入原字符串中，然后再将其反转即可
+        while (curLen > 0) {
+          chars[lo] = (char) (curLen % 10 + '0');
+          lo += 1;
+          curLen /= 10;
+        }
+        reverseChs(chars, start, lo - 1);
+      }
+      len = hi + 1;
+    }
+    return lo;
+  }
+}
+
 /** The type Default s string. */
 abstract class DefaultSString {
   /**
@@ -870,7 +875,7 @@ abstract class DefaultSString {
    * @param left the left
    * @param right the right
    */
-  protected void reverseString(char[] chars, int left, int right) {
+  protected void reverseChs(char[] chars, int left, int right) {
     int lo = left, hi = right;
     while (lo < hi) {
       char temp = chars[lo];

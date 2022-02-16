@@ -8,11 +8,11 @@ import java.util.*;
  * <p>关于 Java 模拟 stack 的选型
  * https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
  *
- * <p>前序，本类，尽可能将同时掌握迭代 &递归
+ * <p>TODO 前序，尝试均改为迭代
  *
  * <p>中序，基本即是 BST
  *
- * <p>后序，统计相关，参下
+ * <p>后序，统计相关 & 递归，参下
  *
  * <p>扩展大部分与记录路径相关
  *
@@ -160,47 +160,150 @@ public class TTree {
   }
 
   /**
-   * 相同的树，前序
+   * 相同的树，前序，迭代选用 bfs
    *
    * @param p the p
    * @param q the q
    * @return boolean boolean
    */
   public boolean isSameTree(TreeNode p, TreeNode q) {
+    return isSameTree2(p, q);
+  }
+
+  private boolean isSameTree1(TreeNode p, TreeNode q) {
     if (p == null && q == null) return true;
     else if (p == null || q == null) return false;
     return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
   }
 
+  private boolean isSameTree2(TreeNode p, TreeNode q) {
+    Queue<TreeNode> queue = new LinkedList<TreeNode>();
+    queue.offer(p);
+    queue.offer(q);
+    while (!queue.isEmpty()) {
+      p = queue.poll();
+      q = queue.poll();
+      if (p == null && q == null) {
+        continue;
+      }
+      if ((p == null || q == null) || p.val != q.val) {
+        return false;
+      }
+      // 顺序
+      queue.offer(p.left);
+      queue.offer(q.left);
+      queue.offer(p.right);
+      queue.offer(q.right);
+    }
+    return true;
+  }
+
   /**
    * 另一棵树的子树
    *
-   * <p>特判匹配树 & 主树为空两种情况
+   * <p>特判匹配树 & 主树为空两种情况，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
    *
-   * <p>当然，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
+   * <p>TODO 面试题 04.10.检查子树 找子结构 t572 找子树 t1376 找链表
    *
    * @param root the root
    * @param subRoot the sub root
    * @return boolean boolean
    */
   public boolean isSubtree(TreeNode root, TreeNode subRoot) {
-    if (subRoot == null) {
-      return true;
-    }
-    if (root == null) {
-      return false;
-    }
+    return isSubtree1(root, subRoot);
+  }
+
+  private boolean isSubtree1(TreeNode root, TreeNode subRoot) {
+    if (subRoot == null) return true;
+    if (root == null) return false;
     return isSubtree(root.left, subRoot)
         || isSubtree(root.right, subRoot)
         || isSameTree(root, subRoot);
   }
+
+  //  private boolean isSubtree2(TreeNode root, TreeNode subRoot) {}
+
+  /**
+   * 二叉树的下一个结点，给定一棵树中任一结点，返回其中序遍历顺序的下一个结点，提供结点的 next 指向父结点
+   *
+   * <p>参考 https://mp.weixin.qq.com/s/yewlHvHSilMsrUMFIO8WAA
+   *
+   * @param node
+   * @return
+   */
+  public _TreeNode getNext(_TreeNode node) {
+    // 如果有右子树，则找右子树的最左节点
+    if (node.right != null) {
+      _TreeNode cur = node.right;
+      while (cur.left != null) {
+        cur = cur.left;
+      }
+      return cur;
+    }
+    // 否则，找第一个当前节点是父节点左孩子的节点
+    _TreeNode cur = node;
+    while (cur.next != null) {
+      if (cur.next.left.equals(cur)) {
+        return cur.next;
+      }
+      cur = cur.next;
+    }
+    // 退到根节点仍没找到
+    return null;
+  }
+
+  private class _TreeNode {
+    _TreeNode left, right, next;
+  }
 }
 
-/** 后序相关，常见为统计 */
+/** 后序相关，常见为统计，递归的本质就是 bottom-to-up */
 class Postorder {
   private int res1 = Integer.MIN_VALUE;
   private int res2 = 0;
   private List<Integer> resPath = new ArrayList<>();
+
+  /**
+   * 平衡二叉树，后序迭代
+   *
+   * <p>TODO
+   *
+   * @param root
+   * @return
+   */
+  public boolean isBalanced(TreeNode root) {
+    if (root == null) return true;
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    TreeNode pre = null, cur = root;
+    while (cur != null || !stack.isEmpty()) {
+      while (cur != null) {
+        stack.addLast(cur);
+        cur = cur.left;
+      }
+      TreeNode inNode = stack.getLast();
+      // 右结点为空或已遍历
+      if (inNode.right != null && inNode.right != pre) {
+        cur = inNode.right; // 右结点还没遍历，遍历右结点
+        continue;
+      }
+      if (Math.abs(getHeight(inNode.left) - getHeight(inNode.right)) > 1) {
+        return false;
+      }
+      pre = stack.removeLast();
+      // 当前结点下，没有要遍历的结点了
+      cur = null;
+    }
+    return true;
+  }
+
+  // 求结点的高度
+  private int getHeight(TreeNode root) {
+    if (root == null) return 0;
+    int leftH = root.left == null ? 0 : root.left.val,
+        rightH = root.right == null ? 0 : root.right.val;
+    root.val = Math.max(leftH, rightH) + 1;
+    return root.val;
+  }
 
   /**
    * 二叉树的最近公共祖先，后序遍历
@@ -322,7 +425,9 @@ class Postorder {
   }
 
   /**
-   * 二叉树的最大深度，后序遍历
+   * 二叉树的最大深度，后序
+   *
+   * <p>扩展1，n 叉树，改用 bfs
    *
    * @param root the root
    * @return int int
@@ -1104,6 +1209,45 @@ class BBacktracking extends DDFS {
       }
     }
     visited[r][c] = false;
+    return false;
+  }
+
+  /**
+   * 解数独，特判可移除，暴力回溯
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/sudoku-solver/solution/hui-su-fa-jie-shu-du-by-i_use_python/
+   *
+   * <p>TODO
+   *
+   * @param board
+   */
+  public void solveSudoku(char[][] board) {
+    boolean[][] row = new boolean[9][9], col = new boolean[9][9], box = new boolean[9][9];
+    for (int i = 0; i < 9; i++) {
+      for (int j = 0; j < 9; j++) {
+        if (board[i][j] == '.') continue;
+        int num = board[i][j] - '1', k = (i / 3) * 3 + j / 3;
+        row[i][num] = col[j][num] = box[k][num] = true;
+      }
+    }
+    backtracking10(board, 0, row, col, box);
+  }
+
+  private boolean backtracking10(
+      char[][] board, int n, boolean[][] row, boolean[][] col, boolean[][] box) {
+    if (n == 81) return true;
+    int i = n / 9, j = n % 9;
+    if (board[i][j] != '.') return backtracking10(board, n + 1, row, col, box);
+    int k = (i / 3) * 3 + j / 3;
+    for (int num = 0; num < 9; num++) {
+      if (row[i][num] || col[j][num] || box[k][num]) continue;
+      board[i][j] = (char) (num + '1');
+      row[i][num] = col[j][num] = box[k][num] = true;
+      if (backtracking10(board, n + 1, row, col, box)) return true;
+      row[i][num] = col[j][num] = box[k][num] = false;
+    }
+    board[i][j] = '.';
     return false;
   }
 }

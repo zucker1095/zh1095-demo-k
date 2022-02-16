@@ -591,7 +591,7 @@ class MMerge extends DefaultArray {
  *
  * <p>lo<=hi 明确碰撞的含义
  */
-class BinarySearch extends DefaultArray {
+class Dichotomy extends DefaultArray {
   /**
    * 寻找两个有序数组的中位数，有重复，联合对两个数组二分求 topk 则复杂度为 log(m+n)
    *
@@ -603,7 +603,7 @@ class BinarySearch extends DefaultArray {
    *
    * <p>扩展2，两个逆序数组，则双指针从尾开始遍历即可
    *
-   * <p>扩展3，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均
+   * <p>扩展3，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均，海量数据参考「数据流的中位数」
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2
@@ -871,10 +871,13 @@ class BinarySearch extends DefaultArray {
   public int firstMissingPositive(int[] nums) {
     for (int i = 0; i < nums.length; i++) {
       // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
-      while (nums[i] > 0 && nums[i] <= nums.length && nums[nums[i] - 1] != nums[i])
+      while (nums[i] > 0 && nums[i] <= nums.length && nums[nums[i] - 1] != nums[i]) {
         swap(nums, nums[i] - 1, i);
+      }
     }
-    for (int i = 0; i < nums.length; i++) if (nums[i] != i + 1) return i + 1;
+    for (int i = 0; i < nums.length; i++) {
+      if (nums[i] != i + 1) return i + 1;
+    }
     return nums.length + 1;
   }
 
@@ -1001,6 +1004,23 @@ class BinarySearch extends DefaultArray {
     }
     return splits;
   }
+
+  /**
+   * 数据流的中位数，分别使用两个堆并保证二者元素数目差值不超过 2 即可
+   *
+   * <p>TODO
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
+   */
+  //  class MedianFinder {
+  //
+  //    public MedianFinder() {}
+  //
+  //    public void addNum(int num) {}
+  //
+  //    public double findMedian() {}
+  //  }
 }
 
 /** 移除 */

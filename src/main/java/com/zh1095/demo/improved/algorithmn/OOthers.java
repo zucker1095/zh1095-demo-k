@@ -12,16 +12,6 @@ import java.util.Map;
  */
 public class OOthers {
   /**
-   * 划分字母区间
-   *
-   * <p>TODO
-   *
-   * @param s the s
-   * @return list
-   */
-  //  public List<Integer> partitionLabels(String s) {}
-
-  /**
    * 罗马数字转整数
    *
    * <p>扩展1，汉字转阿拉伯数字
@@ -131,6 +121,30 @@ public class OOthers {
 
     return res;
   }
+
+  /**
+   * 划分字母区间
+   *
+   * <p>TODO
+   *
+   * @param s the s
+   * @return list
+   */
+  //  public List<Integer> partitionLabels(String s) {}
+
+  /**
+   * 栈排序
+   *
+   * <p>TODO
+   *
+   * @param stack
+   * @return
+   */
+  public Deque<Integer> stackSort(Deque<Integer> stack) {
+    Deque<Integer> tmp = new ArrayDeque<>();
+    while (!stack.isEmpty()) {}
+    return tmp;
+  }
 }
 
 /** 数学类 */
@@ -196,9 +210,7 @@ class MMath {
    * @return int int
    */
   public int mySqrt(int x) {
-    if (x == 0 || x == 1) {
-      return x;
-    }
+    if (x == 0 || x == 1) return x;
     int lo = 0, hi = x, res = 0;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
@@ -209,9 +221,8 @@ class MMath {
         lo = mid + 1;
       }
     }
-    //    if (x == 0) {
-    //      return 0;
-    //    }
+    // 牛顿迭代
+    //    if (x == 0) return 0;
     //    double ori = x, res = x;
     //    while (true) {
     //      double xi = 0.5 * (res + ori / res);
@@ -220,7 +231,6 @@ class MMath {
     //      res = xi;
     //    }
     //    return (int) res;
-
     return res;
   }
 
