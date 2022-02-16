@@ -211,9 +211,7 @@ public class SString extends DefaultSString {
       count[ch - 'a'] += 1;
     }
     for (char ch : chs) {
-      if (count[ch - 'a'] == 1) {
-        return ch;
-      }
+      if (count[ch - 'a'] == 1) return ch;
     }
     return ' ';
   }
@@ -479,18 +477,9 @@ class WWindow {
 /** 子串相关，单词搜索参考 TTree */
 class WWord extends DefaultSString {
   /**
-   * 反转字符串
-   *
-   * @param s the s
-   */
-  public void reverseString(char[] s) {
-    reverseChs(s, 0, s.length - 1);
-  }
-
-  /**
    * 翻转字符串里的单词，对于 Java 不可能实现实际的 O(1) space，因此要求 s 原地即可
    *
-   * <p>去空格 & 两次反转
+   * <p>去空格 & 两次反转，全串与逐个单词
    *
    * @param s the s
    * @return string string
@@ -536,11 +525,11 @@ class WWord extends DefaultSString {
   }
 
   /**
-   * 单词拆分
+   * 单词拆分，s 能否被 wordDict 组合而成
    *
    * <p>dp[i] 表示 s 的前 i 位是否可以用 wordDict 中的单词表示，比如 wordDict=["apple", "pen", "code"]
    *
-   * <p>s="applepencode" 则 dp[8] = dp[5] + check("pen")
+   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
    *
    * @param s the s
    * @param wordDict the word dict
@@ -552,7 +541,8 @@ class WWord extends DefaultSString {
     for (String word : wordDict) hash.put(word, true);
     dp[0] = true;
     for (int i = 1; i <= s.length(); i++) {
-      for (int j = i - 1; j >= 0; j--) { // [0<-i] O(n^2)
+      // [0<-i] O(n^2)
+      for (int j = i - 1; j >= 0; j--) {
         dp[i] = dp[j] && hash.getOrDefault(s.substring(j, i), false);
         if (dp[i]) break;
       }
@@ -589,6 +579,18 @@ class WWord extends DefaultSString {
     }
     return 0;
   }
+
+  /**
+   * 单词接龙，双向 bfs
+   *
+   * <p>TODO
+   *
+   * @param beginWord
+   * @param endWord
+   * @param wordList
+   * @return
+   */
+  //  public int ladderLength(String beginWord, String endWord, List<String> wordList) {}
 }
 
 /**

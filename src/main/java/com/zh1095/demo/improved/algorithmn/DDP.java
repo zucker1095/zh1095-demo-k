@@ -481,7 +481,11 @@ class PPath {
   public int uniquePaths(int m, int n) {
     int[] dp = new int[n];
     Arrays.fill(dp, 1);
-    for (int i = 1; i < m; i++) for (int j = 1; j < n; j++) dp[j] += dp[j - 1];
+    for (int i = 1; i < m; i++) {
+      for (int j = 1; j < n; j++) {
+        dp[j] += dp[j - 1];
+      }
+    }
     return dp[n - 1];
   }
 
@@ -496,7 +500,8 @@ class PPath {
   public int uniquePathsWithObstacles(int[][] obstacleGrid) {
     int m = obstacleGrid[0].length;
     int[] dp = new int[m];
-    dp[0] = (obstacleGrid[0][0] == 1) ? 0 : 1; // 起点可能有障碍物
+    // 起点可能有障碍物
+    dp[0] = (obstacleGrid[0][0] == 1) ? 0 : 1;
     for (int[] ints : obstacleGrid) {
       for (int j = 0; j < m; ++j) {
         if (ints[j] == 1) dp[j] = 0;

@@ -904,14 +904,14 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 搜索二维矩阵，模拟 BST，I & II 通用
+   * 搜索二维矩阵，模拟 BST 以右上角作根开始遍历，I & II 通用
    *
    * @param matrix the matrix
    * @param target the target
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
-    int i = 0, j = matrix[0].length - 1; // 矩阵右上角
+    int i = 0, j = matrix[0].length - 1;
     while (i < matrix.length && j >= 0) {
       if (matrix[i][j] < target) {
         i += 1;
@@ -962,13 +962,12 @@ class Dichotomy extends DefaultArray {
    */
   public int splitArray(int[] nums, int m) {
     int max = 0, sum = 0;
-    // 计算「子数组各自的和的最大值」的上下界
+    // 计算子数组各自和的最大值的上下界
     for (int num : nums) {
       max = Math.max(max, num);
       sum += num;
     }
-    // 使用「二分查找」确定一个恰当的「子数组各自的和的最大值」，
-    // 使得它对应的「子数组的分割数」恰好等于 m
+    // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
     int lo = max, hi = sum;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;

@@ -94,31 +94,30 @@ public class LList {
   }
 
   /**
-   * 回文链表，找中点 & 反转前半部分 & 逐一对比
+   * 回文链表，找中点，并反转前半部分 & 逐一比对两条链表
    *
    * @param head the head
    * @return boolean boolean
    */
   public boolean isPalindrome(ListNode head) {
-    ListNode dummy = new ListNode(); // cur 指向当前要反转的节点，dummy 作为头插法的头
+    // cur 指向当前要反转的节点，dummy 作为头插法的头
+    ListNode dummy = new ListNode();
     ListNode lo = head, hi = head;
+    // 保证 hi 非空
     while (hi != null && hi.next != null) {
       ListNode cur = lo;
       lo = lo.next;
       hi = hi.next.next;
+      // 两次变向，反向头插，建议画图
       cur.next = dummy.next;
       dummy.next = cur;
     }
-    // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一个
-    if (hi != null) {
-      lo = lo.next;
-    }
+    // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一位
+    if (hi != null) lo = lo.next;
     // 分别指向反转后链表的头 & 后半部分链表的头
     ListNode l1 = dummy.next, l2 = lo;
     while (l1 != null && l2 != null) {
-      if (l1.val != l2.val) {
-        return false;
-      }
+      if (l1.val != l2.val) return false;
       l1 = l1.next;
       l2 = l2.next;
     }
@@ -226,18 +225,19 @@ class ReverseList extends LList {
   public ListNode reverseKGroup(ListNode head, int k) {
     ListNode dummy = new ListNode();
     dummy.next = head;
-    ListNode tail = dummy, cur = dummy;
+    ListNode tail = dummy, first, cur = dummy, nxt;
     while (cur.next != null) {
       for (int i = 0; i < k && cur != null; i++) {
         cur = cur.next;
       }
       if (cur == null) break;
-      // 扩展1，改为 cur.next!=null 并统计 i 是否为 k 因为可能刚好 =k 并不用判空当前结点
+      // 扩展1，改为 cur.next!=null 并统计 i 是否为 k 因为可能刚好 =k，且不需判空当前结点
       //      for (int i = 0; i < k && cur.next != null; i++) {
       //        cur = cur.next;
       //      }
       // 暂存
-      ListNode first = tail.next, nxt = cur.next;
+      first = tail.next;
+      nxt = cur.next;
       // 变向三次
       cur.next = null;
       tail.next = reverseList(first);
@@ -386,15 +386,13 @@ class DoublePointerList extends LList {
    * @return the list node
    */
   public ListNode mergeKLists(ListNode[] lists) {
-    if (lists == null || lists.length == 0) {
-      return null;
-    }
+    if (lists == null || lists.length == 0) return null;
     Queue<ListNode> pq =
         new PriorityQueue<>(
             lists.length,
-            (ListNode o1, ListNode o2) -> {
-              if (o1.val < o2.val) return -1;
-              else if (o1.val == o2.val) return 0;
+            (ListNode n1, ListNode n2) -> {
+              if (n1.val < n2.val) return -1;
+              else if (n1.val == n2.val) return 0;
               else return 1;
             });
     for (ListNode node : lists) {
@@ -405,18 +403,14 @@ class DoublePointerList extends LList {
     while (!pq.isEmpty()) {
       cur.next = pq.poll();
       cur = cur.next;
-      if (cur.next != null) {
-        pq.add(cur.next);
-      }
+      if (cur.next != null) pq.offer(cur.next);
     }
     return dummy.next;
     //    return (lists.length == 0) ? null : divide(lists, 0, lists.length - 1);
   }
 
   private ListNode divide(ListNode[] lists, int lo, int hi) {
-    if (lo == hi) {
-      return lists[lo];
-    }
+    if (lo == hi) return lists[lo];
     int mid = lo + (hi - lo) / 2;
     return mergeTwoLists(divide(lists, lo, mid), divide(lists, mid + 1, hi));
   }
@@ -549,43 +543,6 @@ class DoublePointerList extends LList {
   }
 
   /**
-   * 重排奇偶链表，参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
-   *
-   * <p>完全可以复用模板，三步曲如下
-   *
-   * <p>1.分别取出奇偶链表，奇数位链表需断尾
-   *
-   * <p>2.反转偶数位链表
-   *
-   * <p>3.合并二者即可
-   *
-   * @param head
-   * @return
-   */
-  public ListNode sortOddEvenList(ListNode head) {
-    ListNode oddHead = head, evenHead = _oddEvenList(head);
-    evenHead = reverseList(evenHead);
-    return mergeTwoLists(oddHead, evenHead);
-  }
-
-  // 分割奇偶数位，并返回后者首位
-  private ListNode _oddEvenList(ListNode head) {
-    if (head == null) {
-      return null;
-    }
-    ListNode odd = head, even = head.next;
-    ListNode evenHead = head.next;
-    while (even != null && even.next != null) {
-      odd.next = even.next;
-      odd = odd.next;
-      even.next = odd.next;
-      even = even.next;
-    }
-    odd.next = null;
-    return evenHead;
-  }
-
-  /**
    * 删除排序链表中的重复元素
    *
    * <p>与移动零 & 删除排序数组中的重复项保持一致，符合，即要移动 or 移除的则跳过
@@ -624,13 +581,57 @@ class DoublePointerList extends LList {
     ListNode dummy = new ListNode();
     dummy.next = head;
     ListNode cur = dummy;
-    while (cur.next != null && cur.next.next != null) { // diff1
-      if (cur.next.val == cur.next.next.val) { // diff2
+    // diff1
+    while (cur.next != null && cur.next.next != null) {
+      // diff2
+      if (cur.next.val == cur.next.next.val) {
         int target = cur.next.val;
-        while (cur.next != null && cur.next.val == target) cur.next = cur.next.next; // diff3
-      } else cur = cur.next;
+        // diff3
+        while (cur.next != null && cur.next.val == target) {
+          cur.next = cur.next.next;
+        }
+      } else {
+        cur = cur.next;
+      }
     }
     return dummy.next;
+  }
+
+  /**
+   * 重排奇偶链表，参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
+   *
+   * <p>完全可以复用模板，三步曲如下
+   *
+   * <p>1.分别取出奇偶链表，奇数位链表需断尾
+   *
+   * <p>2.反转偶数位链表
+   *
+   * <p>3.合并二者即可
+   *
+   * @param head
+   * @return
+   */
+  public ListNode sortOddEvenList(ListNode head) {
+    ListNode oddHead = head, evenHead = _oddEvenList(head);
+    evenHead = reverseList(evenHead);
+    return mergeTwoLists(oddHead, evenHead);
+  }
+
+  // 分割奇偶数位，并返回后者首位
+  private ListNode _oddEvenList(ListNode head) {
+    if (head == null) {
+      return null;
+    }
+    ListNode odd = head, even = head.next;
+    ListNode evenHead = head.next;
+    while (even != null && even.next != null) {
+      odd.next = even.next;
+      odd = odd.next;
+      even.next = odd.next;
+      even = even.next;
+    }
+    odd.next = null;
+    return evenHead;
   }
 
   /**
