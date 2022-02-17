@@ -283,14 +283,15 @@ class Postorder {
       TreeNode inNode = stack.getLast();
       // 右结点为空或已遍历
       if (inNode.right != null && inNode.right != pre) {
-        cur = inNode.right; // 右结点还没遍历，遍历右结点
+        // 右结点还没遍历，遍历右结点
+        cur = inNode.right;
         continue;
       }
       if (Math.abs(getHeight(inNode.left) - getHeight(inNode.right)) > 1) {
         return false;
       }
       pre = stack.removeLast();
-      // 当前结点下，没有要遍历的结点了
+      // 当前结点下，没有要遍历的结点
       cur = null;
     }
     return true;

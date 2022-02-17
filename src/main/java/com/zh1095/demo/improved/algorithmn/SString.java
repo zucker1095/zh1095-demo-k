@@ -316,11 +316,11 @@ class WWindow {
   /**
    * 长度最小的子数组，满足和不少于 target，滑窗
    *
+   * <p>不能使用滑窗，因为下方缩窗的条件是整体满足 >=target，但可能已经满足的局部无法被收入
+   *
    * <p>扩展1，列出所有满足和为 target 的连续子序列
    *
    * <p>扩展2，里边有负数，参考下方「和至少为k的最短子数组」
-   *
-   * <p>则不能使用滑窗，因为下方缩窗的条件是整体满足 >= target，但可能已经满足的局部无法被收入
    *
    * @param target the target
    * @param nums the nums
@@ -436,6 +436,46 @@ class WWindow {
     }
     return res < len + 1 ? res : -1;
   }
+
+  /**
+   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
+   *
+   * <p>TODO 前缀和
+   *
+   * <p>扩展1，k 倍区间，参考
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public boolean checkSubarraySum(int[] nums, int k) {
+    int[] sum = new int[nums.length + 1];
+    for (int i = 1; i < nums.length + 1; i++) {
+      sum[i] = sum[i - 1] + nums[i - 1];
+    }
+    // 保存余数对应的下标
+    HashMap<Integer, Integer> idxByMod = new HashMap();
+    for (int i = 0; i < sum.length; ++i) {
+      int sumMod = sum[i] % k;
+      if (idxByMod.containsKey(sumMod) && i > idxByMod.get(sumMod) + 1) {
+        return true;
+      } else if (!idxByMod.containsKey(sumMod)) {
+        // 只在不存在 key 时更新，保证子数组长度尽可能大
+        idxByMod.put(sumMod, i);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 连续数组
+   *
+   * <p>TODO 前缀和
+   *
+   * @param nums
+   * @return
+   */
+  //  public int findMaxLength(int[] nums) {}
 
   private static class MonotonicQueue {
     private final Deque<Integer> mq = new LinkedList<>();
@@ -581,9 +621,9 @@ class WWord extends DefaultSString {
   }
 
   /**
-   * 单词接龙，双向 bfs
+   * 单词接龙，返回 beginWord 每次 diff 一个字母，最终变为 endWord 的最短路径，且所有路径均包含在 wordList 内
    *
-   * <p>TODO
+   * <p>TODO 双向 bfs
    *
    * @param beginWord
    * @param endWord
@@ -805,7 +845,7 @@ class StrTravesal extends SString {
       }
       pre = res;
       res = res * 10 + (ch - '0');
-      // 如果不相等就是溢出了
+      // 溢出判断
       if (pre != res / 10) {
         return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
       }

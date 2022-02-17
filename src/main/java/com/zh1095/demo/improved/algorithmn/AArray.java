@@ -43,18 +43,20 @@ public class AArray extends DefaultArray {
     // 特判，避免当 target 小于 nums[0] & nums[end] 时多次循环运算
     if (target < nums[0] || target > nums[nums.length - 1]) return -1;
     int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) { // 目标可能位于碰撞点
+    // 目标可能位于碰撞点
+    while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       if (nums[mid] < target) lo = mid + 1;
       else if (nums[mid] == target) return mid;
       else if (nums[mid] > target) hi = mid - 1;
     }
+    return -1;
     //      while (l < r) {
-    //        if ok(m) r = m;
-    //        else l = m + 1
+    //        if (nums[mid] < target) l = m + 1
+    //        else if (nums[mid] == target) return m
+    //        else if (nums[mid] > target) r = m;
     //      }
     //      return l;
-    return -1;
   }
 
   /**
@@ -813,7 +815,7 @@ class Dichotomy extends DefaultArray {
   /**
    * 寻找重复数，抽屉原理，对数值进行二分
    *
-   * <p>据抽屉原理，小于等于 4 的个数如果严格大于 4 个，此时重复元素一定出现在 [1..4] 区间里
+   * <p>据抽屉原理，比如，小于等于 4 的个数如果严格大于 4 个，此时重复元素一定出现在 [1..4] 区间里
    *
    * @param nums the nums
    * @return int int
@@ -821,19 +823,14 @@ class Dichotomy extends DefaultArray {
   public int findDuplicate(int[] nums) {
     // 值，相当于索引的 0
     int lo = 1, hi = nums.length - 1;
-    // int res = -1;
     while (lo <= hi) {
-      int mid = lo + (hi - lo) / 2;
-      int count = 0;
+      int count = 0, pivot = lo + (hi - lo) / 2;
       // 统计更小的个数
       for (int num : nums) {
-        count += num > mid ? 0 : 1;
+        count += num > pivot ? 0 : 1;
       }
-      if (count > mid) {
-        hi = mid - 1;
-      } else {
-        lo = mid + 1;
-      }
+      if (count <= pivot) lo = pivot + 1;
+      else hi = pivot - 1;
     }
     return lo;
   }
@@ -904,13 +901,21 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 搜索二维矩阵，模拟 BST 以右上角作根开始遍历，I & II 通用
+   * 搜索二维矩阵，建议模拟 BST 以右上角作根开始遍历，复杂度 m+n
+   *
+   * <p>I & II 通用
+   *
+   * <p>或二分，复杂度为 mlogn
    *
    * @param matrix the matrix
    * @param target the target
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
+    return searchMatrix1(matrix, target);
+  }
+
+  private boolean searchMatrix1(int[][] matrix, int target) {
     int i = 0, j = matrix[0].length - 1;
     while (i < matrix.length && j >= 0) {
       if (matrix[i][j] < target) {
@@ -920,6 +925,23 @@ class Dichotomy extends DefaultArray {
       } else if (matrix[i][j] > target) {
         j -= 1;
       }
+    }
+    return false;
+  }
+
+  private boolean searchMatrix2(int[][] matrix, int target) {
+    int y = matrix.length, x = matrix[0].length;
+    for (int i = 0; i < y; i++) {
+      int lo = 0, hi = x - 1;
+      while (lo < hi) {
+        int mid = (lo + hi + 1) >> 1;
+        if (matrix[i][mid] <= target) {
+          lo = mid;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      if (matrix[i][hi] == target) return true;
     }
     return false;
   }
@@ -1162,6 +1184,8 @@ class DicOrder extends DefaultArray {
   /**
    * 下一个排列，求按照字典序，该排列下一个大的
    *
+   * <p>对比下方「最大交换」，后者是找到交换结果的最大
+   *
    * <p>找 & 排 & 找 & 换 & 排
    *
    * <p>扩展1，上一个排列，从 n-2 开始找到首个峰 & 峰右边调为降序 & 从 n-1 开始找到首个比峰小的数，交换
@@ -1181,6 +1205,37 @@ class DicOrder extends DefaultArray {
       }
     }
     Arrays.sort(nums);
+  }
+
+  /**
+   * 最大交换，交换任意两位数，使得结果是所有方案中值最大
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
+   *
+   * <p>贪心，将最高位的 n 与后面 m 交换，后者需满足 m>n 且 m 尽可能靠后
+   *
+   * @param num
+   * @return
+   */
+  public int maximumSwap(int num) {
+    char[] chs = Integer.toString(num).toCharArray();
+    // 记录每个数字出现的最后一次出现的下标
+    int[] lastIdx = new int[10];
+    for (int i = 0; i < chs.length; i++) {
+      lastIdx[chs[i] - '0'] = i;
+    }
+    // 顺序遍历找到当前位置右边的最大的数字，并交换
+    for (int i = 0; i < chs.length; i++) {
+      for (int d = 9; d > chs[i] - '0'; d--) {
+        if (lastIdx[d] > i) {
+          swap(chs, i, lastIdx[d]);
+          // 只允许交换一次，因此直接返回
+          return Integer.parseInt(new String(chs));
+        }
+      }
+    }
+    return num;
   }
 
   /**
@@ -1215,32 +1270,6 @@ class DicOrder extends DefaultArray {
       begin += 1;
     }
     return res.substring(begin);
-  }
-
-  /**
-   * 最大交换，交换任意两位数，使得结果是所有方案中值最大
-   *
-   * <p>TODO
-   *
-   * @param num
-   * @return
-   */
-  public int maximumSwap(int num) {
-    char[] chs = Integer.toString(num).toCharArray();
-    int maxIdx = chs.length - 1;
-    int[] maxArr = new int[chs.length];
-    for (int i = chs.length - 1; i >= 0; i--) {
-      maxIdx = chs[i] > chs[maxIdx] ? i : maxIdx;
-      maxArr[i] = maxIdx;
-    }
-    for (int i = 0; i < chs.length; i++) {
-      if (chs[maxArr[i]] == chs[i]) continue;
-      char tmp = chs[maxArr[i]];
-      chs[maxArr[i]] = chs[i];
-      chs[i] = tmp;
-      break;
-    }
-    return Integer.parseInt(new String(chs));
   }
 
   /**
@@ -1308,15 +1337,14 @@ class DicOrder extends DefaultArray {
   // 如果说现在 prefix 是 10，next 是 20，那么现在分别变成 100 & 200
   // 1 为前缀的子节点增加 100 个，十叉树又增加了一层，变成三层
   private int count(int n, int prefix) {
-    // 不断向下层遍历可能一个乘 10 就溢出, 所以用 long
-    // 下一个前缀峰头
+    // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出, 所以用 long
     long cur = prefix, next = cur + 1;
     int count = 0;
     while (cur <= n) {
       // 下一峰头减去此峰头
       count += Math.min(n + 1, next) - cur;
       cur *= 10;
-      // 往下层走
+      // 步进至下层
       next *= 10;
     }
     return count;
@@ -1525,6 +1553,12 @@ abstract class DefaultArray {
    */
   protected final void swap(int[] nums, int a, int b) {
     int tmp = nums[a];
+    nums[a] = nums[b];
+    nums[b] = tmp;
+  }
+
+  protected final void swap(char[] nums, int a, int b) {
+    char tmp = nums[a];
     nums[a] = nums[b];
     nums[b] = tmp;
   }

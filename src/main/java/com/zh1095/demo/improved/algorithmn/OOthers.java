@@ -149,8 +149,7 @@ public class OOthers {
 
 /** 数学类 */
 class MMath {
-  /** The Chars. */
-  final String CHARS = "0123456789ABCDEF";
+  private final String CHARS = "0123456789ABCDEF";
 
   /**
    * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
@@ -159,16 +158,20 @@ class MMath {
    * @return boolean boolean
    */
   public boolean canJump(int[] nums) {
-    int furthest = 0; // 前 n-1 个元素能够跳到的最远距离
+    // 前 n-1 个元素能够跳到的最远距离
+    int furthest = 0;
     for (int i = 0; i <= furthest; i++) {
-      int curFurthest = i + nums[i]; // 第 i 个元素能够跳到的最远距离
-      furthest = Math.max(furthest, curFurthest); // 更新最远距离
+      // 第 i 个元素能够跳到的最远距离
+      int curFurthest = i + nums[i];
+      // 更新最远距离
+      furthest = Math.max(furthest, curFurthest);
       // 如果最远距离已经大于或等于最后一个元素的下标，则说明能跳过去，结束
       if (furthest >= nums.length - 1) {
         return true;
       }
     }
-    return false; // 最远距离 k 不再改变,且没有到末尾元素
+    // 最远距离 k 不再改变，且没有到末尾元素
+    return false;
   }
 
   /**
@@ -195,9 +198,9 @@ class MMath {
   }
 
   /**
-   * x的平方根，二分只能精确至后二位
+   * x的平方根，二分只能精确至后二位，建议采用牛顿迭代
    *
-   * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid - 1] 与 [mid..right]
+   * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid-1] 与 [mid..right]
    *
    * <p>如果 mid 下取整，在区间只有 22 个数的时候有 mid 的值等于 left，一旦进入分支 [mid..right] 区间不会再缩小，出现死循环
    *
@@ -210,10 +213,28 @@ class MMath {
    * @return int int
    */
   public int mySqrt(int x) {
+    return mySqrt1(x);
+  }
+
+  private int mySqrt1(int x) {
+    if (x == 0) return 0;
+    double cur = x;
+    while (true) {
+      double xi = 0.5 * (cur + x / cur);
+      // 后 n 位此处定制
+      if (Math.abs(cur - xi) < 1e-7) break;
+      cur = xi;
+    }
+    return (int) cur;
+  }
+
+  private int mySqrt2(int x) {
+    // 特判零与一
     if (x == 0 || x == 1) return x;
     int lo = 0, hi = x, res = 0;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
+      // 取代 mid^2 > x 避免溢出
       if (mid > x / mid) {
         hi = mid - 1;
       } else {
@@ -221,16 +242,6 @@ class MMath {
         lo = mid + 1;
       }
     }
-    // 牛顿迭代
-    //    if (x == 0) return 0;
-    //    double ori = x, res = x;
-    //    while (true) {
-    //      double xi = 0.5 * (res + ori / res);
-    //      // 1e-7
-    //      if (Math.abs(res - xi) < Integer.MIN_VALUE) break;
-    //      res = xi;
-    //    }
-    //    return (int) res;
     return res;
   }
 
@@ -245,10 +256,11 @@ class MMath {
     return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
   }
 
+  // 特判零次幂 & 递归二分 & 判断剩余幂
   private double quickMulti(double x, int n) {
-    if (n == 0) return 1; // 1.剩余 0 次幂
-    double y = quickMulti(x, n / 2); // 2.dichotomy
-    return y * y * (((n & 1) == 0) ? 1 : x); // 3.剩余奇 or 偶次幂
+    if (n == 0) return 1;
+    double y = quickMulti(x, n / 2);
+    return y * y * (((n & 1) == 0) ? 1 : x);
   }
 
   /**
@@ -262,7 +274,9 @@ class MMath {
    */
   public int lastRemaining(int n, int m) {
     int res = 0;
-    for (int i = 2; i <= n; i++) res = (res + m) % i;
+    for (int i = 2; i <= n; i++) {
+      res = (res + m) % i;
+    }
     return res;
   }
 

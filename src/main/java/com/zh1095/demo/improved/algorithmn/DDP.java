@@ -243,6 +243,8 @@ class OOptimalSolution {
    *
    * <p>dp[i] = Math.max(dp[i-1], nums[i-1] + dp[i-2]);
    *
+   * <p>扩展1，记录路径，参下 annotate
+   *
    * @param nums the nums
    * @return int int
    */
@@ -252,10 +254,22 @@ class OOptimalSolution {
 
   private int rob1(int[] nums) {
     int pre = 0, cur = 0;
-    for (int i : nums) {
-      int tmp = Math.max(cur, pre + i);
+    //    StringBuilder pathPre = new StringBuilder(), pathCur = new StringBuilder();
+    for (int num : nums) {
+      //      if (cur > pre + num) {
+      //        pathCur = new StringBuilder(pathPre.toString());
+      //        cur = cur;
+      //      } else {
+      //        String tmp1 = pathPre.toString();
+      //        pathPre = new StringBuilder(pathCur.toString()).append(num);
+      //        pathCur = new StringBuilder(tmp1);
+      //        int tmp2 = Math.max(cur, pre + num);
+      //        pre = cur;
+      //        cur = tmp2;
+      //      }
+      int tmp2 = Math.max(cur, pre + num);
       pre = cur;
-      cur = tmp;
+      cur = tmp2;
     }
     return cur;
   }
@@ -429,37 +443,38 @@ class CCount {
   }
 
   /**
-   * 解码方法
+   * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
    *
-   * <p>TODO
+   * <p>参考
+   * https://leetcode-cn.com/problems/decode-ways/solution/c-wo-ren-wei-hen-jian-dan-zhi-guan-de-jie-fa-by-pr/
    *
    * <p>dp[i] 表示 str[0,i] 的解码总数
    *
-   * <p>递推关系
+   * <p>递推关系，按照如下顺序，分别判断正序遍历时，当前与前一位的数字，s[i]=='0' -> s[i-1]=='1' or '2'
+   *
+   * <p>显然 dp[i] 仅依赖前二者，因此可状态压缩
    *
    * @param s the s
    * @return int
    */
   public int numDecodings(String s) {
-    // 补充前导
-    s = " " + s;
-    char[] chs = s.toCharArray();
-    int[] dp = new int[s.length() + 1];
-    dp[0] = 1;
-    for (int i = 1; i <= s.length(); i++) {
-      // a 代表「当前位置」单独形成 item
-      // b 代表「当前位置」与「前一位置」共同形成 item
-      int a = chs[i] - '0', b = (chs[i - 1] - '0') * 10 + (chs[i] - '0');
-      // 如果 a 属于有效值，那么 dp[i] 可以由 dp[i - 1] 转移过来
-      if (1 <= a && a <= 9) {
-        dp[i] = dp[i - 1];
+    if (s.charAt(0) == '0') return 0;
+    // dp[-1]=dp[0]=1
+    int pre = 1, cur = 1;
+    for (int i = 1; i < s.length(); i++) {
+      char curCh = s.charAt(i), preCh = s.charAt(i - 1);
+      int tmp = cur;
+      if (curCh == '0') {
+        if (preCh != '1' && preCh != '2') {
+          return 0;
+        }
+        cur = pre;
+      } else if (preCh == '1' || (preCh == '2' && curCh >= '1' && curCh <= '6')) {
+        cur += pre;
       }
-      // 如果 b 属于有效值，则 dp[i] 可以由 dp[i - 2] 或者 dp[i - 1] & dp[i - 2] 转移过来
-      if (10 <= b && b <= 26) {
-        dp[i] += dp[i - 2];
-      }
+      pre = tmp;
     }
-    return dp[s.length()];
+    return cur;
   }
 }
 
@@ -529,7 +544,7 @@ class PPath {
  */
 class SSubArray {
   /**
-   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，前缀和
+   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
    *
    * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
    *
@@ -616,7 +631,7 @@ class SSubArray {
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
-   * <p>递推 dp[i][j] = (nums1[i - 1] == nums2[j - 1]) ? dp[i - 1][j - 1] + 1 : 0;
+   * <p>递推 dp[i][j]=(nums1[i - 1]==nums2[j - 1]) ? dp[i - 1][j - 1]+1 : 0;
    *
    * <p>状态压缩，由于是连续，因此递推关系只依赖前一个变量，类似滑窗
    *
@@ -674,13 +689,13 @@ class SSubArray {
 /** 子序列 */
 class SSubSequence {
   /**
-   * 最长递增子序列 / 最长上升子序列
+   * 最长递增子序列 / 最长上升子序列，建议掌握 n^2 即可，而且输出路径更便捷
    *
    * <p>TODO
    *
    * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
    *
-   * <p>扩展1，时间复杂度 nlogn 参考
+   * <p>时间复杂度 nlogn 参考
    * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
    *
    * <p>扩展2，输出，分别记录 i & j 即可，参下 annotate
@@ -694,9 +709,7 @@ class SSubSequence {
 
   private int lengthOfLIS1(int[] nums) {
     int res = 0;
-    if (nums.length == 0) {
-      return res;
-    }
+    if (nums.length == 0) return res;
     int[] dp = new int[nums.length];
     Arrays.fill(dp, 1);
     for (int i = 0; i < nums.length; i++) {
@@ -704,59 +717,112 @@ class SSubSequence {
       //      int idx = 0;
       for (int j = 0; j < i; j++) {
         if (nums[j] < pivot) {
-          //          idx = j;
           dp[i] = Math.max(dp[i], dp[j] + 1);
         }
       }
-      //      if (dp[i] >= res) {
-      //        // 记录 i & j
-      //      }
       res = Math.max(res, dp[i]);
+    }
+    // 求出字典序最小的路径
+    //    int[] path = new int[res];
+    //    int j = res - 1;
+    // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
+    // 如果后面的比前面大，那么必定后面的长度>前面的长度
+    //    for (int i = nums.length - 1; i >= 0 && j >= 0; i--) {
+    //      if (dp[i] == j) {
+    //        path[j] = nums[i];
+    //        j -= 1;
+    //      }
+    //    }
+    return res;
+  }
+
+  // 基于贪心，二分与 dp，虽然原数组无序，参考
+  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?toCommentId=11635899
+  // tail[i] 表示长度为 i+1 的所有上升序列的结尾的最小值，如 [10,9,2,5,3,7,101,18] 中的 tail[1]=3 即 [2,3]
+  private int lengthOfLIS2(int[] nums) {
+    int res = 0;
+    int[] tails = new int[nums.length];
+    for (int num : nums) {
+      int lo = 0, hi = res;
+      while (lo < hi) {
+        int mid = lo + (lo - hi) / 2;
+        if (tails[mid] < num) lo = mid + 1;
+        else hi = mid;
+      }
+      tails[lo] = num;
+      if (res == hi) res += 1;
     }
     return res;
   }
 
-  // dp & 二分，参考
-  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?toCommentId=11635899
-  // tail[i] 表示长度为 i+1 的所有上升序列的结尾的最小值，如 [10,9,2,5,3,7,101,18] 中的 tail[1]=3 即 [2,3]
-  private int[] lengthOfLIS2(int[] nums) {
-    int n = nums.length;
-    int[] tail = new int[n + 1];
-    tail[0] = Integer.MIN_VALUE;
+  private int lengthOfLIS3(int[] nums) {
+    int len = nums.length;
+    // 记录长度的 DP 数组
+    int[] tail = new int[len], dp = new int[len];
+    tail[0] = nums[0];
+    dp[0] = 1;
     int end = 0;
-    // dp[i]表示以 arr[i] 结尾的最长递增子序列长度
-    int[] dp = new int[n];
-    for (int i = 0; i < n; i++) {
-      int num = nums[i];
-      if (num > tail[end]) {
+    for (int i = 1; i < len; i++) {
+      if (tail[end] < nums[i]) {
         end += 1;
-        tail[end] = num;
-        dp[i] = end;
+        tail[end] = nums[i];
+        dp[i] = end + 1;
         continue;
       }
-      // 在 tail 中找首个大于 num 的数字
-      int lo = 1, hi = end;
+      int lo = 0, hi = end;
       while (lo < hi) {
         int mid = lo + (hi - lo) / 2;
-        if (tail[mid] < num) {
-          lo = mid + 1;
-        } else {
-          hi = mid;
+        if (tail[mid] < nums[i]) lo = mid + 1;
+        else hi = mid;
+      }
+      // 更新 tail[j]
+      tail[lo] = nums[i];
+      dp[i] = lo + 1;
+    }
+    // 求出字典序最小的路径
+    int[] path = new int[end + 1];
+    int j = end + 1;
+    // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
+    // 如果后面的比前面大，那么必定后面的长度大于前面的长度
+    for (int i = len - 1; i >= 0 && j >= 0; i--) {
+      if (dp[i] == j) {
+        j -= 1;
+        path[j] = nums[i];
+      }
+    }
+    return end + 1;
+  }
+
+  private int lengthOfLIS4(int[] nums) {
+    int n = nums.length;
+    // f[i] 表示以下标i结尾的最长上升子序列的长度
+    // g[i] 表示以下标i结尾的最长上升子序列是从哪个下标转移过来的
+    int[] f = new int[n], g = new int[n];
+    for (int i = 0; i < n; i++) {
+      f[i] = 1;
+      // -1 表示这个序列只有一个数，没有转移
+      g[i] = -1;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] < nums[i] && f[i] < f[j] + 1) {
+          f[i] = f[j] + 1;
+          // 更新长度的同时，记录转移来源
+          g[i] = j;
         }
       }
-      tail[lo] = num;
-      // dp[i]表示i位置最长序列
-      dp[i] = lo;
     }
-    // 字典序最小，若dp[i] = dp[j], i < j 那么一定有arr[j] < arr[i]
-    int[] res = new int[end];
-    int len = end;
-    for (int i = n - 1; i >= 0; i--) {
-      if (dp[i] != len) continue;
-      res[len - 1] = nums[i];
-      len -= 1;
+    // 用k来记录最长上升子序列结尾数字的下标
+    // ans 是最长上升子序列的长度
+    int ans = 1, k = 0;
+    for (int i = 0; i < n; i++) {
+      k = f[k] < f[i] ? i : k;
+      ans = f[k];
     }
-    return res;
+    // 下面是逆序输出最长子序列
+    // 当 k=-1 的时候，表示该数是序列中的第一个数，输出到此为止
+    while (k >= 0) {
+      k = g[k];
+    }
+    return ans;
   }
 
   /**
@@ -898,23 +964,14 @@ class SSubSequence {
   }
 
   /**
-   * 判断子序列
+   * 判断子序列，KMP 思想，类似于用伪链表把相同的字符给链接起来
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/is-subsequence/solution/dui-hou-xu-tiao-zhan-de-yi-xie-si-kao-ru-he-kuai-s/
    *
    * <p>TODO
    *
    * <p>扩展1，依次检查海量 s 是否均为 t 的子序列
-   *
-   * <p>KMP 思想，类似于用伪链表把相同的字符给链接起来，如对于 abac
-   *
-   * <p>1.填充字符 " " -> ' abac'
-   *
-   * <p>2.对其中的字符a链表而言（a-z每个字符都执行一次下述操作,共26次） dp[3]['a'-'a'] => dp[3][0] = -1 记录a最近的一次位置为，nexPos = 3
-   * dp[1]['a'-'a'] => dp[1][0] =3 记录a最近的一次位置为，nexPos = 1 dp[0][0] = 1 (预处理填充的空字符意义所在，否则初始位置的a就找不到了)
-   *
-   * <p>3.初始索引为0,遍历待查找子串
-   *
-   * <p>4.查找 aa 的过程如下 idx = 0 （从idx+1以及之后的位置开始查找） idx = dp[0][c-'a'] => idx = dp[0][0] -> idx = 1
-   * idx = dp[idx][c-'a'] => dp[1][0] = 3 此时 aa 已经遍历完，返回true 上述过程，只要idx = -1,表示找不到字符，则返回false
    *
    * @param s pattern
    * @param t main
@@ -936,9 +993,7 @@ class SSubSequence {
     int idx = 0;
     for (char ch : s.toCharArray()) {
       idx = dp[idx][ch - 'a'];
-      if (idx == -1) {
-        return false;
-      }
+      if (idx == -1) return false;
     }
     return true;
   }

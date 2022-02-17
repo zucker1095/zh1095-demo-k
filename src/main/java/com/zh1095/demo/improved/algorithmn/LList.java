@@ -1,7 +1,5 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -323,7 +321,9 @@ class ReverseList extends LList {
 /** 收集合并 & 删除相关 */
 class DoublePointerList extends LList {
   /**
-   * 两数相加，模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
+   * 两数相加，本质即外排，考虑进位即可
+   *
+   * <p>模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
    * <p>I 逆序存储，而 II 正序，因此需要逆序访问
    *
@@ -335,6 +335,7 @@ class DoublePointerList extends LList {
     return addTwoNumbers2(l1, l2);
   }
 
+  // 123 & 45 -> 573
   private ListNode addTwoNumbers1(ListNode l1, ListNode l2) {
     final int base = 10; // 36 进制
     ListNode dummy = new ListNode();
@@ -353,28 +354,10 @@ class DoublePointerList extends LList {
     return dummy.next;
   }
 
+  // 123 & 45 -> 168
   private ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
-    Deque<Integer> stack1 = new ArrayDeque<>(), stack2 = new ArrayDeque<>();
-    int carry = 0;
-    ListNode p1 = l1, p2 = l2, cur = null;
-    while (p1 != null) {
-      stack1.addLast(p1.val);
-      p1 = p1.next;
-    }
-    while (p2 != null) {
-      stack2.addLast(p2.val);
-      p2 = p2.next;
-    }
-    while (!stack1.isEmpty() || !stack2.isEmpty() || carry > 0) {
-      carry +=
-          (stack1.isEmpty() ? 0 : stack1.removeLast())
-              + (stack2.isEmpty() ? 0 : stack2.removeLast());
-      ListNode node = new ListNode(carry % 10);
-      node.next = cur;
-      cur = node;
-      carry /= 10;
-    }
-    return cur;
+    ListNode p1 = reverseList(l1), p2 = reverseList(l2);
+    return reverseList(addTwoNumbers1(p1, p2));
   }
 
   /**
