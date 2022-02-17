@@ -1,9 +1,6 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 收集 DP 相关
@@ -73,15 +70,15 @@ public class DDP {
   }
 
   /**
-   * 接雨水
+   * 接雨水，贪心，类似漏桶效应
    *
    * @param height the height
    * @return int int
    */
   public int trap(int[] height) {
-    int res = 0;
-    int lm = height[0], rm = height[height.length - 1];
-    for (int lo = 0, hi = height.length - 1; lo <= hi; ) {
+    int lo = 0, hi = height.length - 1;
+    int res = 0, lm = height[lo], rm = height[hi];
+    while (lo <= hi) {
       int left = height[lo], right = height[hi];
       lm = Math.max(lm, left);
       rm = Math.max(rm, right);
@@ -177,11 +174,16 @@ class OOptimalSolution {
   /**
    * 最小路径和，题设自然数
    *
+   * <p>参考
+   * https://leetcode-cn.com/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/0/
+   *
    * <p>dp[i][j] 表示直到走到 (i,j) 的最小路径和
    *
    * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
    *
-   * <p>扩展1，记录路径，则需要自顶向下
+   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历
+   *
+   * <p>扩展2，存在负值点
    *
    * @param grid the grid
    * @return int
@@ -194,9 +196,9 @@ class OOptimalSolution {
       dp[i] = dp[i - 1] + grid[0][i];
     }
     for (int i = 1; i < grid.length; i++) {
-      dp[0] = dp[0] + grid[i][0];
+      dp[0] += grid[i][0];
       for (int j = 1; j < len; j++) {
-        dp[j] = Math.min(dp[j - 1] + grid[i][j], dp[j] + grid[i][j]);
+        dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
       }
     }
     //    List<Integer> res = new ArrayList<>();
@@ -517,10 +519,13 @@ class PPath {
     int[] dp = new int[m];
     // 起点可能有障碍物
     dp[0] = (obstacleGrid[0][0] == 1) ? 0 : 1;
-    for (int[] ints : obstacleGrid) {
+    for (int[] rows : obstacleGrid) {
       for (int j = 0; j < m; ++j) {
-        if (ints[j] == 1) dp[j] = 0;
-        else if (ints[j] == 0 && j - 1 >= 0) dp[j] = dp[j] + dp[j - 1];
+        if (rows[j] == 1) {
+          dp[j] = 0;
+        } else if (rows[j] == 0 && j >= 1) {
+          dp[j] = dp[j] + dp[j - 1];
+        }
       }
     }
     return dp[m - 1];
@@ -579,6 +584,8 @@ class SSubArray {
   /**
    * 和为k的子数组，前缀和 value：key 对应的前缀和的个数
    *
+   * <p>扩展1，求和为 k 的子数组中，最大的长度，参考「连续数组」
+   *
    * @param nums the nums
    * @param k the k
    * @return int int
@@ -590,13 +597,87 @@ class SSubArray {
     int preSum = 0, count = 0;
     for (int num : nums) {
       preSum += num;
-      // 先获得前缀和为 preSum - k 的个数，加到计数变量里
-      if (freqByPreSum.containsKey(preSum - k)) count += freqByPreSum.get(preSum - k);
+      // 先获得前缀和为 preSum-k 的个数，加到计数变量里
+      if (freqByPreSum.containsKey(preSum - k)) {
+        count += freqByPreSum.get(preSum - k);
+      }
       // 然后维护 preSumFreq 的定义
       freqByPreSum.put(preSum, freqByPreSum.getOrDefault(preSum, 0) + 1);
     }
     return count;
   }
+
+  /**
+   * 和至少为k的最短子数组，单调队列 & 前缀和
+   *
+   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int int
+   */
+  public int shortestSubarray(int[] nums, int k) {
+    int len = nums.length;
+    long[] prefix = new long[len + 1];
+    for (int i = 0; i < len; i++) {
+      prefix[i + 1] = prefix[i] + (long) nums[i];
+    }
+    // len+1 is impossible
+    int res = len + 1;
+    // 单调队列
+    Deque<Integer> mq = new LinkedList<>();
+    for (int i = 0; i < prefix.length; i++) {
+      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
+      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
+        mq.removeLast();
+      }
+      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
+        res = Math.min(res, i - mq.removeFirst());
+      }
+      mq.addLast(i);
+    }
+    return res < len + 1 ? res : -1;
+  }
+
+  /**
+   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
+   *
+   * <p>TODO 前缀和
+   *
+   * <p>扩展1，k 倍区间，参考
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public boolean checkSubarraySum(int[] nums, int k) {
+    int[] sum = new int[nums.length + 1];
+    for (int i = 1; i < nums.length + 1; i++) {
+      sum[i] = sum[i - 1] + nums[i - 1];
+    }
+    // 保存余数对应的下标
+    HashMap<Integer, Integer> idxByMod = new HashMap();
+    for (int i = 0; i < sum.length; ++i) {
+      int sumMod = sum[i] % k;
+      if (idxByMod.containsKey(sumMod) && i > idxByMod.get(sumMod) + 1) {
+        return true;
+      } else if (!idxByMod.containsKey(sumMod)) {
+        // 只在不存在 key 时更新，保证子数组长度尽可能大
+        idxByMod.put(sumMod, i);
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 连续数组
+   *
+   * <p>TODO 前缀和
+   *
+   * @param nums
+   * @return
+   */
+  //  public int findMaxLength(int[] nums) {}
 
   /**
    * 最长有效括号，需要考虑上一个成对的括号区间

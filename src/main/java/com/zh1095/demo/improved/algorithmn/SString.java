@@ -220,8 +220,6 @@ public class SString extends DefaultSString {
 /**
  * 滑动窗口相关
  *
- * <p>TODO
- *
  * <p>https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/solution/hua-dong-chuang-kou-by-powcai/
  */
 class WWindow {
@@ -318,28 +316,37 @@ class WWindow {
    *
    * <p>不能使用滑窗，因为下方缩窗的条件是整体满足 >=target，但可能已经满足的局部无法被收入
    *
-   * <p>扩展1，列出所有满足和为 target 的连续子序列
+   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
    *
-   * <p>扩展2，里边有负数，参考下方「和至少为k的最短子数组」
+   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
    *
    * @param target the target
    * @param nums the nums
    * @return int int
    */
   public int minSubArrayLen(int target, int[] nums) {
-    int lo = 0, hi = 0;
     int res = Integer.MAX_VALUE, sum = 0;
+    int lo = 0, hi = 0;
     while (hi < nums.length) {
-      // add = nums[hi]
       sum += nums[hi];
       while (sum >= target) {
         res = Math.min(res, hi - lo + 1);
-        // out = nums[lo]
         sum -= nums[lo];
         lo += 1;
       }
-      // 结束迭代即刚好不满足 >=target 时判断是否满足和为 target 即可
-      // if (sum + nums[lo] == target) {}
+      // 替换上一段 while
+      //      if (sum == target) {
+      //        // 入结果集
+      //        hi += 1;
+      //        continue;
+      //      }
+      //      while (sum > target) {
+      //        sum -= nums[lo];
+      //        if (sum == target) {
+      //          // 入结果集
+      //        }
+      //        lo += 1;
+      //      }
       hi += 1;
     }
     return res == Integer.MAX_VALUE ? 0 : res;
@@ -404,78 +411,6 @@ class WWindow {
     // 原字符串没有小于 k 的字符串
     return s.length();
   }
-
-  /**
-   * 和至少为k的最短子数组，单调队列 & 前缀和
-   *
-   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int int
-   */
-  public int shortestSubarray(int[] nums, int k) {
-    int len = nums.length;
-    long[] prefix = new long[len + 1];
-    for (int i = 0; i < len; i++) {
-      prefix[i + 1] = prefix[i] + (long) nums[i];
-    }
-    // len+1 is impossible
-    int res = len + 1;
-    // 单调队列
-    Deque<Integer> mq = new LinkedList<>();
-    for (int i = 0; i < prefix.length; i++) {
-      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
-      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
-        mq.removeLast();
-      }
-      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
-        res = Math.min(res, i - mq.removeFirst());
-      }
-      mq.addLast(i);
-    }
-    return res < len + 1 ? res : -1;
-  }
-
-  /**
-   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
-   *
-   * <p>TODO 前缀和
-   *
-   * <p>扩展1，k 倍区间，参考
-   *
-   * @param nums
-   * @param k
-   * @return
-   */
-  public boolean checkSubarraySum(int[] nums, int k) {
-    int[] sum = new int[nums.length + 1];
-    for (int i = 1; i < nums.length + 1; i++) {
-      sum[i] = sum[i - 1] + nums[i - 1];
-    }
-    // 保存余数对应的下标
-    HashMap<Integer, Integer> idxByMod = new HashMap();
-    for (int i = 0; i < sum.length; ++i) {
-      int sumMod = sum[i] % k;
-      if (idxByMod.containsKey(sumMod) && i > idxByMod.get(sumMod) + 1) {
-        return true;
-      } else if (!idxByMod.containsKey(sumMod)) {
-        // 只在不存在 key 时更新，保证子数组长度尽可能大
-        idxByMod.put(sumMod, i);
-      }
-    }
-    return false;
-  }
-
-  /**
-   * 连续数组
-   *
-   * <p>TODO 前缀和
-   *
-   * @param nums
-   * @return
-   */
-  //  public int findMaxLength(int[] nums) {}
 
   private static class MonotonicQueue {
     private final Deque<Integer> mq = new LinkedList<>();
@@ -774,10 +709,55 @@ class SStack {
    * @param s the s
    * @return int int
    */
+  //  public int calculate(String s) {
+  //    return cal(s,0);
+  //  }
+  //  private int cal(String s, int begin) {
+  //    // 当前一层，即同属一个括号内的数字组
+  //    Deque<Integer> stack = new ArrayDeque<>();
+  //    // 同一层上一个括号遭遇的运算符
+  //    char preOper = '+';
+  //    // 同一运算符的累计值
+  //    int cur = 0;
+  //    while (begin < s.length()) {
+  //    char ch = s.charAt(begin);
+  //    begin += 1;
+  //    if (char == ' ') { // 空格跳过
+  //      continue
+  //    } else if '0' <= char && char <= '9' {
+  //      // (c - '0')的这个括号不能省略，否则可能造成整型溢出
+  //      // 因为c是一个 ASCII 码，如果不加括号就会先加后减，想象一下n如果接近 INT_MAX，就会溢出
+  //      cur = cur*10 + int(char-'0')
+  //    } else if char == '(' { // 左括号则递归处理
+  //      cur = cal(s, begin)
+  //    } else if char == ')' {
+  //      break
+  //    } else { // 还需要判断如果不是数字或空格，就把符号后边的数字处理后加入栈中，否则需要改动传入的s
+  //      switch pre {
+  //        case '+':
+  //          stack = append(stack, cur)
+  //        case '-':
+  //          stack = append(stack, -cur)
+  //        case '*':
+  //          stack[len(stack)-1] *= cur
+  //        default:
+  //          stack[len(stack)-1] /= cur
+  //      }
+  //      pre = rune(char) // 更新当前符号 & 重置当前层
+  //      cur = 0
+  //    }
+  //	}
+  //    int res = 0;
+  //    // 计算当前整一层的加和
+  //    for (int num : stack) {
+  //      res += num;
+  //    }
+  //    return res;
+  //  }
 }
 
 /** 字符串遍历与解析相关 */
-class StrTravesal extends SString {
+class PParse extends SString {
   /**
    * 字符串解码，类似压缩字符串 & 原子的数量 & 解码方法
    *
@@ -816,19 +796,17 @@ class StrTravesal extends SString {
   /**
    * 字符串转换整数
    *
-   * <p>去空格 & 特判 & 判断正负 & 逐位相加 & 判断溢出
+   * <p>去空格 & 特判空串 & 判断正负 & 逐位相加 & 判断溢出
    *
    * @param s the s
    * @return the int
    */
   public int myAtoi(String s) {
+    int idx = 0, res = 0;
     boolean isNegative = false;
-    // 记录上一次的 res 以判断溢出
-    int idx = 0, res = 0, pre = 0;
     while (idx < s.length() && s.charAt(idx) == ' ') {
       idx += 1;
     }
-    // 特判全空串
     if (idx == s.length()) {
       return 0;
     }
@@ -840,12 +818,10 @@ class StrTravesal extends SString {
     }
     while (idx < s.length()) {
       char ch = s.charAt(idx);
-      if (ch < '0' || ch > '9') {
-        break;
-      }
-      pre = res;
+      if (ch < '0' || ch > '9') break;
+      // 判断进位溢出
+      int pre = res;
       res = res * 10 + (ch - '0');
-      // 溢出判断
       if (pre != res / 10) {
         return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
       }
@@ -875,8 +851,7 @@ class StrTravesal extends SString {
       int curLen = hi - len + 1;
       if (curLen > 1) {
         int start = lo;
-        // 为达到 O(1) space 需要自行实现将数字转化为字符串写入到原字符串的功能
-        // 此处采用短除法将子串长度倒序写入原字符串中，然后再将其反转即可
+        // 短除法，子串倒序写入原字符串，再将其反转
         while (curLen > 0) {
           chars[lo] = (char) (curLen % 10 + '0');
           lo += 1;

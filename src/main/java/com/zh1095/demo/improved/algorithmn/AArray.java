@@ -152,6 +152,54 @@ public class AArray extends DefaultArray {
   }
 
   /**
+   * 将数组分成和相等的三部分
+   *
+   * <p>求和 & 特判 & 二分判断左右区间总和是否为 sum/3
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/partition-array-into-three-parts-with-equal-sum/solution/java-shi-yong-shuang-zhi-zhen-by-sugar-31/
+   *
+   * @param arr
+   * @return
+   */
+  public boolean canThreePartsEqualSum(int[] nums) {
+    int sum = 0;
+    for (int i : nums) {
+      sum += i;
+    }
+    // 特判总和非 3 的倍数
+    if (sum % 3 != 0) return false;
+    int lo = 0, hi = nums.length - 1;
+    int loSum = nums[lo], hiSum = nums[hi];
+    // 使用 left+1<right 防止只能将数组分成两个部分
+    // 如 [1,-1,1,-1]，使用 left<right 作为判断条件就会出错
+    while (lo + 1 < hi) {
+      // 左右两边都等于 sum/3 ，中间也一定等于
+      if (loSum == sum / 3 && hiSum == sum / 3) return true;
+      if (loSum != sum / 3) {
+        lo += 1;
+        loSum += nums[lo];
+      }
+      if (hiSum != sum / 3) {
+        hi -= 1;
+        hiSum += nums[hi];
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 四数之和
+   *
+   * <p>TODO
+   *
+   * @param nums
+   * @param target
+   * @return
+   */
+  //  public List<List<Integer>> fourSum(int[] nums, int target) {}
+
+  /**
    * 两个数组的交集，重复 & 顺序
    *
    * <p>扩展，有序则双指针 & 二分，否则对较小的数组建立 Hash 再遍历较大者
@@ -752,9 +800,11 @@ class Dichotomy extends DefaultArray {
   /**
    * 寻找旋转排序数组中的最小值，比较边界
    *
-   * <p>扩展1，找最大，参考 852
+   * <p>扩展1，找最大，可复用本题，参考「山脉数组的顶峰索引」
    *
-   * <p>扩展2，存在重复元素，参考 154
+   * <p>扩展2，存在重复元素，参下
+   *
+   * <p>扩展3，降序且旋转的数组，求最小值
    *
    * @param nums the nums
    * @return int int
@@ -765,17 +815,19 @@ class Dichotomy extends DefaultArray {
 
   private int findMinI(int[] nums) {
     int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) { // 循环的条件选为左闭右闭区间left <= right
+    while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
-      if (nums[mid] >= nums[hi]) { // 注意是当中值大于等于右值时，
-        lo = mid + 1; // 将左边界移动到中值的右边
-      } else { // 当中值小于右值时
-        hi = mid; // 将右边界移动到中值处
+      if (nums[mid] >= nums[hi]) {
+        // 将左边界移动到中值的右边
+        lo = mid + 1;
+      } else {
+        hi = mid;
       }
     }
-    return nums[hi]; // 最小值返回nums[right]
+    return nums[hi];
   }
 
+  // 寻找旋转排序数组中的最小值II，有重复
   private int findMinII(int[] nums) {
     int lo = 0, hi = nums.length - 1;
     while (lo <= hi) {
@@ -789,6 +841,29 @@ class Dichotomy extends DefaultArray {
       }
     }
     return nums[lo];
+  }
+
+  /**
+   * 山脉数组的顶峰索引
+   *
+   * TODO
+   *
+   * @param nums
+   * @return
+   */
+  public int peakIndexInMountainArray(int[] nums) {
+    int res = 0;
+    int lo = 1, hi = nums.length - 2;
+    while (lo <= hi) {
+      int mid = lo + (hi - lo) / 2;
+      if (nums[mid] <= nums[mid + 1]) {
+        lo = mid + 1;
+      } else {
+        res = mid;
+        hi = mid - 1;
+      }
+    }
+    return res;
   }
 
   /**
@@ -813,29 +888,6 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 寻找重复数，抽屉原理，对数值进行二分
-   *
-   * <p>据抽屉原理，比如，小于等于 4 的个数如果严格大于 4 个，此时重复元素一定出现在 [1..4] 区间里
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int findDuplicate(int[] nums) {
-    // 值，相当于索引的 0
-    int lo = 1, hi = nums.length - 1;
-    while (lo <= hi) {
-      int count = 0, pivot = lo + (hi - lo) / 2;
-      // 统计更小的个数
-      for (int num : nums) {
-        count += num > pivot ? 0 : 1;
-      }
-      if (count <= pivot) lo = pivot + 1;
-      else hi = pivot - 1;
-    }
-    return lo;
-  }
-
-  /**
    * 对有序数组找到重复数超过 k 的序列，滑窗，双指针间距超过 k-1 即可
    *
    * @param nums
@@ -855,49 +907,6 @@ class Dichotomy extends DefaultArray {
       lo = hi;
     }
     return res.stream().mapToInt(i -> i).toArray();
-  }
-
-  /**
-   * 缺失的第一个正数
-   *
-   * <p>原地哈希，nums[nums[i]-1] != nums[i]，类似数组中重复的数据
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int firstMissingPositive(int[] nums) {
-    for (int i = 0; i < nums.length; i++) {
-      // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
-      while (nums[i] > 0 && nums[i] <= nums.length && nums[nums[i] - 1] != nums[i]) {
-        swap(nums, nums[i] - 1, i);
-      }
-    }
-    for (int i = 0; i < nums.length; i++) {
-      if (nums[i] != i + 1) return i + 1;
-    }
-    return nums.length + 1;
-  }
-
-  /**
-   * 数组中重复的数据，题设每个数字至多出现两次，且在 [1,n] 内
-   *
-   * <p>原地哈希，nums[nums[i]-1] *= -1，类似缺失的第一个整数
-   *
-   * @param nums the nums
-   * @return list list
-   */
-  public List<Integer> findDuplicates(int[] nums) {
-    List<Integer> res = new ArrayList<>();
-    for (int num : nums) {
-      num *= num < 0 ? -1 : 1;
-      int idx = num - 1;
-      if (nums[idx] < 0) {
-        res.add(num);
-      } else {
-        nums[idx] *= -1;
-      }
-    }
-    return res;
   }
 
   /**
@@ -947,6 +956,43 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
+   * 有序矩阵中第k小的元素
+   *
+   * <p>TODO
+   *
+   * @param matrix
+   * @param k
+   * @return
+   */
+  public int kthSmallest(int[][] matrix, int k) {
+    int len = matrix.length;
+    int lo = matrix[0][0], hi = matrix[len - 1][len - 1];
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      if (check(matrix, mid, k, len)) {
+        hi = mid;
+      } else {
+        lo = mid + 1;
+      }
+    }
+    return lo;
+  }
+
+  private boolean check(int[][] matrix, int mid, int k, int n) {
+    int num = 0;
+    int lo = 0, hi = n - 1;
+    while (0 <= hi && lo < n) {
+      if (matrix[hi][lo] <= mid) {
+        num += hi + 1;
+        lo += 1;
+      } else {
+        hi -= 1;
+      }
+    }
+    return num >= k;
+  }
+
+  /**
    * 有序数组中的单一元素，参考
    * https://leetcode-cn.com/problems/single-element-in-a-sorted-array/solution/tong-ge-lai-shua-ti-la-er-fen-cha-zhao-b-x8dd/
    *
@@ -971,6 +1017,238 @@ class Dichotomy extends DefaultArray {
       }
     }
     return nums[hi];
+  }
+
+  /**
+   * 数据流的中位数，分别使用两个堆并保证二者元素数目差值不超过 2 即可
+   *
+   * <p>TODO
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
+   */
+  //  class MedianFinder {
+  //
+  //    public MedianFinder() {}
+  //
+  //    public void addNum(int num) {}
+  //
+  //    public double findMedian() {}
+  //  }
+}
+
+/** 遍历相关 */
+class Travesal extends DefaultArray {
+  /**
+   * 寻找重复数，快慢指针
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
+   *
+   * <p>TODO 扩展1，重复数字有多个，要求找出所有重复数字，复杂度为 n & 1
+   *
+   * <p>nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当 nums[idx]>2*n 时就能表示 nums[i]，即 idx+1
+   * 出现过两次
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int findDuplicate(int[] nums) {
+    int lo = 0, hi = 0;
+    while (true) {
+      lo = nums[lo];
+      hi = nums[nums[hi]];
+      if (hi == lo) break;
+    }
+    int finder = 0;
+    while (true) {
+      finder = nums[finder];
+      lo = nums[lo];
+      if (lo == finder) break;
+    }
+    return lo;
+  }
+
+  /**
+   * 缺失的第一个正数
+   *
+   * <p>原地哈希，nums[nums[i]-1] != nums[i]，类似数组中重复的数据
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int firstMissingPositive(int[] nums) {
+    for (int i = 0; i < nums.length; i++) {
+      // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
+      while (nums[i] > 0 && nums[i] <= nums.length && nums[nums[i] - 1] != nums[i]) {
+        swap(nums, nums[i] - 1, i);
+      }
+    }
+    for (int i = 0; i < nums.length; i++) {
+      if (nums[i] != i + 1) return i + 1;
+    }
+    return nums.length + 1;
+  }
+
+  /**
+   * 数组中重复的数据，题设每个数字至多出现两次，且在 [1,n] 内
+   *
+   * <p>原地哈希，nums[nums[i]-1] *= -1，类似缺失的第一个整数
+   *
+   * @param nums the nums
+   * @return list list
+   */
+  public List<Integer> findDuplicates(int[] nums) {
+    List<Integer> res = new ArrayList<>();
+    for (int num : nums) {
+      num *= num < 0 ? -1 : 1;
+      int idx = num - 1;
+      if (nums[idx] < 0) {
+        res.add(num);
+      } else {
+        nums[idx] *= -1;
+      }
+    }
+    return res;
+  }
+
+  /**
+   * 旋转数组，反转三次，全部 & [0,k-1] & [k,end]
+   *
+   * @param nums the nums
+   * @param k the k
+   */
+  public void rotate(int[] nums, int k) {
+    k %= nums.length;
+    reverse(nums, 0, nums.length - 1);
+    reverse(nums, 0, k - 1);
+    reverse(nums, k, nums.length - 1);
+  }
+
+  /**
+   * 旋转图像
+   *
+   * <p>沿东南斜对角线 & 垂直中线翻转
+   *
+   * <p>扩展1，翻转 180 度，则分别沿水平与垂直翻转，而 270 度则改为沿西南斜对角线
+   *
+   * @param matrix
+   */
+  public void rotate(int[][] matrix) {
+    int len = matrix.length;
+    for (int y = 0; y < len; y++) {
+      for (int x = 0; x < y; x++) {
+        int tmp = matrix[y][x];
+        matrix[y][x] = matrix[x][y];
+        matrix[x][y] = tmp;
+      }
+    }
+    for (int i = 0; i < len; i++) {
+      int[] curRow = matrix[i];
+      int lo = 0, hi = len - 1;
+      while (lo <= hi) {
+        swap(curRow, lo, hi);
+        lo += 1;
+        hi -= 1;
+      }
+    }
+  }
+
+  /**
+   * 螺旋矩阵，遍历
+   *
+   * @param matrix
+   * @return
+   */
+  public List<Integer> spiralOrder(int[][] matrix) {
+    List<Integer> res = new ArrayList<>(matrix.length * matrix[0].length);
+    if (matrix.length == 0) return res;
+    int up = 0, down = matrix.length - 1, left = 0, right = matrix[0].length - 1;
+    while (true) {
+      for (int i = left; i <= right; i++) res.add(matrix[up][i]);
+      up += 1;
+      if (up > down) break;
+      for (int i = up; i <= down; i++) res.add(matrix[i][right]);
+      right -= 1;
+      if (right < left) break;
+      for (int i = right; i >= left; i--) res.add(matrix[down][i]);
+      down -= 1;
+      if (down < up) break;
+      for (int i = down; i >= up; i--) res.add(matrix[i][left]);
+      left += 1;
+      if (left > right) break;
+    }
+    return res;
+  }
+
+  /**
+   * 螺旋矩阵II，生成
+   *
+   * <p>left,right & up,down & right,left & down & up
+   *
+   * @param n
+   * @return
+   */
+  public int[][] generateMatrix(int n) {
+    int[][] res = new int[n][n];
+    int num = 1;
+    int left = 0, right = n - 1, up = 0, down = n - 1;
+    while (num <= n * n) {
+      for (int i = left; i <= right; i++) {
+        res[up][i] = num;
+        num += 1;
+      }
+      up += 1;
+      for (int i = up; i <= down; i++) {
+        res[i][right] = num;
+        num += 1;
+      }
+      right -= 1;
+      for (int i = right; i >= left; i--) {
+        res[down][i] = num;
+        num += 1;
+      }
+      down -= 1;
+      for (int i = down; i >= up; i--) {
+        res[i][left] = num;
+        num += 1;
+      }
+      left += 1;
+    }
+    return res;
+  }
+
+  /**
+   * 对角线遍历
+   *
+   * <p>扩展1，反对角线，则将下方 bXFlag 初始为 false
+   *
+   * @param matrix
+   * @return
+   */
+  public int[] findDiagonalOrder(int[][] matrix) {
+    if (matrix == null || matrix.length == 0) {
+      return new int[0];
+    }
+    int m = matrix.length, n = matrix[0].length;
+    int[] res = new int[m * n];
+    // 当前共遍历 k 个元素
+    int k = 0;
+    // 当前是否东北向遍历，反之为西南向
+    boolean bXFlag = true;
+    // 共有 m+n-1 条对角线
+    for (int i = 0; i < m + n - 1; i++) {
+      int pm = bXFlag ? m : n, pn = bXFlag ? n : m;
+      int x = (i < pm) ? i : pm - 1, y = i - x;
+      while (x >= 0 && y < pn) {
+        res[k] = bXFlag ? matrix[x][y] : matrix[y][x];
+        k += 1;
+        x -= 1;
+        y += 1;
+      }
+      bXFlag = !bXFlag;
+    }
+    return res;
   }
 
   /**
@@ -1025,23 +1303,6 @@ class Dichotomy extends DefaultArray {
     }
     return splits;
   }
-
-  /**
-   * 数据流的中位数，分别使用两个堆并保证二者元素数目差值不超过 2 即可
-   *
-   * <p>TODO
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
-   */
-  //  class MedianFinder {
-  //
-  //    public MedianFinder() {}
-  //
-  //    public void addNum(int num) {}
-  //
-  //    public double findMedian() {}
-  //  }
 }
 
 /** 移除 */
@@ -1067,9 +1328,9 @@ class Delete extends DefaultArray {
   /**
    * 移动零，遇到目标则跳过
    *
-   * <p>需要移除的目标为 0
+   * <p>扩展1，移除字符串中指定字符，同模板，参下
    *
-   * <p>扩展，移除字符串中指定字符，同模板，参下
+   * <p>扩展2，a & b 移至末尾，且所有元素保持相对顺序，参下 annotate
    *
    * @param nums the nums
    */
@@ -1077,6 +1338,7 @@ class Delete extends DefaultArray {
     final int target = 0; // diff 1
     int last = 0, k = 0;
     for (int hi = 0; hi < nums.length; hi++) {
+      //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3) {
       if (last >= k && target == nums[hi]) {
         continue;
       }
@@ -1085,6 +1347,13 @@ class Delete extends DefaultArray {
     }
   }
 
+  /**
+   * 移除字符串中指定字符
+   *
+   * @param str
+   * @param target
+   * @return
+   */
   public String moveChars(String str, char target) {
     char[] res = str.toCharArray();
     int last = 0;
@@ -1401,144 +1670,6 @@ class DicOrder extends DefaultArray {
    */
   public int[] maxNumber(int[] nums1, int[] nums2, int k) {
     return new int[0];
-  }
-}
-
-/** 遍历相关 */
-class Travesal extends DefaultArray {
-  /**
-   * 旋转数组，反转三次，全部 & [0,k-1] & [k,end]
-   *
-   * @param nums the nums
-   * @param k the k
-   */
-  public void rotate(int[] nums, int k) {
-    k %= nums.length;
-    reverse(nums, 0, nums.length - 1);
-    reverse(nums, 0, k - 1);
-    reverse(nums, k, nums.length - 1);
-  }
-
-  /**
-   * 旋转图像
-   *
-   * <p>依次沿斜对角线 & 垂直中线翻转
-   *
-   * @param matrix
-   */
-  public void rotate(int[][] matrix) {
-    int len = matrix.length;
-    for (int i = 0; i < len; i++) {
-      for (int j = 0; j < i; j++) {
-        int tmp = matrix[i][j];
-        matrix[i][j] = matrix[j][i];
-        matrix[j][i] = tmp;
-      }
-    }
-    for (int i = 0; i < len; i++) {
-      for (int j = 0, k = len - 1; j < k; j++, k--) {
-        int tmp = matrix[i][k];
-        matrix[i][k] = matrix[i][j];
-        matrix[i][j] = tmp;
-      }
-    }
-  }
-
-  /**
-   * 螺旋矩阵，遍历
-   *
-   * @param matrix
-   * @return
-   */
-  public List<Integer> spiralOrder(int[][] matrix) {
-    List<Integer> res = new ArrayList<>(matrix.length * matrix[0].length);
-    if (matrix.length == 0) return res;
-    int up = 0, down = matrix.length - 1, left = 0, right = matrix[0].length - 1;
-    while (true) {
-      for (int i = left; i <= right; i++) res.add(matrix[up][i]);
-      up += 1;
-      if (up > down) break;
-      for (int i = up; i <= down; i++) res.add(matrix[i][right]);
-      right -= 1;
-      if (right < left) break;
-      for (int i = right; i >= left; i--) res.add(matrix[down][i]);
-      down -= 1;
-      if (down < up) break;
-      for (int i = down; i >= up; i--) res.add(matrix[i][left]);
-      left += 1;
-      if (left > right) break;
-    }
-    return res;
-  }
-
-  /**
-   * 螺旋矩阵II，生成
-   *
-   * <p>left,right & up,down & right,left & down & up
-   *
-   * @param n
-   * @return
-   */
-  public int[][] generateMatrix(int n) {
-    int[][] res = new int[n][n];
-    int num = 1;
-    int left = 0, right = n - 1, up = 0, down = n - 1;
-    while (num <= n * n) {
-      for (int i = left; i <= right; i++) {
-        res[up][i] = num;
-        num += 1;
-      }
-      up += 1;
-      for (int i = up; i <= down; i++) {
-        res[i][right] = num;
-        num += 1;
-      }
-      right -= 1;
-      for (int i = right; i >= left; i--) {
-        res[down][i] = num;
-        num += 1;
-      }
-      down -= 1;
-      for (int i = down; i >= up; i--) {
-        res[i][left] = num;
-        num += 1;
-      }
-      left += 1;
-    }
-    return res;
-  }
-
-  /**
-   * 对角线遍历
-   *
-   * <p>扩展1，反对角线，则将下方 bXFlag 初始为 false
-   *
-   * @param matrix
-   * @return
-   */
-  public int[] findDiagonalOrder(int[][] matrix) {
-    if (matrix == null || matrix.length == 0) {
-      return new int[0];
-    }
-    int m = matrix.length, n = matrix[0].length;
-    int[] res = new int[m * n];
-    // 当前共遍历 k 个元素
-    int k = 0;
-    // 当前是否东北向遍历，反之为西南向
-    boolean bXFlag = true;
-    // 共有 m+n-1 条对角线
-    for (int i = 0; i < m + n - 1; i++) {
-      int pm = bXFlag ? m : n, pn = bXFlag ? n : m;
-      int x = (i < pm) ? i : pm - 1, y = i - x;
-      while (x >= 0 && y < pn) {
-        res[k] = bXFlag ? matrix[x][y] : matrix[y][x];
-        k += 1;
-        x -= 1;
-        y += 1;
-      }
-      bXFlag = !bXFlag;
-    }
-    return res;
   }
 }
 

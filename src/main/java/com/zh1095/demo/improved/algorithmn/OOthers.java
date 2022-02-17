@@ -137,8 +137,8 @@ public class OOthers {
    *
    * <p>TODO
    *
-   * @param stack
-   * @return
+   * @param stack the stack
+   * @return deque
    */
   public Deque<Integer> stackSort(Deque<Integer> stack) {
     Deque<Integer> tmp = new ArrayDeque<>();
