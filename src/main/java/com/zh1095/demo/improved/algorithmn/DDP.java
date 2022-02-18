@@ -153,7 +153,7 @@ class OOptimalSolution {
     return sell;
   }
 
-  // 限定两次
+  // 限定两次，综合上方二者
   private int maxProfitIII(int[] prices) {
     // 因为只能交易 2 次，所以定义 2 组 buy & sell
     int buy1 = Integer.MIN_VALUE, sell1 = 0;
@@ -489,7 +489,7 @@ class PPath {
   /**
    * 不同路径I
    *
-   * <p>dp[i][j] 表示由起点，即 [0][0] 达到 [i][j] 的路径总数
+   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
    *
    * @param m the m
    * @param n the n
@@ -529,6 +529,52 @@ class PPath {
       }
     }
     return dp[m - 1];
+  }
+
+  /**
+   * 目标和
+   *
+   * <p>TODO
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/target-sum/solution/dong-tai-gui-hua-si-kao-quan-guo-cheng-by-keepal/
+   *
+   * <p>dp[i][j] 表示为从数组 nums[0,i] 的元素进行加减可以得到 j 的方法数
+   *
+   * @param nums
+   * @param s
+   * @return
+   */
+  public int findTargetSumWays(int[] nums, int s) {
+    int sum = 0;
+    for (int i = 0; i < nums.length; i++) {
+      sum += nums[i];
+    }
+    // 绝对值范围超过 sum 的绝对值范围，则无法得到
+    if (Math.abs(s) > Math.abs(sum)) return 0;
+    // 因为要包含负数所以要两倍，又要加上0这个中间的那个情况
+    int len = nums.length, range = sum * 2 + 1;
+    // 从总和为-sum开始的
+    int[][] dp = new int[len][range];
+    // 加上 sum 纯粹是因为下标界限问题，赋第二维的值的时候都要加上 sum
+    // 第一个数只能分别组成 +-nums[i] 的一种情况
+    dp[0][sum + nums[0]] += 1;
+    dp[0][sum - nums[0]] += 1;
+    for (int i = 1; i < len; i++) {
+      for (int j = -sum; j <= sum; j++) {
+        // +不成立 加上当前数大于 sum，只能减去当前的数
+        if ((j + nums[i]) > sum) {
+          dp[i][j + sum] = dp[i - 1][j - nums[i] + sum] + 0;
+          // -不成立，减去当前数小于 -sum，只能加上当前的数
+        } else if ((j - nums[i]) < -sum) {
+          dp[i][j + sum] = dp[i - 1][j + nums[i] + sum] + 0;
+        } else {
+          // +- 均可
+          dp[i][j + sum] = dp[i - 1][j + nums[i] + sum] + dp[i - 1][j - nums[i] + sum];
+        }
+      }
+    }
+    return dp[len - 1][sum + s];
   }
 }
 
@@ -609,6 +655,8 @@ class SSubArray {
 
   /**
    * 和至少为k的最短子数组，单调队列 & 前缀和
+   *
+   * <p>TODO
    *
    * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
    *
@@ -708,7 +756,7 @@ class SSubArray {
   }
 
   /**
-   * 最长重复子数组，最长公共子串同一代码，区分楼上子序列的代码
+   * 最长重复子数组 / 最长公共子串，区分楼上子序列的代码
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
@@ -774,6 +822,9 @@ class SSubSequence {
    *
    * <p>TODO
    *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
+   *
    * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
    *
    * <p>时间复杂度 nlogn 参考
@@ -792,10 +843,10 @@ class SSubSequence {
     int res = 0;
     if (nums.length == 0) return res;
     int[] dp = new int[nums.length];
-    Arrays.fill(dp, 1);
     for (int i = 0; i < nums.length; i++) {
+      // base case
+      dp[i] = 1;
       int pivot = nums[i];
-      //      int idx = 0;
       for (int j = 0; j < i; j++) {
         if (nums[j] < pivot) {
           dp[i] = Math.max(dp[i], dp[j] + 1);
@@ -804,112 +855,27 @@ class SSubSequence {
       res = Math.max(res, dp[i]);
     }
     // 求出字典序最小的路径
-    //    int[] path = new int[res];
-    //    int j = res - 1;
+    int[] path = new int[res];
+    int j = res - 1;
     // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
-    // 如果后面的比前面大，那么必定后面的长度>前面的长度
-    //    for (int i = nums.length - 1; i >= 0 && j >= 0; i--) {
-    //      if (dp[i] == j) {
-    //        path[j] = nums[i];
-    //        j -= 1;
-    //      }
-    //    }
+    // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
+    for (int i = nums.length - 1; i >= 0 && j >= 0; i--) {
+      if (dp[i] == j) {
+        path[j] = nums[i];
+        j -= 1;
+      }
+    }
     return res;
   }
 
   // 基于贪心，二分与 dp，虽然原数组无序，参考
   // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?toCommentId=11635899
   // tail[i] 表示长度为 i+1 的所有上升序列的结尾的最小值，如 [10,9,2,5,3,7,101,18] 中的 tail[1]=3 即 [2,3]
-  private int lengthOfLIS2(int[] nums) {
-    int res = 0;
-    int[] tails = new int[nums.length];
-    for (int num : nums) {
-      int lo = 0, hi = res;
-      while (lo < hi) {
-        int mid = lo + (lo - hi) / 2;
-        if (tails[mid] < num) lo = mid + 1;
-        else hi = mid;
-      }
-      tails[lo] = num;
-      if (res == hi) res += 1;
-    }
-    return res;
-  }
-
-  private int lengthOfLIS3(int[] nums) {
-    int len = nums.length;
-    // 记录长度的 DP 数组
-    int[] tail = new int[len], dp = new int[len];
-    tail[0] = nums[0];
-    dp[0] = 1;
-    int end = 0;
-    for (int i = 1; i < len; i++) {
-      if (tail[end] < nums[i]) {
-        end += 1;
-        tail[end] = nums[i];
-        dp[i] = end + 1;
-        continue;
-      }
-      int lo = 0, hi = end;
-      while (lo < hi) {
-        int mid = lo + (hi - lo) / 2;
-        if (tail[mid] < nums[i]) lo = mid + 1;
-        else hi = mid;
-      }
-      // 更新 tail[j]
-      tail[lo] = nums[i];
-      dp[i] = lo + 1;
-    }
-    // 求出字典序最小的路径
-    int[] path = new int[end + 1];
-    int j = end + 1;
-    // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
-    // 如果后面的比前面大，那么必定后面的长度大于前面的长度
-    for (int i = len - 1; i >= 0 && j >= 0; i--) {
-      if (dp[i] == j) {
-        j -= 1;
-        path[j] = nums[i];
-      }
-    }
-    return end + 1;
-  }
-
-  private int lengthOfLIS4(int[] nums) {
-    int n = nums.length;
-    // f[i] 表示以下标i结尾的最长上升子序列的长度
-    // g[i] 表示以下标i结尾的最长上升子序列是从哪个下标转移过来的
-    int[] f = new int[n], g = new int[n];
-    for (int i = 0; i < n; i++) {
-      f[i] = 1;
-      // -1 表示这个序列只有一个数，没有转移
-      g[i] = -1;
-      for (int j = 0; j < i; j++) {
-        if (nums[j] < nums[i] && f[i] < f[j] + 1) {
-          f[i] = f[j] + 1;
-          // 更新长度的同时，记录转移来源
-          g[i] = j;
-        }
-      }
-    }
-    // 用k来记录最长上升子序列结尾数字的下标
-    // ans 是最长上升子序列的长度
-    int ans = 1, k = 0;
-    for (int i = 0; i < n; i++) {
-      k = f[k] < f[i] ? i : k;
-      ans = f[k];
-    }
-    // 下面是逆序输出最长子序列
-    // 当 k=-1 的时候，表示该数是序列中的第一个数，输出到此为止
-    while (k >= 0) {
-      k = g[k];
-    }
-    return ans;
-  }
 
   /**
-   * 最长连续序列，并查集 & 哈希
+   * 最长连续序列，并查集 & 哈希，时间 O(n)
    *
-   * <p>map[i] 表示以 i 为端点的最长连续序列
+   * <p>map.get(i) 表示以 i 为端点的最长连续序列
    *
    * @param nums the nums
    * @return int int

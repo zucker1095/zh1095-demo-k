@@ -177,13 +177,13 @@ class MMath {
   /**
    * 跳跃游戏 II，返回到达最后一位到最少跳跃数
    *
-   * <p>分别记录第 res+1 步可以到达的上下界，直到上界超过终点即结束迭代，此时的步数即为最少
+   * <p>分别记录第 res+1 步可以到达的上下界 & 直到上界超过终点即结束迭代，此时的步数即为最少
    *
    * @param nums the nums
    * @return int int
    */
   public int jump(int[] nums) {
-    int res = 0;
+    int step = 0;
     int curLo = 0, curHi = 0;
     while (curHi < nums.length - 1) {
       int tmp = 0;
@@ -192,9 +192,9 @@ class MMath {
       }
       curLo = curHi + 1;
       curHi = tmp;
-      res += 1;
+      step += 1;
     }
-    return res;
+    return step;
   }
 
   /**
@@ -213,36 +213,16 @@ class MMath {
    * @return int int
    */
   public int mySqrt(int x) {
-    return mySqrt1(x);
-  }
-
-  private int mySqrt1(int x) {
     if (x == 0) return 0;
-    double cur = x;
+    double pre = x;
     while (true) {
-      double xi = 0.5 * (cur + x / cur);
+      // 2*cur=pre+x/pre
+      double cur = 0.5 * (pre + x / pre);
       // 后 n 位此处定制
-      if (Math.abs(cur - xi) < 1e-7) break;
-      cur = xi;
+      if (Math.abs(pre - cur) < 1e-7) break;
+      pre = cur;
     }
-    return (int) cur;
-  }
-
-  private int mySqrt2(int x) {
-    // 特判零与一
-    if (x == 0 || x == 1) return x;
-    int lo = 0, hi = x, res = 0;
-    while (lo <= hi) {
-      int mid = lo + (hi - lo) / 2;
-      // 取代 mid^2 > x 避免溢出
-      if (mid > x / mid) {
-        hi = mid - 1;
-      } else {
-        res = mid;
-        lo = mid + 1;
-      }
-    }
-    return res;
+    return (int) pre;
   }
 
   /**
@@ -266,7 +246,7 @@ class MMath {
   /**
    * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
    *
-   * <p>记住公式即可 res = (res+m)%i
+   * <p>记住公式即可 res=(res+m)%i
    *
    * @param n the n
    * @param m the m

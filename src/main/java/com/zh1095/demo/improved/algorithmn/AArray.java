@@ -139,10 +139,11 @@ public class AArray extends DefaultArray {
     Arrays.sort(nums);
     int res = nums[0] + nums[1] + nums[2];
     for (int i = 0; i < nums.length; i++) {
+      int pivot = nums[i];
       int lo = i + 1, hi = nums.length - 1;
       while (lo < hi) {
-        int sum = nums[lo] + nums[hi] + nums[i];
-        if (Math.abs(target - sum) < Math.abs(target - res)) res = sum;
+        int sum = pivot + nums[lo] + nums[hi];
+        res = Math.abs(target - sum) < Math.abs(target - res) ? sum : res;
         if (sum < target) lo += 1;
         else if (sum == target) return res;
         else hi -= 1;
@@ -152,7 +153,7 @@ public class AArray extends DefaultArray {
   }
 
   /**
-   * 将数组分成和相等的三部分
+   * 将数组分成和相等的三部分，无序数组，且有正负
    *
    * <p>求和 & 特判 & 二分判断左右区间总和是否为 sum/3
    *
@@ -846,7 +847,7 @@ class Dichotomy extends DefaultArray {
   /**
    * 山脉数组的顶峰索引
    *
-   * TODO
+   * <p>TODO
    *
    * @param nums
    * @return
@@ -1161,20 +1162,29 @@ class Travesal extends DefaultArray {
    * @return
    */
   public List<Integer> spiralOrder(int[][] matrix) {
-    List<Integer> res = new ArrayList<>(matrix.length * matrix[0].length);
+    int row = matrix.length, col = matrix[0].length;
+    List<Integer> res = new ArrayList<>(row * col);
     if (matrix.length == 0) return res;
-    int up = 0, down = matrix.length - 1, left = 0, right = matrix[0].length - 1;
+    int up = 0, down = row - 1, left = 0, right = col - 1;
     while (true) {
-      for (int i = left; i <= right; i++) res.add(matrix[up][i]);
+      for (int i = left; i <= right; i++) {
+        res.add(matrix[up][i]);
+      }
       up += 1;
       if (up > down) break;
-      for (int i = up; i <= down; i++) res.add(matrix[i][right]);
+      for (int i = up; i <= down; i++) {
+        res.add(matrix[i][right]);
+      }
       right -= 1;
       if (right < left) break;
-      for (int i = right; i >= left; i--) res.add(matrix[down][i]);
+      for (int i = right; i >= left; i--) {
+        res.add(matrix[down][i]);
+      }
       down -= 1;
       if (down < up) break;
-      for (int i = down; i >= up; i--) res.add(matrix[i][left]);
+      for (int i = down; i >= up; i--) {
+        res.add(matrix[i][left]);
+      }
       left += 1;
       if (left > right) break;
     }
@@ -1308,24 +1318,6 @@ class Travesal extends DefaultArray {
 /** 移除 */
 class Delete extends DefaultArray {
   /**
-   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
-   *
-   * <p>扩展1，链表参考「奇偶链表」
-   *
-   * @param nums
-   * @return
-   */
-  public int[] exchange(int[] nums) {
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
-      if ((nums[hi] & 1) == 0) continue;
-      swap(nums, lo, hi);
-      lo += 1;
-    }
-    return nums;
-  }
-
-  /**
    * 移动零，遇到目标则跳过
    *
    * <p>扩展1，移除字符串中指定字符，同模板，参下
@@ -1345,6 +1337,24 @@ class Delete extends DefaultArray {
       swap(nums, last, hi); // diff 2
       last += 1;
     }
+  }
+
+  /**
+   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
+   *
+   * <p>扩展1，链表参考「奇偶链表」
+   *
+   * @param nums
+   * @return
+   */
+  public int[] exchange(int[] nums) {
+    int lo = 0;
+    for (int hi = 0; hi < nums.length; hi++) {
+      if ((nums[hi] & 1) == 0) continue;
+      swap(nums, lo, hi);
+      lo += 1;
+    }
+    return nums;
   }
 
   /**
@@ -1642,19 +1652,26 @@ class DicOrder extends DefaultArray {
   public String removeDuplicateLetters(String s) {
     if (s.length() < 2) return s;
     Deque<Character> stack = new ArrayDeque<>(s.length());
-    int[] lastIdxs = new int[26]; // 记录每个字符出现的最后一个位置
-    boolean[] visited = new boolean[26]; // 栈内尚存的字母
-    for (int i = 0; i < s.length(); i++) lastIdxs[s.charAt(i) - 'a'] = i;
+    // 栈内尚存的字母
+    boolean[] visited = new boolean[26];
+    // 记录每个字符出现的最后一个位置
+    int[] lastIdxs = new int[26];
+    for (int i = 0; i < s.length(); i++) {
+      lastIdxs[s.charAt(i) - 'a'] = i;
+    }
     for (int i = 0; i < s.length(); i++) {
       char cur = s.charAt(i);
       if (visited[cur - 'a']) continue;
-      while (!stack.isEmpty() && cur < stack.getLast() && lastIdxs[stack.getLast() - 'a'] > i)
+      while (!stack.isEmpty() && cur < stack.getLast() && lastIdxs[stack.getLast() - 'a'] > i) {
         visited[stack.removeLast() - 'a'] = false;
+      }
       stack.addLast(cur);
       visited[cur - 'a'] = true;
     }
     StringBuilder res = new StringBuilder();
-    for (char c : stack) res.append(c);
+    for (char ch : stack) {
+      res.append(ch);
+    }
     return res.toString();
   }
 
@@ -1668,9 +1685,7 @@ class DicOrder extends DefaultArray {
    * @param k the k
    * @return int [ ]
    */
-  public int[] maxNumber(int[] nums1, int[] nums2, int k) {
-    return new int[0];
-  }
+  //  public int[] maxNumber(int[] nums1, int[] nums2, int k) {}
 }
 
 /** 提供一些数组的通用方法 */

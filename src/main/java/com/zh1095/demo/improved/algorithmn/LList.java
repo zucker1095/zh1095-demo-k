@@ -151,7 +151,7 @@ public class LList {
   }
 
   /**
-   * 复制带随机指针的链表，即深拷贝，三次遍历 O(n) & O(1)
+   * 复制带随机指针的链表，即深拷贝，三次遍历
    *
    * <p>参考
    * https://leetcode-cn.com/problems/copy-list-with-random-pointer/solution/liang-chong-shi-xian-tu-jie-138-fu-zhi-dai-sui-ji-/
@@ -178,13 +178,13 @@ public class LList {
       cur = cur.next.next;
     }
     // 3.分离两个链表
-    Node dummy = new Node(-1), nxt = head;
-    cur = dummy;
-    while (nxt != null) {
-      cur.next = nxt.next;
-      cur = cur.next;
-      nxt.next = cur.next;
-      nxt = nxt.next;
+    Node dummy = new Node(-1);
+    Node lo = dummy, hi = head;
+    while (hi != null) {
+      lo.next = hi.next;
+      lo = lo.next;
+      hi.next = lo.next;
+      hi = hi.next;
     }
     return dummy.next;
   }
