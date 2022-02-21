@@ -235,8 +235,8 @@ class WWindow {
    */
   public int lengthOfLongestSubstring(String s) {
     int[] window = new int[128];
-    int lo = 0, hi = 0;
     int res = 1;
+    int lo = 0, hi = 0;
     while (hi < s.length()) {
       char add = s.charAt(hi);
       window[add] += 1;
@@ -353,7 +353,7 @@ class WWindow {
   }
 
   /**
-   * 滑动窗口的最大值
+   * 滑动窗口的最大值，offer & max & poll
    *
    * @param nums the nums
    * @param k the k
@@ -361,21 +361,20 @@ class WWindow {
    */
   public int[] maxSlidingWindow(int[] nums, int k) {
     int[] res = new int[nums.length - k + 1];
-    Deque<Integer> mq = new LinkedList<>();
+    Deque<Integer> monotonicQueue = new LinkedList<>();
     for (int i = 0; i < nums.length; i++) {
-      //      mq.push(nums[i]);
-      while (mq.size() > 0 && mq.getLast() < nums[i]) {
-        mq.removeLast();
+      // offer
+      while (monotonicQueue.size() > 0 && monotonicQueue.getLast() < nums[i]) {
+        monotonicQueue.removeLast();
       }
-      mq.addLast(nums[i]);
-      if (i < k - 1) {
-        continue;
-      }
-      //      res[i - k + 1] = mq.max();
-      res[i - k + 1] = mq.getFirst();
-      //      mq.pop(nums[i - k + 1]);
-      if (mq.size() > 0 && mq.getFirst() == nums[i - k + 1]) {
-        mq.removeFirst();
+      monotonicQueue.addLast(nums[i]);
+      if (i < k - 1) continue;
+      int outIdx = i - k + 1;
+      //      res[outIdx] = mq.max();
+      res[outIdx] = monotonicQueue.getFirst();
+      //      mq.poll(nums[outIdx]);
+      if (monotonicQueue.size() > 0 && monotonicQueue.getFirst() == nums[outIdx]) {
+        monotonicQueue.removeFirst();
       }
     }
     return res;
@@ -447,125 +446,6 @@ class WWindow {
       return mq.getFirst();
     }
   }
-}
-
-/** 子串相关，单词搜索参考 TTree */
-class WWord extends DefaultSString {
-  /**
-   * 翻转字符串里的单词，对于 Java 不可能实现实际的 O(1) space，因此要求 s 原地即可
-   *
-   * <p>去空格 & 两次反转，全串与逐个单词
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String reverseWords(String s) {
-    StringBuilder res = trimSpaces(s);
-    reverse(res, 0, res.length() - 1);
-    reverseEachWord(res);
-    return res.toString();
-  }
-
-  // 去除字符首尾空格，并只保留单词间一个空格
-  private StringBuilder trimSpaces(String s) {
-    int lo = 0, hi = s.length() - 1;
-    while (lo <= hi && s.charAt(lo) == ' ') {
-      lo += 1;
-    }
-    while (lo <= hi && s.charAt(hi) == ' ') {
-      hi -= 1;
-    }
-    StringBuilder res = new StringBuilder();
-    while (lo <= hi) {
-      char ch = s.charAt(lo);
-      if (ch != ' ' || res.charAt(res.length() - 1) != ' ') {
-        res.append(ch);
-      }
-      lo += 1;
-    }
-    return res;
-  }
-
-  // 循环至单词的末尾 & 翻转单词 & 步进
-  private void reverseEachWord(StringBuilder sb) {
-    int lo = 0, hi = 0;
-    while (lo < sb.length()) {
-      while (hi < sb.length() && sb.charAt(hi) != ' ') {
-        hi += 1;
-      }
-      reverse(sb, lo, hi - 1);
-      lo = hi + 1;
-      hi += 1;
-    }
-  }
-
-  /**
-   * 单词拆分，s 能否被 wordDict 组合而成
-   *
-   * <p>dp[i] 表示 s 的前 i 位是否可以用 wordDict 中的单词表示，比如 wordDict=["apple", "pen", "code"]
-   *
-   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
-   *
-   * @param s the s
-   * @param wordDict the word dict
-   * @return boolean boolean
-   */
-  public boolean wordBreak(String s, List<String> wordDict) {
-    boolean[] dp = new boolean[s.length() + 1];
-    Map<String, Boolean> hash = new HashMap<>(wordDict.size());
-    for (String word : wordDict) hash.put(word, true);
-    dp[0] = true;
-    for (int i = 1; i <= s.length(); i++) {
-      // [0<-i] O(n^2)
-      for (int j = i - 1; j >= 0; j--) {
-        dp[i] = dp[j] && hash.getOrDefault(s.substring(j, i), false);
-        if (dp[i]) break;
-      }
-    }
-    return dp[s.length()];
-  }
-
-  /**
-   * 比较版本号，逐个区间统计并比对
-   *
-   * @param version1 the version 1
-   * @param version2 the version 2
-   * @return int int
-   */
-  public int compareVersion(String version1, String version2) {
-    int len1 = version1.length(), len2 = version2.length();
-    int p1 = 0, p2 = 0;
-    while (p1 < len1 || p2 < len2) {
-      int n1 = 0, n2 = 0;
-      while (p1 < len1 && version1.charAt(p1) != '.') {
-        n1 = n1 * 10 + version1.charAt(p1) - '0';
-        p1 += 1;
-      }
-      // 跳过点号
-      p1 += 1;
-      while (p2 < len2 && version2.charAt(p2) != '.') {
-        n2 = n2 * 10 + version2.charAt(p2) - '0';
-        p2 += 1;
-      }
-      p2 += 1;
-      if (n1 != n2) {
-        return n1 > n2 ? 1 : -1;
-      }
-    }
-    return 0;
-  }
-
-  /**
-   * 单词接龙，返回 beginWord 每次 diff 一个字母，最终变为 endWord 的最短路径，且所有路径均包含在 wordList 内
-   *
-   * <p>TODO 双向 bfs
-   *
-   * @param beginWord
-   * @param endWord
-   * @param wordList
-   * @return
-   */
-  //  public int ladderLength(String beginWord, String endWord, List<String> wordList) {}
 }
 
 /**
@@ -756,10 +636,86 @@ class SStack {
   //  }
 }
 
-/** 字符串遍历与解析相关 */
-class PParse extends SString {
+/** 字符串遍历与编码相关 */
+class EEncoding extends SString {
   /**
-   * 字符串解码，类似压缩字符串 & 原子的数量 & 解码方法
+   * 字符串转换整数，如 " -26" to 26
+   *
+   * <p>去空格 & 判断正负 & 逐位相加 & 判断溢出
+   *
+   * @param s the s
+   * @return the int
+   */
+  public int myAtoi(String s) {
+    int idx = 0, res = 0;
+    boolean isNegative = false;
+    while (idx < s.length() && s.charAt(idx) == ' ') {
+      idx += 1;
+    }
+    if (idx == s.length()) return 0;
+    if (s.charAt(idx) == '-') {
+      idx += 1;
+      isNegative = true;
+    } else if (s.charAt(idx) == '+') {
+      idx += 1;
+    }
+    while (idx < s.length()) {
+      char ch = s.charAt(idx);
+      if (ch < '0' || ch > '9') break;
+      // 判断进位溢出
+      int pre = res;
+      res = res * 10 + (ch - '0');
+      if (pre != res / 10) {
+        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      }
+      idx += 1;
+    }
+    return res * (isNegative ? -1 : 1);
+  }
+
+  /**
+   * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
+   *
+   * <p>框架类似「移动零」与滑窗
+   *
+   * <p>1.前指针遍历 & 找到同个字母的连续末尾并统计个数
+   *
+   * <p>2.后指针的下一位写入数量，注意数字需逆序写，并步进该指针
+   *
+   * @param chars the chars
+   * @return int int
+   */
+  public int compress(char[] chars) {
+    // 写指针 & 读指针 &
+    int lo = 0, hi = 0, pre = 0;
+    while (hi < chars.length) {
+      // 存在 aa to a2 因此到最后一位需特判
+      if (hi < chars.length - 1 && chars[hi] == chars[hi + 1]) {
+        hi += 1;
+        continue;
+      }
+      chars[lo] = chars[hi];
+      lo += 1;
+      int countDigit = hi - pre + 1;
+      if (countDigit > 1) {
+        final int start = lo;
+        // 短除法将数字倒序写入原字符串中，再将其反转
+        while (countDigit > 0) {
+          chars[lo] = (char) (countDigit % 10 + '0');
+          countDigit /= 10;
+          lo += 1;
+        }
+        reverseChs(chars, start, lo - 1);
+      }
+      pre = hi + 1;
+      hi += 1;
+    }
+    //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
+    return lo;
+  }
+
+  /**
+   * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
    *
    * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
    *
@@ -792,77 +748,125 @@ class PParse extends SString {
     }
     return curStr.toString();
   }
+}
 
+/** 子串相关，单词搜索参考 TTree */
+class WWord extends DefaultSString {
   /**
-   * 字符串转换整数
+   * 翻转字符串里的单词，对于 Java 不可能实现实际的 O(1) space，因此要求 s 原地即可
    *
-   * <p>去空格 & 特判空串 & 判断正负 & 逐位相加 & 判断溢出
+   * <p>去空格 & 两次反转，全串与逐个单词
    *
    * @param s the s
-   * @return the int
+   * @return string string
    */
-  public int myAtoi(String s) {
-    int idx = 0, res = 0;
-    boolean isNegative = false;
-    while (idx < s.length() && s.charAt(idx) == ' ') {
-      idx += 1;
+  public String reverseWords(String s) {
+    StringBuilder res = trimSpaces(s);
+    reverse(res, 0, res.length() - 1);
+    reverseEachWord(res);
+    return res.toString();
+  }
+
+  // 去除字符首尾空格，并只保留单词间一个空格
+  private StringBuilder trimSpaces(String s) {
+    int lo = 0, hi = s.length() - 1;
+    while (lo <= hi && s.charAt(lo) == ' ') {
+      lo += 1;
     }
-    if (idx == s.length()) {
-      return 0;
+    while (lo <= hi && s.charAt(hi) == ' ') {
+      hi -= 1;
     }
-    if (s.charAt(idx) == '-') {
-      idx += 1;
-      isNegative = true;
-    } else if (s.charAt(idx) == '+') {
-      idx += 1;
-    }
-    while (idx < s.length()) {
-      char ch = s.charAt(idx);
-      if (ch < '0' || ch > '9') break;
-      // 判断进位溢出
-      int pre = res;
-      res = res * 10 + (ch - '0');
-      if (pre != res / 10) {
-        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+    StringBuilder res = new StringBuilder();
+    while (lo <= hi) {
+      char ch = s.charAt(lo);
+      if (ch != ' ' || res.charAt(res.length() - 1) != ' ') {
+        res.append(ch);
       }
-      idx += 1;
+      lo += 1;
     }
-    return res * (isNegative ? -1 : 1);
+    return res;
+  }
+
+  // 循环至单词的末尾 & 翻转单词 & 步进
+  private void reverseEachWord(StringBuilder sb) {
+    int lo = 0, hi = 0;
+    while (lo < sb.length()) {
+      while (hi < sb.length() && sb.charAt(hi) != ' ') {
+        hi += 1;
+      }
+      reverse(sb, lo, hi - 1);
+      lo = hi + 1;
+      hi += 1;
+    }
   }
 
   /**
-   * 压缩字符串
+   * 单词拆分，s 能否被 wordDict 组合而成
    *
-   * <p>1.前指针遍历 & 找到同个字母的连续末尾并统计个数
+   * <p>dp[i] 表示 s 的前 i 位是否可以用 wordDict 中的单词表示，比如 wordDict=["apple", "pen", "code"]
    *
-   * <p>2.后指针的下一位写入数量，注意数字需逆序写，并步进该指针
+   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
    *
-   * @param chars the chars
+   * @param s the s
+   * @param wordDict the word dict
+   * @return boolean boolean
+   */
+  public boolean wordBreak(String s, List<String> wordDict) {
+    boolean[] dp = new boolean[s.length() + 1];
+    Map<String, Boolean> hash = new HashMap<>(wordDict.size());
+    for (String word : wordDict) hash.put(word, true);
+    dp[0] = true;
+    for (int i = 1; i <= s.length(); i++) {
+      // [0<-i] O(n^2)
+      for (int j = i - 1; j >= 0; j--) {
+        dp[i] = dp[j] && hash.getOrDefault(s.substring(j, i), false);
+        if (dp[i]) break;
+      }
+    }
+    return dp[s.length()];
+  }
+
+  /**
+   * 比较版本号，逐个区间统计并比对
+   *
+   * @param version1 the version 1
+   * @param version2 the version 2
    * @return int int
    */
-  public int compress(char[] chars) {
-    int lo = 0, len = 0;
-    for (int hi = 0; hi < chars.length; hi++) {
-      if (hi < chars.length - 1 && chars[hi] == chars[hi + 1]) {
-        continue;
+  public int compareVersion(String version1, String version2) {
+    int len1 = version1.length(), len2 = version2.length();
+    int p1 = 0, p2 = 0;
+    while (p1 < len1 || p2 < len2) {
+      int n1 = 0, n2 = 0;
+      while (p1 < len1 && version1.charAt(p1) != '.') {
+        n1 = n1 * 10 + version1.charAt(p1) - '0';
+        p1 += 1;
       }
-      chars[lo] = chars[hi];
-      lo += 1;
-      int curLen = hi - len + 1;
-      if (curLen > 1) {
-        int start = lo;
-        // 短除法，子串倒序写入原字符串，再将其反转
-        while (curLen > 0) {
-          chars[lo] = (char) (curLen % 10 + '0');
-          lo += 1;
-          curLen /= 10;
-        }
-        reverseChs(chars, start, lo - 1);
+      // 跳过点号
+      p1 += 1;
+      while (p2 < len2 && version2.charAt(p2) != '.') {
+        n2 = n2 * 10 + version2.charAt(p2) - '0';
+        p2 += 1;
       }
-      len = hi + 1;
+      p2 += 1;
+      if (n1 != n2) {
+        return n1 > n2 ? 1 : -1;
+      }
     }
-    return lo;
+    return 0;
   }
+
+  /**
+   * 单词接龙，返回 beginWord 每次 diff 一个字母，最终变为 endWord 的最短路径，且所有路径均包含在 wordList 内
+   *
+   * <p>TODO 双向 bfs
+   *
+   * @param beginWord
+   * @param endWord
+   * @param wordList
+   * @return
+   */
+  //  public int ladderLength(String beginWord, String endWord, List<String> wordList) {}
 }
 
 /** The type Default s string. */

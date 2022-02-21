@@ -123,35 +123,6 @@ public class OOthers {
   }
 
   /**
-   * 划分字母区间
-   *
-   * <p>TODO
-   *
-   * @param s the s
-   * @return list
-   */
-  //  public List<Integer> partitionLabels(String s) {}
-
-  /**
-   * 栈排序
-   *
-   * <p>TODO
-   *
-   * @param stack the stack
-   * @return deque
-   */
-  public Deque<Integer> stackSort(Deque<Integer> stack) {
-    Deque<Integer> tmp = new ArrayDeque<>();
-    while (!stack.isEmpty()) {}
-    return tmp;
-  }
-}
-
-/** 数学类 */
-class MMath {
-  private final String CHARS = "0123456789ABCDEF";
-
-  /**
    * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
    *
    * @param nums the nums
@@ -195,6 +166,69 @@ class MMath {
       step += 1;
     }
     return step;
+  }
+
+  /**
+   * 划分字母区间
+   *
+   * <p>TODO
+   *
+   * @param s the s
+   * @return list
+   */
+  //  public List<Integer> partitionLabels(String s) {}
+
+  /**
+   * 栈排序
+   *
+   * <p>TODO
+   *
+   * @param stack the stack
+   * @return deque
+   */
+  public Deque<Integer> stackSort(Deque<Integer> stack) {
+    Deque<Integer> tmp = new ArrayDeque<>();
+    while (!stack.isEmpty()) {}
+    return tmp;
+  }
+}
+
+/** 数学类 */
+class MMath {
+  private final String CHARS = "0123456789ABCDEF";
+
+  /**
+   * rand7生成rand10 即[1,10]，等同进制转换的思路
+   *
+   * <p>https://www.cnblogs.com/ymjyqsx/p/9561443.html
+   *
+   * <p>数学推论，记住即可 (randX-1)*Y+randY() -> 等概率[1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
+   *
+   * <p>扩展1，比如 randX to randY，有如下情况，本质均是找平方与倍数
+   *
+   * <p>rand2 to rand3 取平方再拒绝采样，即本题
+   *
+   * <p>rand2 to rand5 先通过 rand2 to rand3，再 rand3 to rand5，取平方再拒绝采样，即第一种情况
+   *
+   * <p>rand5 to rand3 自旋，直接取，这种拒绝概率不大
+   *
+   * <p>rand5 to rand2 判断是否为 2 的倍数，类似本题 rand49 to rand10
+   *
+   * @return the int
+   */
+  public int rand10() {
+    while (true) {
+      // 等概率生成 [1,49] 范围的随机数
+      int num = (rand7() - 1) * 7 + rand7();
+      // 拒绝采样，并返回 [1,10] 范围的随机数
+      if (num <= 40) {
+        return num % 10 + 1;
+      }
+    }
+  }
+
+  private int rand7() {
+    return 0;
   }
 
   /**
@@ -261,38 +295,6 @@ class MMath {
   }
 
   /**
-   * rand7生成rand10 即[1,10]，等同进制转换的思路
-   *
-   * <p>https://www.cnblogs.com/ymjyqsx/p/9561443.html
-   *
-   * <p>数学推论，记住即可 (randX-1)*Y+randY() -> 等概率[1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
-   *
-   * <p>扩展1，比如 randX to randY，有三种情况
-   *
-   * <p>x<y && x^2<y 如 rand2 to rand5，则由 randX 生成 randZ 使得 z^2>y
-   *
-   * <p>x<y && x^2>y 如 rand5 to rand7，平方取余
-   *
-   * <p>x>y 如 rand rand5 to rand3，自旋
-   *
-   * @return the int
-   */
-  public int rand10() {
-    while (true) {
-      // 等概率生成 [1,49] 范围的随机数
-      int num = (rand7() - 1) * 7 + rand7();
-      // 拒绝采样，并返回 [1,10] 范围的随机数
-      if (num <= 40) {
-        return num % 10 + 1;
-      }
-    }
-  }
-
-  private int rand7() {
-    return 0;
-  }
-
-  /**
    * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
    *
    * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
@@ -322,6 +324,36 @@ class MMath {
   }
 
   /**
+   * 1~n整数中1出现的次数 / 数字1的个数
+   *
+   * <p>TODO
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int countDigitOne(int n) {
+    int digit = 1, res = 0;
+    int high = n / 10, cur = n % 10, low = 0;
+    while (high != 0 || cur != 0) {
+      if (cur == 0) {
+        res += high * digit;
+      } else if (cur == 1) {
+        res += high * digit + low + 1;
+      } else {
+        res += (high + 1) * digit;
+      }
+      low += cur * digit;
+      high /= 10;
+      cur = high % 10;
+      digit *= 10;
+    }
+    return res;
+  }
+
+  /**
    * 第n位数字
    *
    * <p>一位数 9 个 -> 1 * 9，二位数 90 个 -> 2 * 90，其余同理
@@ -341,52 +373,6 @@ class MMath {
     int num = (int) Math.pow(10, cur - 1) + k / cur;
     int idx = k % cur;
     return num / (int) Math.pow(10, cur - 1 - idx) % 10;
-  }
-
-  /**
-   * 多数元素，摩尔投票，类比 Raft
-   *
-   * <p>尽管不通用，但对于本题方便理解和记忆
-   *
-   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int majorityElement(int[] nums) {
-    // 当前遍历的元素即 candidate 及其个数即 votes
-    int num = nums[0], count = 1;
-    for (int i = 1; i < nums.length; ++i) {
-      if (count == 0) {
-        num = nums[i];
-        count = 1;
-      } else if (nums[i] == num) {
-        count += 1;
-      } else {
-        count -= 1;
-      }
-    }
-    return num;
-  }
-
-  /**
-   * 整数反转，32 位
-   *
-   * @param x the x
-   * @return int int
-   */
-  public int reverse(int x) {
-    // 暂存已反转的和剩余待反转的部分
-    int res = 0, left = x;
-    while (left != 0) {
-      // 判断是否溢出 32 位整数
-      if (res < Integer.MIN_VALUE / 10 || res > Integer.MAX_VALUE / 10) return 0;
-      // 每次取末尾数字
-      int tail = left % 10;
-      left /= 10;
-      res = res * 10 + tail;
-    }
-    return res;
   }
 
   /**
@@ -414,90 +400,29 @@ class MMath {
   }
 
   /**
-   * 颠倒二进制位，题设 32 位下，对于 Java need treat n as an unsigned value
+   * 多数元素，摩尔投票，类比 Raft
    *
-   * <p>归并，两位互换 -> 4 -> 8 -> 16
+   * <p>尽管不通用，但对于本题方便理解和记忆
    *
-   * @param n the n
-   * @return int int
-   */
-  public int reverseBits(int n) {
-    // 01010101010101010101010101010101
-    n = ((n & 0xAAAAAAAA) >>> 1) | ((n & 0x55555555) << 1);
-    // 00110011001100110011001100110011
-    n = ((n & 0xCCCCCCCC) >>> 2) | ((n & 0x33333333) << 2);
-    // 00001111000011110000111100001111
-    n = ((n & 0xF0F0F0F0) >>> 4) | ((n & 0x0F0F0F0F) << 4);
-    // 00000000111111110000000011111111
-    n = ((n & 0xFF00FF00) >>> 8) | ((n & 0x00FF00FF) << 8);
-    // 00000000000000001111111111111111
-    n = ((n & 0xFFFF0000) >>> 16) | ((n & 0x0000FFFF) << 16);
-    return n;
-  }
-
-  /**
-   * 位1的个数，you need to treat n as an unsigned value
-   *
-   * <p>逐位与判断即可
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int hammingWeight(int n) {
-    int res = 0;
-    while (n != 0) {
-      res += n & 1;
-      n >>>= 1;
-    }
-    return res;
-  }
-
-  /**
-   * 只出现一次的数字
-   *
-   * <p>扩展1，有序数组，参考「有序数组中的单一元素」
-   *
-   * <p>扩展2，只出现一次的字符，参考「第一个只出现一次的字符」
+   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
    *
    * @param nums the nums
    * @return int int
    */
-  public int singleNumber(int[] nums) {
-    int res = 0;
-    for (int num : nums) {
-      res ^= num;
-    }
-    return res;
-  }
-
-  /**
-   * 1~n整数中1出现的次数
-   *
-   * <p>TODO
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int countDigitOne(int n) {
-    int digit = 1, res = 0;
-    int high = n / 10, cur = n % 10, low = 0;
-    while (high != 0 || cur != 0) {
-      if (cur == 0) {
-        res += high * digit;
-      } else if (cur == 1) {
-        res += high * digit + low + 1;
+  public int majorityElement(int[] nums) {
+    // 当前遍历的元素即 candidate 及其个数即 votes
+    int num = nums[0], count = 1;
+    for (int i = 1; i < nums.length; ++i) {
+      if (count == 0) {
+        num = nums[i];
+        count = 1;
+      } else if (nums[i] == num) {
+        count += 1;
       } else {
-        res += (high + 1) * digit;
+        count -= 1;
       }
-      low += cur * digit;
-      cur = high % 10;
-      high /= 10;
-      digit *= 10;
     }
-    return res;
+    return num;
   }
 }
 
@@ -629,6 +554,91 @@ class DData {
   }
 
   /**
+   * 设计循环队列
+   *
+   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
+   *
+   * <p>扩展1，并发安全，单个 push 多个 pop
+   */
+  public class MyCircularQueue {
+    private final int capacity;
+    private final int[] data;
+    private int front, rear;
+
+    /**
+     * Instantiates a new My circular queue.
+     *
+     * @param k the k
+     */
+    public MyCircularQueue(int k) {
+      // 循环数组中任何时刻一定至少有一个位置不存放有效元素
+      // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
+      capacity = k + 1;
+      data = new int[capacity];
+    }
+
+    /**
+     * En queue boolean.
+     *
+     * @param value the value
+     * @return the boolean
+     */
+    public boolean enQueue(int value) {
+      if (isFull()) return false;
+      data[rear] = value;
+      rear = (rear + 1) % capacity;
+      return true;
+    }
+
+    /**
+     * De queue boolean.
+     *
+     * @return the boolean
+     */
+    public boolean deQueue() {
+      if (isEmpty()) return false;
+      front = (front + 1) % capacity;
+      return true;
+    }
+
+    /**
+     * Front int.
+     *
+     * @return the int
+     */
+    public int Front() {
+      return isEmpty() ? -1 : data[front];
+    }
+
+    /**
+     * Rear int.
+     *
+     * @return the int
+     */
+    public int Rear() {
+      return isEmpty() ? -1 : data[(rear - 1 + capacity) % capacity];
+    }
+
+    /**
+     * Is empty boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isEmpty() {
+      return front == rear;
+    }
+
+    /**
+     * Is full boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isFull() {
+      return (rear + 1) % capacity == front;
+    }
+  }
+
+  /**
    * 最小栈
    *
    * @author cenghui
@@ -722,88 +732,88 @@ class DData {
       return out.isEmpty() && in.isEmpty();
     }
   }
+}
+
+/** 二进制，位运算相关，掌握常见的运算符即可，现场推，毕竟命中率超低 */
+class BBit {
+  /**
+   * 整数反转，32 位
+   *
+   * @param x the x
+   * @return int int
+   */
+  public int reverse(int x) {
+    // 暂存已反转的 & 待反转的部分
+    int res = 0, left = x;
+    while (left != 0) {
+      // 判断溢出
+      if (res < Integer.MIN_VALUE / 10 || res > Integer.MAX_VALUE / 10) {
+        return 0;
+      }
+      // 每次取末尾数字
+      res = res * 10 + left % 10;
+      left /= 10;
+    }
+    return res;
+  }
 
   /**
-   * 设计循环队列
+   * 颠倒二进制位，反转整数的二进制位，题设 32 位下，对于 Java need treat n as an unsigned value
    *
-   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
+   * <p>分治，两位互换 -> 4 -> 8 -> 16
+   *
+   * <p>记住 f & c & a & 3 & 5 即可
+   *
+   * @param n the n
+   * @return int int
    */
-  public class MyCircularQueue {
-    private final int capacity;
-    private final int[] data;
-    private int front, rear;
+  public int reverseBits(int n) {
+    // 低 16 位与高 16 位交换
+    n = (n >> 16) | (n << 16);
+    // 每16位中低8位和高8位交换，1111是f
+    n = ((n & 0xff00ff00) >> 8) | ((n & 0x00ff00ff) << 8);
+    // 每8位中低4位和高4位交换
+    n = ((n & 0xf0f0f0f0) >> 4) | ((n & 0x0f0f0f0f) << 4);
+    // 每4位中低2位和高2位交换，1100是c,0011是3
+    n = ((n & 0xcccccccc) >> 2) | ((n & 0x33333333) << 2);
+    // 每2位中低1位和高1位交换，1010是a，0101是5
+    n = ((n & 0xaaaaaaaa) >> 1) | ((n & 0x55555555) << 1);
+    return n;
+  }
 
-    /**
-     * Instantiates a new My circular queue.
-     *
-     * @param k the k
-     */
-    public MyCircularQueue(int k) {
-      // 循环数组中任何时刻一定至少有一个位置不存放有效元素
-      // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
-      capacity = k + 1;
-      data = new int[capacity];
+  /**
+   * 位1的个数，you need to treat n as an unsigned value
+   *
+   * <p>逐位与判断即可
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int hammingWeight(int n) {
+    int res = 0;
+    while (n != 0) {
+      res += n & 1;
+      n >>>= 1;
     }
+    return res;
+  }
 
-    /**
-     * En queue boolean.
-     *
-     * @param value the value
-     * @return the boolean
-     */
-    public boolean enQueue(int value) {
-      if (isFull()) return false;
-      data[rear] = value;
-      rear = (rear + 1) % capacity;
-      return true;
+  /**
+   * 只出现一次的数字
+   *
+   * <p>扩展1，有序数组，参考「有序数组中的单一元素」
+   *
+   * <p>扩展2，只出现一次的字符，参考「第一个只出现一次的字符」
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int singleNumber(int[] nums) {
+    int res = 0;
+    for (int num : nums) {
+      res ^= num;
     }
-
-    /**
-     * De queue boolean.
-     *
-     * @return the boolean
-     */
-    public boolean deQueue() {
-      if (isEmpty()) return false;
-      front = (front + 1) % capacity;
-      return true;
-    }
-
-    /**
-     * Front int.
-     *
-     * @return the int
-     */
-    public int Front() {
-      return isEmpty() ? -1 : data[front];
-    }
-
-    /**
-     * Rear int.
-     *
-     * @return the int
-     */
-    public int Rear() {
-      return isEmpty() ? -1 : data[(rear - 1 + capacity) % capacity];
-    }
-
-    /**
-     * Is empty boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isEmpty() {
-      return front == rear;
-    }
-
-    /**
-     * Is full boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isFull() {
-      return (rear + 1) % capacity == front;
-    }
+    return res;
   }
 }
 

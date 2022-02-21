@@ -14,7 +14,7 @@ import java.util.Queue;
  */
 public class LList {
   /**
-   * 反转链表，三步曲，暂存 & 变向 & 步进，pre cur nxt
+   * 反转链表，三步曲，暂存 1/2 & 变向 1/2/3 & 步进 1/2 次，pre cur nxt
    *
    * @param head the head
    * @return the list node
@@ -122,30 +122,6 @@ public class LList {
     return true;
   }
 
-  /**
-   * 重排链表，找中 & 反转 & 连接
-   *
-   * @param head the head
-   */
-  public void reorderList(ListNode head) {
-    if (head == null || head.next == null || head.next.next == null) {
-      return;
-    }
-    ListNode lo = middleNode(head);
-    ListNode first = lo.next;
-    lo.next = null;
-    // 第二个链表倒置
-    first = reverseList(first);
-    // 链表节点依次连接
-    while (first != null) {
-      ListNode nxt = first.next;
-      first.next = head.next;
-      head.next = first;
-      head = first.next;
-      first = nxt;
-    }
-  }
-
   protected int getVal(ListNode node) {
     return node == null ? 0 : node.val;
   }
@@ -205,7 +181,7 @@ public class LList {
 /** 收集反转相关 */
 class ReverseList extends LList {
   /**
-   * k个一组反转链表，三步曲，暂存 & 变向 & 步进，tail [first ... cur] nxt
+   * k个一组反转链表，tail [first ... cur] nxt
    *
    * <p>变向的顺序为 cur tail first，只需专注其后驱即可，下方反转区间同理
    *
@@ -223,20 +199,22 @@ class ReverseList extends LList {
   public ListNode reverseKGroup(ListNode head, int k) {
     ListNode dummy = new ListNode();
     dummy.next = head;
-    ListNode tail = dummy, first, cur = dummy, nxt;
+    ListNode tail = dummy, first = null, cur = dummy, nxt = null;
     while (cur.next != null) {
-      for (int i = 0; i < k && cur != null; i++) {
-        cur = cur.next;
-      }
-      if (cur == null) break;
-      // 扩展1，改为 cur.next!=null 并统计 i 是否为 k 因为可能刚好 =k，且不需判空当前结点
+      // 扩展1，cur.next!=null 并统计 i 是否为 k 因为可能刚好等于 k，且不需判空当前结点
       //      for (int i = 0; i < k && cur.next != null; i++) {
       //        cur = cur.next;
       //      }
+      for (int i = 0; i < k && cur != null; i++) {
+        cur = cur.next;
+      }
+      // 此时 cur 为区间尾
+      if (cur == null) break;
       // 暂存
       first = tail.next;
       nxt = cur.next;
-      // 变向三次
+      // 变向三次，反转区间
+      // 首次保证 reverseList 可遍历结束，最终作为其返回值
       cur.next = null;
       tail.next = reverseList(first);
       first.next = nxt;
@@ -248,7 +226,7 @@ class ReverseList extends LList {
   }
 
   /**
-   * 反转链表II，三步曲，暂存 & 变向三次 & 步进，tail [first cur...] nxt
+   * 反转链表II，区间，三步曲，暂存 & 变向三次 & 步进，tail [first cur...] nxt
    *
    * @param head the head
    * @param left the left
@@ -308,7 +286,7 @@ class ReverseList extends LList {
   }
 
   /**
-   * 两两交换链表中的节点，暂存 & 变向 & 步进，复用 reverseKGroup 即可
+   * 两两交换链表中的节点，复用 reverseKGroup 即可
    *
    * @param head the head
    * @return list node
@@ -318,8 +296,8 @@ class ReverseList extends LList {
   }
 }
 
-/** 收集合并 & 删除相关 */
-class DoublePointerList extends LList {
+/** 收集合并，重排相关 */
+class MergeList extends LList {
   /**
    * 两数相加，本质即外排，考虑进位即可
    *
@@ -396,29 +374,6 @@ class DoublePointerList extends LList {
     if (lo == hi) return lists[lo];
     int mid = lo + (hi - lo) / 2;
     return mergeTwoLists(divide(lists, lo, mid), divide(lists, mid + 1, hi));
-  }
-
-  /**
-   * 删除链表的倒数第 N 个结点
-   *
-   * @param head the head
-   * @param n the n
-   * @return list node
-   */
-  public ListNode removeNthFromEnd(ListNode head, int n) {
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    ListNode lo = dummy, hi = head;
-    for (int i = 0; i < n; i++) {
-      hi = hi.next;
-    }
-    while (hi != null) {
-      hi = hi.next;
-      lo = lo.next;
-    }
-    // lo.next 即倒数第 n 个
-    lo.next = lo.next.next;
-    return dummy.next;
   }
 
   /**
@@ -526,61 +481,6 @@ class DoublePointerList extends LList {
   }
 
   /**
-   * 删除排序链表中的重复元素
-   *
-   * <p>与移动零 & 删除排序数组中的重复项保持一致，符合，即要移动 or 移除的则跳过
-   *
-   * @param head the head
-   * @return list node
-   */
-  public ListNode deleteDuplicates(ListNode head) {
-    return deleteDuplicatesI(head);
-  }
-
-  /**
-   * 删除排序链表中的重复元素I，保留一个
-   *
-   * @param head the head
-   * @return list node
-   */
-  private ListNode deleteDuplicatesI(ListNode head) {
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    ListNode cur = dummy.next;
-    while (cur != null && cur.next != null) {
-      if (cur.val == cur.next.val) cur.next = cur.next.next;
-      else cur = cur.next;
-    }
-    return dummy.next;
-  }
-
-  /**
-   * 删除排序链表中的重复元素II，毫无保留
-   *
-   * @param head the head
-   * @return list node
-   */
-  private ListNode deleteDuplicatesII(ListNode head) {
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    ListNode cur = dummy;
-    // diff1
-    while (cur.next != null && cur.next.next != null) {
-      // diff2
-      if (cur.next.val == cur.next.next.val) {
-        int target = cur.next.val;
-        // diff3
-        while (cur.next != null && cur.next.val == target) {
-          cur.next = cur.next.next;
-        }
-      } else {
-        cur = cur.next;
-      }
-    }
-    return dummy.next;
-  }
-
-  /**
    * 重排奇偶链表，参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
    *
    * <p>完全可以复用模板，三步曲如下
@@ -618,6 +518,32 @@ class DoublePointerList extends LList {
   }
 
   /**
+   * 重排链表，类似奇偶链表，将 1,2,3...n-1,n 排序为 1,n,2,n-1,3...n/2
+   *
+   * <p>找中 & 反转 & 连接
+   *
+   * @param head the head
+   */
+  public void reorderList(ListNode head) {
+    if (head == null || head.next == null || head.next.next == null) {
+      return;
+    }
+    ListNode lo = middleNode(head);
+    ListNode first = lo.next;
+    lo.next = null;
+    // 第二个链表倒置
+    first = reverseList(first);
+    // 链表节点依次连接
+    while (first != null) {
+      ListNode nxt = first.next;
+      first.next = head.next;
+      head.next = first;
+      head = first.next;
+      first = nxt;
+    }
+  }
+
+  /**
    * 分隔链表
    *
    * @param head the head
@@ -645,8 +571,8 @@ class DoublePointerList extends LList {
   }
 }
 
-/** 收集环形相关 */
-class Cycle extends LList {
+/** 收集环形，搜索相关 */
+class CycleList extends LList {
   /**
    * 环形链表I，判断即可
    *
@@ -716,5 +642,89 @@ class Cycle extends LList {
       l2 = l2 == null ? headA : l2.next;
     }
     return l1;
+  }
+}
+
+/** TODO 删除相关，类似滑窗，后期考虑同步后者的模板 */
+class DeleteList extends LList {
+  /**
+   * 删除链表的倒数第 N 个结点
+   *
+   * @param head the head
+   * @param n the n
+   * @return list node
+   */
+  public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    ListNode lo = dummy, hi = head;
+    for (int i = 0; i < n; i++) {
+      hi = hi.next;
+    }
+    while (hi != null) {
+      hi = hi.next;
+      lo = lo.next;
+    }
+    // lo.next 即倒数第 n 个
+    lo.next = lo.next.next;
+    return dummy.next;
+  }
+
+  /**
+   * 删除排序链表中的重复元素
+   *
+   * <p>与移动零 & 删除排序数组中的重复项保持一致，符合，即要移动 or 移除的则跳过
+   *
+   * @param head the head
+   * @return list node
+   */
+  public ListNode deleteDuplicates(ListNode head) {
+    return deleteDuplicatesI(head);
+  }
+
+  /**
+   * 删除排序链表中的重复元素I，保留一个
+   *
+   * @param head the head
+   * @return list node
+   */
+  private ListNode deleteDuplicatesI(ListNode head) {
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    ListNode cur = dummy.next;
+    while (cur != null && cur.next != null) {
+      if (cur.val == cur.next.val) {
+        cur.next = cur.next.next;
+        continue;
+      }
+      cur = cur.next;
+    }
+    return dummy.next;
+  }
+
+  /**
+   * 删除排序链表中的重复元素II，毫无保留
+   *
+   * @param head the head
+   * @return list node
+   */
+  private ListNode deleteDuplicatesII(ListNode head) {
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    ListNode cur = dummy;
+    // diff1
+    while (cur.next != null && cur.next.next != null) {
+      // diff2
+      if (cur.next.val == cur.next.next.val) {
+        int target = cur.next.val;
+        // diff3
+        while (cur.next != null && cur.next.val == target) {
+          cur.next = cur.next.next;
+        }
+        continue;
+      }
+      cur = cur.next;
+    }
+    return dummy.next;
   }
 }

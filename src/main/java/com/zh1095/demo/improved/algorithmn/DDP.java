@@ -13,107 +13,7 @@ import java.util.*;
  *
  * @author cenghui
  */
-public class DDP {
-  /**
-   * 零钱兑换，硬币可重复，与下方 II 保持外 coin 内 amount
-   *
-   * <p>dp[i] 表示凑成 i 元需要的最少的硬币数
-   *
-   * @param coins the coins
-   * @param amount the amount
-   * @return int int
-   */
-  public int coinChange(int[] coins, int amount) {
-    int[] dp = new int[amount + 1];
-    // 因为要比较的是最小值，这个不可能的值就得赋值成为一个最大值
-    Arrays.fill(dp, amount + 1);
-    // 单独一枚硬币如果能够凑出面值，符合最优子结构
-    dp[0] = 0;
-    Arrays.sort(coins);
-    for (int coin : coins) {
-      for (int i = coin; i <= amount; i++) {
-        if (i < coin) break;
-        dp[i] = Math.min(dp[i], dp[i - coin] + 1);
-      }
-    }
-    return (dp[amount] == amount + 1) ? -1 : dp[amount];
-  }
-
-  /**
-   * 分发糖果，求满足权重规则的最少所需糖果量
-   *
-   * <p>扩展1，成环
-   *
-   * @param ratings the ratings
-   * @return the int
-   */
-  public int candy(int[] ratings) {
-    int res = 0;
-    int[] left = new int[ratings.length];
-    for (int i = 0; i < ratings.length; i++) {
-      //      if (i == 0 && ratings[0] > ratings[ratings.length - 1]) {
-      //        left[i] = left[ratings.length - 1] + 1;
-      //        continue;
-      //      }
-      left[i] = (i > 0 && ratings[i] > ratings[i - 1]) ? left[i - 1] + 1 : 1;
-    }
-    int right = 0;
-    for (int i = ratings.length - 1; i >= 0; i--) {
-      //      if (i == ratings.length - 1 && ratings[0] < ratings[i]) {
-      //        right += 1;
-      //        continue;
-      //      }
-      right = (i < ratings.length - 1 && ratings[i] > ratings[i + 1]) ? right + 1 : 1;
-      res += Math.max(left[i], right);
-    }
-    return res;
-  }
-
-  /**
-   * 接雨水，贪心，类似漏桶效应
-   *
-   * @param height the height
-   * @return int int
-   */
-  public int trap(int[] height) {
-    int lo = 0, hi = height.length - 1;
-    int res = 0, lm = height[lo], rm = height[hi];
-    while (lo <= hi) {
-      int left = height[lo], right = height[hi];
-      lm = Math.max(lm, left);
-      rm = Math.max(rm, right);
-      if (left <= right) {
-        res += lm - left;
-        lo += 1;
-      } else {
-        res += rm - right;
-        hi -= 1;
-      }
-    }
-    return res;
-  }
-
-  /**
-   * 盛最多水的容器
-   *
-   * @param height the height
-   * @return int int
-   */
-  public int maxArea(int[] height) {
-    int res = 0;
-    for (int lo = 0, hi = height.length - 1; lo < hi; ) {
-      int left = height[lo], right = height[hi];
-      if (left <= right) {
-        res = Math.max(res, left * (hi - lo));
-        lo += 1;
-      } else {
-        res = Math.max(res, right * (hi - lo));
-        hi -= 1;
-      }
-    }
-    return res;
-  }
-}
+public class DDP {}
 
 /** 最优解，状态压缩 & 双指针 */
 class OOptimalSolution {
@@ -172,134 +72,103 @@ class OOptimalSolution {
   }
 
   /**
-   * 最小路径和，题设自然数
+   * 接雨水，贪心，类似漏桶效应
    *
-   * <p>参考
-   * https://leetcode-cn.com/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/0/
-   *
-   * <p>dp[i][j] 表示直到走到 (i,j) 的最小路径和
-   *
-   * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
-   *
-   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历
-   *
-   * <p>扩展2，存在负值点
-   *
-   * @param grid the grid
-   * @return int
+   * @param height the height
+   * @return int int
    */
-  public int minPathSum(int[][] grid) {
-    int len = grid[0].length;
-    int[] dp = new int[len];
-    dp[0] = grid[0][0];
-    for (int i = 1; i < len; i++) {
-      dp[i] = dp[i - 1] + grid[0][i];
-    }
-    for (int i = 1; i < grid.length; i++) {
-      dp[0] += grid[i][0];
-      for (int j = 1; j < len; j++) {
-        dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
+  public int trap(int[] height) {
+    int lo = 0, hi = height.length - 1;
+    int res = 0, lm = height[lo], rm = height[hi];
+    while (lo <= hi) {
+      int left = height[lo], right = height[hi];
+      lm = Math.max(lm, left);
+      rm = Math.max(rm, right);
+      if (left <= right) {
+        res += lm - left;
+        lo += 1;
+      } else {
+        res += rm - right;
+        hi -= 1;
       }
     }
-    //    List<Integer> res = new ArrayList<>();
-    //    int i = grid.length - 1, j = grid[0].length - 1;
-    //    res.add(grid[i][j]);
-    //    int sum = dp[i][j];
-    //    while (i > 0 || j > 0) {
-    //      sum -= grid[i][j];
-    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
-    //        res.add(grid[i][j - 1]);
-    //        j -=1;
-    //      } else {
-    //        res.add(grid[i - 1][j]);
-    //        i -=1;
-    //      }
-    //    }
-    //    return res;
-    return dp[len - 1];
+    return res;
   }
 
   /**
-   * 三角形的最小路径和，bottom to up
+   * 盛最多水的容器
    *
-   * <p>dp[i][j] 表示由 triangle[0][0] 达到 triangle[i][j] 的最小路径长度
-   *
-   * @param triangle the triangle
+   * @param height the height
    * @return int int
    */
-  public int minimumTotal(List<List<Integer>> triangle) {
-    int len = triangle.get(triangle.size() - 1).size();
-    int[] dp = new int[len + 1];
-    for (int i = len - 1; i >= 0; i--) {
-      for (int j = 0; j <= i; j++) {
-        dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
+  public int maxArea(int[] height) {
+    int res = 0;
+    for (int lo = 0, hi = height.length - 1; lo < hi; ) {
+      int left = height[lo], right = height[hi];
+      if (left <= right) {
+        res = Math.max(res, left * (hi - lo));
+        lo += 1;
+      } else {
+        res = Math.max(res, right * (hi - lo));
+        hi -= 1;
       }
     }
-    return dp[0];
+    return res;
   }
 
   /**
-   * 打家劫舍
+   * 零钱兑换，硬币可重复，与下方 II 保持外 coin 内 amount
    *
-   * <p>dp[i] 表示 nums[0,i] 产生的最大金额
+   * <p>dp[i] 表示凑成 i 元需要的最少的硬币数
    *
-   * <p>dp[i] = Math.max(dp[i-1], nums[i-1] + dp[i-2]);
-   *
-   * <p>扩展1，记录路径，参下 annotate
-   *
-   * @param nums the nums
+   * @param coins the coins
+   * @param amount the amount
    * @return int int
    */
-  public int rob(int[] nums) {
-    return rob2(nums);
+  public int coinChange(int[] coins, int amount) {
+    int[] dp = new int[amount + 1];
+    // 因为要比较的是最小值，这个不可能的值就得赋值成为一个最大值
+    Arrays.fill(dp, amount + 1);
+    // 单独一枚硬币如果能够凑出面值，符合最优子结构
+    dp[0] = 0;
+    Arrays.sort(coins);
+    for (int coin : coins) {
+      for (int i = coin; i <= amount; i++) {
+        if (i < coin) break;
+        dp[i] = Math.min(dp[i], dp[i - coin] + 1);
+      }
+    }
+    return (dp[amount] == amount + 1) ? -1 : dp[amount];
   }
 
-  private int rob1(int[] nums) {
-    int pre = 0, cur = 0;
-    //    StringBuilder pathPre = new StringBuilder(), pathCur = new StringBuilder();
-    for (int num : nums) {
-      //      if (cur > pre + num) {
-      //        pathCur = new StringBuilder(pathPre.toString());
-      //        cur = cur;
-      //      } else {
-      //        String tmp1 = pathPre.toString();
-      //        pathPre = new StringBuilder(pathCur.toString()).append(num);
-      //        pathCur = new StringBuilder(tmp1);
-      //        int tmp2 = Math.max(cur, pre + num);
-      //        pre = cur;
-      //        cur = tmp2;
+  /**
+   * 分发糖果，求满足权重规则的最少所需糖果量
+   *
+   * <p>扩展1，成环
+   *
+   * @param ratings the ratings
+   * @return the int
+   */
+  public int candy(int[] ratings) {
+    int res = 0;
+    int[] left = new int[ratings.length];
+    for (int i = 0; i < ratings.length; i++) {
+      //      if (i == 0 && ratings[0] > ratings[ratings.length - 1]) {
+      //        left[i] = left[ratings.length - 1] + 1;
+      //        continue;
       //      }
-      int tmp2 = Math.max(cur, pre + num);
-      pre = cur;
-      cur = tmp2;
+      left[i] = (i > 0 && ratings[i] > ratings[i - 1]) ? left[i - 1] + 1 : 1;
     }
-    return cur;
-  }
-
-  private int rob2(int[] nums) {
-    if (nums.length < 2) return nums[0];
-    return Math.max(
-        rob1(Arrays.copyOfRange(nums, 0, nums.length - 1)),
-        rob1(Arrays.copyOfRange(nums, 1, nums.length)));
-  }
-
-  /**
-   * 打家劫舍III，树状，后序遍历，两种选择，遍历与否当前点
-   *
-   * @param root the root
-   * @return int int
-   */
-  public int rob(TreeNode root) {
-    int[] res = postOrder(root);
-    return Math.max(res[0], res[1]);
-  }
-
-  private int[] postOrder(TreeNode root) {
-    if (root == null) return new int[2];
-    int[] left = postOrder(root.left), right = postOrder(root.right);
-    return new int[] {
-      Math.max(left[0], left[1]) + Math.max(right[0], right[1]), left[0] + right[0] + root.val
-    };
+    int right = 0;
+    for (int i = ratings.length - 1; i >= 0; i--) {
+      //      if (i == ratings.length - 1 && ratings[0] < ratings[i]) {
+      //        right += 1;
+      //        continue;
+      //      }
+      right = (i < ratings.length - 1 && ratings[i] > ratings[i + 1]) ? right + 1 : 1;
+      res += Math.max(left[i], right);
+    }
+    return res;
   }
 
   /**
@@ -336,245 +205,6 @@ class OOptimalSolution {
       }
     }
     return maxSide * maxSide;
-  }
-}
-
-/**
- * 统计
- *
- * <p>区分统计排列 & 组合的区别
- */
-class CCount {
-  /**
-   * 爬楼梯，对比零钱兑换 II，可选集为 [1,2] 需要返回凑成 n 的总数，元素可重，前者排列，后者组合
-   *
-   * <p>先走 2 步再走 1 步与先 1 后 2 是两种爬楼梯的方案，而先拿 2 块再拿 1 块 & 相反是同种凑金额的方案
-   *
-   * <p>扩展1，不能爬到 7 倍数的楼层
-   *
-   * <p>扩展2，记录爬楼梯的路径，选用 dfs
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int climbStairs(int n) {
-    int step1 = 1, step2 = 1; // dp[i-1] & dp[i-2]
-    for (int i = 2; i < n + 1; i++) {
-      // 扩展1，无法状态压缩
-      // if ((i + 1) % 7 == 0) { dp[i] = 0 }
-      // else { dp[i] = dp[i - 1] + dp[i - 2] }
-      int tmp = step2;
-      step2 = step2 + step1;
-      step1 = tmp;
-    }
-    return step2;
-  }
-
-  private int dfs(int n, int[] memo) {
-    if (n == 0 || n == 1) {
-      return 1;
-    }
-    return memo[n] == 0 ? dfs(n - 1, memo) + dfs(n - 2, memo) : memo[n];
-  }
-
-  /**
-   * 零钱兑换II，返回可以凑成总金额的硬币组合数，硬币可重，即 coins[i] 同个索引可重复选择
-   *
-   * <p>dp[i] 表示凑成 i 元的路径总数，即组合
-   *
-   * <p>与上方 I 保持外 coin 内 amount
-   *
-   * <p>https://leetcode-cn.com/problems/coin-change-2/solution/ling-qian-dui-huan-iihe-pa-lou-ti-wen-ti-dao-di-yo/
-   *
-   * @param amount the amount
-   * @param coins the coins
-   * @return int int
-   */
-  public int change(int amount, int[] coins) {
-    int[] dp = new int[amount + 1];
-    dp[0] = 1;
-    for (int coin : coins) for (int i = coin; i <= amount; i++) dp[i] += dp[i - coin];
-    return dp[amount];
-  }
-
-  /**
-   * 圆环回原点，类似爬楼梯，参考 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
-   *
-   * <p>圆环上有 m 个点，编号为 0~m-1，从 0 点出发，每次可以逆时针和顺时针走一步，求 n 步回到 0 点的走法
-   *
-   * <p>dp[i][j] 表示从 0 出发走 i 步到达 j 点的方案，即排列数
-   *
-   * <p>递推，走 n 步到 0 的方案数 = 走 n-1 步到 1 的方案数 + 走 n-1 步到 m-1 的方案数
-   *
-   * @param m 点数
-   * @param n 步数
-   * @return int int
-   */
-  public int backToOrigin(int m, int n) {
-    // 便于从 1 开始递推
-    int[][] dp = new int[m][n + 1];
-    dp[0][0] = 1;
-    // j+1 or j-1 可能越界 [0, m-1] 因此取余
-    for (int step = 1; step < n + 1; step++) {
-      for (int idx = 0; idx < m; idx++) {
-        int idxNxt = (idx + 1) % m, idxTail = (idx - 1 + m) % m;
-        dp[step][idx] = dp[step - 1][idxNxt] + dp[step - 1][idxTail];
-      }
-    }
-    return dp[n][0];
-  }
-
-  /**
-   * 不同的二叉搜索树，卡特兰数公式，记忆即可
-   *
-   * <p>dp[i] 表示假设 i 个节点存在二叉排序树的个数
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int numTrees(int n) {
-    int[] dp = new int[n + 1];
-    dp[0] = 1;
-    dp[1] = 1;
-    for (int i = 2; i < n + 1; i++) {
-      for (int j = 1; j < i + 1; j++) {
-        dp[i] += dp[j - 1] * dp[i - j];
-      }
-    }
-    return dp[n];
-  }
-
-  /**
-   * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/decode-ways/solution/c-wo-ren-wei-hen-jian-dan-zhi-guan-de-jie-fa-by-pr/
-   *
-   * <p>dp[i] 表示 str[0,i] 的解码总数
-   *
-   * <p>递推关系，按照如下顺序，分别判断正序遍历时，当前与前一位的数字，s[i]=='0' -> s[i-1]=='1' or '2'
-   *
-   * <p>显然 dp[i] 仅依赖前二者，因此可状态压缩
-   *
-   * @param s the s
-   * @return int
-   */
-  public int numDecodings(String s) {
-    if (s.charAt(0) == '0') return 0;
-    // dp[-1]=dp[0]=1
-    int pre = 1, cur = 1;
-    for (int i = 1; i < s.length(); i++) {
-      char curCh = s.charAt(i), preCh = s.charAt(i - 1);
-      int tmp = cur;
-      if (curCh == '0') {
-        if (preCh != '1' && preCh != '2') {
-          return 0;
-        }
-        cur = pre;
-      } else if (preCh == '1' || (preCh == '2' && curCh >= '1' && curCh <= '6')) {
-        cur += pre;
-      }
-      pre = tmp;
-    }
-    return cur;
-  }
-}
-
-/**
- * 路径相关，其余如海岛类 & 最长递增路径，参考 TTree
- *
- * @author cenghui
- */
-class PPath {
-  /**
-   * 不同路径I
-   *
-   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
-   *
-   * @param m the m
-   * @param n the n
-   * @return int int
-   */
-  public int uniquePaths(int m, int n) {
-    int[] dp = new int[n];
-    Arrays.fill(dp, 1);
-    for (int i = 1; i < m; i++) {
-      for (int j = 1; j < n; j++) {
-        dp[j] += dp[j - 1];
-      }
-    }
-    return dp[n - 1];
-  }
-
-  /**
-   * 不同路径II
-   *
-   * <p>dp[i][j] 表示由起点，即 [0][0] 达到 [i][j] 的路径总数
-   *
-   * @param obstacleGrid the obstacle grid
-   * @return int int
-   */
-  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
-    int m = obstacleGrid[0].length;
-    int[] dp = new int[m];
-    // 起点可能有障碍物
-    dp[0] = (obstacleGrid[0][0] == 1) ? 0 : 1;
-    for (int[] rows : obstacleGrid) {
-      for (int j = 0; j < m; ++j) {
-        if (rows[j] == 1) {
-          dp[j] = 0;
-        } else if (rows[j] == 0 && j >= 1) {
-          dp[j] = dp[j] + dp[j - 1];
-        }
-      }
-    }
-    return dp[m - 1];
-  }
-
-  /**
-   * 目标和
-   *
-   * <p>TODO
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/target-sum/solution/dong-tai-gui-hua-si-kao-quan-guo-cheng-by-keepal/
-   *
-   * <p>dp[i][j] 表示为从数组 nums[0,i] 的元素进行加减可以得到 j 的方法数
-   *
-   * @param nums
-   * @param s
-   * @return
-   */
-  public int findTargetSumWays(int[] nums, int s) {
-    int sum = 0;
-    for (int i = 0; i < nums.length; i++) {
-      sum += nums[i];
-    }
-    // 绝对值范围超过 sum 的绝对值范围，则无法得到
-    if (Math.abs(s) > Math.abs(sum)) return 0;
-    // 因为要包含负数所以要两倍，又要加上0这个中间的那个情况
-    int len = nums.length, range = sum * 2 + 1;
-    // 从总和为-sum开始的
-    int[][] dp = new int[len][range];
-    // 加上 sum 纯粹是因为下标界限问题，赋第二维的值的时候都要加上 sum
-    // 第一个数只能分别组成 +-nums[i] 的一种情况
-    dp[0][sum + nums[0]] += 1;
-    dp[0][sum - nums[0]] += 1;
-    for (int i = 1; i < len; i++) {
-      for (int j = -sum; j <= sum; j++) {
-        // +不成立 加上当前数大于 sum，只能减去当前的数
-        if ((j + nums[i]) > sum) {
-          dp[i][j + sum] = dp[i - 1][j - nums[i] + sum] + 0;
-          // -不成立，减去当前数小于 -sum，只能加上当前的数
-        } else if ((j - nums[i]) < -sum) {
-          dp[i][j + sum] = dp[i - 1][j + nums[i] + sum] + 0;
-        } else {
-          // +- 均可
-          dp[i][j + sum] = dp[i - 1][j + nums[i] + sum] + dp[i - 1][j - nums[i] + sum];
-        }
-      }
-    }
-    return dp[len - 1][sum + s];
   }
 }
 
@@ -942,9 +572,9 @@ class SSubSequence {
     return editDistance(word1, word2);
   }
 
-  // 编辑距离
+  // 编辑距离，画图即可，三个方向分别代表三种操作
   // dp[i][j] 表示由 A[0:i] 转移为 B[0:j] 的最少步数
-  // 递推 min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])+1
+  // 递推 1+min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
   // 扩展1，三个操作权重不同，求最少的总权重
   private int editDistance(String word1, String word2) {
     int n1 = word1.length(), n2 = word2.length();
@@ -958,9 +588,9 @@ class SSubSequence {
     for (int i = 1; i <= n1; i++) {
       for (int j = 1; j <= n2; j++) {
         dp[i][j] =
-            (word1.charAt(i - 1) == word2.charAt(j - 1))
+            word1.charAt(i - 1) == word2.charAt(j - 1)
                 ? dp[i - 1][j - 1]
-                : Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]) + 1;
+                : 1 + Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]);
       }
     }
     return dp[n1][n2];
@@ -1048,15 +678,9 @@ class SSubSequence {
   /**
    * 正则表达式匹配，以下均基于 p 判定
    *
-   * <p>TODO
+   * <p>TODO dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
    *
-   * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
-   *
-   * <p>dp[i][j] = dp[i-1][j] 多个字符匹配的情况
-   *
-   * <p>dp[i][j] = dp[i][j-1] 单个字符匹配的情况
-   *
-   * <p>dp[i][j] = dp[i][j-2] 没有匹配的情况
+   * <p>dp[i-1][j] 多个字符匹配的情况，dp[i][j-1] 单个字符匹配的情况，dp[i][j-2] 没有匹配的情况
    *
    * @param s the s
    * @param p the p
@@ -1084,5 +708,375 @@ class SSubSequence {
       }
     }
     return dp[s.length()][p.length()];
+  }
+}
+
+/**
+ * 路径相关，其余如海岛类 & 最长递增路径，参考 TTree
+ *
+ * @author cenghui
+ */
+class PPath {
+  /**
+   * 不同路径I
+   *
+   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
+   *
+   * @param m the m
+   * @param n the n
+   * @return int int
+   */
+  public int uniquePaths(int m, int n) {
+    int[] dp = new int[n];
+    Arrays.fill(dp, 1);
+    for (int i = 1; i < m; i++) {
+      for (int j = 1; j < n; j++) {
+        dp[j] += dp[j - 1];
+      }
+    }
+    return dp[n - 1];
+  }
+
+  /**
+   * 不同路径II
+   *
+   * <p>dp[i][j] 表示由起点，即 [0][0] 达到 [i][j] 的路径总数
+   *
+   * @param obstacleGrid the obstacle grid
+   * @return int int
+   */
+  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+    int m = obstacleGrid[0].length;
+    int[] dp = new int[m];
+    // 起点可能有障碍物
+    dp[0] = (obstacleGrid[0][0] == 1) ? 0 : 1;
+    for (int[] rows : obstacleGrid) {
+      for (int j = 0; j < m; ++j) {
+        if (rows[j] == 1) {
+          dp[j] = 0;
+        } else if (rows[j] == 0 && j >= 1) {
+          dp[j] = dp[j] + dp[j - 1];
+        }
+      }
+    }
+    return dp[m - 1];
+  }
+
+  /**
+   * 最小路径和，题设自然数
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/0/
+   *
+   * <p>dp[i][j] 表示直到走到 (i,j) 的最小路径和
+   *
+   * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
+   *
+   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历
+   *
+   * <p>扩展2，存在负值点
+   *
+   * @param grid the grid
+   * @return int
+   */
+  public int minPathSum(int[][] grid) {
+    int len = grid[0].length;
+    int[] dp = new int[len];
+    dp[0] = grid[0][0];
+    for (int i = 1; i < len; i++) {
+      dp[i] = dp[i - 1] + grid[0][i];
+    }
+    for (int i = 1; i < grid.length; i++) {
+      dp[0] += grid[i][0];
+      for (int j = 1; j < len; j++) {
+        dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
+      }
+    }
+    //    List<Integer> res = new ArrayList<>();
+    //    int i = grid.length - 1, j = grid[0].length - 1;
+    //    res.add(grid[i][j]);
+    //    int sum = dp[i][j];
+    //    while (i > 0 || j > 0) {
+    //      sum -= grid[i][j];
+    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
+    //        res.add(grid[i][j - 1]);
+    //        j -=1;
+    //      } else {
+    //        res.add(grid[i - 1][j]);
+    //        i -=1;
+    //      }
+    //    }
+    //    return res;
+    return dp[len - 1];
+  }
+
+  /**
+   * 三角形的最小路径和，bottom to up
+   *
+   * <p>dp[i][j] 表示由 triangle[0][0] 达到 triangle[i][j] 的最小路径长度
+   *
+   * @param triangle the triangle
+   * @return int int
+   */
+  public int minimumTotal(List<List<Integer>> triangle) {
+    int len = triangle.get(triangle.size() - 1).size();
+    int[] dp = new int[len + 1];
+    for (int i = len - 1; i >= 0; i--) {
+      for (int j = 0; j <= i; j++) {
+        dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
+      }
+    }
+    return dp[0];
+  }
+
+  /**
+   * 打家劫舍
+   *
+   * <p>dp[i] 表示 nums[0,i] 产生的最大金额
+   *
+   * <p>dp[i] = Math.max(dp[i-1], nums[i-1] + dp[i-2]);
+   *
+   * <p>扩展1，记录路径，参下 annotate
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int rob(int[] nums) {
+    return rob2(nums);
+  }
+
+  private int rob1(int[] nums) {
+    int pre = 0, cur = 0;
+    //    StringBuilder pathPre = new StringBuilder(), pathCur = new StringBuilder();
+    for (int num : nums) {
+      //      if (cur > pre + num) {
+      //        pathCur = new StringBuilder(pathPre.toString());
+      //        cur = cur;
+      //      } else {
+      //        String tmp1 = pathPre.toString();
+      //        pathPre = new StringBuilder(pathCur.toString()).append(num);
+      //        pathCur = new StringBuilder(tmp1);
+      //        int tmp2 = Math.max(cur, pre + num);
+      //        pre = cur;
+      //        cur = tmp2;
+      //      }
+      int tmp2 = Math.max(cur, pre + num);
+      pre = cur;
+      cur = tmp2;
+    }
+    return cur;
+  }
+
+  private int rob2(int[] nums) {
+    if (nums.length < 2) return nums[0];
+    return Math.max(
+        rob1(Arrays.copyOfRange(nums, 0, nums.length - 1)),
+        rob1(Arrays.copyOfRange(nums, 1, nums.length)));
+  }
+
+  /**
+   * 打家劫舍III，树状，后序遍历，两种选择，遍历与否当前点
+   *
+   * @param root the root
+   * @return int int
+   */
+  public int rob(TreeNode root) {
+    int[] res = postOrder(root);
+    return Math.max(res[0], res[1]);
+  }
+
+  private int[] postOrder(TreeNode root) {
+    if (root == null) return new int[2];
+    int[] left = postOrder(root.left), right = postOrder(root.right);
+    return new int[] {
+      Math.max(left[0], left[1]) + Math.max(right[0], right[1]), left[0] + right[0] + root.val
+    };
+  }
+
+  /**
+   * 目标和
+   *
+   * <p>TODO
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/target-sum/solution/dong-tai-gui-hua-si-kao-quan-guo-cheng-by-keepal/
+   *
+   * <p>dp[i][j] 表示为从数组 nums[0,i] 的元素进行加减可以得到 j 的方法数
+   *
+   * @param nums
+   * @param s
+   * @return
+   */
+  public int findTargetSumWays(int[] nums, int s) {
+    int sum = 0;
+    for (int i = 0; i < nums.length; i++) {
+      sum += nums[i];
+    }
+    // 绝对值范围超过 sum 的绝对值范围，则无法得到
+    if (Math.abs(s) > Math.abs(sum)) return 0;
+    // 因为要包含负数所以要两倍，又要加上0这个中间的那个情况
+    int len = nums.length, range = sum * 2 + 1;
+    // 从总和为-sum开始的
+    int[][] dp = new int[len][range];
+    // 加上 sum 纯粹是因为下标界限问题，赋第二维的值的时候都要加上 sum
+    // 第一个数只能分别组成 +-nums[i] 的一种情况
+    dp[0][sum + nums[0]] += 1;
+    dp[0][sum - nums[0]] += 1;
+    for (int i = 1; i < len; i++) {
+      for (int j = -sum; j <= sum; j++) {
+        // +不成立 加上当前数大于 sum，只能减去当前的数
+        if ((j + nums[i]) > sum) {
+          dp[i][j + sum] = dp[i - 1][j - nums[i] + sum] + 0;
+          // -不成立，减去当前数小于 -sum，只能加上当前的数
+        } else if ((j - nums[i]) < -sum) {
+          dp[i][j + sum] = dp[i - 1][j + nums[i] + sum] + 0;
+        } else {
+          // +- 均可
+          dp[i][j + sum] = dp[i - 1][j + nums[i] + sum] + dp[i - 1][j - nums[i] + sum];
+        }
+      }
+    }
+    return dp[len - 1][sum + s];
+  }
+}
+
+/**
+ * 统计
+ *
+ * <p>区分统计排列 & 组合的区别
+ */
+class CCount {
+  /**
+   * 爬楼梯，对比零钱兑换 II，可选集为 [1,2] 需要返回凑成 n 的总数，元素可重，前者排列，后者组合
+   *
+   * <p>先走 2 步再走 1 步与先 1 后 2 是两种爬楼梯的方案，而先拿 2 块再拿 1 块 & 相反是同种凑金额的方案
+   *
+   * <p>扩展1，不能爬到 7 倍数的楼层
+   *
+   * <p>扩展2，记录爬楼梯的路径，选用 dfs
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int climbStairs(int n) {
+    int step1 = 1, step2 = 1; // dp[i-1] & dp[i-2]
+    for (int i = 2; i < n + 1; i++) {
+      // 扩展1，无法状态压缩
+      // if ((i + 1) % 7 == 0) { dp[i] = 0 }
+      // else { dp[i] = dp[i - 1] + dp[i - 2] }
+      int tmp = step2;
+      step2 = step2 + step1;
+      step1 = tmp;
+    }
+    return step2;
+  }
+
+  private int dfs(int n, int[] memo) {
+    if (n == 0 || n == 1) {
+      return 1;
+    }
+    return memo[n] == 0 ? dfs(n - 1, memo) + dfs(n - 2, memo) : memo[n];
+  }
+
+  /**
+   * 零钱兑换II，返回可以凑成总金额的硬币组合数，硬币可重，即 coins[i] 同个索引可重复选择
+   *
+   * <p>dp[i] 表示凑成 i 元的路径总数，即组合
+   *
+   * <p>与上方 I 保持外 coin 内 amount
+   *
+   * <p>https://leetcode-cn.com/problems/coin-change-2/solution/ling-qian-dui-huan-iihe-pa-lou-ti-wen-ti-dao-di-yo/
+   *
+   * @param amount the amount
+   * @param coins the coins
+   * @return int int
+   */
+  public int change(int amount, int[] coins) {
+    int[] dp = new int[amount + 1];
+    dp[0] = 1;
+    for (int coin : coins) for (int i = coin; i <= amount; i++) dp[i] += dp[i - coin];
+    return dp[amount];
+  }
+
+  /**
+   * 圆环回原点，类似爬楼梯，参考 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
+   *
+   * <p>圆环上有 m 个点，编号为 0~m-1，从 0 点出发，每次可以逆时针和顺时针走一步，求 n 步回到 0 点的走法
+   *
+   * <p>dp[i][j] 表示从 0 出发走 i 步到达 j 点的方案，即排列数
+   *
+   * <p>递推，走 n 步到 0 的方案数 = 走 n-1 步到 1 的方案数 + 走 n-1 步到 m-1 的方案数
+   *
+   * @param m 点数
+   * @param n 步数
+   * @return int int
+   */
+  public int backToOrigin(int m, int n) {
+    // 便于从 1 开始递推
+    int[][] dp = new int[m][n + 1];
+    dp[0][0] = 1;
+    // j+1 or j-1 可能越界 [0, m-1] 因此取余
+    for (int step = 1; step < n + 1; step++) {
+      for (int idx = 0; idx < m; idx++) {
+        int idxNxt = (idx + 1) % m, idxTail = (idx - 1 + m) % m;
+        dp[step][idx] = dp[step - 1][idxNxt] + dp[step - 1][idxTail];
+      }
+    }
+    return dp[n][0];
+  }
+
+  /**
+   * 不同的二叉搜索树，卡特兰数公式，记忆即可
+   *
+   * <p>dp[i] 表示假设 i 个节点存在二叉排序树的个数
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int numTrees(int n) {
+    int[] dp = new int[n + 1];
+    dp[0] = 1;
+    dp[1] = 1;
+    for (int i = 2; i < n + 1; i++) {
+      for (int j = 1; j < i + 1; j++) {
+        dp[i] += dp[j - 1] * dp[i - j];
+      }
+    }
+    return dp[n];
+  }
+
+  /**
+   * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/decode-ways/solution/c-wo-ren-wei-hen-jian-dan-zhi-guan-de-jie-fa-by-pr/
+   *
+   * <p>dp[i] 表示 str[0,i] 的解码总数
+   *
+   * <p>递推关系，按照如下顺序，分别判断正序遍历时，当前与前一位的数字，s[i]=='0' -> s[i-1]=='1' or '2'
+   *
+   * <p>显然 dp[i] 仅依赖前二者，因此可状态压缩
+   *
+   * @param s the s
+   * @return int
+   */
+  public int numDecodings(String s) {
+    if (s.charAt(0) == '0') return 0;
+    // dp[-1]=dp[0]=1
+    int pre = 1, cur = 1;
+    for (int i = 1; i < s.length(); i++) {
+      char curCh = s.charAt(i), preCh = s.charAt(i - 1);
+      int tmp = cur;
+      if (curCh == '0') {
+        if (preCh != '1' && preCh != '2') {
+          return 0;
+        }
+        cur = pre;
+      } else if (preCh == '1' || (preCh == '2' && curCh >= '1' && curCh <= '6')) {
+        cur += pre;
+      }
+      pre = tmp;
+    }
+    return cur;
   }
 }

@@ -271,6 +271,138 @@ public class AArray extends DefaultArray {
   }
 }
 
+class HHeap extends DefaultArray {
+  /**
+   * 数组中的第k个最大元素，原地维护小根堆
+   *
+   * <p>堆化 [0,k] & 依次入堆 [k+1,l-1] 的元素 & 最终堆顶即 [0]
+   *
+   * <p>扩展1，寻找两个有序数组的第 k 大，参下「寻找两个有序数组的中位数」
+   *
+   * <p>扩展2，判断 num 是否为第 k 大，有重复，partition 如果在 K 位置的左边和右边都遇到该数，直接结束，否则直到找到第 k 大的元素比较是否为同一个数
+   *
+   * <p>扩展3，如何只选出 [n, m]，分别建两个长度为 n & m-n 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
+   *
+   * <p>扩展4，不同的量级如何选择，如 10 & 100 & 10k，分别为计数排序，快速选择 or 建堆，分治 & 外排
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return the int
+   */
+  public int findKthLargest(int[] nums, int k) {
+    //    PriorityQueue<Integer> minHeap =
+    //        new PriorityQueue<Integer>(
+    //            k,
+    //            (n1, n2) -> {
+    //              if (n1 < n2) return -1;
+    //              else if (n1 == n2) return 0;
+    //              else return 1;
+    //            });
+    //    for (int num : nums) {
+    //      minHeap.add(num);
+    //      if (minHeap.size() > k) minHeap.poll();
+    //    }
+    //    return minHeap.peek();
+    int idx = nums.length - 1;
+    heapify(nums, nums.length);
+    while (idx >= nums.length - k + 1) {
+      swap(nums, 0, idx);
+      idx -= 1;
+      // 区间 [0,idx-1] 有序，对比上方，因为此处 heap capcacity 固定
+      down(nums, 0, idx - 1);
+    }
+    return nums[0];
+  }
+
+  /**
+   * 堆是具有以下性质的完全二叉树，每个结点的值都大于或等于其左右孩子结点的值，称为大顶堆，反之，小顶堆
+   *
+   * @param nums the nums
+   */
+  public void heapSort(int[] nums) {
+    int idx = nums.length - 1;
+    heapify(nums, nums.length);
+    // 循环不变量，区间 [0, idx] 堆有序
+    while (idx >= 1) {
+      // 把堆顶元素（当前最大）交换到数组末尾
+      swap(nums, 0, idx);
+      // 逐步减少堆有序的部分
+      idx -= 1;
+      // 下标 0 位置下沉操作，使得区间 [0, i] 堆有序
+      down(nums, 0, idx);
+    }
+  }
+
+  // 从 (len-1)/2 即首个叶结点开始逐层下沉
+  private void heapify(int[] nums, int capcacity) {
+    for (int i = capcacity / 2; i >= 0; i--) {
+      down(nums, i, capcacity - 1);
+    }
+  }
+
+  // [0, hi] 是 nums 的有效部分，闭区间
+  private void down(int[] nums, int lo, int hi) {
+    int cur = lo;
+    while (2 * cur + 1 <= hi) {
+      int idx = 2 * cur + 1;
+      if (idx + 1 <= hi && nums[idx + 1] > nums[idx]) {
+        idx += 1;
+      }
+      if (nums[idx] <= nums[cur]) {
+        break;
+      }
+      swap(nums, idx, cur);
+      cur = idx;
+    }
+  }
+
+  /**
+   * 字符串出现次数 topk，参考
+   * https://www.nowcoder.com/practice/fd711bdfa0e840b381d7e1b82183b3ee?tpId=196&tqId=37142&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   *
+   * <p>TODO
+   *
+   * @param strings string字符串一维数组 strings
+   * @param k int整型 the k
+   * @return string字符串二维数组
+   */
+  public String[][] topKstrings(String[] strings, int k) {
+    if (k == 0) {
+      return new String[][] {};
+    }
+    String[][] res = new String[k][2];
+    Comparator compa = new DescComparator();
+    Map<String, Integer> counter = new HashMap<>();
+    for (String str : strings) {
+      counter.put(str, counter.get(str) + 1);
+    }
+    Queue<Map.Entry<String, Integer>> pq = new PriorityQueue<>(k, compa);
+    for (Map.Entry<String, Integer> countByStr : counter.entrySet()) {
+      if (pq.size() < k) {
+        pq.add(countByStr);
+      } else if (compa.compare(pq.peek(), countByStr) < 0) {
+        pq.remove();
+        pq.add(countByStr);
+      }
+    }
+    for (int i = k - 1; i >= 0; i--) {
+      Map.Entry<String, Integer> entry = pq.poll();
+      res[i] = new String[] {entry.getKey(), String.valueOf(entry.getValue())};
+    }
+    return res;
+  }
+
+  private class DescComparator implements Comparator<Map.Entry<String, Integer>> {
+    @Override
+    public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+      // 字典序小的在前
+      return (o1.getValue().equals(o2.getValue()))
+          ? o2.getKey().compareTo(o1.getKey())
+          : o1.getValue() - o2.getValue();
+    }
+  }
+}
+
 /**
  * 基于比较的排序的时间复杂度下界均是 nlogn
  *
@@ -282,6 +414,7 @@ public class AArray extends DefaultArray {
  */
 class QQuick extends DefaultArray {
   private final Random random = new Random();
+
   /**
    * 快速排序，三路，循环不变量
    *
@@ -383,140 +516,10 @@ class QQuick extends DefaultArray {
   }
 }
 
-class HHeap extends DefaultArray {
-  /**
-   * 堆是具有以下性质的完全二叉树，每个结点的值都大于或等于其左右孩子结点的值，称为大顶堆，反之，小顶堆
-   *
-   * @param nums the nums
-   */
-  public void heapSort(int[] nums) {
-    int idx = nums.length - 1;
-    heapify(nums, nums.length);
-    // 循环不变量，区间 [0, idx] 堆有序
-    while (idx >= 1) {
-      // 把堆顶元素（当前最大）交换到数组末尾
-      swap(nums, 0, idx);
-      // 逐步减少堆有序的部分
-      idx -= 1;
-      // 下标 0 位置下沉操作，使得区间 [0, i] 堆有序
-      down(nums, 0, idx);
-    }
-  }
-
-  /**
-   * 数组中的第k个最大元素，原地维护小根堆
-   *
-   * <p>堆化 [0,k] & 依次入堆 [k+1,l-1] 的元素 & 最终堆顶即 [0]
-   *
-   * <p>扩展1，寻找两个有序数组的第 k 大，参考「寻找两个有序数组的中位数」
-   *
-   * <p>扩展2，判断 num 是否为第 k 大，有重复，partition 如果在 K 位置的左边和右边都遇到该数，直接结束，否则直到找到第 k 大的元素比较是否为同一个数
-   *
-   * <p>扩展3，如何只选出 [n, m]，分别建两个长度为 n & m-n 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return the int
-   */
-  public int findKthLargest(int[] nums, int k) {
-    //    PriorityQueue<Integer> minHeap =
-    //        new PriorityQueue<Integer>(
-    //            k,
-    //            (n1, n2) -> {
-    //              if (n1 < n2) return -1;
-    //              else if (n1 == n2) return 0;
-    //              else return 1;
-    //            });
-    //    for (int num : nums) {
-    //      minHeap.add(num);
-    //      if (minHeap.size() > k) minHeap.poll();
-    //    }
-    //    return minHeap.peek();
-    int idx = nums.length - 1;
-    heapify(nums, nums.length);
-    while (idx >= nums.length - k + 1) {
-      swap(nums, 0, idx);
-      idx -= 1;
-      // 区间 [0,idx-1] 有序，对比上方，因为此处 heap capcacity 固定
-      down(nums, 0, idx - 1);
-    }
-    return nums[0];
-  }
-
-  // 从 (len-1)/2 即首个叶结点开始逐层下沉
-  private void heapify(int[] nums, int capcacity) {
-    for (int i = capcacity / 2; i >= 0; i--) {
-      down(nums, i, capcacity - 1);
-    }
-  }
-
-  // [0, hi] 是 nums 的有效部分，闭区间
-  private void down(int[] nums, int lo, int hi) {
-    int cur = lo;
-    while (2 * cur + 1 <= hi) {
-      int idx = 2 * cur + 1;
-      if (idx + 1 <= hi && nums[idx + 1] > nums[idx]) {
-        idx += 1;
-      }
-      if (nums[idx] <= nums[cur]) {
-        break;
-      }
-      swap(nums, idx, cur);
-      cur = idx;
-    }
-  }
-
-  /**
-   * 字符串出现次数 topk，参考
-   * https://www.nowcoder.com/practice/fd711bdfa0e840b381d7e1b82183b3ee?tpId=196&tqId=37142&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
-   *
-   * <p>TODO
-   *
-   * @param strings string字符串一维数组 strings
-   * @param k int整型 the k
-   * @return string字符串二维数组
-   */
-  public String[][] topKstrings(String[] strings, int k) {
-    if (k == 0) {
-      return new String[][] {};
-    }
-    String[][] res = new String[k][2];
-    Comparator compa = new DescComparator();
-    Map<String, Integer> counter = new HashMap<>();
-    for (String str : strings) {
-      counter.put(str, counter.get(str) + 1);
-    }
-    Queue<Map.Entry<String, Integer>> pq = new PriorityQueue<>(k, compa);
-    for (Map.Entry<String, Integer> countByStr : counter.entrySet()) {
-      if (pq.size() < k) {
-        pq.add(countByStr);
-      } else if (compa.compare(pq.peek(), countByStr) < 0) {
-        pq.remove();
-        pq.add(countByStr);
-      }
-    }
-    for (int i = k - 1; i >= 0; i--) {
-      Map.Entry<String, Integer> entry = pq.poll();
-      res[i] = new String[] {entry.getKey(), String.valueOf(entry.getValue())};
-    }
-    return res;
-  }
-
-  private class DescComparator implements Comparator<Map.Entry<String, Integer>> {
-    @Override
-    public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-      // 字典序小的在前
-      return (o1.getValue().equals(o2.getValue()))
-          ? o2.getKey().compareTo(o1.getKey())
-          : o1.getValue() - o2.getValue();
-    }
-  }
-}
-
 class MMerge extends DefaultArray {
   private int res = 0;
   /**
-   * 归并排序，up-to-bottom 递归
+   * 归并排序，up-to-bottom 递归，先分后合
    *
    * <p>bottom-to-up 迭代，参考排序链表
    *
@@ -528,6 +531,7 @@ class MMerge extends DefaultArray {
     divide1(nums, new int[nums.length], 0, nums.length - 1);
   }
 
+  // 取中二分 & 合
   private void divide1(int[] nums, int[] tmp, int lo, int hi) {
     // 对于双指针，假如迭代内部基于比较，则不需要=，假如需要统计每个元素，则需要
     if (lo >= hi) return;
@@ -542,8 +546,8 @@ class MMerge extends DefaultArray {
   }
 
   // 合并 nums[lo:mid] & nums[mid+1:hi] 即排序区间 [lo,hi]
-  // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
   // 四种情况，其一遍历结束 & 比较
+  // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
   private void merge1(int[] nums, int[] tmp, int lo, int mid, int hi) {
     // 前后指针未逾界且数组至少有两个元素
     if (hi - lo >= 1) {
@@ -644,17 +648,15 @@ class MMerge extends DefaultArray {
  */
 class Dichotomy extends DefaultArray {
   /**
-   * 寻找两个有序数组的中位数，有重复，联合对两个数组二分求 topk 则复杂度为 log(m+n)
+   * 寻找两个有序数组的中位数，单数组已去重，相互之间可能有重，联合对两个数组二分求 topk 则复杂度为 log(m+n)
    *
    * <p>对于两个有序数组，逆序则顺序遍历求第 k 大，正序则顺序遍历求第 k 小，反之，二者均需要逆序遍历
    *
    * <p>对于 123 & 334 的中位数和 top3 分别是 3 & 2
    *
-   * <p>扩展1，单纯求两个有序数组 topk，需要对值，而本题求中位数本质是对排位进行二分
+   * <p>扩展1，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均，海量数据参考「数据流的中位数」
    *
-   * <p>扩展2，两个逆序数组，则双指针从尾开始遍历即可
-   *
-   * <p>扩展3，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均，海量数据参考「数据流的中位数」
+   * <p>扩展2，单纯求两个逆序数组 topk，则双指针从尾开始遍历即可，且需要对值，而本题求中位数本质是对排位进行二分，前提是单个数组无重复
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2
@@ -671,28 +673,28 @@ class Dichotomy extends DefaultArray {
         * 0.5;
   }
 
-  // 迭代
-  // 特判其一为空 7 其一遍历结束 & k 为 1
+  // 迭代，特判其一为空 & 其一遍历结束 & k 为 1
   private int getKSmallElement1(int[] nums1, int[] nums2, int k) {
     int l1 = nums1.length, l2 = nums2.length;
-    int p1 = 0, p2 = 0, cur = k;
+    int p1 = 0, p2 = 0, curRanking = k;
     while (true) {
+      // 去重1
       if (p1 == l1) {
-        return nums2[p2 + cur - 1];
+        return nums2[p2 + curRanking - 1];
       } else if (p2 == l2) {
-        return nums1[p1 + cur - 1];
-      } else if (cur == 1) {
+        return nums1[p1 + curRanking - 1];
+      } else if (curRanking == 1) {
         return Math.min(nums1[p1], nums2[p2]);
       }
-      int half = cur / 2;
+      int half = curRanking / 2;
       int newIdx1 = Math.min(p1 + half, l1) - 1, newIdx2 = Math.min(p2 + half, l2) - 1;
-      // 扩展1 需要在此处去重
       int num1 = nums1[newIdx1], num2 = nums2[newIdx2];
+      // 去重2
       if (num1 <= num2) {
-        cur -= (newIdx1 - p1 + 1);
+        curRanking -= (newIdx1 - p1 + 1);
         p1 = newIdx1 + 1;
       } else {
-        cur -= (newIdx2 - p2 + 1);
+        curRanking -= (newIdx2 - p2 + 1);
         p2 = newIdx2 + 1;
       }
     }
@@ -889,28 +891,6 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 对有序数组找到重复数超过 k 的序列，滑窗，双指针间距超过 k-1 即可
-   *
-   * @param nums
-   * @param k
-   * @return
-   */
-  public int[] findDuplicatesK(int[] nums, int k) {
-    List<Integer> res = new ArrayList<>();
-    int lo = 0;
-    for (int hi = 1; hi < nums.length; hi++) {
-      if (nums[hi] == nums[lo]) {
-        continue;
-      }
-      if (hi - lo >= k) {
-        res.add(nums[lo]);
-      }
-      lo = hi;
-    }
-    return res.stream().mapToInt(i -> i).toArray();
-  }
-
-  /**
    * 搜索二维矩阵，建议模拟 BST 以右上角作根开始遍历，复杂度 m+n
    *
    * <p>I & II 通用
@@ -1041,7 +1021,7 @@ class Dichotomy extends DefaultArray {
 /** 遍历相关 */
 class Travesal extends DefaultArray {
   /**
-   * 寻找重复数，快慢指针
+   * 寻找重复数，无序找首个，快慢指针
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1070,26 +1050,33 @@ class Travesal extends DefaultArray {
     return lo;
   }
 
-  /**
-   * 缺失的第一个正数
-   *
-   * <p>原地哈希，nums[nums[i]-1] != nums[i]，类似数组中重复的数据
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int firstMissingPositive(int[] nums) {
-    for (int i = 0; i < nums.length; i++) {
-      // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
-      while (nums[i] > 0 && nums[i] <= nums.length && nums[nums[i] - 1] != nums[i]) {
-        swap(nums, nums[i] - 1, i);
-      }
-    }
-    for (int i = 0; i < nums.length; i++) {
-      if (nums[i] != i + 1) return i + 1;
-    }
-    return nums.length + 1;
-  }
+  // 对有序数组找到重复数超过 k 的序列，滑窗，双指针间距超过 k-1 即可
+  // 找到最接近 k 的下界索引 & 从此开始按照上述模板
+  //  private int[] findDuplicatesK(int[] nums, int k) {
+  //    List<Integer> res = new ArrayList<>();
+  //    int lo = 0, hi = nums.length - 1;
+  //    if (nums[hi] < k) return new int[] {};
+  //    while (lo <= hi) {
+  //      int mid = lo + (hi - lo) / 2;
+  //      if (nums[mid] < k) {
+  //
+  //      } else if (nums[mid] == k) {
+  //
+  //      } else if (nums[mid] > k) {
+  //
+  //      }
+  //    }
+  //
+  //    int lo = 0;
+  //    for (int hi = 1; hi < nums.length; hi++) {
+  //      if (nums[hi] == nums[lo]) continue;
+  //      if (hi - lo >= k) {
+  //        res.add(nums[lo]);
+  //      }
+  //      lo = hi;
+  //    }
+  //    return res.stream().mapToInt(i -> i).toArray();
+  //  }
 
   /**
    * 数组中重复的数据，题设每个数字至多出现两次，且在 [1,n] 内
@@ -1114,7 +1101,28 @@ class Travesal extends DefaultArray {
   }
 
   /**
-   * 旋转数组，反转三次，全部 & [0,k-1] & [k,end]
+   * 缺失的第一个正数
+   *
+   * <p>原地哈希，nums[nums[i]-1] != nums[i]，类似数组中重复的数据
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int firstMissingPositive(int[] nums) {
+    for (int i = 0; i < nums.length; i++) {
+      // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
+      while (nums[i] > 0 && nums[i] <= nums.length && nums[nums[i] - 1] != nums[i]) {
+        swap(nums, nums[i] - 1, i);
+      }
+    }
+    for (int i = 0; i < nums.length; i++) {
+      if (nums[i] != i + 1) return i + 1;
+    }
+    return nums.length + 1;
+  }
+
+  /**
+   * 旋转数组，反转三次，all & [0,k-1] & [k,end]
    *
    * @param nums the nums
    * @param k the k
@@ -1315,7 +1323,7 @@ class Travesal extends DefaultArray {
   }
 }
 
-/** 移除 */
+/** TODO 移除相关，类似滑窗，后期考虑同步后者的模板 */
 class Delete extends DefaultArray {
   /**
    * 移动零，遇到目标则跳过
