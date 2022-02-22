@@ -15,9 +15,9 @@ import java.util.*;
  */
 public class SString extends DefaultSString {
   /**
-   * 字符串相加，类似包括合并 & 两数相加 & 大数相乘 & 大数相减 & 36 进制
+   * 字符串相加，双指针同时遍历 & 比对 & 最后处理高位，模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
-   * <p>模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
+   * <p>类似包括合并 & 两数相加 & 大数相乘 & 大数相减 & 36 进制
    *
    * <p>扩展1，36 进制则先转 10 再转 36
    *
@@ -53,6 +53,7 @@ public class SString extends DefaultSString {
     return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
   }
 
+  // ASCII 编码允许直接相减
   private int getInt(char num) {
     return '0' <= num && num <= '9' ? num - '0' : num - 'a' + 10;
   }
@@ -90,6 +91,8 @@ public class SString extends DefaultSString {
   /**
    * 字符串相乘，竖式，区分当前位和高位即可，最终需跳过前导零
    *
+   * <p>扩展1，不能使用 vector 而是新建 string，使用加法，即每一轮内循环均产出一个字符串，外循环相加，不适合大数
+   *
    * @param num1 the num 1
    * @param num2 the num 2
    * @return string string
@@ -99,6 +102,7 @@ public class SString extends DefaultSString {
     if (num1.equals("0") || num2.equals("0")) {
       return "0";
     }
+    // 乘法比加法多出高位的概率更大，因此额外冗余一位暂存计算结果即可，取缔 carry
     int[] res = new int[num1.length() + num2.length()];
     for (int i = num1.length() - 1; i >= 0; i--) {
       int n1 = num1.charAt(i) - '0';
@@ -686,7 +690,7 @@ class EEncoding extends SString {
    * @return int int
    */
   public int compress(char[] chars) {
-    // 写指针 & 读指针 &
+    // 写指针 & 读指针 & 上一段读指针的下一位
     int lo = 0, hi = 0, pre = 0;
     while (hi < chars.length) {
       // 存在 aa to a2 因此到最后一位需特判
@@ -707,8 +711,8 @@ class EEncoding extends SString {
         }
         reverseChs(chars, start, lo - 1);
       }
-      pre = hi + 1;
       hi += 1;
+      pre = hi;
     }
     //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
     return lo;

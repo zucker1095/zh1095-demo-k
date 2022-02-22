@@ -50,7 +50,7 @@ public class TTree {
   }
 
   /**
-   * 二叉树的后序遍历
+   * 二叉树的后序遍历，遍历顺序同前序，再反转即可
    *
    * @param root the root
    * @return list
@@ -84,26 +84,37 @@ public class TTree {
   }
 
   /**
-   * 从前序与中序遍历序列构造二叉树
+   * 从前序与中序遍历序列构造二叉树，题设元素唯一，否则，存在多棵树
+   *
+   * <p>扩展1，根据前序和后序，输出后序，不能构造树，参下 annotate
+   *
+   * <p>扩展2，给一个随机数组，生成相应的二叉搜索树，先排序，参下「将有序数组转换为二叉搜索树」
    *
    * @param preorder the preorder
    * @param inorder the inorder
    * @return the tree node
    */
   public TreeNode buildTree(int[] preorder, int[] inorder) {
-    Map<Integer, Integer> idxByValInorder = new HashMap<Integer, Integer>();
-    for (int i = 0; i < preorder.length; i++) idxByValInorder.put(inorder[i], i);
+    Map<Integer, Integer> idxByValInorder = new HashMap<>();
+    for (int i = 0; i < preorder.length; i++) {
+      idxByValInorder.put(inorder[i], i);
+    }
     return buildTree(preorder, 0, preorder.length - 1, idxByValInorder, 0);
   }
 
   private TreeNode buildTree(
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> idxByValInorder, int inLo) {
+    //    if (preLo == preHi) {
+    //      postorder.add(preorder[preLo]);
+    //      return;
+    //    }
     if (preLo > preHi) return null;
     TreeNode root = new TreeNode(preorder[preLo]);
     int idx = idxByValInorder.get(preorder[preLo]);
     int countLeft = idx - inLo;
     root.left = buildTree(preorder, preLo + 1, preLo + countLeft, idxByValInorder, inLo);
     root.right = buildTree(preorder, preLo + countLeft + 1, preHi, idxByValInorder, idx + 1);
+    //    postorder.add(preorder[preLo]);
     return root;
   }
 
@@ -310,6 +321,8 @@ class Postorder {
    * 二叉树的最近公共祖先，后序遍历
    *
    * <p>特判 & 剪枝，判断 p & q 均在左子树内 & 返回非空结点
+   *
+   * <p>TODO 扩展1，n 叉树，先找到两条路径查找第一个相交的节点即可，如果用后序遍历需要把每个分支都写清楚是否为空比较麻烦
    *
    * @param root the root
    * @param p the p
@@ -752,12 +765,9 @@ class BBST {
   private void dfs7(TreeNode head) {
     if (head == null) return;
     dfs7(head.left);
-    if (pre == null) {
-      cur = head;
-    } else {
-      // 左
-      pre.right = head;
-    }
+    // 左
+    if (pre == null) cur = head;
+    else pre.right = head;
     // 右
     head.left = pre;
     pre = head;
@@ -1089,10 +1099,8 @@ class BBacktracking extends DDFS {
   /**
    * 解数独，特判可移除，暴力回溯
    *
-   * <p>参考
+   * <p>TODO 参考
    * https://leetcode-cn.com/problems/sudoku-solver/solution/hui-su-fa-jie-shu-du-by-i_use_python/
-   *
-   * <p>TODO
    *
    * @param board
    */

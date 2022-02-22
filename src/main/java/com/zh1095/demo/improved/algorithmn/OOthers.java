@@ -326,9 +326,7 @@ class MMath {
   /**
    * 1~n整数中1出现的次数 / 数字1的个数
    *
-   * <p>TODO
-   *
-   * <p>参考
+   * <p>TODO 参考
    * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
    *
    * @param n the n
@@ -762,7 +760,7 @@ class BBit {
    *
    * <p>分治，两位互换 -> 4 -> 8 -> 16
    *
-   * <p>记住 f & c & a & 3 & 5 即可
+   * <p>记住 ff00ff00，f0f0f0f0 镜像与 c & 3，a & 5 即可
    *
    * @param n the n
    * @return int int
@@ -770,13 +768,13 @@ class BBit {
   public int reverseBits(int n) {
     // 低 16 位与高 16 位交换
     n = (n >> 16) | (n << 16);
-    // 每16位中低8位和高8位交换，1111是f
+    // 每16位中低8位和高8位交换，1111 是 f
     n = ((n & 0xff00ff00) >> 8) | ((n & 0x00ff00ff) << 8);
     // 每8位中低4位和高4位交换
     n = ((n & 0xf0f0f0f0) >> 4) | ((n & 0x0f0f0f0f) << 4);
-    // 每4位中低2位和高2位交换，1100是c,0011是3
+    // 每4位中低2位和高2位交换，1100 是 c,0011 是 3
     n = ((n & 0xcccccccc) >> 2) | ((n & 0x33333333) << 2);
-    // 每2位中低1位和高1位交换，1010是a，0101是5
+    // 每2位中低1位和高1位交换，1010 是 a，0101 是 5
     n = ((n & 0xaaaaaaaa) >> 1) | ((n & 0x55555555) << 1);
     return n;
   }

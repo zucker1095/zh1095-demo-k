@@ -1,5 +1,7 @@
 package com.zh1095.demo.improved.algorithmn;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -328,14 +330,39 @@ class MergeList extends LList {
       p2 = p2 == null ? null : p2.next;
       cur = cur.next;
     }
-    if (carry == 1) cur.next = new ListNode(1);
+    if (carry == 1) {
+      cur.next = new ListNode(1);
+    }
     return dummy.next;
   }
 
   // 123 & 45 -> 168
+  // 分别反转两个链表 & 正序计算 & 反转整个链表
+  // 允许空间，则分别遍历建栈即可，模板参上
   private ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
-    ListNode p1 = reverseList(l1), p2 = reverseList(l2);
-    return reverseList(addTwoNumbers1(p1, p2));
+    //    ListNode p1 = reverseList(l1), p2 = reverseList(l2);
+    //    return reverseList(addTwoNumbers1(p1, p2));
+    Deque<Integer> st1 = new ArrayDeque<>(), st2 = new ArrayDeque<>();
+    while (l1 != null) {
+      st1.push(l1.val);
+      l1 = l1.next;
+    }
+    while (l2 != null) {
+      st2.push(l2.val);
+      l2 = l2.next;
+    }
+    ListNode head = null;
+    int carry = 0;
+    while (!st1.isEmpty() || !st2.isEmpty() || carry > 0) {
+      int sum = carry;
+      sum += st1.isEmpty() ? 0 : st1.pop();
+      sum += st2.isEmpty() ? 0 : st2.pop();
+      ListNode cur = new ListNode(sum % 10);
+      cur.next = head;
+      head = cur;
+      carry = sum / 10;
+    }
+    return head;
   }
 
   /**
@@ -711,6 +738,7 @@ class DeleteList extends LList {
   private ListNode deleteDuplicatesII(ListNode head) {
     ListNode dummy = new ListNode();
     dummy.next = head;
+    // diff0
     ListNode cur = dummy;
     // diff1
     while (cur.next != null && cur.next.next != null) {

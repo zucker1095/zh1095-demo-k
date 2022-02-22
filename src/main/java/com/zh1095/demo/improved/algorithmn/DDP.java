@@ -896,9 +896,7 @@ class PPath {
   /**
    * 目标和
    *
-   * <p>TODO
-   *
-   * <p>参考
+   * <p>TODO 参考
    * https://leetcode-cn.com/problems/target-sum/solution/dong-tai-gui-hua-si-kao-quan-guo-cheng-by-keepal/
    *
    * <p>dp[i][j] 表示为从数组 nums[0,i] 的元素进行加减可以得到 j 的方法数

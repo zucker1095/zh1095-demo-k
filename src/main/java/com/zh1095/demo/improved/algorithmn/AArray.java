@@ -528,6 +528,7 @@ class MMerge extends DefaultArray {
    * @param hi the hi
    */
   public void mergeSort(int[] nums, int lo, int hi) {
+    if (nums.length < 2) return;
     divide1(nums, new int[nums.length], 0, nums.length - 1);
   }
 
@@ -578,6 +579,7 @@ class MMerge extends DefaultArray {
    * @return int int
    */
   public int reversePairs(int[] nums) {
+    if (nums.length < 2) return 0;
     divide2(nums, new int[nums.length], 0, nums.length - 1);
     return res;
   }
@@ -704,9 +706,7 @@ class Dichotomy extends DefaultArray {
   // 特判 k=1 & 其一为空
   private int getkSmallElement2(
       int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
-    if (k == 1) {
-      return Math.min(nums1[lo1], nums2[lo2]);
-    }
+    if (k == 1) return Math.min(nums1[lo1], nums2[lo2]);
     int len1 = hi1 - lo1 + 1, len2 = hi2 - lo2 + 1;
     // 让 len1 的长度小于 len2，这样就能保证如果有数组空了，一定是 len1
     if (len1 > len2) {
@@ -1081,7 +1081,7 @@ class Travesal extends DefaultArray {
   /**
    * 数组中重复的数据，题设每个数字至多出现两次，且在 [1,n] 内
    *
-   * <p>原地哈希，nums[nums[i]-1] *= -1，类似缺失的第一个整数
+   * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
    *
    * @param nums the nums
    * @return list list
@@ -1091,11 +1091,8 @@ class Travesal extends DefaultArray {
     for (int num : nums) {
       num *= num < 0 ? -1 : 1;
       int idx = num - 1;
-      if (nums[idx] < 0) {
-        res.add(num);
-      } else {
-        nums[idx] *= -1;
-      }
+      if (nums[idx] < 0) res.add(num);
+      else nums[idx] *= -1;
     }
     return res;
   }
@@ -1103,7 +1100,7 @@ class Travesal extends DefaultArray {
   /**
    * 缺失的第一个正数
    *
-   * <p>原地哈希，nums[nums[i]-1] != nums[i]，类似数组中重复的数据
+   * <p>原地哈希，缺失会命中错误索引，nums[nums[i]-1]!=nums[i]，类似数组中重复的数据
    *
    * @param nums the nums
    * @return int int
@@ -1348,24 +1345,6 @@ class Delete extends DefaultArray {
   }
 
   /**
-   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
-   *
-   * <p>扩展1，链表参考「奇偶链表」
-   *
-   * @param nums
-   * @return
-   */
-  public int[] exchange(int[] nums) {
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
-      if ((nums[hi] & 1) == 0) continue;
-      swap(nums, lo, hi);
-      lo += 1;
-    }
-    return nums;
-  }
-
-  /**
    * 移除字符串中指定字符
    *
    * @param str
@@ -1390,7 +1369,7 @@ class Delete extends DefaultArray {
    *
    * <p>遇到目标则跳过
    *
-   * <p>扩展，参考删除字符串中的所有相邻重复项
+   * <p>扩展1，参考删除字符串中的所有相邻重复项
    *
    * @param nums the nums
    * @return the int
@@ -1438,11 +1417,11 @@ class Delete extends DefaultArray {
   }
 
   /**
-   * 删除字符串中的所有相邻重复项，不保留，且需要反复执行
+   * 删除字符串中的所有相邻重复项，毫无保留，原地建栈或模拟栈
    *
    * <p>类似有效的括号，即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
    *
-   * <p>匹配指当前 char 与栈顶不同，即入栈，否则出栈，且 skip 当前 char
+   * <p>匹配指当前字符与栈顶不同，即入栈，否则出栈，且 skip 当前 char
    *
    * <p>最终栈内即为最终结果
    *
@@ -1450,19 +1429,37 @@ class Delete extends DefaultArray {
    * @return string string
    */
   public String removeDuplicates(String s) {
-    char[] chs = s.toCharArray();
-    int stackTop = -1;
-    for (int i = 0; i < s.length(); i++) {
-      if (stackTop == -1 || chs[stackTop] != chs[i]) {
-        // 入栈
-        stackTop += 1;
-        chs[stackTop] = chs[i];
+    StringBuilder stack = new StringBuilder();
+    int nextTop = -1;
+    for (int i = 0; i < s.length(); ++i) {
+      char ch = s.charAt(i);
+      if (nextTop >= 0 && stack.charAt(nextTop) == ch) {
+        stack.deleteCharAt(nextTop);
+        nextTop -= 1;
       } else {
-        // 出栈
-        stackTop -= 1;
+        stack.append(ch);
+        nextTop += 1;
       }
     }
-    return String.valueOf(chs, 0, stackTop + 1);
+    return stack.toString();
+  }
+
+  /**
+   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
+   *
+   * <p>扩展1，链表参考「奇偶链表」
+   *
+   * @param nums
+   * @return
+   */
+  public int[] exchange(int[] nums) {
+    int lo = 0;
+    for (int hi = 0; hi < nums.length; hi++) {
+      if ((nums[hi] & 1) == 0) continue;
+      swap(nums, lo, hi);
+      lo += 1;
+    }
+    return nums;
   }
 }
 
