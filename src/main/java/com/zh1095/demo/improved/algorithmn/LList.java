@@ -94,7 +94,7 @@ public class LList {
   }
 
   /**
-   * 回文链表，找中点，并反转前半部分 & 逐一比对两条链表
+   * 回文链表，找中点，同时反转前半部分 & 逐一比对两条链表
    *
    * @param head the head
    * @return boolean boolean
@@ -366,7 +366,7 @@ class MergeList extends LList {
   }
 
   /**
-   * 合并k个有序链表，分治 up-to-bottom or 大顶堆
+   * 合并k个有序链表，大顶堆 / 分治 up-to-bottom
    *
    * <p>上方排序链表则为 bottom-to-up
    *
@@ -374,7 +374,7 @@ class MergeList extends LList {
    * @return the list node
    */
   public ListNode mergeKLists(ListNode[] lists) {
-    if (lists == null || lists.length == 0) return null;
+    if (lists.length < 1) return null;
     Queue<ListNode> pq =
         new PriorityQueue<>(
             lists.length,
@@ -710,7 +710,7 @@ class DeleteList extends LList {
   }
 
   /**
-   * 删除排序链表中的重复元素I，保留一个
+   * 删除排序链表中的重复元素I，保留一个，即去重
    *
    * @param head the head
    * @return list node

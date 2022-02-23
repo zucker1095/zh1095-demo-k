@@ -268,7 +268,7 @@ public class TTree {
   }
 }
 
-/** 后序相关，常见为统计，递归的本质就是 bottom-to-up */
+/** 后序相关，常见为统计，自顶向下的递归相当于前序遍历，自底向上的递归相当于后序遍历 */
 class Postorder {
   private int res1 = Integer.MIN_VALUE;
   private int res2 = 0;
@@ -277,12 +277,23 @@ class Postorder {
   /**
    * 平衡二叉树，后序迭代
    *
-   * <p>TODO
-   *
    * @param root
    * @return
    */
   public boolean isBalanced(TreeNode root) {
+    return isBalanced1(root) != -1;
+  }
+
+  public int isBalanced1(TreeNode root) {
+    if (root == null) return 0;
+    int left = isBalanced1(root.left);
+    if (left == -1) return -1;
+    int right = isBalanced1(root.right);
+    if (right == -1) return -1;
+    return Math.abs(left - right) < 2 ? Math.max(left, right) + 1 : -1;
+  }
+
+  public boolean isBalanced2(TreeNode root) {
     if (root == null) return true;
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode pre = null, cur = root;
@@ -726,7 +737,7 @@ class BBST {
   }
 
   /**
-   * 将有序数组转换为二叉搜索树，类似双路快排，以升序数组的中间元素作 root
+   * 将有序数组转换为二叉搜索树，前序，类似双路快排，以升序数组的中间元素作 root
    *
    * @param nums the nums
    * @return tree node

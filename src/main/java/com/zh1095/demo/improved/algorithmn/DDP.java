@@ -206,6 +206,51 @@ class OOptimalSolution {
     }
     return maxSide * maxSide;
   }
+
+  /**
+   * 最大子矩阵，元素和最大
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/max-submatrix-lcci/solution/zhe-yao-cong-zui-da-zi-xu-he-shuo-qi-you-jian-dao-/
+   *
+   * @param matrix
+   * @return
+   */
+  public int[] getMaxMatrix(int[][] matrix) {
+    // 保存最大子矩阵的左上角和右下角的行列坐标
+    int[] res = new int[4];
+    int N = matrix.length, M = matrix[0].length;
+    int[] preSum = new int[M]; // 记录当前i~j行组成大矩阵的每一列的和，将二维转化为一维
+    // 相当于dp[i],dp_i 与最大值
+    int sum = 0, maxSum = Integer.MIN_VALUE;
+    int bestr1 = 0, bestc1 = 0; // 暂时记录左上角，相当于begin
+    for (int i = 0; i < N; i++) { // 以i为上边，从上而下扫描
+      for (int t = 0; t < M; t++) {
+        preSum[t] = 0; // 每次更换子矩形上边，就要清空b，重新计算每列的和
+      }
+      for (int j = i; j < N; j++) { // 子矩阵的下边，从i到N-1，不断增加子矩阵的高
+        // 一下就相当于求一次最大子序列和
+        sum = 0; // 从头开始求dp
+        for (int k = 0; k < M; k++) {
+          preSum[k] += matrix[j][k];
+          // 我们只是不断增加其高，也就是下移矩阵下边，所有这个矩阵每列的和只需要加上新加的哪一行的元素
+          // 因为我们求dp[i]的时候只需要dp[i-1]和nums[i],所有在我们不断更新b数组时就可以求出当前位置的dp_i
+          if (sum > 0) {
+            sum += preSum[k];
+          } else {
+            sum = preSum[k];
+            bestr1 = i; // 自立门户，暂时保存其左上角
+            bestc1 = k;
+          }
+          if (sum > maxSum) {
+            maxSum = sum;
+            res = new int[] {bestr1, bestc1, j, k};
+          }
+        }
+      }
+    }
+    return res;
+  }
 }
 
 /**
@@ -511,8 +556,8 @@ class SSubSequence {
    * @return int int
    */
   public int longestConsecutive(int[] nums) {
-    Map<Integer, Integer> lenAsVertex = new HashMap<>(nums.length);
     int res = 0;
+    Map<Integer, Integer> lenAsVertex = new HashMap<>(nums.length);
     for (int num : nums) {
       int left = lenAsVertex.get(num - 1), right = lenAsVertex.get(num + 1);
       if (lenAsVertex.containsKey(num)) continue;
@@ -641,35 +686,49 @@ class SSubSequence {
   }
 
   /**
-   * 判断子序列，KMP 思想，类似于用伪链表把相同的字符给链接起来
+   * 判断子序列，双指针即可
    *
-   * <p>参考
+   * <p>扩展1，依次检查海量 s 是否均为 t 的子序列，参下
    * https://leetcode-cn.com/problems/is-subsequence/solution/dui-hou-xu-tiao-zhan-de-yi-xie-si-kao-ru-he-kuai-s/
-   *
-   * <p>TODO
-   *
-   * <p>扩展1，依次检查海量 s 是否均为 t 的子序列
    *
    * @param s pattern
    * @param t main
    * @return boolean
    */
   public boolean isSubsequence(String s, String t) {
-    // 预处理以保证 t[0] 也被正确表示，即 dp[0][..]
-    t = " " + t;
+    return isSubsequence1(s, t);
+  }
+
+  private boolean isSubsequence1(String s, String t) {
+    int p1 = 0, p2 = 0;
+    while (p1 < s.length() && p2 < t.length()) {
+      if (s.charAt(p1) == t.charAt(p2)) {
+        p1 += 1;
+      }
+      p2 += 1;
+    }
+    return p1 == s.length();
+  }
+
+  // TODO KMP 思想，类似于用伪链表把相同的字符给链接起来
+  private boolean isSubsequence2(String s, String t) {
+    t = ' ' + t;
+    // 存储每一个位置上 a-z 的下一个字符出现的位置
     int[][] dp = new int[t.length()][26];
-    for (int ch = 0; ch < 26; ch++) {
-      int nxt = -1;
-      for (int i = t.length() - 1; i > -1; i--) {
-        dp[i][ch] = nxt;
-        nxt = (t.charAt(i) == ch + 'a') ? nxt : i;
+    for (char c = 'a'; c <= 'z'; c++) {
+      // 表示接下来不会在出现该字符
+      int nxtIdx = -1;
+      for (int i = t.length() - 1; i >= 0; i--) {
+        // dp[i][c-'a']  加上外层循环  就是对每一个位置的 a-z 字符的处理
+        dp[i][c - 'a'] = nxtIdx;
+        // 表示当前位置有该字符，那么指向下一个该字符出现的位置就要被更新为 i
+        if (t.charAt(i) == c) nxtIdx = i;
       }
     }
-    // 起始位置是空字符（idx = 0）
-    // dp[0][p] 表示从 1 开始查找 p+'a' 在 t 中的位置
     int idx = 0;
-    for (char ch : s.toCharArray()) {
-      idx = dp[idx][ch - 'a'];
+    for (int i = 0; i < s.length(); i++) {
+      // 因为加了' ' 则之后在处理第一个字符的时候  如果是在第一行，就会去第一行，不影响之后字符的判断
+      idx = dp[idx][s.charAt(i) - 'a'];
       if (idx == -1) return false;
     }
     return true;
@@ -959,7 +1018,7 @@ class CCount {
   public int climbStairs(int n) {
     int step1 = 1, step2 = 1; // dp[i-1] & dp[i-2]
     for (int i = 2; i < n + 1; i++) {
-      // 扩展1，无法状态压缩
+      // 扩展 1 无法状态压缩
       // if ((i + 1) % 7 == 0) { dp[i] = 0 }
       // else { dp[i] = dp[i - 1] + dp[i - 2] }
       int tmp = step2;

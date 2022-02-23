@@ -290,32 +290,25 @@ class HHeap extends DefaultArray {
    * @return the int
    */
   public int findKthLargest(int[] nums, int k) {
-    //    PriorityQueue<Integer> minHeap =
-    //        new PriorityQueue<Integer>(
-    //            k,
-    //            (n1, n2) -> {
-    //              if (n1 < n2) return -1;
-    //              else if (n1 == n2) return 0;
-    //              else return 1;
-    //            });
-    //    for (int num : nums) {
-    //      minHeap.add(num);
-    //      if (minHeap.size() > k) minHeap.poll();
-    //    }
-    //    return minHeap.peek();
-    int idx = nums.length - 1;
-    heapify(nums, nums.length);
-    while (idx >= nums.length - k + 1) {
-      swap(nums, 0, idx);
-      idx -= 1;
-      // 区间 [0,idx-1] 有序，对比上方，因为此处 heap capcacity 固定
-      down(nums, 0, idx - 1);
+    // 对前k个元素建成小根堆
+    for (int i = 0; i < k; i++) {
+      swim(nums, i);
     }
+    // 剩下的元素与堆顶比较，若大于堆顶则去掉堆顶，再将其插入
+    for (int i = k; i < nums.length; i++) {
+      if (nums[i] > nums[0]) {
+        swap(nums, 0, i);
+        sink(nums, 0, k - 1);
+      }
+    }
+    // 结束后第k个大的数就是小根堆的堆顶
     return nums[0];
   }
 
   /**
    * 堆是具有以下性质的完全二叉树，每个结点的值都大于或等于其左右孩子结点的值，称为大顶堆，反之，小顶堆
+   *
+   * <p>切换 priorityRThan 为 > 即可
    *
    * @param nums the nums
    */
@@ -329,31 +322,63 @@ class HHeap extends DefaultArray {
       // 逐步减少堆有序的部分
       idx -= 1;
       // 下标 0 位置下沉操作，使得区间 [0, i] 堆有序
-      down(nums, 0, idx);
+      sink(nums, 0, idx);
     }
   }
 
   // 从 (len-1)/2 即首个叶结点开始逐层下沉
   private void heapify(int[] nums, int capcacity) {
     for (int i = capcacity / 2; i >= 0; i--) {
-      down(nums, i, capcacity - 1);
+      sink(nums, i, capcacity - 1);
     }
   }
 
-  // [0, hi] 是 nums 的有效部分，闭区间
-  private void down(int[] nums, int lo, int hi) {
-    int cur = lo;
-    while (2 * cur + 1 <= hi) {
-      int idx = 2 * cur + 1;
-      if (idx + 1 <= hi && nums[idx + 1] > nums[idx]) {
-        idx += 1;
+  // 从下到上调整堆
+  private void swim(int[] heap, int idx) {
+    while (idx > 0 && priorityThan(heap[idx], heap[(idx - 1) / 2])) {
+      swap(heap, idx, (idx - 1) / 2);
+      idx = (idx - 1) / 2;
+    }
+  }
+
+  // 从下到上调整堆
+  private void sink(int[] heap, int cur, int end) {
+    while (2 * cur + 1 <= end) {
+      int j = 2 * cur + 1;
+      if (j + 1 <= end && priorityThan(heap[j + 1], heap[j])) {
+        j += 1;
       }
-      if (nums[idx] <= nums[cur]) {
+      if (priorityThan(heap[cur], heap[j])) {
         break;
       }
-      swap(nums, idx, cur);
-      cur = idx;
+      swap(heap, cur, j);
+      cur = j;
     }
+  }
+
+  // v1 是否优先度高于 v2
+  private boolean priorityThan(int v1, int v2) {
+    return v1 < v2;
+  }
+
+  /**
+   * 获取最大与第二大的数，无序数组
+   *
+   * @param nums
+   * @return
+   */
+  public int[] getMaxAndSecond(int[] nums) {
+    if (nums.length < 1) return new int[2];
+    int max = nums[0], second = Integer.MIN_VALUE;
+    for (int i = 1; i < nums.length; i++) {
+      if (nums[i] > max) {
+        second = max;
+        max = nums[i];
+      } else {
+        second = Math.max(second, nums[i]);
+      }
+    }
+    return new int[] {max, second};
   }
 
   /**
@@ -367,9 +392,7 @@ class HHeap extends DefaultArray {
    * @return string字符串二维数组
    */
   public String[][] topKstrings(String[] strings, int k) {
-    if (k == 0) {
-      return new String[][] {};
-    }
+    if (k == 0) return new String[][] {};
     String[][] res = new String[k][2];
     Comparator compa = new DescComparator();
     Map<String, Integer> counter = new HashMap<>();
@@ -974,12 +997,12 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 有序数组中的单一元素，参考
-   * https://leetcode-cn.com/problems/single-element-in-a-sorted-array/solution/tong-ge-lai-shua-ti-la-er-fen-cha-zhao-b-x8dd/
+   * 有序数组中的单一元素，下述代码适配无序
    *
    * <p>假设所有数字都成对，那么所有数字的下标必定同时偶数和奇数，因此比对 nums[mid]
    *
-   * <p>说明前面半段没有缺失的数，反之，缺对者在前半段
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/single-element-in-a-sorted-array/solution/er-fen-fa-wu-xu-shu-zu-ye-gua-yong-by-li-s6f2/
    *
    * @param nums
    * @return
@@ -988,16 +1011,18 @@ class Dichotomy extends DefaultArray {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      // 当前奇位，则判偶位
-      if (mid % 2 == 0) {
-        if (nums[mid] == nums[mid + 1]) lo = mid + 1;
-        else hi = mid;
+      // 移除中心元素后，其右侧的数量为奇数，如 1144 5 5688
+      if (mid % 2 == 0 && nums[mid] == nums[mid + 1]) {
+        lo = mid + 2;
+      } else if (mid % 2 == 1 && nums[mid] == nums[mid - 1]) {
+        // 同上，但如 11445 5 66899
+        lo = mid + 1;
       } else {
-        if (nums[mid] == nums[mid - 1]) lo = mid + 1;
-        else hi = mid;
+        // 取中心值时会向下取整，如 11455 6 68899 & 1145 5 6688
+        hi = mid;
       }
     }
-    return nums[hi];
+    return nums[lo];
   }
 
   /**
@@ -1531,7 +1556,7 @@ class DicOrder extends DefaultArray {
    *
    * <p>2.然后证明传递性，即两两之间都要满足该性质
    *
-   * <p>扩展1，最小数 / 把数组排成最小的数，调整上方的排序规则即可，参考
+   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
    *
    * <p>TODO 最小数显然存在 03<30 即排序为 03 的情况，因此需要为排序结果去除前导零
