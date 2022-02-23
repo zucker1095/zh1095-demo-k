@@ -29,7 +29,9 @@ import java.util.*;
  */
 public class AArray extends DefaultArray {
   /**
-   * 二分查找，下方 FFind 统一该写法
+   * 二分查找，下方 FFind 统一该写法，参考 https://www.zhihu.com/question/36132386
+   *
+   * <p>思想是不断剔除「不合格区域」的二分，但不能保证「最后幸存的l=r区域是合格的」，因此最后应判定 l 的值是否正确
    *
    * <p>扩展1，重复，改为 nextIdx
    *
@@ -43,20 +45,13 @@ public class AArray extends DefaultArray {
     // 特判，避免当 target 小于 nums[0] & nums[end] 时多次循环运算
     if (target < nums[0] || target > nums[nums.length - 1]) return -1;
     int lo = 0, hi = nums.length - 1;
-    // 目标可能位于碰撞点
-    while (lo <= hi) {
+    while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
       if (nums[mid] < target) lo = mid + 1;
       else if (nums[mid] == target) return mid;
-      else if (nums[mid] > target) hi = mid - 1;
+      else if (nums[mid] > target) hi = mid;
     }
-    return -1;
-    //      while (l < r) {
-    //        if (nums[mid] < target) l = m + 1
-    //        else if (nums[mid] == target) return m
-    //        else if (nums[mid] > target) r = m;
-    //      }
-    //      return l;
+    return nums[lo] == target ? lo : -1;
   }
 
   /**
@@ -290,18 +285,24 @@ class HHeap extends DefaultArray {
    * @return the int
    */
   public int findKthLargest(int[] nums, int k) {
-    // 对前k个元素建成小根堆
+    // 对前 k 个元素建小根堆，即堆化 [0,k-1] 区间的元素
     for (int i = 0; i < k; i++) {
       swim(nums, i);
     }
     // 剩下的元素与堆顶比较，若大于堆顶则去掉堆顶，再将其插入
     for (int i = k; i < nums.length; i++) {
-      if (nums[i] > nums[0]) {
-        swap(nums, 0, i);
-        sink(nums, 0, k - 1);
-      }
+      if (priorityThan(nums[i], nums[0])) continue;
+      swap(nums, 0, i);
+      sink(nums, 0, k - 1);
     }
-    // 结束后第k个大的数就是小根堆的堆顶
+    //    int idx = nums.length - 1;
+    //    heapify(nums, nums.length);
+    //    while (idx >= nums.length - k + 1) {
+    //      swap(nums, 0, idx);
+    //      idx--;
+    //      down(nums, 0, idx - 1);
+    //    }
+    // 结束后第 k 个大的数即小根堆堆顶
     return nums[0];
   }
 
@@ -333,24 +334,24 @@ class HHeap extends DefaultArray {
     }
   }
 
-  // 从下到上调整堆
+  // 从下到上调整堆，取父结点 (cur-1)/2
   private void swim(int[] heap, int idx) {
-    while (idx > 0 && priorityThan(heap[idx], heap[(idx - 1) / 2])) {
-      swap(heap, idx, (idx - 1) / 2);
-      idx = (idx - 1) / 2;
+    int cur = idx;
+    while (cur > 0 && priorityThan(heap[cur], heap[(cur - 1) / 2])) {
+      swap(heap, cur, (cur - 1) / 2);
+      cur = (cur - 1) / 2;
     }
   }
 
-  // 从下到上调整堆
-  private void sink(int[] heap, int cur, int end) {
+  // 从下到上调整堆，分别取左右子结点 2*cur+1 与 +2 判断
+  private void sink(int[] heap, int idx, int end) {
+    int cur = idx;
     while (2 * cur + 1 <= end) {
       int j = 2 * cur + 1;
       if (j + 1 <= end && priorityThan(heap[j + 1], heap[j])) {
         j += 1;
       }
-      if (priorityThan(heap[cur], heap[j])) {
-        break;
-      }
+      if (priorityThan(heap[cur], heap[j])) break;
       swap(heap, cur, j);
       cur = j;
     }
@@ -667,7 +668,7 @@ class MMerge extends DefaultArray {
 }
 
 /**
- * 二分，参考上方 AArray.search 的写法，即
+ * 二分，参考上方 AArray.search 的写法
  *
  * <p>lo<=hi 明确碰撞的含义
  */
@@ -746,6 +747,9 @@ class Dichotomy extends DefaultArray {
   /**
    * 在排序数组中查找元素的第一个和最后一个位置
    *
+   * <p>参考
+   * https://leetcode-cn.com/problems/find-first-and-last-position-of-element-in-sorted-array/solution/si-lu-hen-jian-dan-xi-jie-fei-mo-gui-de-er-fen-cha/
+   *
    * @param nums the nums
    * @param target the target
    * @return int [ ]
@@ -765,31 +769,31 @@ class Dichotomy extends DefaultArray {
 
   private int lowerBound(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) {
-      int mid = lo + ((hi - lo) >> 1);
-      if (nums[mid] < target) {
-        lo = mid + 1;
-      } else if (nums[mid] >= target) {
-        hi = mid - 1;
-      }
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      // 下一轮搜索区间是 [lo...mid] 因为小于一定不是解
+      if (nums[mid] < target) lo = mid + 1;
+      else hi = mid;
     }
-    return (lo > nums.length - 1 || nums[lo] != target) ? -1 : lo;
+    return nums[lo] == target ? lo : -1;
   }
 
   private int upperBound(int[] nums, int target, int start) {
     int lo = start, hi = nums.length - 1;
-    while (lo <= hi) {
-      int mid = lo + ((hi - lo) >> 1);
-      if (nums[mid] <= target) lo = mid + 1;
-      else if (nums[mid] > target) hi = mid - 1;
+    while (lo < hi) {
+      // 需要右开区间
+      int mid = lo + (hi - lo) / 2 + 1;
+      // 下一轮搜索区间是 [lo..mid - 1]
+      if (nums[mid] > target) hi = mid - 1;
+      else lo = mid;
     }
-    return hi;
+    return nums[hi] == target ? hi : -1;
   }
 
   /**
-   * 搜索旋转排序数组
+   * 搜索旋转排序数组，目标分别与中点，左右边界对比，有序的一边的边界值可能等于目标值
    *
-   * <p>目标分别与中点 & 左右边界的值对比，有序的一边的边界值可能等于目标值
+   * <p>将数组一分为二，其中一定有一个是有序的，另一个可能是有序，此时有序部分用二分法查找，无序部分再一分为二，其中一个一定有序，另一个可能有序
    *
    * <p>33-查找旋转数组不重复；81-查找旋转数组可重复复；153-旋转数组最小值不重复；154旋转数字最小值重复
    *
@@ -801,26 +805,20 @@ class Dichotomy extends DefaultArray {
    */
   public int search(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) {
-      int mid = lo + (hi - lo) / 2;
-      if (target == nums[mid]) {
-        return mid;
-      }
-      // 中点的值与右边界对比，右边有序
-      if (nums[lo] <= nums[mid]) {
-        // 目标在左 or 右
-        if (target >= nums[lo] && target < nums[mid]) {
-          hi = mid - 1;
-        } else {
-          lo = mid + 1;
-        }
-      } else {
-        // 同上
-        if (target > nums[mid] && target <= nums[hi]) lo = mid + 1;
+    while (lo < hi) {
+      // 根据分支的逻辑将中间数改成上取整
+      int mid = lo + (hi - lo + 1) / 2;
+      if (nums[mid] < nums[hi]) {
+        // target 落在 [mid..right]
+        if (nums[mid] <= target && target <= nums[hi]) lo = mid;
         else hi = mid - 1;
+      } else {
+        // target 落在 [left..mid - 1]
+        if (nums[lo] <= target && target <= nums[mid - 1]) hi = mid - 1;
+        else lo = mid;
       }
     }
-    return -1;
+    return (nums[lo] == target) ? lo : -1;
   }
 
   /**
@@ -841,30 +839,22 @@ class Dichotomy extends DefaultArray {
 
   private int findMinI(int[] nums) {
     int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) {
+    while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      if (nums[mid] >= nums[hi]) {
-        // 将左边界移动到中值的右边
-        lo = mid + 1;
-      } else {
-        hi = mid;
-      }
+      if (nums[mid] < nums[hi]) hi = mid;
+      else lo = mid + 1;
     }
-    return nums[hi];
+    return nums[lo];
   }
 
   // 寻找旋转排序数组中的最小值II，有重复
   private int findMinII(int[] nums) {
     int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) {
-      int mid = lo + (hi - lo) / 2;
-      if (nums[mid] > nums[hi]) {
-        lo = mid + 1;
-      } else if (nums[mid] < nums[hi]) {
-        hi = mid;
-      } else {
-        hi -= 1;
-      }
+    while (lo < hi) {
+      int mid = (lo + hi) / 2;
+      if (nums[mid] > nums[hi]) lo = mid + 1;
+      else if (nums[mid] < nums[hi]) hi = mid;
+      else hi -= 1;
     }
     return nums[lo];
   }
@@ -880,16 +870,14 @@ class Dichotomy extends DefaultArray {
   public int peakIndexInMountainArray(int[] nums) {
     int res = 0;
     int lo = 1, hi = nums.length - 2;
-    while (lo <= hi) {
+    while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      if (nums[mid] <= nums[mid + 1]) {
-        lo = mid + 1;
-      } else {
-        res = mid;
-        hi = mid - 1;
-      }
+      // 缩减区间为 [mid+1,hi]
+      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
+      else hi = mid;
     }
-    return res;
+    // 碰撞时结束
+    return lo;
   }
 
   /**
@@ -904,11 +892,8 @@ class Dichotomy extends DefaultArray {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      if (nums[mid] < nums[mid + 1]) {
-        lo = mid + 1;
-      } else {
-        hi = mid;
-      }
+      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
+      else hi = mid;
     }
     return lo;
   }
@@ -960,40 +945,42 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 有序矩阵中第k小的元素
+   * 有序矩阵中第k小的元素，值域二分
    *
-   * <p>TODO
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/solution/er-fen-chao-ji-jian-dan-by-jacksu1024/
    *
    * @param matrix
    * @param k
    * @return
    */
   public int kthSmallest(int[][] matrix, int k) {
-    int len = matrix.length;
-    int lo = matrix[0][0], hi = matrix[len - 1][len - 1];
+    int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
     while (lo < hi) {
+      // 每次循环都保证第 k 小的数在 [lo,hi]
       int mid = lo + (hi - lo) / 2;
-      if (check(matrix, mid, k, len)) {
-        hi = mid;
-      } else {
-        lo = mid + 1;
-      }
+      // 找二维矩阵中 <=mid 的元素总个数，判断目标分别在 [mid+1,hi] & [lo,mid]
+      if (findLteMid(matrix, mid) < k) lo = mid + 1;
+      else hi = mid;
     }
-    return lo;
+    return hi;
   }
 
-  private boolean check(int[][] matrix, int mid, int k, int n) {
-    int num = 0;
-    int lo = 0, hi = n - 1;
-    while (0 <= hi && lo < n) {
-      if (matrix[hi][lo] <= mid) {
-        num += hi + 1;
-        lo += 1;
+  private int findLteMid(int[][] matrix, int mid) {
+    int res = 0;
+    int y = matrix.length - 1, x = 0;
+    // 向右下角遍历，找每列最后一个 <=mid 的数即知道每一列有多少个数 <=mid
+    while (-1 < y && x < matrix[0].length) {
+      if (matrix[y][x] <= mid) {
+        // 第 j 列有 i+1 个元素 <=mid
+        res += y + 1;
+        x += 1;
       } else {
-        hi -= 1;
+        // 第 j 列目前的数大于 mid，需要继续在当前列往上找
+        y -= 1;
       }
     }
-    return num >= k;
+    return res;
   }
 
   /**

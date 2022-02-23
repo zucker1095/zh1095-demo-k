@@ -142,6 +142,26 @@ class OOptimalSolution {
   }
 
   /**
+   * 完全平方数，完全背包，类似「零钱兑换」
+   *
+   * <p>dp[i] 表示和为 i 的完全平方数的最少数量，如 13=4+9 则 dp[13] 为 2
+   *
+   * @param n
+   * @return
+   */
+  public int numSquares(int n) {
+    int[] dp = new int[n + 1];
+    for (int i = 1; i <= n; i++) {
+      // 最坏的情况就是每次 +1
+      dp[i] = i;
+      for (int j = 1; i - j * j >= 0; j++) {
+        dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
+      }
+    }
+    return dp[n];
+  }
+
+  /**
    * 分发糖果，求满足权重规则的最少所需糖果量
    *
    * <p>扩展1，成环
@@ -940,16 +960,16 @@ class PPath {
    * @return int int
    */
   public int rob(TreeNode root) {
-    int[] res = postOrder(root);
+    int[] res = dfs11(root);
     return Math.max(res[0], res[1]);
   }
 
-  private int[] postOrder(TreeNode root) {
+  private int[] dfs11(TreeNode root) {
     if (root == null) return new int[2];
-    int[] left = postOrder(root.left), right = postOrder(root.right);
-    return new int[] {
-      Math.max(left[0], left[1]) + Math.max(right[0], right[1]), left[0] + right[0] + root.val
-    };
+    int[] left = dfs11(root.left), right = dfs11(root.right);
+    int cur = left[0] + right[0] + root.val;
+    int nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
+    return new int[] {nxt, cur};
   }
 
   /**
@@ -960,17 +980,21 @@ class PPath {
    *
    * <p>dp[i][j] 表示为从数组 nums[0,i] 的元素进行加减可以得到 j 的方法数
    *
+   * <p>扩展1，改为乘法
+   *
+   * <p>扩展2，target 为负
+   *
    * @param nums
-   * @param s
+   * @param target
    * @return
    */
-  public int findTargetSumWays(int[] nums, int s) {
+  public int findTargetSumWays(int[] nums, int target) {
     int sum = 0;
     for (int i = 0; i < nums.length; i++) {
       sum += nums[i];
     }
     // 绝对值范围超过 sum 的绝对值范围，则无法得到
-    if (Math.abs(s) > Math.abs(sum)) return 0;
+    if (Math.abs(target) > Math.abs(sum)) return 0;
     // 因为要包含负数所以要两倍，又要加上0这个中间的那个情况
     int len = nums.length, range = sum * 2 + 1;
     // 从总和为-sum开始的
@@ -993,7 +1017,7 @@ class PPath {
         }
       }
     }
-    return dp[len - 1][sum + s];
+    return dp[len - 1][sum + target];
   }
 }
 

@@ -255,18 +255,16 @@ class ReverseList extends LList {
   }
 
   /**
-   * 旋转链表，闭环后断开
+   * 旋转链表，特判三空 & 获取链尾与总长 & 闭环 & 断开
    *
    * @param head the head
    * @param k the k
    * @return list node
    */
   public ListNode rotateRight(ListNode head, int k) {
-    // 0.特判三空
     if (head == null || head.next == null || k == 0) {
       return head;
     }
-    // 1.获取链尾 & 总长
     int len = 1;
     ListNode cur = head;
     while (cur.next != null) {
@@ -274,10 +272,7 @@ class ReverseList extends LList {
       len += 1;
     }
     int count = len - k % len;
-    if (count == len) {
-      return head;
-    }
-    // 2.先闭环，再断点
+    if (count == len) return head;
     cur.next = head;
     for (int i = count; i > 0; i--) {
       cur = cur.next;
@@ -368,7 +363,7 @@ class MergeList extends LList {
   /**
    * 合并k个有序链表，大顶堆 / 分治 up-to-bottom
    *
-   * <p>上方排序链表则为 bottom-to-up
+   * <p>下方「排序链表」则为 bottom-to-up
    *
    * @param lists the lists
    * @return the list node
@@ -406,6 +401,8 @@ class MergeList extends LList {
   /**
    * 奇偶链表，如 1234 至 1324，暂存偶头 & 奇偶 & 变向步进
    *
+   * <p>扩展1，排序一个奇数位升序而偶数位降序的链表，O(n) & O(1)，参下「重排奇偶链表」
+   *
    * @param head the head
    * @return list node
    */
@@ -427,6 +424,43 @@ class MergeList extends LList {
   }
 
   /**
+   * 重排奇偶链表，参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
+   *
+   * <p>完全可以复用模板，三步曲如下
+   *
+   * <p>1.分别取出奇偶链表，奇数位链表需断尾
+   *
+   * <p>2.反转偶数位链表
+   *
+   * <p>3.合并二者即可
+   *
+   * @param head
+   * @return
+   */
+  public ListNode sortOddEvenList(ListNode head) {
+    ListNode oddHead = head, evenHead = _oddEvenList(head);
+    evenHead = reverseList(evenHead);
+    return mergeTwoLists(oddHead, evenHead);
+  }
+
+  // 分割奇偶数位，并返回后者首位
+  private ListNode _oddEvenList(ListNode head) {
+    if (head == null) {
+      return null;
+    }
+    ListNode odd = head, even = head.next;
+    ListNode evenHead = head.next;
+    while (even != null && even.next != null) {
+      odd.next = even.next;
+      odd = odd.next;
+      even.next = odd.next;
+      even = even.next;
+    }
+    odd.next = null;
+    return evenHead;
+  }
+
+  /**
    * 排序链表，bottom-to-up 即从两步长开始分割为 len/2 个 & 合并
    *
    * <p>参考
@@ -434,9 +468,7 @@ class MergeList extends LList {
    *
    * <p>下方合并 k 个有序链表则 up-to-bottom
    *
-   * <p>扩展1，再去重，模板参考
-   *
-   * <p>扩展2，排序一个奇数位升序而偶数位降序的链表，O(n) & O(1)，参下
+   * <p>TODO 扩展1，去重
    *
    * @param head the head
    * @return list node
@@ -449,7 +481,6 @@ class MergeList extends LList {
     for (ListNode cur = dummy.next; cur != null; cur = cur.next) {
       len += 1;
     }
-    // 循环开始切割和合并
     for (int size = 1; size < len; size <<= 1) {
       ListNode tail = dummy, cur = dummy.next;
       while (cur != null) {
@@ -505,43 +536,6 @@ class MergeList extends LList {
     ListNode node = quickSort(ltHead, head);
     head.next = quickSort(head.next, end);
     return node;
-  }
-
-  /**
-   * 重排奇偶链表，参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
-   *
-   * <p>完全可以复用模板，三步曲如下
-   *
-   * <p>1.分别取出奇偶链表，奇数位链表需断尾
-   *
-   * <p>2.反转偶数位链表
-   *
-   * <p>3.合并二者即可
-   *
-   * @param head
-   * @return
-   */
-  public ListNode sortOddEvenList(ListNode head) {
-    ListNode oddHead = head, evenHead = _oddEvenList(head);
-    evenHead = reverseList(evenHead);
-    return mergeTwoLists(oddHead, evenHead);
-  }
-
-  // 分割奇偶数位，并返回后者首位
-  private ListNode _oddEvenList(ListNode head) {
-    if (head == null) {
-      return null;
-    }
-    ListNode odd = head, even = head.next;
-    ListNode evenHead = head.next;
-    while (even != null && even.next != null) {
-      odd.next = even.next;
-      odd = odd.next;
-      even.next = odd.next;
-      even = even.next;
-    }
-    odd.next = null;
-    return evenHead;
   }
 
   /**

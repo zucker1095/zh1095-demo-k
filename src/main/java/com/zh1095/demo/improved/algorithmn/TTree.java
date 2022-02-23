@@ -90,6 +90,8 @@ public class TTree {
    *
    * <p>扩展2，给一个随机数组，生成相应的二叉搜索树，先排序，参下「将有序数组转换为二叉搜索树」
    *
+   * <p>TODO 扩展3，从中序和后序构造，参下
+   *
    * @param preorder the preorder
    * @param inorder the inorder
    * @return the tree node
@@ -99,10 +101,10 @@ public class TTree {
     for (int i = 0; i < preorder.length; i++) {
       idxByValInorder.put(inorder[i], i);
     }
-    return buildTree(preorder, 0, preorder.length - 1, idxByValInorder, 0);
+    return buildTree1(preorder, 0, preorder.length - 1, idxByValInorder, 0);
   }
 
-  private TreeNode buildTree(
+  private TreeNode buildTree1(
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> idxByValInorder, int inLo) {
     //    if (preLo == preHi) {
     //      postorder.add(preorder[preLo]);
@@ -112,24 +114,66 @@ public class TTree {
     TreeNode root = new TreeNode(preorder[preLo]);
     int idx = idxByValInorder.get(preorder[preLo]);
     int countLeft = idx - inLo;
-    root.left = buildTree(preorder, preLo + 1, preLo + countLeft, idxByValInorder, inLo);
-    root.right = buildTree(preorder, preLo + countLeft + 1, preHi, idxByValInorder, idx + 1);
+    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, idxByValInorder, inLo);
+    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, idxByValInorder, idx + 1);
     //    postorder.add(preorder[preLo]);
     return root;
   }
 
+  private TreeNode buildTree2(
+      int[] postrorder, int postLo, int postHi, Map<Integer, Integer> idxByValInorder, int inLo) {
+    if (postLo > postHi) return null;
+    TreeNode root = new TreeNode(postrorder[postLo]);
+    int idx = idxByValInorder.get(postrorder[postLo]);
+    int countLeft = idx - inLo;
+
+    //    node.left = buildTree( ps, ps + ri - is - 1, is, ri - 1);
+    //    node.right = buildTree(ps + ri - is, pe - 1, ri + 1, ie);
+    root.left = buildTree2(postrorder, postLo + 1, postLo + countLeft, idxByValInorder, inLo);
+    root.right = buildTree2(postrorder, postLo + countLeft + 1, postHi, idxByValInorder, idx + 1);
+    return root;
+  }
+
   /**
-   * 求根节点到叶子节点数字之和，前序
+   * 求根节点到叶子节点数字之和，bfs 维护两个队列 / 前序
    *
    * @param root the root
    * @return int int
    */
   public int sumNumbers(TreeNode root) {
-    preOrdering(root, 0);
-    return res3;
+    return bfs(root);
+    //    dfs12(root, 0);
+    //    return res3;
   }
 
-  private void preOrdering(TreeNode root, int path) {
+  private int bfs(TreeNode root) {
+    if (root == null) return 0;
+    int res = 0;
+    Queue<TreeNode> nodeQueue = new LinkedList<TreeNode>();
+    Queue<Integer> numQueue = new LinkedList<Integer>();
+    nodeQueue.offer(root);
+    numQueue.offer(root.val);
+    while (!nodeQueue.isEmpty()) {
+      TreeNode node = nodeQueue.poll();
+      int num = numQueue.poll();
+      TreeNode left = node.left, right = node.right;
+      if (left == null && right == null) {
+        res += num;
+        continue;
+      }
+      if (left != null) {
+        nodeQueue.offer(left);
+        numQueue.offer(num * 10 + left.val);
+      }
+      if (right != null) {
+        nodeQueue.offer(right);
+        numQueue.offer(num * 10 + right.val);
+      }
+    }
+    return res;
+  }
+
+  private void dfs12(TreeNode root, int path) {
     if (root == null) return;
     // 题设不会越界
     int cur = path * 10 + root.val;
@@ -137,8 +181,8 @@ public class TTree {
       res3 += cur;
       return;
     }
-    preOrdering(root.left, cur);
-    preOrdering(root.right, cur);
+    dfs12(root.left, cur);
+    dfs12(root.right, cur);
   }
 
   /**
@@ -566,25 +610,12 @@ class BBST {
       if (count == 0) return cur.val;
       cur = cur.right;
     }
-    return -1; // never
-  }
-
-  private int kthSmallest2(TreeNode root, int k) {
-    count = k;
-    inordering(root);
-    return res4;
-  }
-
-  private void inordering(TreeNode root) {
-    if (root == null || count <= 0) return;
-    inordering(root.left); // right
-    count -= 1;
-    if (count == 0) res4 = root.val;
-    inordering(root.right); // left
+    // impossible
+    return -1;
   }
 
   /**
-   * 二叉搜索树中的第k大的元素，右中左，模板与上方一致
+   * 二叉搜索树中的第k大的元素，右中左，模板与「二叉搜索树中的第k小的元素」一致
    *
    * @param root the root
    * @param k the k
@@ -604,7 +635,8 @@ class BBST {
       if (count == 0) return cur.val;
       cur = cur.left;
     }
-    return -1; // never
+    // impossible
+    return -1;
   }
 
   /**
@@ -653,17 +685,14 @@ class BBST {
   }
 
   /**
-   * 二叉搜索树中的插入操作，判断进入左或右，直到空
+   * 二叉搜索树中的插入操作，比当前小，则入左，否则入右
    *
    * @param root
    * @param val
    * @return
    */
   public TreeNode insertIntoBST(TreeNode root, int val) {
-    // 特判
-    if (root == null) {
-      return new TreeNode(val);
-    }
+    if (root == null) return new TreeNode(val);
     TreeNode cur = root;
     while (cur != null) {
       if (val < cur.val) {
@@ -1477,13 +1506,13 @@ class BBFS {
    */
   public TreeNode invertTree(TreeNode root) {
     if (root == null) return null;
-    Deque<TreeNode> queue = new LinkedList<>();
+    Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
       TreeNode cur = queue.poll();
       swap(cur);
-      if (cur.left != null) queue.addLast(cur.left);
-      if (cur.right != null) queue.addLast(cur.right);
+      if (cur.left != null) queue.offer(cur.left);
+      if (cur.right != null) queue.offer(cur.right);
     }
     return root;
   }
