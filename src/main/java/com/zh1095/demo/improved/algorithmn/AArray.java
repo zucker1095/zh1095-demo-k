@@ -132,6 +132,7 @@ public class AArray extends DefaultArray {
    */
   public int threeSumClosest(int[] nums, int target) {
     Arrays.sort(nums);
+    // 题设至少三位
     int res = nums[0] + nums[1] + nums[2];
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
@@ -263,6 +264,48 @@ public class AArray extends DefaultArray {
       else if (nums[i] == nums[i + 1]) return false; // 若有重复，提前返回 false
     }
     return nums[4] - nums[joker] < 5; // 最大牌 - 最小牌 < 5 则可构成顺子
+  }
+
+  /**
+   * 打乱数组，Shuffle 洗牌算法即可
+   *
+   * @author cenghui
+   */
+  public class Solution {
+    private final int[] nums;
+    private final Random random = new Random();
+
+    /**
+     * Instantiates a new Solution.
+     *
+     * @param _nums the nums
+     */
+    public Solution(int[] _nums) {
+      nums = _nums;
+    }
+
+    /**
+     * Reset int [ ].
+     *
+     * @return the int [ ]
+     */
+    public int[] reset() {
+      return nums;
+    }
+
+    /**
+     * [i,n) 随机抽取一个下标 j & 将第 i 个元素与第 j 个元素交换
+     *
+     * @return int [ ]
+     */
+    public int[] shuffle() {
+      int[] res = nums.clone();
+      for (int i = 0; i < nums.length; i++) {
+        int randomIdx = random.nextInt(nums.length - i);
+        swap(res, i, i + randomIdx);
+      }
+      return res;
+    }
   }
 }
 
@@ -495,47 +538,6 @@ class QQuick extends DefaultArray {
         gt -= 1;
         swap(nums, cur, gt);
       }
-    }
-  }
-
-  /**
-   * 打乱数组，Shuffle 即可
-   *
-   * @author cenghui
-   */
-  public class Solution {
-    private final int[] nums;
-    private final Random random = new Random();
-
-    /**
-     * Instantiates a new Solution.
-     *
-     * @param _nums the nums
-     */
-    public Solution(int[] _nums) {
-      nums = _nums;
-    }
-
-    /**
-     * Reset int [ ].
-     *
-     * @return the int [ ]
-     */
-    public int[] reset() {
-      return nums;
-    }
-
-    /**
-     * [i,n) 随机抽取一个下标 j & 将第 i 个元素与第 j 个元素交换
-     *
-     * @return int [ ]
-     */
-    public int[] shuffle() {
-      int[] res = nums.clone();
-      for (int i = 0; i < nums.length; i++) {
-        swap(res, i, i + random.nextInt(nums.length - i));
-      }
-      return res;
     }
   }
 }
@@ -1246,6 +1248,28 @@ class Travesal extends DefaultArray {
   }
 
   /**
+   * 字符的最短距离，依次正序和逆序遍历
+   *
+   * @param s
+   * @param c
+   * @return
+   */
+  public int[] shortestToChar(String s, char c) {
+    int len = s.length(), pre = Integer.MIN_VALUE / 2;
+    int[] res = new int[len];
+    for (int i = 0; i < len; i++) {
+      if (s.charAt(i) == c) pre = i;
+      res[i] = i - pre;
+    }
+    pre = Integer.MAX_VALUE / 2;
+    for (int i = len - 1; i >= 0; i--) {
+      if (s.charAt(i) == c) pre = i;
+      res[i] = Math.min(res[i], pre - i);
+    }
+    return res;
+  }
+
+  /**
    * 对角线遍历
    *
    * <p>扩展1，反对角线，则将下方 bXFlag 初始为 false
@@ -1693,7 +1717,7 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 拼接最大数
+   * 拼接最大数，两个无序正整数数组，共取 k 个拼接为数字，求该数最大的方案
    *
    * <p>TODO
    *

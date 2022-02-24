@@ -1,12 +1,11 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 收集非五大基本类型的
+ *
+ * <p>进制转换，两种类型，确定进制，如 26，自定义进制，如人民币与罗马数字
  *
  * @author cenghui
  */
@@ -82,44 +81,38 @@ public class OOthers {
   }
 
   /**
-   * Excel表列序号，类似罗马数字转整数
+   * Excel表列序号，26 转十进制，类似罗马数字转整数
    *
    * @param columnTitle the column title
    * @return int int
    */
-  public int titleToNumber(String columnTitle) {
+  public int titleToNumber(String ct) {
     int res = 0;
-    for (char ch : columnTitle.toCharArray()) {
+    for (char ch : ct.toCharArray()) {
       res = res * 26 + (ch - 'A' + 1);
     }
     return res;
   }
 
   /**
-   * Ip to int int.
+   * Excel表列名称，十进制转 26
    *
-   * @param s the s
-   * @return the int
+   * <p>一般进制转换无须进行额外操作，是因为我们是在「每一位数值范围在 [0,x)」的前提下进行「逢 x 进一」。
+   *
+   * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
+   *
+   * @param cn
+   * @return
    */
-  public int ipToInt(String s) {
-    String[] ipList = s.split("\\.");
-    int res = 0;
-    for (String seg : ipList) {
-      res = res << 8 | Integer.parseInt(seg, 10);
+  public String convertToTitle(int cn) {
+    StringBuilder res = new StringBuilder();
+    while (cn > 0) {
+      cn -= 1;
+      res.append((char) (cn % 26 + 'A'));
+      cn /= 26;
     }
-    return res;
-  }
-
-  /**
-   * Int to ip string.
-   *
-   * @param num the num
-   * @return the string
-   */
-  public String intToIP(int num) {
-    String res = "";
-
-    return res;
+    res.reverse();
+    return res.toString();
   }
 
   /**
@@ -422,6 +415,24 @@ class MMath {
     }
     return num;
   }
+
+  /**
+   * 阶乘后点零，记住即可
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
+   *
+   * @param n
+   * @return
+   */
+  public int trailingZeroes(int n) {
+    int count = 0;
+    while (n > 0) {
+      n /= 5;
+      count += n;
+    }
+    return count;
+  }
 }
 
 /** 构建新数据结构 */
@@ -682,6 +693,70 @@ class DData {
      */
     public int getMin() {
       return min;
+    }
+  }
+
+  /** 设计哈希映射 */
+  public class MyHashMap {
+    private static final int BASE = 769;
+    private LinkedList[] data;
+
+    MyHashMap() {
+      data = new LinkedList[BASE];
+      for (int i = 0; i < BASE; i++) {
+        data[i] = new LinkedList<Pair>();
+      }
+    }
+
+    private int hash(int key) {
+      return key % BASE;
+    }
+
+    public void put(int key, int value) {
+      int h = hash(key);
+      Iterator<Pair> iterator = data[h].iterator();
+      while (iterator.hasNext()) {
+        Pair pair = iterator.next();
+        if (pair.key == key) {
+          pair.value = value;
+          return;
+        }
+      }
+      data[h].offerLast(new Pair(key, value));
+    }
+
+    public int get(int key) {
+      int h = hash(key);
+      Iterator<Pair> iterator = data[h].iterator();
+      while (iterator.hasNext()) {
+        Pair pair = iterator.next();
+        if (pair.key == key) {
+          return pair.value;
+        }
+      }
+      return -1;
+    }
+
+    public void remove(int key) {
+      int h = hash(key);
+      Iterator<Pair> iterator = data[h].iterator();
+      while (iterator.hasNext()) {
+        Pair pair = iterator.next();
+        if (pair.key == key) {
+          data[h].remove(pair);
+          return;
+        }
+      }
+    }
+
+    private class Pair {
+      final int key;
+      int value;
+
+      Pair(int key, int value) {
+        this.key = key;
+        this.value = value;
+      }
     }
   }
 

@@ -591,13 +591,11 @@ class SSubSequence {
   }
 
   /**
-   * 最长公共子序列
-   *
-   * <p>与楼下模板一致，[1,m] & [1,n]
+   * 最长公共子序列，[1,m] & [1,n]
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
-   * <p>扩展1，求最长公共子串的长度，即最长连续序列，参上
+   * <p>扩展1，求最长公共子串的长度，参上「最长连续序列」
    *
    * <p>扩展2，输出该子序列，则补充首尾指针，参下 annotate
    *
@@ -606,11 +604,11 @@ class SSubSequence {
    * @return int int
    */
   public int longestCommonSubsequence(String text1, String text2) {
-    int n1 = text1.length(), n2 = text2.length();
-    int[][] dp = new int[n1 + 1][n2 + 1];
+    int len1 = text1.length(), len2 = text2.length();
+    int[][] dp = new int[len1 + 1][len2 + 1];
     //    int lo = 0, hi = 0;
-    for (int i = 1; i <= n1; i++) {
-      for (int j = 1; j <= n2; j++) {
+    for (int i = 1; i <= len1; i++) {
+      for (int j = 1; j <= len2; j++) {
         dp[i][j] =
             text1.charAt(i - 1) == text2.charAt(j - 1)
                 ? dp[i - 1][j - 1] + 1
@@ -621,13 +619,13 @@ class SSubSequence {
         //        }
       }
     }
-    return dp[n1][n2];
+    return dp[len1][len2];
   }
 
   /**
    * 编辑距离 & 两个字符串的删除操作，均是 LCS 最长公共子序列的问题
    *
-   * <p>与楼上模板一致，[1,m] & [1,n]
+   * <p>与「最长公共子序列」模板一致，[1,m] & [1,n]
    *
    * @param word1 the word 1
    * @param word2 the word 2

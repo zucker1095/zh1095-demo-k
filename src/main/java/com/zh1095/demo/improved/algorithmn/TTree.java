@@ -222,26 +222,14 @@ public class TTree {
    * @return boolean boolean
    */
   public boolean isSameTree(TreeNode p, TreeNode q) {
-    return isSameTree2(p, q);
-  }
-
-  private boolean isSameTree1(TreeNode p, TreeNode q) {
-    if (p == null && q == null) return true;
-    else if (p == null || q == null) return false;
-    return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
-  }
-
-  private boolean isSameTree2(TreeNode p, TreeNode q) {
-    Queue<TreeNode> queue = new LinkedList<TreeNode>();
+    Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(p);
     queue.offer(q);
     while (!queue.isEmpty()) {
       p = queue.poll();
       q = queue.poll();
-      if (p == null && q == null) {
-        continue;
-      }
-      if ((p == null || q == null) || p.val != q.val) {
+      if (p == null && q == null) continue;
+      if (p == null || q == null || p.val != q.val) {
         return false;
       }
       // 顺序
@@ -319,57 +307,22 @@ class Postorder {
   private List<Integer> resPath = new ArrayList<>();
 
   /**
-   * 平衡二叉树，后序迭代
+   * 平衡二叉树，前序递归
    *
    * @param root
    * @return
    */
   public boolean isBalanced(TreeNode root) {
-    return isBalanced1(root) != -1;
+    return getHeight(root) != -1;
   }
 
-  public int isBalanced1(TreeNode root) {
-    if (root == null) return 0;
-    int left = isBalanced1(root.left);
-    if (left == -1) return -1;
-    int right = isBalanced1(root.right);
-    if (right == -1) return -1;
-    return Math.abs(left - right) < 2 ? Math.max(left, right) + 1 : -1;
-  }
-
-  public boolean isBalanced2(TreeNode root) {
-    if (root == null) return true;
-    Deque<TreeNode> stack = new ArrayDeque<>();
-    TreeNode pre = null, cur = root;
-    while (cur != null || !stack.isEmpty()) {
-      while (cur != null) {
-        stack.addLast(cur);
-        cur = cur.left;
-      }
-      TreeNode inNode = stack.getLast();
-      // 右结点为空或已遍历
-      if (inNode.right != null && inNode.right != pre) {
-        // 右结点还没遍历，遍历右结点
-        cur = inNode.right;
-        continue;
-      }
-      if (Math.abs(getHeight(inNode.left) - getHeight(inNode.right)) > 1) {
-        return false;
-      }
-      pre = stack.removeLast();
-      // 当前结点下，没有要遍历的结点
-      cur = null;
-    }
-    return true;
-  }
-
-  // 求结点的高度
   private int getHeight(TreeNode root) {
     if (root == null) return 0;
-    int leftH = root.left == null ? 0 : root.left.val,
-        rightH = root.right == null ? 0 : root.right.val;
-    root.val = Math.max(leftH, rightH) + 1;
-    return root.val;
+    int left = getHeight(root.left);
+    if (left == -1) return -1;
+    int right = getHeight(root.right);
+    if (right == -1) return -1;
+    return Math.abs(left - right) < 2 ? Math.max(left, right) + 1 : -1;
   }
 
   /**
@@ -1318,6 +1271,8 @@ class DDFS {
   /**
    * 二叉树中所有距离为k的结点
    *
+   * <p>TODO
+   *
    * <p>1.建图，从 root 出发 DFS 记录每个结点的父结点
    *
    * <p>2.从 target 出发 DFS 寻找相距为 k 的点，分别判断左右 & 父结点是否与 from 相等
@@ -1362,7 +1317,7 @@ class DDFS {
   }
 }
 
-/** BFS */
+/** 广度优先搜索 */
 class BBFS {
   /**
    * 二叉树的层序遍历，递归实现，前序，记录 level 即可

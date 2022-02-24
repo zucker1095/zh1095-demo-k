@@ -58,10 +58,10 @@ public class LList {
    * @return the list node
    */
   public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
-    ListNode dummy = new ListNode();
+    ListNode dummy = new ListNode(0);
     ListNode cur = dummy, l1 = list1, l2 = list2;
     while (l1 != null && l2 != null) {
-      if (l1.val <= l2.val) {
+      if (l1.val < l2.val) {
         cur.next = l1;
         l1 = l1.next;
       } else {
@@ -70,11 +70,7 @@ public class LList {
       }
       cur = cur.next;
     }
-    if (l1 != null) {
-      cur.next = l1;
-    } else if (l2 != null) {
-      cur.next = l2;
-    }
+    cur.next = l1 != null ? l1 : l2;
     return dummy.next;
   }
 
@@ -461,55 +457,27 @@ class MergeList extends LList {
   }
 
   /**
-   * 排序链表，bottom-to-up 即从两步长开始分割为 len/2 个 & 合并
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/sort-list/solution/148-pai-xu-lian-biao-bottom-to-up-o1-kong-jian-by-/
+   * 排序链表，递归 up-to-bottom，找中点 & 分割 & 分别排序 & 合并
    *
    * <p>下方合并 k 个有序链表则 up-to-bottom
    *
-   * <p>TODO 扩展1，去重
+   * <p>扩展1，去重，参下 annotate
    *
    * @param head the head
    * @return list node
    */
   public ListNode sortList(ListNode head) {
-    //    return quickSort(head,null);
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    int len = 0;
-    for (ListNode cur = dummy.next; cur != null; cur = cur.next) {
-      len += 1;
+    if (head == null || head.next == null) return head;
+    ListNode lo = head, hi = head.next;
+    while (hi != null && hi.next != null) {
+      lo = lo.next;
+      hi = hi.next.next;
     }
-    for (int size = 1; size < len; size <<= 1) {
-      ListNode tail = dummy, cur = dummy.next;
-      while (cur != null) {
-        ListNode left = cur, right = cut(cur, size);
-        cur = cut(right, size);
-        tail.next = mergeTwoLists(left, right);
-        while (tail.next != null) {
-          tail = tail.next;
-        }
-      }
-    }
-    return dummy.next;
-  }
-
-  // 将链表 L 切掉前 n 个节点 并返回后半部分的链表头，因此是往前走 n-1 步
-  private ListNode cut(ListNode head, int n) {
-    if (n <= 0) {
-      return head;
-    }
-    ListNode cur = head;
-    for (int i = n - 1; i > 0 && cur != null; i--) {
-      cur = cur.next;
-    }
-    if (cur == null) {
-      return null;
-    }
-    ListNode next = cur.next;
-    cur.next = null;
-    return next;
+    ListNode tmp = lo.next;
+    lo.next = null;
+    ListNode left = sortList(head), right = sortList(tmp);
+    // 4.合并
+    return mergeTwoLists(left, right);
   }
 
   // 链表快排，时间复杂度炸裂

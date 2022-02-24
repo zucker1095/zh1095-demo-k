@@ -14,6 +14,8 @@ import java.util.*;
  * @author cenghui
  */
 public class SString extends DefaultSString {
+  private final String HEX_CHAR = "0123456789abcdef";
+
   /**
    * 字符串相加，双指针同时遍历 & 比对 & 最后处理高位，模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
@@ -43,9 +45,7 @@ public class SString extends DefaultSString {
       p1 -= 1;
       p2 -= 1;
     }
-    if (carry == 1) {
-      res.append(1);
-    }
+    if (carry == 1) res.append(1);
     return res.reverse().toString();
   }
 
@@ -61,29 +61,18 @@ public class SString extends DefaultSString {
   /**
    * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
    *
-   * <p>补码
+   * <p>TODO 参考 https://juejin.cn/post/6844904058357022728
    *
    * @param num the num
    * @return string string
    */
   public String toHex(int num) {
-    if (num == 0) {
-      return "0";
-    }
-    long cur = num;
-    final int hex = 16;
+    if (num == 0) return "0";
+    long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
     StringBuilder res = new StringBuilder();
-    if (cur < 0) {
-      cur = (long) (Math.pow(2, 32) + cur);
-    }
     while (cur != 0) {
-      long u = cur % hex;
-      char c = (char) (u + '0');
-      if (u >= 10) {
-        c = (char) (u - 10 + 'a');
-      }
-      res.append(c);
-      cur /= hex;
+      res.append(HEX_CHAR.charAt((int) (cur % 16)));
+      cur /= 16;
     }
     return res.reverse().toString();
   }
@@ -462,12 +451,12 @@ class SStack {
   /**
    * 有效的括号
    *
-   * <p>扩展1，需要保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，在出入栈时更新
+   * <p>扩展1，需保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，在出入栈时更新，参下 annotate
    *
    * <p>扩展2，左括号可不以正确的任意闭合，如 ([)] 返回true，同时不能视作同一种即只统计数量，如 {{][}}
-   * 非法，即放弃对顺序的要求，而只要求同种的数量，因此使用三个变量统计数目而无需栈
+   * 非法，即放弃对顺序的要求，而只要求同种的数量，因此使用三个变量分别统计数目，无需栈
    *
-   * <p>扩展3，( & ) & * 三种符号，参下
+   * <p>扩展3，( ) * 三种符号，参下「有效的括号字符串」
    *
    * @param s the s
    * @return the boolean
@@ -475,15 +464,11 @@ class SStack {
   public boolean isValid(String s) {
     // 外层括弧定义一个 Anonymous Inner Class
     // 内层括弧上是一个 instance initializer block，在内部匿名类构造时被执行
-    Map<Character, Character> pairs =
-        new HashMap<>(4) {
-          {
-            put('[', ']');
-            put('(', ')');
-            put('{', '}');
-            put('?', '?');
-          }
-        };
+    Map<Character, Character> pairs = new HashMap<>(4);
+    pairs.put('[', ']');
+    pairs.put('(', ')');
+    pairs.put('{', '}');
+    pairs.put('?', '?');
     Deque<Character> stack = new ArrayDeque<>();
     // int level = 0;
     for (char ch : s.toCharArray()) {
@@ -511,12 +496,12 @@ class SStack {
   }
 
   /**
-   * 有效的括号字符串，贪心，参考
+   * 有效的括号字符串，贪心
+   *
+   * <p>参考
    * https://leetcode-cn.com/problems/valid-parenthesis-string/solution/you-xiao-de-gua-hao-zi-fu-chuan-by-leetc-osi3/
    *
-   * <p>维护未匹配的左括号数量可能的上下界，未匹配的左括号数量必须非负
-   *
-   * <p>因此当最大值变成负数时，说明没有左括号可以和右括号匹配，返回
+   * <p>维护未匹配的左括号数量可能的上下界，未匹配的左括号数量必须非负，因此当最大值变成负数时，说明没有左括号可以和右括号匹配，返回
    *
    * <p>当最小值为 0 时，不应将最小值继续减少，以确保最小值非负
    *
@@ -527,9 +512,7 @@ class SStack {
    */
   public boolean checkValidString(String s) {
     int minCount = 0, maxCount = 0;
-    int n = s.length();
-    for (int i = 0; i < n; i++) {
-      char ch = s.charAt(i);
+    for (char ch : s.toCharArray()) {
       if (ch == '(') {
         minCount += 1;
         maxCount += 1;
