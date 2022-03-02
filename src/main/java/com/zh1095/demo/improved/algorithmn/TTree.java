@@ -24,9 +24,11 @@ public class TTree {
   /**
    * 中序遍历迭代，注意区分遍历 & 处理两个 step
    *
-   * <p>https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/zhuan-ti-jiang-jie-er-cha-shu-qian-zhong-hou-xu-2/
+   * <p>模板参考
+   * https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/zhuan-ti-jiang-jie-er-cha-shu-qian-zhong-hou-xu-2/
    *
-   * <p>通过 Deque 模拟 stack
+   * <p>思维参考
+   * https://leetcode-cn.com/problems/binary-tree-paths/solution/tu-jie-er-cha-shu-de-suo-you-lu-jing-by-xiao_ben_z/
    *
    * @param root the root
    * @return the list
@@ -295,8 +297,48 @@ public class TTree {
     return null;
   }
 
+  /**
+   * 翻转等价二叉树
+   *
+   * @param root1
+   * @param root2
+   * @return
+   */
+  public boolean flipEquiv(TreeNode root1, TreeNode root2) {
+    if (root1 == root2) return true;
+    if (root1 == null || root2 == null || root1.val != root2.val) return false;
+    return flipEquiv(root1.left, root2.left) && flipEquiv(root1.right, root2.right)
+        || flipEquiv(root1.left, root2.right) && flipEquiv(root1.right, root2.left);
+  }
+
   private class _TreeNode {
     _TreeNode left, right, next;
+  }
+
+  /** 二叉树的序列化与反序列化，前序 */
+  public class Codec {
+
+    // Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+      return root == null
+          ? "null"
+          : root.val + "," + serialize(root.left) + "," + serialize(root.right);
+    }
+
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+      Queue<String> queue = new LinkedList<>(Arrays.asList(data.split(",")));
+      return dfs(queue);
+    }
+
+    private TreeNode dfs(Queue<String> queue) {
+      String val = queue.poll();
+      if ("null".equals(val)) return null;
+      TreeNode root = new TreeNode(Integer.parseInt(val));
+      root.left = dfs(queue);
+      root.right = dfs(queue);
+      return root;
+    }
   }
 }
 
@@ -766,6 +808,44 @@ class BBST {
     pre = head;
     dfs7(head.right);
   }
+
+  /**
+   * 二叉搜索树迭代器
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/binary-search-tree-iterator/solution/fu-xue-ming-zhu-dan-diao-zhan-die-dai-la-dkrm/
+   *
+   * <p>均摊复杂度是 O(1)，调用 next()，如果栈顶元素有右子树，则把所有右边节点即其所有左孩子全部放到了栈中，下次调用 next() 直接访问栈顶
+   *
+   * <p>空间复杂度 O(h)，h 为数的高度，因为栈中只保留了左节点，栈中元素最多时，即树高
+   */
+  public class BSTIterator {
+    private final Deque<TreeNode> stack = new ArrayDeque<>();
+
+    public BSTIterator(TreeNode root) {
+      TreeNode cur = root;
+      while (cur != null) {
+        stack.push(cur);
+        cur = cur.left;
+      }
+    }
+
+    public int next() {
+      TreeNode cur = stack.pop();
+      if (cur.right != null) {
+        TreeNode nxt = cur.right;
+        while (nxt != null) {
+          stack.push(nxt);
+          nxt = nxt.left;
+        }
+      }
+      return cur.val;
+    }
+
+    public boolean hasNext() {
+      return !stack.isEmpty();
+    }
+  }
 }
 
 /**
@@ -1138,6 +1218,9 @@ class BBacktracking extends DDFS {
  */
 class DDFS {
   protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+  private List<Integer> res = new ArrayList<>();
+  // 目标节点的父
+  private TreeNode parent;
 
   /**
    * 岛屿数量
@@ -1269,51 +1352,81 @@ class DDFS {
   }
 
   /**
-   * 二叉树中所有距离为k的结点
+   * 二叉树中所有距离为k的结点，建议掌握 DFS 分割即可
    *
-   * <p>TODO
-   *
-   * <p>1.建图，从 root 出发 DFS 记录每个结点的父结点
-   *
-   * <p>2.从 target 出发 DFS 寻找相距为 k 的点，分别判断左右 & 父结点是否与 from 相等
+   * <p>参考
+   * https://leetcode-cn.com/problems/all-nodes-distance-k-in-binary-tree/solution/gai-bian-shu-de-xing-zhuang-c-si-lu-dai-ma-by-lhrs/
    *
    * @param root the root
    * @param target the target
    * @param k the k
    * @return list list
    */
-  public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    List<Integer> res = new ArrayList<>();
-    // 图关系，题设结点值唯一
-    Map<Integer, TreeNode> graph = new HashMap<>();
-    findParents(root, graph);
-    dfs4(target, null, graph, res, k);
+  public List<Integer> distanceK(TreeNode root, TrzeeNode target, int k) {
+    // 首先把树分为两棵，一棵以目标节点为根，一棵以目标节点父为根
+    dfs4(root, target, null);
+    // 搜索以目标节点为根的树深度为 k 的节点
+    collect(target, k);
+    // 搜索以目标节点父为根的树深度为 k-1 的节点
+    collect(parent, k - 1);
     return res;
   }
 
-  private void findParents(TreeNode cur, Map<Integer, TreeNode> graph) {
-    if (cur.left != null) {
-      graph.put(cur.left.val, cur);
-      findParents(cur.left, graph);
+  private Boolean dfs4(TreeNode root, TreeNode target, TreeNode father) {
+    if (root == null) return false;
+    // 如果搜到了目标节点，那么它父就是新树的根
+    if (root == target) {
+      parent = father;
+      return true;
     }
-    if (cur.right != null) {
-      graph.put(cur.right.val, cur);
-      findParents(cur.right, graph);
+    // 如果我成了左儿子的儿子，那我的父就是我的新的左儿子
+    if (dfs4(root.left, target, root)) {
+      root.left = father;
+      return true;
     }
+    // 如果我成了我右儿子的儿子，那我的父就是我的新的右儿子
+    if (dfs4(root.right, target, root)) {
+      root.right = father;
+      return true;
+    }
+    // 递归的时候返回父
+    return false;
   }
 
-  private void dfs4(
-      TreeNode cur, TreeNode from, Map<Integer, TreeNode> graph, List<Integer> res, int distance) {
-    if (cur == null) return;
-    if (distance == 0) {
-      res.add(cur.val);
+  // 搜索以 k 为根节点的树的第 k 层所有节点
+  private void collect(TreeNode root, int k) {
+    if (root == null) return;
+    if (k == 0) {
+      res.add(root.val);
       return;
     }
-    if (cur.left != from) dfs4(cur.left, cur, graph, res, distance - 1);
-    if (cur.right != from) dfs4(cur.right, cur, graph, res, distance - 1);
-    if (graph.get(cur.val) != from) {
-      dfs4(graph.get(cur.val), cur, graph, res, distance - 1);
+    collect(root.left, k - 1);
+    collect(root.right, k - 1);
+  }
+
+  /**
+   * 二叉树的所有路径，前序
+   *
+   * @param root
+   * @return
+   */
+  public List<String> binaryTreePaths(TreeNode root) {
+    List<String> res = new ArrayList<>();
+    dfs13(root, "", res);
+    return res;
+  }
+
+  private void dfs13(TreeNode root, String path, List<String> res) {
+    // 如果为空，直接返回
+    if (root == null) return;
+    // 如果是叶子节点，说明找到了一条路径，把它加入到res中
+    if (root.left == null && root.right == null) {
+      res.add(path + root.val);
+      return;
     }
+    // 如果不是叶子节点，在分别遍历他的左右子节点
+    dfs13(root.left, path + root.val + "->", res);
+    dfs13(root.right, path + root.val + "->", res);
   }
 }
 

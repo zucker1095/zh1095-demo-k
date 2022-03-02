@@ -426,47 +426,38 @@ class HHeap extends DefaultArray {
   }
 
   /**
-   * 字符串出现次数 topk，参考
-   * https://www.nowcoder.com/practice/fd711bdfa0e840b381d7e1b82183b3ee?tpId=196&tqId=37142&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   * 字符串出现次数 topk，小根堆 nlogk
    *
-   * <p>TODO
+   * <p>先按次数排，相同则按字典序排
    *
    * @param strings string字符串一维数组 strings
    * @param k int整型 the k
    * @return string字符串二维数组
    */
   public String[][] topKstrings(String[] strings, int k) {
-    if (k == 0) return new String[][] {};
     String[][] res = new String[k][2];
-    Comparator compa = new DescComparator();
     Map<String, Integer> counter = new HashMap<>();
     for (String str : strings) {
-      counter.put(str, counter.get(str) + 1);
+      counter.put(str, counter.getOrDefault(str, 0) + 1);
     }
-    Queue<Map.Entry<String, Integer>> pq = new PriorityQueue<>(k, compa);
-    for (Map.Entry<String, Integer> countByStr : counter.entrySet()) {
-      if (pq.size() < k) {
-        pq.add(countByStr);
-      } else if (compa.compare(pq.peek(), countByStr) < 0) {
-        pq.remove();
-        pq.add(countByStr);
-      }
+    PriorityQueue<String[]> pq =
+        new PriorityQueue<>(
+            k + 1,
+            (o1, o2) -> {
+              return Integer.parseInt(o1[1]) == Integer.parseInt(o2[1])
+                  ? o2[0].compareTo(o1[0])
+                  : Integer.parseInt(o1[1]) - Integer.parseInt(o2[1]);
+            });
+    for (String str : counter.keySet()) {
+      pq.offer(new String[] {str, counter.get(str).toString()});
+      if (pq.size() > k) pq.poll();
     }
-    for (int i = k - 1; i >= 0; i--) {
-      Map.Entry<String, Integer> entry = pq.poll();
-      res[i] = new String[] {entry.getKey(), String.valueOf(entry.getValue())};
+    int idx = k - 1;
+    while (!pq.isEmpty()) {
+      res[idx] = pq.poll();
+      idx -= 1;
     }
     return res;
-  }
-
-  private class DescComparator implements Comparator<Map.Entry<String, Integer>> {
-    @Override
-    public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-      // 字典序小的在前
-      return (o1.getValue().equals(o2.getValue()))
-          ? o2.getKey().compareTo(o1.getKey())
-          : o1.getValue() - o2.getValue();
-    }
   }
 }
 
@@ -496,9 +487,9 @@ class QQuick extends DefaultArray {
     int pivotIdx = lo + random.nextInt(hi - lo + 1);
     // 下方需要确保虚拟头也满足 <pivot，因此从 lt+1 开始遍历
     swap(nums, pivotIdx, lo);
-    // 哨兵 & 虚拟头尾，保证界外
-    int pivot = nums[lo], lt = lo, gt = hi + 1;
-    int cur = lt + 1;
+    int pivot = nums[lo];
+    // 虚拟头尾，保证界外
+    int lt = lo, cur = lt + 1, gt = hi + 1;
     while (cur < gt) {
       if (nums[cur] < pivot) {
         lt += 1;
@@ -786,8 +777,8 @@ class Dichotomy extends DefaultArray {
       // 需要右开区间
       int mid = lo + (hi - lo) / 2 + 1;
       // 下一轮搜索区间是 [lo..mid - 1]
-      if (nums[mid] > target) hi = mid - 1;
-      else lo = mid;
+      if (nums[mid] <= target) lo = mid;
+      else hi = mid - 1;
     }
     return nums[hi] == target ? hi : -1;
   }
@@ -839,6 +830,7 @@ class Dichotomy extends DefaultArray {
     return findMinI(nums);
   }
 
+  // 已去重
   private int findMinI(int[] nums) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
@@ -854,32 +846,11 @@ class Dichotomy extends DefaultArray {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = (lo + hi) / 2;
-      if (nums[mid] > nums[hi]) lo = mid + 1;
-      else if (nums[mid] < nums[hi]) hi = mid;
-      else hi -= 1;
+      if (nums[mid] < nums[hi]) hi = mid;
+      else if (nums[mid] > nums[hi]) lo = mid + 1;
+      else hi -= 1; // 比上方多的一个判断
     }
     return nums[lo];
-  }
-
-  /**
-   * 山脉数组的顶峰索引
-   *
-   * <p>TODO
-   *
-   * @param nums
-   * @return
-   */
-  public int peakIndexInMountainArray(int[] nums) {
-    int res = 0;
-    int lo = 1, hi = nums.length - 2;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      // 缩减区间为 [mid+1,hi]
-      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
-      else hi = mid;
-    }
-    // 碰撞时结束
-    return lo;
   }
 
   /**
@@ -901,47 +872,40 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
+   * 山脉数组的顶峰索引，与上方几乎一致
+   *
+   * <p>TODO
+   *
+   * @param nums
+   * @return
+   */
+  public int peakIndexInMountainArray(int[] nums) {
+    int lo = 1, hi = nums.length - 2;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      // 缩减区间为 [mid+1,hi]
+      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
+      else hi = mid;
+    }
+    // 碰撞时结束
+    return lo;
+  }
+
+  /**
    * 搜索二维矩阵，建议模拟 BST 以右上角作根开始遍历，复杂度 m+n
    *
-   * <p>I & II 通用
-   *
-   * <p>或二分，复杂度为 mlogn
+   * <p>I & II 通用，或二分，复杂度为 mlogn
    *
    * @param matrix the matrix
    * @param target the target
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
-    return searchMatrix1(matrix, target);
-  }
-
-  private boolean searchMatrix1(int[][] matrix, int target) {
-    int i = 0, j = matrix[0].length - 1;
-    while (i < matrix.length && j >= 0) {
-      if (matrix[i][j] < target) {
-        i += 1;
-      } else if (matrix[i][j] == target) {
-        return true;
-      } else if (matrix[i][j] > target) {
-        j -= 1;
-      }
-    }
-    return false;
-  }
-
-  private boolean searchMatrix2(int[][] matrix, int target) {
-    int y = matrix.length, x = matrix[0].length;
-    for (int i = 0; i < y; i++) {
-      int lo = 0, hi = x - 1;
-      while (lo < hi) {
-        int mid = (lo + hi + 1) >> 1;
-        if (matrix[i][mid] <= target) {
-          lo = mid;
-        } else {
-          hi = mid - 1;
-        }
-      }
-      if (matrix[i][hi] == target) return true;
+    int y = 0, x = matrix[0].length - 1;
+    while (y < matrix.length && x >= 0) {
+      if (matrix[y][x] < target) y += 1;
+      else if (matrix[y][x] == target) return true;
+      else if (matrix[y][x] > target) x -= 1;
     }
     return false;
   }
@@ -1017,9 +981,7 @@ class Dichotomy extends DefaultArray {
   /**
    * 数据流的中位数，分别使用两个堆并保证二者元素数目差值不超过 2 即可
    *
-   * <p>TODO
-   *
-   * <p>参考
+   * <p>TODO 参考
    * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
    */
   //  class MedianFinder {
@@ -1249,6 +1211,8 @@ class Travesal extends DefaultArray {
 
   /**
    * 字符的最短距离，依次正序和逆序遍历
+   *
+   * <p>TODO
    *
    * @param s
    * @param c
@@ -1561,27 +1525,26 @@ class DicOrder extends DefaultArray {
   /**
    * 最大数，把数组排成最大的数，排序 & 贪心
    *
-   * <p>对 nums 按照 ab>ba 排序为 ab
+   * <p>对 nums 按照 ab>ba -> b>a
    *
-   * <p>1.先单独证明两个数需要满足该定律，比如 3 & 30 有 303<330 显然 3 需要安排至 30 前，即权重表现为 3<30
+   * <p>1.先单独证明两个数需要满足该定律，比如 3 & 30 有 330>303 显然 3 需要安排至 30 前，即表现为 3<30
    *
-   * <p>2.然后证明传递性，即两两之间都要满足该性质
+   * <p>2.然后证明传递性，即两两之间都要满足该性质，参考
+   * https://leetcode-cn.com/problems/largest-number/solution/gong-shui-san-xie-noxiang-xin-ke-xue-xi-vn86e/
    *
-   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则即可，参考
+   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba -> a>b 即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
-   *
-   * <p>TODO 最小数显然存在 03<30 即排序为 03 的情况，因此需要为排序结果去除前导零
    *
    * @param nums
    * @return
    */
   public String largestNumber(int[] nums) {
+    StringBuilder res = new StringBuilder();
     List<String> strs = new ArrayList<>(nums.length);
     for (int num : nums) {
       strs.add(String.valueOf(num));
     }
     strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
-    StringBuilder res = new StringBuilder();
     for (String str : strs) {
       res.append(str);
     }

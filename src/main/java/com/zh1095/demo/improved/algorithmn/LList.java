@@ -120,10 +120,6 @@ public class LList {
     return true;
   }
 
-  protected int getVal(ListNode node) {
-    return node == null ? 0 : node.val;
-  }
-
   /**
    * 复制带随机指针的链表，即深拷贝，三次遍历
    *
@@ -313,7 +309,7 @@ class MergeList extends LList {
     int carry = 0;
     ListNode p1 = l1, p2 = l2, cur = dummy;
     while (p1 != null || p2 != null || carry != 0) {
-      int n1 = getVal(p1), n2 = getVal(p2);
+      int n1 = p1 == null ? 0 : p1.val, n2 = p2 == null ? 0 : p2.val;
       int tmp = n1 + n2 + carry;
       carry = tmp / base;
       cur.next = new ListNode(tmp % base);
@@ -321,15 +317,12 @@ class MergeList extends LList {
       p2 = p2 == null ? null : p2.next;
       cur = cur.next;
     }
-    if (carry == 1) {
-      cur.next = new ListNode(1);
-    }
     return dummy.next;
   }
 
   // 123 & 45 -> 168
   // 分别反转两个链表 & 正序计算 & 反转整个链表
-  // 允许空间，则分别遍历建栈即可，模板参上
+  // 允许空间，则分别遍历建栈，注意需要逆序尾插
   private ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
     //    ListNode p1 = reverseList(l1), p2 = reverseList(l2);
     //    return reverseList(addTwoNumbers1(p1, p2));
@@ -345,13 +338,12 @@ class MergeList extends LList {
     ListNode head = null;
     int carry = 0;
     while (!st1.isEmpty() || !st2.isEmpty() || carry > 0) {
-      int sum = carry;
-      sum += st1.isEmpty() ? 0 : st1.pop();
-      sum += st2.isEmpty() ? 0 : st2.pop();
-      ListNode cur = new ListNode(sum % 10);
+      int n1 = st1.isEmpty() ? 0 : st1.pop(), n2 = st2.isEmpty() ? 0 : st2.pop();
+      int tmp = n1 + n2 + carry;
+      carry = tmp / 10;
+      ListNode cur = new ListNode(tmp % 10);
       cur.next = head;
       head = cur;
-      carry = sum / 10;
     }
     return head;
   }
@@ -457,9 +449,7 @@ class MergeList extends LList {
   }
 
   /**
-   * 排序链表，递归 up-to-bottom，找中点 & 分割 & 分别排序 & 合并
-   *
-   * <p>下方合并 k 个有序链表则 up-to-bottom
+   * 排序链表，建议掌握递归 up-to-bottom 即可，找中点 & 分割 & 分别排序 & 合并
    *
    * <p>扩展1，去重，参下 annotate
    *
@@ -467,6 +457,10 @@ class MergeList extends LList {
    * @return list node
    */
   public ListNode sortList(ListNode head) {
+    return sortList1(head);
+  }
+
+  private ListNode sortList1(ListNode head) {
     if (head == null || head.next == null) return head;
     ListNode lo = head, hi = head.next;
     while (hi != null && hi.next != null) {
@@ -476,8 +470,49 @@ class MergeList extends LList {
     ListNode tmp = lo.next;
     lo.next = null;
     ListNode left = sortList(head), right = sortList(tmp);
-    // 4.合并
     return mergeTwoLists(left, right);
+  }
+
+  private ListNode sortList2(ListNode head) {
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    int len = 0;
+    ListNode node = dummy.next;
+    while (node != null) {
+      len += 1;
+      node = node.next;
+    }
+    // 循环开始切割和合并
+    for (int size = 1; size < len; size /= 2) {
+      ListNode cur = dummy.next, tail = dummy;
+      while (cur != null) {
+        // 链表切掉 size 剩下的返还给 right
+        ListNode left = cur, right = cut(cur, size);
+        // 链表切掉 size 剩下的返还给 cur
+        cur = cut(right, size);
+        tail.next = mergeTwoLists(left, right);
+        // 保持最尾端
+        while (tail.next != null) {
+          tail = tail.next;
+        }
+      }
+    }
+    return dummy.next;
+  }
+
+  // 将链表切掉前 n 个节点，并返回后半部分的链表头
+  private ListNode cut(ListNode head, int n) {
+    if (n <= 0) return head;
+    ListNode cur = head;
+    // 往前走 n-1 步
+    while (n > 1 && cur != null) {
+      cur = cur.next;
+      n -= 1;
+    }
+    if (cur == null) return null;
+    ListNode nxt = cur.next;
+    cur.next = null;
+    return nxt;
   }
 
   // 链表快排，时间复杂度炸裂
@@ -634,7 +669,7 @@ class CycleList extends LList {
   }
 }
 
-/** TODO 删除相关，类似滑窗，后期考虑同步后者的模板 */
+/** 删除相关 */
 class DeleteList extends LList {
   /**
    * 删除链表的倒数第 N 个结点
@@ -663,6 +698,8 @@ class DeleteList extends LList {
    * 删除排序链表中的重复元素
    *
    * <p>与移动零 & 删除排序数组中的重复项保持一致，符合，即要移动 or 移除的则跳过
+   *
+   * <p>TODO 类似滑窗，后期考虑同步后者的模板
    *
    * @param head the head
    * @return list node

@@ -41,11 +41,10 @@ public class SString extends DefaultSString {
       int n2 = p2 >= 0 ? getInt(num2.charAt(p2)) : 0;
       int tmp = n1 + n2 + carry;
       carry = tmp / base;
-      res.append(getChar(tmp) % base);
+      res.append(getChar(tmp % base));
       p1 -= 1;
       p2 -= 1;
     }
-    if (carry == 1) res.append(1);
     return res.reverse().toString();
   }
 
@@ -219,9 +218,7 @@ class WWindow {
   /**
    * 无重复字符的最长子串 / 最长无重复数组
    *
-   * <p>扩展1，不使用 HashMap 则使用数组代替，索引通过 ASCII 取
-   *
-   * <p>扩展2，允许重复 k 次，即字符的个数，下方「至少有k个重复字符的最长子串」指种类
+   * <p>扩展1，允许重复 k 次，即字符的个数，下方「至少有k个重复字符的最长子串」指种类
    *
    * @param s the s
    * @return the int
@@ -302,47 +299,6 @@ class WWindow {
       res = Math.max(res, hi - lo + 1);
     }
     return res;
-  }
-
-  /**
-   * 长度最小的子数组，满足和不少于 target，滑窗
-   *
-   * <p>不能使用滑窗，因为下方缩窗的条件是整体满足 >=target，但可能已经满足的局部无法被收入
-   *
-   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
-   *
-   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
-   *
-   * @param target the target
-   * @param nums the nums
-   * @return int int
-   */
-  public int minSubArrayLen(int target, int[] nums) {
-    int res = Integer.MAX_VALUE, sum = 0;
-    int lo = 0, hi = 0;
-    while (hi < nums.length) {
-      sum += nums[hi];
-      while (sum >= target) {
-        res = Math.min(res, hi - lo + 1);
-        sum -= nums[lo];
-        lo += 1;
-      }
-      // 替换上一段 while
-      //      if (sum == target) {
-      //        // 入结果集
-      //        hi += 1;
-      //        continue;
-      //      }
-      //      while (sum > target) {
-      //        sum -= nums[lo];
-      //        if (sum == target) {
-      //          // 入结果集
-      //        }
-      //        lo += 1;
-      //      }
-      hi += 1;
-    }
-    return res == Integer.MAX_VALUE ? 0 : res;
   }
 
   /**
@@ -628,7 +584,7 @@ class EEncoding extends SString {
   /**
    * 字符串转换整数，如 " -26" to 26
    *
-   * <p>去空格 & 判断正负 & 逐位相加 & 判断溢出
+   * <p>去空格 & 判正负 & 逐位加 & 判溢出
    *
    * @param s the s
    * @return the int
@@ -649,7 +605,6 @@ class EEncoding extends SString {
     while (idx < s.length()) {
       char ch = s.charAt(idx);
       if (ch < '0' || ch > '9') break;
-      // 判断进位溢出
       int pre = res;
       res = res * 10 + (ch - '0');
       if (pre != res / 10) {
@@ -846,14 +801,77 @@ class WWord extends DefaultSString {
   /**
    * 单词接龙，返回 beginWord 每次 diff 一个字母，最终变为 endWord 的最短路径，且所有路径均包含在 wordList 内
    *
-   * <p>TODO 双向 bfs
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/word-ladder/solution/yan-du-you-xian-bian-li-shuang-xiang-yan-du-you-2/
    *
    * @param beginWord
    * @param endWord
    * @param wordList
    * @return
    */
-  //  public int ladderLength(String beginWord, String endWord, List<String> wordList) {}
+  public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+    // 第 1 步：先将 wordList 放到哈希表里，便于判断某个单词是否在 wordList 里
+    Set<String> wordSet = new HashSet<>(wordList);
+    if (wordSet.size() == 0 || !wordSet.contains(endWord)) {
+      return 0;
+    }
+    // 第 2 步：已经访问过的 word 添加到 visited 哈希表里
+    Set<String> visited = new HashSet<>();
+    // 分别用左边和右边扩散的哈希表代替单向 BFS 里的队列，它们在双向 BFS 的过程中交替使用
+    Set<String> beginVisited = new HashSet<>();
+    beginVisited.add(beginWord);
+    Set<String> endVisited = new HashSet<>();
+    endVisited.add(endWord);
+    // 第 3 步：执行双向 BFS，左右交替扩散的步数之和为所求
+    int step = 1;
+    while (!beginVisited.isEmpty() && !endVisited.isEmpty()) {
+      // 优先选择小的哈希表进行扩散，考虑到的情况更少
+      if (beginVisited.size() > endVisited.size()) {
+        Set<String> temp = beginVisited;
+        beginVisited = endVisited;
+        endVisited = temp;
+      }
+      // 逻辑到这里，保证 beginVisited 是相对较小的集合，nextLevelVisited 在扩散完成以后，会成为新的 beginVisited
+      Set<String> nextLevelVisited = new HashSet<>();
+      for (String word : beginVisited) {
+        if (changeWordEveryOneLetter(word, endVisited, visited, wordSet, nextLevelVisited)) {
+          return step + 1;
+        }
+      }
+      // 原来的 beginVisited 废弃，从 nextLevelVisited 开始新的双向 BFS
+      beginVisited = nextLevelVisited;
+      step += 1;
+    }
+    return 0;
+  }
+
+  // 尝试对 word 修改每一个字符，看看能否落在 endVisited 中，扩展得到的新的 word 添加到 nextLevelVisited 里
+  private boolean changeWordEveryOneLetter(
+      String word,
+      Set<String> endVisited,
+      Set<String> visited,
+      Set<String> wordSet,
+      Set<String> nextLevelVisited) {
+    char[] chs = word.toCharArray();
+    for (int i = 0; i < word.length(); i++) {
+      char originCh = chs[i];
+      for (char curCh = 'a'; curCh <= 'z'; curCh++) {
+        if (originCh == curCh) continue;
+        chs[i] = curCh;
+        String nextWord = String.valueOf(chs);
+        if (wordSet.contains(nextWord)) {
+          if (endVisited.contains(nextWord)) return true;
+          if (!visited.contains(nextWord)) {
+            nextLevelVisited.add(nextWord);
+            visited.add(nextWord);
+          }
+        }
+      }
+      // 恢复，下次再用
+      chs[i] = originCh;
+    }
+    return false;
+  }
 }
 
 /** The type Default s string. */

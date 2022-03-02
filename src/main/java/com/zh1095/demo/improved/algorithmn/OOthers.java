@@ -186,10 +186,8 @@ public class OOthers {
   }
 }
 
-/** 数学类 */
+/** 计算 */
 class MMath {
-  private final String CHARS = "0123456789ABCDEF";
-
   /**
    * rand7生成rand10 即[1,10]，等同进制转换的思路
    *
@@ -223,6 +221,100 @@ class MMath {
   private int rand7() {
     return 0;
   }
+
+  /**
+   * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
+   *
+   * <p>记住公式即可 res=(res+m)%i
+   *
+   * @param n the n
+   * @param m the m
+   * @return the int
+   */
+  public int lastRemaining(int n, int m) {
+    int res = 0;
+    for (int i = 2; i <= n; i++) {
+      res = (res + m) % i;
+    }
+    return res;
+  }
+
+  /**
+   * 1~n整数中1出现的次数 / 数字1的个数
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int countDigitOne(int n) {
+    int res = 0;
+    int high = n / 10, cur = n % 10, low = 0, digit = 1;
+    while (high != 0 || cur != 0) {
+      if (cur == 0) {
+        res += high * digit;
+      } else if (cur == 1) {
+        res += high * digit + low + 1;
+      } else {
+        res += (high + 1) * digit;
+      }
+      low += cur * digit;
+      high /= 10;
+      cur = high % 10;
+      digit *= 10;
+    }
+    return res;
+  }
+
+  /**
+   * 多数元素，摩尔投票，类比 Raft
+   *
+   * <p>尽管不通用，但对于本题方便理解和记忆
+   *
+   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int majorityElement(int[] nums) {
+    // 当前遍历的元素即 candidate 及其个数即 votes
+    int num = nums[0], count = 1;
+    for (int i = 1; i < nums.length; ++i) {
+      if (count == 0) {
+        num = nums[i];
+        count = 1;
+      } else if (nums[i] == num) {
+        count += 1;
+      } else {
+        count -= 1;
+      }
+    }
+    return num;
+  }
+
+  /**
+   * 阶乘后点零，记住即可
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
+   *
+   * @param n
+   * @return
+   */
+  public int trailingZeroes(int n) {
+    int count = 0;
+    while (n > 0) {
+      n /= 5;
+      count += n;
+    }
+    return count;
+  }
+}
+
+/** 单个数字 */
+class Digit {
+  private final String CHARS = "0123456789ABCDEF";
 
   /**
    * x的平方根，二分只能精确至后二位，建议采用牛顿迭代
@@ -271,23 +363,6 @@ class MMath {
   }
 
   /**
-   * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
-   *
-   * <p>记住公式即可 res=(res+m)%i
-   *
-   * @param n the n
-   * @param m the m
-   * @return the int
-   */
-  public int lastRemaining(int n, int m) {
-    int res = 0;
-    for (int i = 2; i <= n; i++) {
-      res = (res + m) % i;
-    }
-    return res;
-  }
-
-  /**
    * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
    *
    * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
@@ -314,34 +389,6 @@ class MMath {
       res.append("-");
     }
     return res.reverse().toString();
-  }
-
-  /**
-   * 1~n整数中1出现的次数 / 数字1的个数
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int countDigitOne(int n) {
-    int res = 0;
-    int high = n / 10, cur = n % 10, low = 0, digit = 1;
-    while (high != 0 || cur != 0) {
-      if (cur == 0) {
-        res += high * digit;
-      } else if (cur == 1) {
-        res += high * digit + low + 1;
-      } else {
-        res += (high + 1) * digit;
-      }
-      low += cur * digit;
-      high /= 10;
-      cur = high % 10;
-      digit *= 10;
-    }
-    return res;
   }
 
   /**
@@ -388,50 +435,6 @@ class MMath {
       left /= 10;
     }
     return left == right || left == right / 10;
-  }
-
-  /**
-   * 多数元素，摩尔投票，类比 Raft
-   *
-   * <p>尽管不通用，但对于本题方便理解和记忆
-   *
-   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int majorityElement(int[] nums) {
-    // 当前遍历的元素即 candidate 及其个数即 votes
-    int num = nums[0], count = 1;
-    for (int i = 1; i < nums.length; ++i) {
-      if (count == 0) {
-        num = nums[i];
-        count = 1;
-      } else if (nums[i] == num) {
-        count += 1;
-      } else {
-        count -= 1;
-      }
-    }
-    return num;
-  }
-
-  /**
-   * 阶乘后点零，记住即可
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
-   *
-   * @param n
-   * @return
-   */
-  public int trailingZeroes(int n) {
-    int count = 0;
-    while (n > 0) {
-      n /= 5;
-      count += n;
-    }
-    return count;
   }
 }
 
@@ -696,7 +699,11 @@ class DData {
     }
   }
 
-  /** 设计哈希映射 */
+  /**
+   * 设计哈希映射
+   *
+   * <p>扩展1，要求布隆过滤器
+   */
   public class MyHashMap {
     private static final int BASE = 769;
     private LinkedList[] data;
