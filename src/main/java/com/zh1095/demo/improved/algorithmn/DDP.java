@@ -1,6 +1,9 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 收集 DP 相关
@@ -80,7 +83,7 @@ class OOptimalSolution {
   public int trap(int[] height) {
     int lo = 0, hi = height.length - 1;
     int res = 0, lm = height[lo], rm = height[hi];
-    while (lo <= hi) {
+    while (lo < hi) {
       int left = height[lo], right = height[hi];
       lm = Math.max(lm, left);
       rm = Math.max(rm, right);
@@ -119,7 +122,7 @@ class OOptimalSolution {
   /**
    * 最长有效括号，需要考虑上一个成对的括号区间
    *
-   * <p>三类题型，生成回溯，判断栈，找最长 dp
+   * <p>括号相关的参考「括号生成」与「有效的括号」
    *
    * <p>dp[i] 表示 s[0,i-1] 的最长有效括号
    *
@@ -180,13 +183,35 @@ class OOptimalSolution {
   public int numSquares(int n) {
     int[] dp = new int[n + 1];
     for (int i = 1; i <= n; i++) {
-      // 最坏的情况就是每次 +1
       dp[i] = i;
       for (int j = 1; i - j * j >= 0; j++) {
         dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
       }
     }
     return dp[n];
+  }
+
+  /**
+   * 森林中的兔子
+   *
+   * <p>TODO
+   *
+   * <p>先对所有出现过的数字进行统计，然后再对数值按颜色分配
+   *
+   * @param cs
+   * @return
+   */
+  public int numRabbits(int[] answers) {
+    Map<Integer, Integer> counter = new HashMap<Integer, Integer>();
+    for (int answer : answers) {
+      counter.put(answer, counter.getOrDefault(answer, 0) + 1);
+    }
+    int count = 0;
+    for (Map.Entry<Integer, Integer> entry : counter.entrySet()) {
+      int y = entry.getKey(), x = entry.getValue();
+      count += (x + y) / (y + 1) * (y + 1);
+    }
+    return count;
   }
 
   /**
@@ -304,8 +329,7 @@ class OOptimalSolution {
 /**
  * 子数组，连续，子序列，不连续，即子数组相当于连续子序列
  *
- * <p>连续子区间的问题，可以考虑「前缀和」，经常与哈希表结合使用，因为希望遍历得到前缀和的时候，一边遍历一边记住结果，参考
- * https://leetcode-cn.com/circle/discuss/SrePlc/
+ * <p>连续子区间可考虑前缀和，常搭配哈希表，因为希望遍历得到前缀和的时候，一边遍历一边记住结果，参考 https://leetcode-cn.com/circle/discuss/SrePlc/
  *
  * <p>最长上升子序列(LIS):Longest Increasing Subsequence
  *
@@ -319,7 +343,7 @@ class OOptimalSolution {
  */
 class SSubArray {
   /**
-   * 最长重复子数组 / 最长公共子串，区分楼上子序列的代码
+   * 最长重复子数组 / 最长公共子串，区别于子序列的代码
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
@@ -351,7 +375,7 @@ class SSubArray {
   /**
    * 目标和，找到 nums 一个正子集与一个负子集，使其总和等于 target，统计这种可能性的总数
    *
-   * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和+序列总和，即 01 背包
+   * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和 + 序列总和，即 01 背包
    *
    * <p>dp[j] 表示填满 j 容积的包的方案数，即组合
    *
@@ -372,16 +396,18 @@ class SSubArray {
       sum += nums[i];
     }
     if ((target + sum) % 2 != 0) return 0;
-    int size = (target + sum) / 2;
-    if (size < 0) size = -size;
-    int[] dp = new int[size + 1];
+
+    int capacity = (target + sum) / 2;
+    capacity = capacity < 0 ? -capacity : capacity;
+
+    int[] dp = new int[capacity + 1];
     dp[0] = 1;
     for (int i = 0; i < nums.length; i++) {
-      for (int j = size; j >= nums[i]; j--) {
+      for (int j = capacity; j >= nums[i]; j--) {
         dp[j] += dp[j - nums[i]];
       }
     }
-    return dp[size];
+    return dp[capacity];
   }
 
   /**
@@ -415,51 +441,24 @@ class SSubArray {
 }
 
 /** 子序列 */
-class SSubSequence {
+class SSubSequence extends Dichotomy {
   /**
-   * 最长递增子序列 / 最长上升子序列，建议掌握 n^2 即可，而且输出路径更便捷
+   * 最长递增子序列 / 最长上升子序列，基于贪心
+   *
+   * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
+   *
+   * <p>tail[i] 表示长度为 i+1 的所有 LIS 的结尾的最小值
    *
    * <p>TODO 参考
-   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
-   *
-   * <p>dp[i] 表示 nums[:i-1] 的最长递增子序列
-   *
-   * <p>扩展1，时间复杂度 nlogn 参考
    * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
    *
-   * <p>扩展2，输出，分别记录 i & j 即可，参下 annotate
+   * <p>扩展1，输出路径，参考
+   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
    *
    * @param nums the nums
    * @return int int
    */
   public int lengthOfLIS(int[] nums) {
-    return lengthOfLIS1(nums);
-  }
-
-  private int lengthOfLIS1(int[] nums) {
-    int res = 0;
-    if (nums.length == 0) return res;
-    int[] dp = new int[nums.length];
-    for (int i = 0; i < nums.length; i++) {
-      // base case
-      dp[i] = 1;
-      int pivot = nums[i];
-      for (int j = 0; j < i; j++) {
-        if (nums[j] < pivot) {
-          dp[i] = Math.max(dp[i], dp[j] + 1);
-        }
-      }
-      res = Math.max(res, dp[i]);
-    }
-    return res;
-  }
-
-  // 如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小
-  // 如 3465 应该选 345 而非 346，基于贪心，二分与 dp，虽然原数组无序，参考
-  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
-  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
-  // tail[i] 表示长度为 i+1 的所有上升序列的结尾的最小值，如 [10,9,2,5,3,7,101,18] 中的 tail[1]=3 即 [2,3]
-  private int lengthOfLIS2(int[] nums) {
     int len = nums.length, end = 0;
     int[] tail = new int[len], dp = new int[len];
     tail[0] = nums[0];
@@ -470,7 +469,8 @@ class SSubSequence {
         tail[end] = nums[i];
         // dp[i] = end + 1;
       } else {
-        int lo = lowerBound(tail, nums[i], end);
+        // 替换
+        int lo = lowerBound(Arrays.copyOfRange(tail, 0, end + 1), nums[i]);
         tail[lo] = nums[i];
         // dp[i] = lo + 1;
       }
@@ -479,6 +479,8 @@ class SSubSequence {
     return end + 1;
   }
 
+  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
   private int[] getPath(int[] nums, int[] dp, int end) {
     int len = nums.length;
     int[] path = new int[end + 1];
@@ -492,16 +494,6 @@ class SSubSequence {
       }
     }
     return path;
-  }
-
-  private int lowerBound(int[] nums, int target, int end) {
-    int lo = 0, hi = end;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      if (nums[mid] >= target) hi = mid;
-      else lo = mid + 1;
-    }
-    return lo;
   }
 
   /**
@@ -647,53 +639,6 @@ class SSubSequence {
   }
 
   /**
-   * 判断子序列，双指针即可
-   *
-   * <p>扩展1，依次检查海量 s 是否均为 t 的子序列，参下
-   * https://leetcode-cn.com/problems/is-subsequence/solution/dui-hou-xu-tiao-zhan-de-yi-xie-si-kao-ru-he-kuai-s/
-   *
-   * @param s pattern
-   * @param t main
-   * @return boolean boolean
-   */
-  public boolean isSubsequence(String s, String t) {
-    return isSubsequence1(s, t);
-  }
-
-  private boolean isSubsequence1(String s, String t) {
-    int p1 = 0, p2 = 0;
-    while (p1 < s.length() && p2 < t.length()) {
-      if (s.charAt(p1) == t.charAt(p2)) p1 += 1;
-      p2 += 1;
-    }
-    return p1 == s.length();
-  }
-
-  // TODO KMP 思想，类似于用伪链表把相同的字符给链接起来
-  private boolean isSubsequence2(String s, String t) {
-    t = ' ' + t;
-    // 存储每一个位置上 a-z 的下一个字符出现的位置
-    int[][] dp = new int[t.length()][26];
-    for (char c = 'a'; c <= 'z'; c++) {
-      // 表示接下来不会在出现该字符
-      int nxtIdx = -1;
-      for (int i = t.length() - 1; i >= 0; i--) {
-        // dp[i][c-'a']  加上外层循环  就是对每一个位置的 a-z 字符的处理
-        dp[i][c - 'a'] = nxtIdx;
-        // 表示当前位置有该字符，那么指向下一个该字符出现的位置就要被更新为 i
-        if (t.charAt(i) == c) nxtIdx = i;
-      }
-    }
-    int idx = 0;
-    for (int i = 0; i < s.length(); i++) {
-      // 因为加了' ' 则之后在处理第一个字符的时候  如果是在第一行，就会去第一行，不影响之后字符的判断
-      idx = dp[idx][s.charAt(i) - 'a'];
-      if (idx == -1) return false;
-    }
-    return true;
-  }
-
-  /**
    * 正则表达式匹配，以下均基于 p 判定
    *
    * <p>TODO dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
@@ -726,193 +671,6 @@ class SSubSequence {
       }
     }
     return dp[s.length()][p.length()];
-  }
-}
-
-/** 前缀和，区间和满足 target */
-class PreSum {
-  /**
-   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
-   *
-   * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
-   *
-   * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
-   *
-   * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
-   *
-   * <p>扩展2，返回最大和的子序列
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int maxSubArray(int[] nums) {
-    int curSum = 0, res = nums[0];
-    for (int num : nums) {
-      curSum = curSum > 0 ? curSum + num : num;
-      res = Math.max(res, curSum);
-    }
-    return res;
-  }
-
-  /**
-   * 和为k的子数组
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
-   *
-   * <p>扩展1，求和为 k 的子数组中，最大的长度，参考「连续数组」
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int int
-   */
-  public int subarraySum(int[] nums, int k) {
-    // 对应的前缀和的个数
-    HashMap<Integer, Integer> idxBySum = new HashMap<>();
-    // 需要预存前缀和为 0，会漏掉前几位就满足的情况
-    // 如 [1,1,0]，k=2 如果没有这行代码，则会返回 0 漏掉 1+1=2 与 1+1+0=2
-    // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
-    idxBySum.put(0, 1);
-    int count = 0, preSum = 0;
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i];
-      // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
-      if (idxBySum.containsKey(preSum - k)) {
-        count += idxBySum.get(preSum - k);
-      }
-      idxBySum.put(preSum, idxBySum.getOrDefault(preSum, 0) + 1);
-    }
-    return count;
-  }
-
-  /**
-   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
-   *
-   * <p>TODO 前缀和
-   *
-   * <p>扩展1，k 倍区间方案数，参考
-   * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return boolean
-   */
-  public boolean checkSubarraySum(int[] nums, int k) {
-    HashMap<Integer, Integer> idxBySum = new HashMap<>();
-    idxBySum.put(0, -1);
-    int preSum = 0;
-    for (int i = 0; i < nums.length; ++i) {
-      preSum += nums[i];
-      int key = k == 0 ? preSum : preSum % k;
-      if (idxBySum.containsKey(key)) {
-        if (i - idxBySum.get(key) >= 2) return true;
-        // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
-        continue;
-      }
-      idxBySum.put(key, i);
-    }
-    return false;
-  }
-
-  /**
-   * 连续数组，找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
-   *
-   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
-   *
-   * @param nums the nums
-   * @return int
-   */
-  public int findMaxLength(int[] nums) {
-    int preSum = 0, maxLen = 0;
-    // 总和及其首次出现的下标
-    Map<Integer, Integer> idxBySum = new HashMap<>();
-    // 可能存在前缀和刚好满足条件的情况
-    idxBySum.put(0, -1);
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i] == 0 ? -1 : 1;
-      // 因为求的是最长的长度，只记录前缀和第一次出现的下标
-      if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
-      else idxBySum.put(preSum, i);
-    }
-    return maxLen;
-  }
-
-  /**
-   * 长度最小的子数组，满足和不少于 target
-   *
-   * <p>不能使用滑窗，因为下方缩窗的条件是整体满足 >=target，但可能已经满足的局部无法被收入
-   *
-   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
-   *
-   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
-   *
-   * @param target the target
-   * @param nums the nums
-   * @return int int
-   */
-  public int minSubArrayLen(int target, int[] nums) {
-    int res = Integer.MAX_VALUE, sum = 0;
-    int lo = 0, hi = 0;
-    while (hi < nums.length) {
-      sum += nums[hi];
-      while (sum >= target) {
-        res = Math.min(res, hi - lo + 1);
-        sum -= nums[lo];
-        lo += 1;
-      }
-      // 替换上一段 while
-      //      if (sum == target) {
-      //        // 入结果集
-      //        hi += 1;
-      //        continue;
-      //      }
-      //      while (sum > target) {
-      //        sum -= nums[lo];
-      //        if (sum == target) {
-      //          // 入结果集
-      //        }
-      //        lo += 1;
-      //      }
-      hi += 1;
-    }
-    return res == Integer.MAX_VALUE ? 0 : res;
-  }
-
-  /**
-   * 和至少为k的最短子数组，单调队列 & 前缀和
-   *
-   * <p>TODO
-   *
-   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int int
-   */
-  public int shortestSubarray(int[] nums, int k) {
-    int len = nums.length;
-    long[] prefix = new long[len + 1];
-    for (int i = 0; i < len; i++) {
-      prefix[i + 1] = prefix[i] + (long) nums[i];
-    }
-    // len+1 is impossible
-    int res = len + 1;
-    // 单调队列
-    Deque<Integer> mq = new LinkedList<>();
-    for (int i = 0; i < prefix.length; i++) {
-      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
-      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
-        mq.removeLast();
-      }
-      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
-        res = Math.min(res, i - mq.removeFirst());
-      }
-      mq.addLast(i);
-    }
-    return res < len + 1 ? res : -1;
   }
 }
 
@@ -977,7 +735,7 @@ class PPath {
    *
    * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
    *
-   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历
+   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历，参下 annotate
    *
    * <p>扩展2，存在负值点
    *

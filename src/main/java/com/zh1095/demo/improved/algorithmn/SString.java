@@ -58,25 +58,6 @@ public class SString extends DefaultSString {
   }
 
   /**
-   * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
-   *
-   * <p>TODO 参考 https://juejin.cn/post/6844904058357022728
-   *
-   * @param num the num
-   * @return string string
-   */
-  public String toHex(int num) {
-    if (num == 0) return "0";
-    long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
-    StringBuilder res = new StringBuilder();
-    while (cur != 0) {
-      res.append(HEX_CHAR.charAt((int) (cur % 16)));
-      cur /= 16;
-    }
-    return res.reverse().toString();
-  }
-
-  /**
    * 字符串相乘，竖式，区分当前位和高位即可，最终需跳过前导零
    *
    * <p>扩展1，不能使用 vector 而是新建 string，使用加法，即每一轮内循环均产出一个字符串，外循环相加，不适合大数
@@ -112,80 +93,22 @@ public class SString extends DefaultSString {
   }
 
   /**
-   * 最长公共前缀，纵向扫描
+   * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
    *
-   * @param strs the strs
+   * <p>TODO 参考 https://juejin.cn/post/6844904058357022728
+   *
+   * @param num the num
    * @return string string
    */
-  public String longestCommonPrefix(String[] strs) {
-    if (strs == null || strs.length == 0) {
-      return "";
+  public String toHex(int num) {
+    if (num == 0) return "0";
+    long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
+    StringBuilder res = new StringBuilder();
+    while (cur != 0) {
+      res.append(HEX_CHAR.charAt((int) (cur % 16)));
+      cur /= 16;
     }
-    int count = strs.length;
-    for (int i = 0; i < strs[0].length(); i++) {
-      char pivot = strs[0].charAt(i);
-      for (int j = 1; j < count; j++) {
-        if (i == strs[j].length() || strs[j].charAt(i) != pivot) {
-          return strs[0].substring(0, i);
-        }
-      }
-    }
-    return strs[0];
-  }
-
-  /**
-   * 最长回文子串，中心扩散
-   *
-   * @param s the s
-   * @return the string
-   */
-  public String longestPalindrome(String s) {
-    if (s == null || s.length() < 1) return "";
-    int start = 0, end = 0;
-    for (int i = 0; i < s.length(); i++) {
-      int odd = findLongestPalindrome(s, i, i), even = findLongestPalindrome(s, i, i + 1);
-      int len = Math.max(odd, even);
-      if (len > end - start) {
-        start = i - (len - 1) / 2;
-        end = i + len / 2;
-      }
-    }
-    return s.substring(start, end + 1);
-  }
-
-  // 分别从 lo&hi 扩散，直到二者所在字符不同
-  private int findLongestPalindrome(String s, int lo, int hi) {
-    while (lo > -1 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
-      lo -= 1;
-      hi += 1;
-    }
-    return hi - lo - 1;
-  }
-
-  /**
-   * 验证回文串，忽略空格与大小写
-   *
-   * @param s the s
-   * @return boolean boolean
-   */
-  public boolean isPalindrome(String s) {
-    int lo = 0, hi = s.length() - 1;
-    while (lo < hi) {
-      while (lo < hi && !Character.isLetterOrDigit(s.charAt(lo))) {
-        lo += 1;
-      }
-      while (lo < hi && !Character.isLetterOrDigit(s.charAt(hi))) {
-        hi -= 1;
-      }
-      if (lo < hi) {
-        if (Character.toLowerCase(s.charAt(lo)) != Character.toLowerCase(s.charAt(hi))) {
-          return false;
-        }
-        lo += 1;
-        hi -= 1;
-      }
-    }
-    return true;
+    return res.reverse().toString();
   }
 
   /**
@@ -405,7 +328,7 @@ class WWindow {
  */
 class SStack {
   /**
-   * 有效的括号
+   * 有效的括号，括号相关的参考「最长有效括号」与「括号生成」
    *
    * <p>扩展1，需保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，在出入栈时更新，参下 annotate
    *
@@ -437,7 +360,7 @@ class SStack {
       if (stack.size() == 0 || stack.getLast() == pairs.get(ch)) {
         return false;
       }
-      // level = Math.max((priorities.indexOf(stack.get(stack.size() - 1)) + 1) % 3, level);
+      // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
       stack.removeLast();
     }
     //    int curLeft1 = 0, curLeft2 = 0, curLeft3 = 0;
@@ -579,6 +502,132 @@ class SStack {
   //  }
 }
 
+/** 子串相关 */
+class SSubString {
+  /**
+   * 最长公共前缀，纵向扫描
+   *
+   * @param strs the strs
+   * @return string string
+   */
+  public String longestCommonPrefix(String[] strs) {
+    // 需要特判
+    if (strs.length == 0) return "";
+    int count = strs.length;
+    for (int i = 0; i < strs[0].length(); i++) {
+      char pivot = strs[0].charAt(i);
+      for (int j = 1; j < count; j++) {
+        if (i == strs[j].length() || strs[j].charAt(i) != pivot) {
+          return strs[0].substring(0, i);
+        }
+      }
+    }
+    return strs[0];
+  }
+
+  /**
+   * 最长回文子串，中心扩散
+   *
+   * @param s the s
+   * @return the string
+   */
+  public String longestPalindrome(String s) {
+    if (s == null || s.length() < 1) return "";
+    int lo = 0, hi = 0;
+    for (int i = 0; i < s.length(); i++) {
+      int odd = findLongestPalindrome(s, i, i), even = findLongestPalindrome(s, i, i + 1);
+      int len = Math.max(odd, even);
+      if (len > hi - lo) {
+        lo = i - (len - 1) / 2;
+        hi = i + len / 2;
+      }
+    }
+    return s.substring(lo, hi + 1);
+  }
+
+  // 分别从 lo & hi 扩散，直到二者所在字符不同
+  private int findLongestPalindrome(String s, int lo, int hi) {
+    while (lo > -1 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
+      lo -= 1;
+      hi += 1;
+    }
+    return hi - lo - 1;
+  }
+
+  /**
+   * 验证回文串，忽略空格与大小写
+   *
+   * @param s the s
+   * @return boolean boolean
+   */
+  public boolean isPalindrome(String s) {
+    int lo = 0, hi = s.length() - 1;
+    while (lo < hi) {
+      while (lo < hi && !Character.isLetterOrDigit(s.charAt(lo))) {
+        lo += 1;
+      }
+      while (lo < hi && !Character.isLetterOrDigit(s.charAt(hi))) {
+        hi -= 1;
+      }
+      if (lo < hi) {
+        if (Character.toLowerCase(s.charAt(lo)) != Character.toLowerCase(s.charAt(hi))) {
+          return false;
+        }
+        lo += 1;
+        hi -= 1;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 判断子序列，顺序满足，因此双指针正序遍历即可
+   *
+   * <p>扩展1，依次检查海量 s 是否均为 t 的子序列，参下
+   * https://leetcode-cn.com/problems/is-subsequence/solution/dui-hou-xu-tiao-zhan-de-yi-xie-si-kao-ru-he-kuai-s/
+   *
+   * @param s pattern
+   * @param t main
+   * @return boolean boolean
+   */
+  public boolean isSubsequence(String s, String t) {
+    return isSubsequence1(s, t);
+  }
+
+  private boolean isSubsequence1(String s, String t) {
+    int p1 = 0, p2 = 0;
+    while (p1 < s.length() && p2 < t.length()) {
+      if (s.charAt(p1) == t.charAt(p2)) p1 += 1;
+      p2 += 1;
+    }
+    return p1 == s.length();
+  }
+
+  // TODO KMP 思想，类似于用伪链表把相同的字符给链接起来
+  private boolean isSubsequence2(String s, String t) {
+    t = ' ' + t;
+    // 存储每一个位置上 a-z 的下一个字符出现的位置
+    int[][] dp = new int[t.length()][26];
+    for (char c = 'a'; c <= 'z'; c++) {
+      // 表示接下来不会在出现该字符
+      int nxtIdx = -1;
+      for (int i = t.length() - 1; i >= 0; i--) {
+        // dp[i][c-'a']  加上外层循环  就是对每一个位置的 a-z 字符的处理
+        dp[i][c - 'a'] = nxtIdx;
+        // 表示当前位置有该字符，那么指向下一个该字符出现的位置就要被更新为 i
+        if (t.charAt(i) == c) nxtIdx = i;
+      }
+    }
+    int idx = 0;
+    for (int i = 0; i < s.length(); i++) {
+      // 因为加了' ' 则之后在处理第一个字符的时候  如果是在第一行，就会去第一行，不影响之后字符的判断
+      idx = dp[idx][s.charAt(i) - 'a'];
+      if (idx == -1) return false;
+    }
+    return true;
+  }
+}
+
 /** 字符串遍历与编码相关 */
 class EEncoding extends SString {
   /**
@@ -695,6 +744,34 @@ class EEncoding extends SString {
 /** 子串相关，单词搜索参考 TTree */
 class WWord extends DefaultSString {
   /**
+   * 比较版本号，逐个区间计数
+   *
+   * @param version1 the version 1
+   * @param version2 the version 2
+   * @return int int
+   */
+  public int compareVersion(String version1, String version2) {
+    int len1 = version1.length(), len2 = version2.length();
+    int p1 = 0, p2 = 0;
+    while (p1 < len1 || p2 < len2) {
+      int n1 = 0, n2 = 0;
+      while (p1 < len1 && version1.charAt(p1) != '.') {
+        n1 = n1 * 10 + version1.charAt(p1) - '0';
+        p1 += 1;
+      }
+      // 跳过点号
+      p1 += 1;
+      while (p2 < len2 && version2.charAt(p2) != '.') {
+        n2 = n2 * 10 + version2.charAt(p2) - '0';
+        p2 += 1;
+      }
+      p2 += 1;
+      if (n1 != n2) return n1 > n2 ? 1 : -1;
+    }
+    return 0;
+  }
+
+  /**
    * 翻转字符串里的单词，对于 Java 不可能实现实际的 O(1) space，因此要求 s 原地即可
    *
    * <p>去空格 & 两次反转，全串与逐个单词
@@ -766,36 +843,6 @@ class WWord extends DefaultSString {
       }
     }
     return dp[s.length()];
-  }
-
-  /**
-   * 比较版本号，逐个区间统计并比对
-   *
-   * @param version1 the version 1
-   * @param version2 the version 2
-   * @return int int
-   */
-  public int compareVersion(String version1, String version2) {
-    int len1 = version1.length(), len2 = version2.length();
-    int p1 = 0, p2 = 0;
-    while (p1 < len1 || p2 < len2) {
-      int n1 = 0, n2 = 0;
-      while (p1 < len1 && version1.charAt(p1) != '.') {
-        n1 = n1 * 10 + version1.charAt(p1) - '0';
-        p1 += 1;
-      }
-      // 跳过点号
-      p1 += 1;
-      while (p2 < len2 && version2.charAt(p2) != '.') {
-        n2 = n2 * 10 + version2.charAt(p2) - '0';
-        p2 += 1;
-      }
-      p2 += 1;
-      if (n1 != n2) {
-        return n1 > n2 ? 1 : -1;
-      }
-    }
-    return 0;
   }
 
   /**

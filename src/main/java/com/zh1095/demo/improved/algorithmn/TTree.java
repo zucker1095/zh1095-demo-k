@@ -188,7 +188,7 @@ public class TTree {
   }
 
   /**
-   * 路径总和I，前序遍历，II 参下回溯
+   * 路径总和，从根出发要求达到叶，前序遍历，记录路径则参下「路径总和II」回溯
    *
    * @param root the root
    * @param targetSum the target sum
@@ -196,9 +196,10 @@ public class TTree {
    */
   public boolean hasPathSum(TreeNode root, int targetSum) {
     if (root == null) return false;
-    if (root.left == null && root.right == null) return targetSum - root.val == 0;
+    if (root.left == null && root.right == null) return targetSum == root.val;
+    // 剪枝
     return hasPathSum(root.left, targetSum - root.val)
-        || hasPathSum(root.right, targetSum - root.val); // 其一
+        || hasPathSum(root.right, targetSum - root.val);
   }
 
   /**
@@ -412,7 +413,7 @@ class Postorder {
   }
 
   /**
-   * 二叉树中的最大路径和，后序遍历
+   * 二叉树中的最大路径和，后序遍历，模板与「二叉树但直径」近乎一致
    *
    * <p>三步曲，先取单侧 & 更新双侧结果 & 返回单侧更大者
    *
@@ -472,7 +473,7 @@ class Postorder {
   }
 
   /**
-   * 二叉树的直径，后序遍历
+   * 二叉树的直径，后序遍历，模板与「二叉树但最大路径和」近乎一致
    *
    * @param root the root
    * @return int int
@@ -857,7 +858,7 @@ class BBST {
  */
 class BBacktracking extends DDFS {
   /**
-   * 路径总和II，需要记录路径
+   * 路径总和II，从根出发要求达到叶，需要记录路径
    *
    * @param root the root
    * @param targetSum the target sum
@@ -1048,69 +1049,14 @@ class BBacktracking extends DDFS {
   }
 
   /**
-   * 复原IP地址
-   *
-   * @param s the s
-   * @return list list
-   */
-  public List<String> restoreIpAddresses(String s) {
-    List<String> res = new ArrayList<>();
-    // 特判
-    if (s.length() > 12 || s.length() < 4) {
-      return res;
-    }
-    backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
-    return res;
-  }
-
-  private void backtracking6(
-      String s, Deque<String> path, List<String> res, int start, int residue) {
-    if (start == s.length()) {
-      if (residue == 0) {
-        res.add(String.join(".", path));
-      }
-      return;
-    }
-    for (int i = start; i < start + 3 && i < s.length(); i++) {
-      if (residue * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
-        continue;
-      }
-      path.addLast(s.substring(start, i + 1));
-      backtracking6(s, path, res, i + 1, residue - 1);
-      path.removeLast();
-    }
-  }
-
-  private boolean isValidIpSegment(String s, int lo, int hi) {
-    int res = 0;
-    if (hi > lo && s.charAt(lo) == '0') {
-      return false;
-    }
-    while (lo <= hi) {
-      res = res * 10 + s.charAt(lo) - '0';
-      lo += 1;
-    }
-    return res >= 0 && res <= 255;
-  }
-
-  /**
-   * 验证IP地址
-   *
-   * <p>TODO
-   *
-   * @param queryIP
-   * @return
-   */
-  // public String validIPAddress(String queryIP) {}
-
-  /**
-   * 括号生成
+   * 括号生成，括号相关的参考「最长有效括号」与「有效的括号」
    *
    * @param n the n
    * @return list list
    */
   public List<String> generateParenthesis(int n) {
     List<String> res = new ArrayList<>();
+    // 需要特判，否则入串
     if (n <= 0) return res;
     backtracking7(n, n, "", res);
     return res;
@@ -1170,40 +1116,155 @@ class BBacktracking extends DDFS {
   }
 
   /**
-   * 解数独，特判可移除，暴力回溯
+   * 分割回文串
+   *
+   * <p>1.预处理所有子串的回文情况
+   *
+   * <p>2.暴力回溯
    *
    * <p>TODO 参考
-   * https://leetcode-cn.com/problems/sudoku-solver/solution/hui-su-fa-jie-shu-du-by-i_use_python/
+   * https://leetcode-cn.com/problems/palindrome-partitioning/solution/hui-su-you-hua-jia-liao-dong-tai-gui-hua-by-liweiw/
+   *
+   * @param s
+   * @return
+   */
+  public List<List<String>> partition(String s) {
+    List<List<String>> res = new ArrayList<>();
+    backtracking11(s, new ArrayDeque<String>(), res, 0, parseString(s));
+    return res;
+  }
+
+  // 预处理 dp[i][j] 表示 s[i][j] 是否是回文
+  // 状态转移，在 s[i] == s[j] 的时候，dp[i][j] 参考 dp[i + 1][j - 1]
+  private boolean[][] parseString(String s) {
+    int len = s.length();
+    char[] chs = s.toCharArray();
+    boolean[][] dp = new boolean[len][len];
+    for (int hi = 0; hi < len; hi++) {
+      // 双指针碰撞表示一个字符的时候也需要判断
+      for (int lo = 0; lo <= hi; lo++) {
+        dp[lo][hi] = chs[lo] == chs[hi] && (hi - lo <= 2 || dp[lo + 1][hi - 1]);
+      }
+    }
+    return dp;
+  }
+
+  private void backtracking11(
+      String s, Deque<String> path, List<List<String>> res, int idx, boolean[][] dp) {
+    int len = s.length();
+    if (idx == len) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int i = idx; i < len; i++) {
+      if (!dp[idx][i]) continue;
+      path.addLast(s.substring(idx, i + 1));
+      backtracking11(s, path, res, i + 1, dp);
+      path.removeLast();
+    }
+  }
+
+  /**
+   * 复原IP地址，特判多
+   *
+   * @param s the s
+   * @return list list
+   */
+  public List<String> restoreIpAddresses(String s) {
+    List<String> res = new ArrayList<>();
+    // 特判
+    if (s.length() > 12 || s.length() < 4) {
+      return res;
+    }
+    backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
+    return res;
+  }
+
+  private void backtracking6(
+      String s, Deque<String> path, List<String> res, int start, int residue) {
+    if (start == s.length()) {
+      if (residue == 0) res.add(String.join(".", path));
+      return;
+    }
+    for (int i = start; i < start + 3 && i < s.length(); i++) {
+      if (residue * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
+        continue;
+      }
+      path.addLast(s.substring(start, i + 1));
+      backtracking6(s, path, res, i + 1, residue - 1);
+      path.removeLast();
+    }
+  }
+
+  private boolean isValidIpSegment(String s, int lo, int hi) {
+    int res = 0;
+    if (hi > lo && s.charAt(lo) == '0') {
+      return false;
+    }
+    while (lo <= hi) {
+      res = res * 10 + s.charAt(lo) - '0';
+      lo += 1;
+    }
+    return res >= 0 && res <= 255;
+  }
+
+  /**
+   * 验证IP地址
+   *
+   * <p>TODO
+   *
+   * @param queryIP
+   * @return
+   */
+  // public String validIPAddress(String queryIP) {}
+
+  /**
+   * 解数独，暴力回溯
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/sudoku-solver/solution/37-jie-shu-du-hui-su-sou-suo-suan-fa-xiang-jie-by-/
    *
    * @param board
    */
   public void solveSudoku(char[][] board) {
-    boolean[][] row = new boolean[9][9], col = new boolean[9][9], box = new boolean[9][9];
-    for (int i = 0; i < 9; i++) {
-      for (int j = 0; j < 9; j++) {
-        if (board[i][j] == '.') continue;
-        int num = board[i][j] - '1', k = (i / 3) * 3 + j / 3;
-        row[i][num] = col[j][num] = box[k][num] = true;
-      }
-    }
-    backtracking10(board, 0, row, col, box);
+    backtracking10(board);
   }
 
-  private boolean backtracking10(
-      char[][] board, int n, boolean[][] row, boolean[][] col, boolean[][] box) {
-    if (n == 81) return true;
-    int i = n / 9, j = n % 9;
-    if (board[i][j] != '.') return backtracking10(board, n + 1, row, col, box);
-    int k = (i / 3) * 3 + j / 3;
-    for (int num = 0; num < 9; num++) {
-      if (row[i][num] || col[j][num] || box[k][num]) continue;
-      board[i][j] = (char) (num + '1');
-      row[i][num] = col[j][num] = box[k][num] = true;
-      if (backtracking10(board, n + 1, row, col, box)) return true;
-      row[i][num] = col[j][num] = box[k][num] = false;
+  // 1.跳过原始数字
+  // 2.位置放 k 是否合适，是则，找到合适一组立刻返回
+  // 3.九个数都试完，说明该棋盘无解
+  private boolean backtracking10(char[][] board) {
+    for (int y = 0; y < 9; y++) {
+      for (int x = 0; x < 9; x++) {
+        if (board[y][x] != '.') continue;
+        for (char k = '1'; k <= '9'; k++) {
+          if (!isValidSudoku(y, x, k, board)) continue;
+          board[y][x] = k;
+          if (backtracking10(board)) return true;
+          board[y][x] = '.';
+        }
+        return false;
+      }
     }
-    board[i][j] = '.';
-    return false;
+    // 遍历完没有返回 false，说明找到合适棋盘位置
+    return true;
+  }
+
+  // 判断棋盘是否合法有如下三个维度，同行，同列，九宫格里是否重复
+  private boolean isValidSudoku(int row, int col, char val, char[][] board) {
+    for (int i = 0; i < 9; i++) {
+      if (board[row][i] == val) return false;
+    }
+    for (int j = 0; j < 9; j++) {
+      if (board[j][col] == val) return false;
+    }
+    int startRow = (row / 3) * 3, startCol = (col / 3) * 3;
+    for (int i = startRow; i < startRow + 3; i++) {
+      for (int j = startCol; j < startCol + 3; j++) {
+        if (board[i][j] == val) return false;
+      }
+    }
+    return true;
   }
 }
 
@@ -1214,7 +1275,7 @@ class BBacktracking extends DDFS {
  *
  * <p>回溯 & dfs 框架基本一致，但前者适用 tree 这类不同分支互不连通的结构，而后者更适合 graph 这类各个分支都可能连通的
  *
- * <p>因此后者不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复，因为要避免环路
+ * <p>因此后者为避免环路，不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复
  */
 class DDFS {
   protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
@@ -1225,7 +1286,8 @@ class DDFS {
   /**
    * 岛屿数量
    *
-   * <p>https://leetcode-cn.com/problems/number-of-islands/solution/dao-yu-lei-wen-ti-de-tong-yong-jie-fa-dfs-bian-li-/
+   * <p>参考
+   * https://leetcode-cn.com/problems/number-of-islands/solution/dao-yu-lei-wen-ti-de-tong-yong-jie-fa-dfs-bian-li-/
    *
    * @param grid the grid
    * @return int int
@@ -1362,7 +1424,7 @@ class DDFS {
    * @param k the k
    * @return list list
    */
-  public List<Integer> distanceK(TreeNode root, TrzeeNode target, int k) {
+  public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
     // 首先把树分为两棵，一棵以目标节点为根，一棵以目标节点父为根
     dfs4(root, target, null);
     // 搜索以目标节点为根的树深度为 k 的节点

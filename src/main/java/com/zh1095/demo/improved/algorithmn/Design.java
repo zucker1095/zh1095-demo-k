@@ -3,207 +3,11 @@ package com.zh1095.demo.improved.algorithmn;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** 收集所有场景设计 & 系统设计类 */
 public class Design {}
-
-/** 缓存类，LRU & LFU 参考 OOthers */
-class CCache {
-  private final int capacity;
-  private final Map<String, CacheItem> data = new HashMap<String, CacheItem>();
-
-  private class CacheItem {
-    /** The Key. */
-    String key;
-
-    /** The Value. */
-    Object value;
-
-    /** The Expire. */
-    long expire;
-
-    private int lru;
-    private final Long createdAt;
-    private boolean deleted;
-
-    /**
-     * Instantiates a new Cache item.
-     *
-     * @param key the key
-     * @param value the value
-     */
-    public CacheItem(String key, Object value) {
-      this.key = key;
-      this.value = value;
-      this.expire = Integer.MAX_VALUE;
-      this.createdAt = System.currentTimeMillis();
-    }
-
-    /**
-     * Instantiates a new Cache item.
-     *
-     * @param key the key
-     * @param value the value
-     * @param expire the expire
-     */
-    public CacheItem(String key, Object value, Long expire) {
-      this.key = key;
-      this.value = value;
-      this.expire = expire;
-      this.createdAt = System.currentTimeMillis();
-    }
-
-    /**
-     * Is expired boolean.
-     *
-     * @param currentTimeStamp the current time stamp
-     * @return the boolean
-     */
-    public boolean isExpired(Long currentTimeStamp) {
-      return currentTimeStamp - currentTimeStamp > expire;
-    }
-
-    /**
-     * Del boolean.
-     *
-     * @return the boolean
-     */
-    public boolean del() {
-      if (deleted) return false;
-      return deleted = true;
-    }
-  }
-
-  /**
-   * Instantiates a new C cache.
-   *
-   * @param capacity the capacity
-   */
-  public CCache(int capacity) {
-    this.capacity = capacity;
-    new Thread(this::gcWorker);
-  }
-
-  /**
-   * Get object.
-   *
-   * @param key the key
-   * @return the object
-   */
-  public Object get(String key) {
-    return data.get(key).value;
-  }
-
-  /**
-   * Set.
-   *
-   * @param key the key
-   * @param val the val
-   */
-  public void set(String key, Object val) {
-    data.put(key, new CacheItem(key, val));
-  }
-
-  /**
-   * Del.
-   *
-   * @param key the key
-   */
-  public void del(String key) {}
-
-  /**
-   * Expire.
-   *
-   * @param key the key
-   * @param duration the duration
-   */
-  public void expire(String key, Long duration) {}
-
-  private void gcWorker() {}
-}
-
-/** 容器类 */
-class Container {
-  /**
-   * 实现 HashMap
-   *
-   * @author cenghui
-   */
-  public class HHashMap {
-    private int size;
-    private HHashMapNode[] buckets;
-
-    private class HHashMapNode {
-      /** The Val. */
-      public Object val;
-
-      /** The Next. */
-      public HHashMapNode next;
-
-      /**
-       * Instantiates a new H hash map node.
-       *
-       * @param val the val
-       */
-      public HHashMapNode(Object val) {
-        this.val = val;
-      }
-    }
-
-    /**
-     * Instantiates a new H hash map.
-     *
-     * @param capacity the capacity
-     */
-    public HHashMap(int capacity) {
-      this.buckets = new HHashMapNode[capacity];
-    }
-
-    /**
-     * Get object.
-     *
-     * @param key the key
-     * @return the object
-     */
-    public Object get(int key) {
-      int idx = hashcode(key);
-      return buckets[idx];
-    }
-
-    /**
-     * Set.
-     *
-     * @param key the key
-     * @param value the value
-     */
-    public void set(int key, Object value) {
-      int idx = hashcode(key);
-      if (buckets[idx] == null) {
-        buckets[idx] = new HHashMapNode(value);
-        size += 1;
-        if (size == buckets.length) resize();
-        return;
-      }
-      HHashMapNode cur = buckets[idx];
-      while (cur.next != null) cur = cur.next;
-      cur.next = new HHashMapNode(value);
-    }
-
-    private int hashcode(int key) {
-      return key % buckets.length;
-    }
-
-    private void resize() {
-      HHashMapNode[] newBuckets = new HHashMapNode[buckets.length * 2];
-      System.arraycopy(buckets, 0, newBuckets, 0, buckets.length);
-      buckets = newBuckets;
-    }
-  }
-}
 
 /** 压缩类 */
 class Compress {
@@ -215,13 +19,6 @@ class Compress {
   public class Trie {
     private final int ALPHABET_SIZE = 26;
     private TrieNode root;
-
-    private class TrieNode {
-      private final TrieNode[] children = new TrieNode[ALPHABET_SIZE];
-      private boolean isEndOfWord = false; // 默认
-      // isEndOfWord = false;
-      // for (int i = 0; i < ALPHABET_SIZE; i++) children[i] = null;
-    }
 
     /**
      * 如果不存在，则插入，如果属于某个的前缀，则标记为叶
@@ -256,7 +53,15 @@ class Compress {
       }
       return cur.isEndOfWord;
     }
+
+    private class TrieNode {
+      private final TrieNode[] children = new TrieNode[ALPHABET_SIZE];
+      private boolean isEndOfWord = false; // 默认
+      // isEndOfWord = false;
+      // for (int i = 0; i < ALPHABET_SIZE; i++) children[i] = null;
+    }
   }
+
   /**
    * 位图
    *
@@ -317,50 +122,13 @@ class Compress {
       bits[idx] &= ~(1 << offset);
     }
   }
+
   /**
    * Huffman Encoding，适用于已知压缩
    *
    * @author cenghui
    */
   public class Huffman {
-    private class Node {
-      /** The Ch. */
-      Character ch;
-
-      /** The Freq. */
-      int freq;
-
-      /** The Left. */
-      Node left = null,
-          /** The Right. */
-          right = null;
-
-      /**
-       * Instantiates a new Node.
-       *
-       * @param ch the ch
-       * @param freq the freq
-       */
-      public Node(Character ch, int freq) {
-        this.ch = ch;
-        this.freq = freq;
-      }
-
-      /**
-       * Instantiates a new Node.
-       *
-       * @param ch the ch
-       * @param freq the freq
-       * @param left the left
-       * @param right the right
-       */
-      public Node(Character ch, int freq, Node left, Node right) {
-        this.ch = ch;
-        this.freq = freq;
-        this.left = left;
-        this.right = right;
-      }
-    }
     /**
      * Build huffman tree.
      *
@@ -415,6 +183,7 @@ class Compress {
         while (index < sb.length() - 1) index = decode(root, index, sb);
       }
     }
+
     // Traverse the Huffman Tree and store Huffman Codes in a map.
     private void encode(Node root, String str, Map<Character, String> huffmanCode) {
       if (root == null) return;
@@ -424,6 +193,7 @@ class Compress {
       encode(root.left, str + '0', huffmanCode);
       encode(root.right, str + '1', huffmanCode);
     }
+
     // Traverse the Huffman Tree and decode the encoded string
     private int decode(Node root, int index, StringBuilder sb) {
       if (root == null) return index;
@@ -437,7 +207,47 @@ class Compress {
       index = decode(root, index, sb);
       return index;
     }
+
+    private class Node {
+      /** The Ch. */
+      Character ch;
+
+      /** The Freq. */
+      int freq;
+
+      /** The Left. */
+      Node left = null,
+          /** The Right. */
+          right = null;
+
+      /**
+       * Instantiates a new Node.
+       *
+       * @param ch the ch
+       * @param freq the freq
+       */
+      public Node(Character ch, int freq) {
+        this.ch = ch;
+        this.freq = freq;
+      }
+
+      /**
+       * Instantiates a new Node.
+       *
+       * @param ch the ch
+       * @param freq the freq
+       * @param left the left
+       * @param right the right
+       */
+      public Node(Character ch, int freq, Node left, Node right) {
+        this.ch = ch;
+        this.freq = freq;
+        this.left = left;
+        this.right = right;
+      }
+    }
   }
+
   /**
    * 短网址设计 https://www.geeksforgeeks.org/system-design-url-shortening-service/
    *
@@ -452,10 +262,6 @@ class Compress {
    * @author cenghui
    */
   public class TinyUrl {
-    private class UrlItem {
-      /** The Long url. */
-      String longUrl;
-    }
     /** The Long urls. */
     // tinyUrl:longUrl
     Map<String, UrlItem> longUrls = new ConcurrentHashMap<String, UrlItem>(10);
@@ -504,8 +310,16 @@ class Compress {
     private String decoding(String tinyUrl) {
       return tinyUrl;
     }
+
+    private class UrlItem {
+      /** The Long url. */
+      String longUrl;
+    }
   }
 }
+
+/** 容器类 */
+class Container {}
 
 /** 三种常用的限流算法 */
 class Limiter {
@@ -653,113 +467,117 @@ class Limiter {
   }
 }
 
-/**
- * 设计社交，朋友圈可参考，以下基于后者，因此 followed & follower 视为双向连通
- *
- * <p>https://www.geeksforgeeks.org/design-twitter-a-system-design-interview-question/
- *
- * <p>Timeline - User，查询某个用户 & Home，查询某个用户的所有关注用户，即朋友圈 & Search，搜索以上所有 tweet，核心为 HomeTimeline
- *
- * <p>Characteristics - 高并发读 & 读写比>>1 & 最终一致性
- *
- * <p>Bottleneck1 select 查询瓶颈 m*n，在朋友圈池内搜索 m 条圈，并遍历当前用户的 n 个好友
- *
- * <p>Bottleneck2 a celebrity
- */
-class Twitter {
+/** 缓存类，LRU & LFU 参考 OOthers */
+class CCache {
+  private final int capacity;
+  private final Map<String, CacheItem> data = new HashMap<String, CacheItem>();
 
-  /** The type Handler. */
-  public class Handler {
-    /** The type Timeline server. */
-    class TimelineServer {
-      /** The type User timeline. */
-      // 基于 TweetTable 加上 caching layer 即可
-      class UserTimeline {}
-
-      /** The type Home timeline. */
-      // 基于 UserTimeline 提供的 caching layer，某人发布一条 tweet 后续流程如下
-      // a.活跃用户
-      // 1.将完整 row insert DB & caching
-      // 2.通过 FollowersTable 获取该用户所有 follower
-      // 3.O(n) 遍历 push tweet_id 至 HomeTimeline
-      // 4.某个 follower 只查看其 HomeTimeline 拥有的 tweet_id 即可
-      // b.对于 celebrity
-      // 1.基于一定阈值 caching 所有 celebrity 的 user_id
-      // 2.当该 celebrity 发布 tweet，不获取其 follower
-      // 3.某个 follower 查看其 HomeTimeline 时，单独遍历其所有 celebrity 的 UserTimeline
-      // 与该 follower 的 HomeTimeline混合
-      // c.非活跃用户不计算 HomeTimeline
-      class HomeTimeline {
-        /** The User id. */
-        int user_id;
-
-        /** The Tweet ids. */
-        BlockingQueue<Integer> tweetIds = new ArrayBlockingQueue<Integer>(5);
-      }
-
-      /** The type Search timeline. */
-      // 基于 HomeTimeline 通过的队列
-      class SearchTimeline {}
-    }
-
-    /** The type Search server. */
-    class SearchServer {}
-
-    /** The type Tweet writer server. */
-    class TweetWriterServer {}
+  /**
+   * Instantiates a new C cache.
+   *
+   * @param capacity the capacity
+   */
+  public CCache(int capacity) {
+    this.capacity = capacity;
+    new Thread(this::gcWorker);
   }
 
-  /** The type Dao. */
-  public class Dao {
-    /** The type Record. */
-    class Record {}
-
-    /** indeed */
-    class RemoteCache {}
-
-    /** maybe */
-    class LocalCache {}
+  /**
+   * Get object.
+   *
+   * @param key the key
+   * @return the object
+   */
+  public Object get(String key) {
+    return data.get(key).value;
   }
 
-  /** The type Model. */
-  public class Model {
-    /** The type User table. */
-    class UserTable {
-      /** The User id. */
-      int user_id; // auto-increment
+  /**
+   * Set.
+   *
+   * @param key the key
+   * @param val the val
+   */
+  public void set(String key, Object val) {
+    data.put(key, new CacheItem(key, val));
+  }
 
-      /** The User name. */
-      String user_name;
+  /**
+   * Del.
+   *
+   * @param key the key
+   */
+  public void del(String key) {}
+
+  /**
+   * Expire.
+   *
+   * @param key the key
+   * @param duration the duration
+   */
+  public void expire(String key, Long duration) {}
+
+  private void gcWorker() {}
+
+  private class CacheItem {
+    private final Long createdAt;
+    /** The Key. */
+    String key;
+    /** The Value. */
+    Object value;
+    /** The Expire. */
+    long expire;
+    private int lru;
+    private boolean deleted;
+
+    /**
+     * Instantiates a new Cache item.
+     *
+     * @param key the key
+     * @param value the value
+     */
+    public CacheItem(String key, Object value) {
+      this.key = key;
+      this.value = value;
+      this.expire = Integer.MAX_VALUE;
+      this.createdAt = System.currentTimeMillis();
     }
 
-    /** The type Tweet table. */
-    class TweetTable {
-      /** The Tweet id. */
-      int tweet_id; // auto-increment
-
-      /** The User id. */
-      int user_id; // primary of UserTable
-
-      /** The Content. */
-      String content; // text
+    /**
+     * Instantiates a new Cache item.
+     *
+     * @param key the key
+     * @param value the value
+     * @param expire the expire
+     */
+    public CacheItem(String key, Object value, Long expire) {
+      this.key = key;
+      this.value = value;
+      this.expire = expire;
+      this.createdAt = System.currentTimeMillis();
     }
 
-    /** 对于朋友圈类型，followed_id & follower_id 可视为同级 */
-    class FollowersTable {
-      /** The Id. */
-      int id; // auto-increment
+    /**
+     * Is expired boolean.
+     *
+     * @param currentTimeStamp the current time stamp
+     * @return the boolean
+     */
+    public boolean isExpired(Long currentTimeStamp) {
+      return currentTimeStamp - currentTimeStamp > expire;
+    }
 
-      /** The Followed id. */
-      int followed_id; // 受关注者，primary of UserTable
-
-      /** The Follower id. */
-      int follower_id; // 关注者，primary of UserTable
+    /**
+     * Del boolean.
+     *
+     * @return the boolean
+     */
+    public boolean del() {
+      if (deleted) return false;
+      return deleted = true;
     }
   }
 }
-
-/** 设计静态资源存储，百度云盘可参考 */
-class Dropbox {}
 
 /** 参考 CMU 15445 https://zhenghe.gitbook.io/open-courses/cmu-15-445-645-database-systems */
 class Databases {

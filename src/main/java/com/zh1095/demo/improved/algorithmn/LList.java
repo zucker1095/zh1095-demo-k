@@ -35,17 +35,6 @@ public class LList {
     return pre;
   }
 
-  // 递归只 focus 当前结点的指向，后序 & 变向 & 断链
-  private ListNode _reverseList(ListNode head) {
-    if (head == null || head.next == null) {
-      return head;
-    }
-    ListNode cur = _reverseList(head.next);
-    head.next.next = head;
-    head.next = null;
-    return cur;
-  }
-
   /**
    * 合并两个有序链表，正向，参考合并两个有序数组
    *
@@ -87,37 +76,6 @@ public class LList {
       hi = hi.next.next;
     }
     return lo;
-  }
-
-  /**
-   * 回文链表，找中点，同时反转前半部分 & 逐一比对两条链表
-   *
-   * @param head the head
-   * @return boolean boolean
-   */
-  public boolean isPalindrome(ListNode head) {
-    // cur 指向当前要反转的节点，dummy 作为头插法的头
-    ListNode dummy = new ListNode();
-    ListNode lo = head, hi = head;
-    // 保证 hi 非空
-    while (hi != null && hi.next != null) {
-      ListNode cur = lo;
-      lo = lo.next;
-      hi = hi.next.next;
-      // 两次变向，反向头插，建议画图
-      cur.next = dummy.next;
-      dummy.next = cur;
-    }
-    // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一位
-    if (hi != null) lo = lo.next;
-    // 分别指向反转后链表的头 & 后半部分链表的头
-    ListNode l1 = dummy.next, l2 = lo;
-    while (l1 != null && l2 != null) {
-      if (l1.val != l2.val) return false;
-      l1 = l1.next;
-      l2 = l2.next;
-    }
-    return true;
   }
 
   /**
@@ -177,7 +135,7 @@ class ReverseList extends LList {
   /**
    * k个一组反转链表，tail [first ... cur] nxt
    *
-   * <p>变向的顺序为 cur tail first，只需专注其后驱即可，下方反转区间同理
+   * <p>变向顺序 cur tail first，只需专注其后驱即可，下方反转区间同理
    *
    * <p>参考
    * https://leetcode-cn.com/problems/reverse-nodes-in-k-group/solution/tu-jie-kge-yi-zu-fan-zhuan-lian-biao-by-user7208t/
@@ -204,11 +162,8 @@ class ReverseList extends LList {
       }
       // 此时 cur 为区间尾
       if (cur == null) break;
-      // 暂存
       first = tail.next;
       nxt = cur.next;
-      // 变向三次，反转区间
-      // 首次保证 reverseList 可遍历结束，最终作为其返回值
       cur.next = null;
       tail.next = reverseList(first);
       first.next = nxt;
@@ -220,7 +175,9 @@ class ReverseList extends LList {
   }
 
   /**
-   * 反转链表II，区间，三步曲，暂存 & 变向三次 & 步进，tail [first cur...] nxt
+   * 反转链表II，区间，tail [first cur...] nxt
+   *
+   * <p>三步曲，暂存 & 变向三次 & 步进，顺序同上 cur tail first
    *
    * @param head the head
    * @param left the left
@@ -228,14 +185,13 @@ class ReverseList extends LList {
    * @return the list node
    */
   public ListNode reverseBetween(ListNode head, int left, int right) {
-    ListNode dummy = new ListNode(0);
+    ListNode dummy = new ListNode();
     dummy.next = head;
     ListNode tail = dummy;
     for (int step = 0; step < left - 1; step++) {
       tail = tail.next;
     }
-    ListNode first = tail.next;
-    ListNode cur = first.next, nxt = cur.next;
+    ListNode first = tail.next, cur = first.next, nxt = cur.next;
     for (int i = 0; i < right - left; i++) {
       nxt = cur.next;
       cur.next = tail.next;
@@ -244,6 +200,37 @@ class ReverseList extends LList {
       cur = nxt;
     }
     return dummy.next;
+  }
+
+  /**
+   * 回文链表，找中点，同时反转前半部分 & 逐一比对两条链表
+   *
+   * @param head the head
+   * @return boolean boolean
+   */
+  public boolean isPalindrome(ListNode head) {
+    // cur 指向当前要反转的节点，dummy 作为头插法的头
+    ListNode dummy = new ListNode();
+    ListNode lo = head, hi = head;
+    // 保证 hi 非空
+    while (hi != null && hi.next != null) {
+      ListNode cur = lo;
+      lo = lo.next;
+      hi = hi.next.next;
+      // 两次变向，反向头插，建议画图
+      cur.next = dummy.next;
+      dummy.next = cur;
+    }
+    // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一位
+    if (hi != null) lo = lo.next;
+    // 分别指向反转后链表的头 & 后半部分链表的头
+    ListNode l1 = dummy.next, l2 = lo;
+    while (l1 != null && l2 != null) {
+      if (l1.val != l2.val) return false;
+      l1 = l1.next;
+      l2 = l2.next;
+    }
+    return true;
   }
 
   /**
@@ -431,7 +418,7 @@ class MergeList extends LList {
     return mergeTwoLists(oddHead, evenHead);
   }
 
-  // 分割奇偶数位，并返回后者首位
+  // 代码与上方「奇偶链表」一致，但返回偶头
   private ListNode _oddEvenList(ListNode head) {
     if (head == null) {
       return null;
@@ -449,7 +436,7 @@ class MergeList extends LList {
   }
 
   /**
-   * 排序链表，建议掌握递归 up-to-bottom 即可，找中点 & 分割 & 分别排序 & 合并
+   * 排序链表，建议掌握递归 up-to-bottom 即可
    *
    * <p>扩展1，去重，参下 annotate
    *
@@ -460,6 +447,7 @@ class MergeList extends LList {
     return sortList1(head);
   }
 
+  // 找中点 & 分割 & 分别排序 & 合并
   private ListNode sortList1(ListNode head) {
     if (head == null || head.next == null) return head;
     ListNode lo = head, hi = head.next;
@@ -469,7 +457,7 @@ class MergeList extends LList {
     }
     ListNode tmp = lo.next;
     lo.next = null;
-    ListNode left = sortList(head), right = sortList(tmp);
+    ListNode left = sortList1(head), right = sortList1(tmp);
     return mergeTwoLists(left, right);
   }
 

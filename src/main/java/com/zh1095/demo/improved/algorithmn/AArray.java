@@ -2,6 +2,16 @@ package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
 
+interface MountainArray {
+  default int get(int index) {
+    return 0;
+  }
+
+  default int length() {
+    return 0;
+  }
+}
+
 /**
  * 收集数组相关，包括如下类型，部分查找不到则至 DDP
  *
@@ -31,7 +41,7 @@ public class AArray extends DefaultArray {
   /**
    * 二分查找，下方 FFind 统一该写法，参考 https://www.zhihu.com/question/36132386
    *
-   * <p>思想是不断剔除「不合格区域」的二分，但不能保证「最后幸存的l=r区域是合格的」，因此最后应判定 l 的值是否正确
+   * <p>思想是基于比较点，不断剔除「不合格区域」，但不能保证「最后幸存的 l=r 区域是合格的」，因此最后应判定 l 的值是否正确
    *
    * <p>扩展1，重复，改为 nextIdx
    *
@@ -309,6 +319,7 @@ public class AArray extends DefaultArray {
   }
 }
 
+/** 堆排序相关，建堆 */
 class HHeap extends DefaultArray {
   /**
    * 数组中的第k个最大元素，原地维护小根堆
@@ -317,7 +328,7 @@ class HHeap extends DefaultArray {
    *
    * <p>扩展1，寻找两个有序数组的第 k 大，参下「寻找两个有序数组的中位数」
    *
-   * <p>扩展2，判断 num 是否为第 k 大，有重复，partition 如果在 K 位置的左边和右边都遇到该数，直接结束，否则直到找到第 k 大的元素比较是否为同一个数
+   * <p>TODO 扩展2，判断 num 是否为第 k 大，有重复，partition 如果在 K 位置的左边和右边都遇到该数，直接结束，否则直到找到第 k 大的元素比较是否为同一个数
    *
    * <p>扩展3，如何只选出 [n, m]，分别建两个长度为 n & m-n 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
    *
@@ -379,24 +390,25 @@ class HHeap extends DefaultArray {
 
   // 从下到上调整堆，取父结点 (cur-1)/2
   private void swim(int[] heap, int idx) {
-    int cur = idx;
-    while (cur > 0 && priorityThan(heap[cur], heap[(cur - 1) / 2])) {
-      swap(heap, cur, (cur - 1) / 2);
-      cur = (cur - 1) / 2;
+    int cur = idx, parent = (cur - 1) / 2;
+    while (cur > 0 && priorityThan(heap[cur], heap[parent])) {
+      swap(heap, cur, parent);
+      cur = parent;
+      parent = (cur - 1) / 2;
     }
   }
 
   // 从下到上调整堆，分别取左右子结点 2*cur+1 与 +2 判断
   private void sink(int[] heap, int idx, int end) {
-    int cur = idx;
+    int cur = idx, child = 2 * cur + 1;
     while (2 * cur + 1 <= end) {
-      int j = 2 * cur + 1;
-      if (j + 1 <= end && priorityThan(heap[j + 1], heap[j])) {
-        j += 1;
+      if (child + 1 <= end && priorityThan(heap[child + 1], heap[child])) {
+        child += 1;
       }
-      if (priorityThan(heap[cur], heap[j])) break;
-      swap(heap, cur, j);
-      cur = j;
+      if (priorityThan(heap[cur], heap[child])) break;
+      swap(heap, cur, child);
+      cur = child;
+      child = 2 * cur + 1;
     }
   }
 
@@ -459,6 +471,35 @@ class HHeap extends DefaultArray {
     }
     return res;
   }
+
+  /**
+   * 最接近原点的k个点，大根堆排序
+   *
+   * @param points
+   * @param K
+   * @return
+   */
+  public int[][] kClosest(int[][] points, int K) {
+    int[][] res = new int[K][2];
+    PriorityQueue<int[]> pq =
+        new PriorityQueue<>(
+            K, (p1, p2) -> p2[0] * p2[0] + p2[1] * p2[1] - p1[0] * p1[0] - p1[1] * p1[1]);
+    for (int[] point : points) {
+      if (pq.size() < K) {
+        pq.offer(point);
+        continue;
+      }
+      // 判断当前点的距离是否小于堆中的最大距离
+      if (pq.comparator().compare(point, pq.peek()) > 0) {
+        pq.poll();
+        pq.offer(point);
+      }
+    }
+    for (int i = 0; i < K; i++) {
+      res[i] = pq.poll();
+    }
+    return res;
+  }
 }
 
 /**
@@ -484,10 +525,9 @@ class QQuick extends DefaultArray {
    */
   public void quickSort(int[] nums, int lo, int hi) {
     if (lo >= hi) return;
-    int pivotIdx = lo + random.nextInt(hi - lo + 1);
+    int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
     // 下方需要确保虚拟头也满足 <pivot，因此从 lt+1 开始遍历
     swap(nums, pivotIdx, lo);
-    int pivot = nums[lo];
     // 虚拟头尾，保证界外
     int lt = lo, cur = lt + 1, gt = hi + 1;
     while (cur < gt) {
@@ -567,7 +607,7 @@ class MMerge extends DefaultArray {
   // 四种情况，其一遍历结束 & 比较
   // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
   private void merge1(int[] nums, int[] tmp, int lo, int mid, int hi) {
-    // 前后指针未逾界且数组至少有两个元素
+    // 前后指针未逾界，且数组至少有两个元素
     if (hi - lo >= 1) {
       System.arraycopy(nums, lo, tmp, lo, hi + 1 - lo);
     }
@@ -590,7 +630,7 @@ class MMerge extends DefaultArray {
   }
 
   /**
-   * 数组中的逆序对，参考归并排序，基本一致
+   * 数组中的逆序对，与上方「归并排序」基本一致
    *
    * @param nums the nums
    * @return int int
@@ -760,7 +800,7 @@ class Dichotomy extends DefaultArray {
     return new int[] {lower, upper};
   }
 
-  private int lowerBound(int[] nums, int target) {
+  protected int lowerBound(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
@@ -811,7 +851,7 @@ class Dichotomy extends DefaultArray {
         else lo = mid;
       }
     }
-    return (nums[lo] == target) ? lo : -1;
+    return nums[lo] == target ? lo : -1;
   }
 
   /**
@@ -892,6 +932,46 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
+   * 山脉数组中查找目标值
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/find-in-mountain-array/solution/shi-yong-chao-hao-yong-de-er-fen-fa-mo-ban-python-/
+   *
+   * @param target
+   * @param mountainArr
+   * @return
+   */
+  public int findInMountainArray(int target, MountainArray mountainArr) {
+    int lo = 0, hi = mountainArr.length() - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      if (mountainArr.get(mid) < mountainArr.get(mid + 1)) lo = mid + 1;
+      else hi = mid;
+    }
+    int peak = lo, idx = search(mountainArr, target, 0, peak, true);
+    return idx != -1 ? idx : search(mountainArr, target, peak + 1, mountainArr.length() - 1, false);
+  }
+
+  private int search(MountainArray mountainArr, int target, int lo, int hi, boolean flag) {
+    if (!flag) target *= -1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      int cur = mountainArr.get(mid) * (flag ? 1 : -1);
+      if (cur < target) {
+        lo = mid + 1;
+      } else if (cur == target) {
+        return mid;
+      } else {
+        hi = mid;
+      }
+    }
+    int mid = lo + (hi - lo) / 2;
+    int cur = mountainArr.get(mid) * (flag ? 1 : -1);
+    if (cur == target) return lo;
+    return -1;
+  }
+
+  /**
    * 搜索二维矩阵，建议模拟 BST 以右上角作根开始遍历，复杂度 m+n
    *
    * <p>I & II 通用，或二分，复杂度为 mlogn
@@ -925,28 +1005,28 @@ class Dichotomy extends DefaultArray {
     while (lo < hi) {
       // 每次循环都保证第 k 小的数在 [lo,hi]
       int mid = lo + (hi - lo) / 2;
-      // 找二维矩阵中 <=mid 的元素总个数，判断目标分别在 [mid+1,hi] & [lo,mid]
+      // 找二维矩阵中 <=mid 的元素总个数，判断目标分别在 [lo,mid] 或 [mid+1,hi]
       if (findLteMid(matrix, mid) < k) lo = mid + 1;
       else hi = mid;
     }
     return hi;
   }
 
+  // 向右下角遍历，找每列最后一个 <=mid 的数即知道每一列有多少个数 <=mid
   private int findLteMid(int[][] matrix, int mid) {
-    int res = 0;
+    int count = 0;
     int y = matrix.length - 1, x = 0;
-    // 向右下角遍历，找每列最后一个 <=mid 的数即知道每一列有多少个数 <=mid
     while (-1 < y && x < matrix[0].length) {
       if (matrix[y][x] <= mid) {
         // 第 j 列有 i+1 个元素 <=mid
-        res += y + 1;
+        count += y + 1;
         x += 1;
       } else {
         // 第 j 列目前的数大于 mid，需要继续在当前列往上找
         y -= 1;
       }
     }
-    return res;
+    return count;
   }
 
   /**
@@ -979,6 +1059,37 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
+   * 和为s的连续正数序列
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/solution/shi-yao-shi-hua-dong-chuang-kou-yi-ji-ru-he-yong-h/
+   *
+   * @param target
+   * @return
+   */
+  public int[][] findContinuousSequence(int target) {
+    List<int[]> res = new ArrayList<int[]>();
+    int lo = 1, hi = 2;
+    while (lo < hi) {
+      // 区间求和公式
+      int sum = (lo + hi) * (hi - lo + 1) / 2;
+      if (sum < target) {
+        hi += 1;
+      } else if (sum == target) {
+        int[] ans = new int[hi - lo + 1];
+        for (int i = lo; i <= hi; i++) {
+          ans[i - lo] = i;
+        }
+        res.add(ans);
+        lo += 1;
+      } else {
+        lo += 1;
+      }
+    }
+    return res.toArray(new int[res.size()][]);
+  }
+
+  /**
    * 数据流的中位数，分别使用两个堆并保证二者元素数目差值不超过 2 即可
    *
    * <p>TODO 参考
@@ -994,6 +1105,193 @@ class Dichotomy extends DefaultArray {
   //  }
 }
 
+/** 前缀和，区间和满足 target */
+class PreSum {
+  /**
+   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
+   *
+   * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
+   *
+   * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
+   *
+   * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
+   *
+   * <p>扩展2，返回最大和的子序列
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int maxSubArray(int[] nums) {
+    int curSum = 0, res = nums[0];
+    for (int num : nums) {
+      curSum = curSum > 0 ? curSum + num : num;
+      res = Math.max(res, curSum);
+    }
+    return res;
+  }
+
+  /**
+   * 和为k的子数组
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
+   *
+   * <p>扩展1，求和为 k 的子数组中，最大的长度，参考「连续数组」
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int int
+   */
+  public int subarraySum(int[] nums, int k) {
+    int count = 0, preSum = 0;
+    // 对应的前缀和的个数
+    HashMap<Integer, Integer> idxBySum = new HashMap<>();
+    // 需要预存前缀和为 0，会漏掉前几位就满足的情况
+    // 如 [1,1,0]，k=2 如果没有这行代码，则会返回 0 漏掉 1+1=2 与 1+1+0=2
+    // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
+    idxBySum.put(0, 1);
+    for (int i = 0; i < nums.length; i++) {
+      preSum += nums[i];
+      // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
+      if (idxBySum.containsKey(preSum - k)) {
+        count += idxBySum.get(preSum - k);
+      }
+      idxBySum.put(preSum, idxBySum.getOrDefault(preSum, 0) + 1);
+    }
+    return count;
+  }
+
+  /**
+   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
+   *
+   * <p>TODO 前缀和
+   *
+   * <p>扩展1，k 倍区间方案数，参考
+   * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return boolean
+   */
+  public boolean checkSubarraySum(int[] nums, int k) {
+    HashMap<Integer, Integer> idxBySum = new HashMap<>();
+    idxBySum.put(0, -1);
+    int preSum = 0;
+    for (int i = 0; i < nums.length; ++i) {
+      preSum += nums[i];
+      int key = k == 0 ? preSum : preSum % k;
+      if (idxBySum.containsKey(key)) {
+        if (i - idxBySum.get(key) >= 2) return true;
+        // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
+        continue;
+      }
+      idxBySum.put(key, i);
+    }
+    return false;
+  }
+
+  /**
+   * 连续数组，找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
+   *
+   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
+   *
+   * @param nums the nums
+   * @return int
+   */
+  public int findMaxLength(int[] nums) {
+    int preSum = 0, maxLen = 0;
+    // 总和及其首次出现的下标
+    Map<Integer, Integer> idxBySum = new HashMap<>();
+    // 可能存在前缀和刚好满足条件的情况
+    idxBySum.put(0, -1);
+    for (int i = 0; i < nums.length; i++) {
+      preSum += nums[i] == 0 ? -1 : 1;
+      // 因为求的是最长的长度，只记录前缀和第一次出现的下标
+      if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
+      else idxBySum.put(preSum, i);
+    }
+    return maxLen;
+  }
+
+  /**
+   * 长度最小的子数组，满足和不少于 target，前缀和搭配滑窗的思维
+   *
+   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
+   *
+   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
+   *
+   * @param target the target
+   * @param nums the nums
+   * @return int int
+   */
+  public int minSubArrayLen(int target, int[] nums) {
+    int minLen = Integer.MAX_VALUE, preSum = 0;
+    int lo = 0, hi = 0;
+    while (hi < nums.length) {
+      // in
+      preSum += nums[hi];
+      while (preSum >= target) {
+        minLen = Math.min(minLen, hi - lo + 1);
+        // out
+        preSum -= nums[lo];
+        lo += 1;
+      }
+      // 替换上一段 while
+      //      if (sum == target) {
+      //        // 入结果集
+      //        hi += 1;
+      //        continue;
+      //      }
+      //      while (sum > target) {
+      //        sum -= nums[lo];
+      //        if (sum == target) {
+      //          // 入结果集
+      //        }
+      //        lo += 1;
+      //      }
+      hi += 1;
+    }
+    return minLen == Integer.MAX_VALUE ? 0 : minLen;
+  }
+
+  /**
+   * 和至少为k的最短子数组，单调队列 & 前缀和
+   *
+   * <p>TODO
+   *
+   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int int
+   */
+  public int shortestSubarray(int[] nums, int k) {
+    int len = nums.length;
+    long[] prefix = new long[len + 1];
+    for (int i = 0; i < len; i++) {
+      prefix[i + 1] = prefix[i] + (long) nums[i];
+    }
+    // len+1 is impossible
+    int res = len + 1;
+    // 单调队列
+    Deque<Integer> mq = new LinkedList<>();
+    for (int i = 0; i < prefix.length; i++) {
+      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
+      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
+        mq.removeLast();
+      }
+      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
+        res = Math.min(res, i - mq.removeFirst());
+      }
+      mq.addLast(i);
+    }
+    return res < len + 1 ? res : -1;
+  }
+}
+
 /** 遍历相关 */
 class Travesal extends DefaultArray {
   /**
@@ -1002,10 +1300,8 @@ class Travesal extends DefaultArray {
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
    *
-   * <p>TODO 扩展1，重复数字有多个，要求找出所有重复数字，复杂度为 n & 1
-   *
-   * <p>nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当 nums[idx]>2*n 时就能表示 nums[i]，即 idx+1
-   * 出现过两次
+   * <p>TODO 扩展1，重复数字有多个，要求找出所有重复数字，复杂度为 n & 1，nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当
+   * nums[idx]>2*n 时就能表示 nums[i]，即 idx+1 出现过两次
    *
    * @param nums the nums
    * @return int int
@@ -1032,7 +1328,7 @@ class Travesal extends DefaultArray {
   //    List<Integer> res = new ArrayList<>();
   //    int lo = 0, hi = nums.length - 1;
   //    if (nums[hi] < k) return new int[] {};
-  //    while (lo <= hi) {
+  //    while (lo < hi) {
   //      int mid = lo + (hi - lo) / 2;
   //      if (nums[mid] < k) {
   //
@@ -1492,12 +1788,12 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 最大交换，交换任意两位数，使得结果是所有方案中值最大
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
+   * 最大交换，只交换一次任意两位的数，使其结果数值是所有方案中最大的
    *
    * <p>贪心，将最高位的 n 与后面 m 交换，后者需满足 m>n 且 m 尽可能靠后
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
    *
    * @param num
    * @return
@@ -1512,11 +1808,9 @@ class DicOrder extends DefaultArray {
     // 顺序遍历找到当前位置右边的最大的数字，并交换
     for (int i = 0; i < chs.length; i++) {
       for (int d = 9; d > chs[i] - '0'; d--) {
-        if (lastIdx[d] > i) {
-          swap(chs, i, lastIdx[d]);
-          // 只允许交换一次，因此直接返回
-          return Integer.parseInt(new String(chs));
-        }
+        if (lastIdx[d] <= i) continue;
+        swap(chs, i, lastIdx[d]);
+        return Integer.parseInt(chs.toString());
       }
     }
     return num;
@@ -1525,14 +1819,14 @@ class DicOrder extends DefaultArray {
   /**
    * 最大数，把数组排成最大的数，排序 & 贪心
    *
-   * <p>对 nums 按照 ab>ba -> b>a
+   * <p>对 nums 按照 ab>ba 为 b>a，前导零
    *
    * <p>1.先单独证明两个数需要满足该定律，比如 3 & 30 有 330>303 显然 3 需要安排至 30 前，即表现为 3<30
    *
    * <p>2.然后证明传递性，即两两之间都要满足该性质，参考
    * https://leetcode-cn.com/problems/largest-number/solution/gong-shui-san-xie-noxiang-xin-ke-xue-xi-vn86e/
    *
-   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba -> a>b 即可，参考
+   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba 为 a>b 即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
    *
    * @param nums
@@ -1634,16 +1928,6 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 字典序排数
-   *
-   * @param n the n
-   * @return list list
-   */
-  public List<Integer> lexicalOrder(int n) {
-    return new ArrayList<>();
-  }
-
-  /**
    * 去除重复字母 / 不同字符的最小子序列，且要求之后的整体字典序最小
    *
    * <p>greedy - 结果中第一个字母的字典序靠前的优先级最高
@@ -1678,6 +1962,16 @@ class DicOrder extends DefaultArray {
     }
     return res.toString();
   }
+
+  /**
+   * 字典序排数
+   *
+   * <p>TODO
+   *
+   * @param n the n
+   * @return list list
+   */
+  //  public List<Integer> lexicalOrder(int n) { }
 
   /**
    * 拼接最大数，两个无序正整数数组，共取 k 个拼接为数字，求该数最大的方案

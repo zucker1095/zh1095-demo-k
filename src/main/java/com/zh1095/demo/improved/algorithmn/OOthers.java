@@ -11,111 +11,6 @@ import java.util.*;
  */
 public class OOthers {
   /**
-   * 罗马数字转整数
-   *
-   * <p>扩展1，汉字转阿拉伯数字
-   *
-   * <p>扩展2，IP 与 integer 互转，参下
-   *
-   * @param s the s
-   * @return int int
-   */
-  public int romanToInt(String s) {
-    Map<Character, Integer> hash =
-        new HashMap<>() {
-          {
-            //            put('一', 1);
-            //            put('二', 2);
-            //            put('三', 3);
-            //            put('四', 4);
-            //            put('五', 5);
-            //            put('六', 6);
-            //            put('七', 7);
-            //            put('八', 8);
-            //            put('九', 9);
-            //            put('十', 10);
-            //            put('百', 100);
-            //            put('千', 1000);
-            //            put('万', 10000);
-            put('I', 1);
-            put('V', 5);
-            put('X', 10);
-            put('L', 50);
-            put('C', 100);
-            put('D', 500);
-            put('M', 1000);
-          }
-        };
-    int res = 0;
-    for (int i = 0; i < s.length(); i++) {
-      int cur = hash.get(s.charAt(i)), nxt = hash.get(s.charAt(i + 1));
-      if (i < s.length() - 1 && cur < nxt) {
-        res -= cur;
-      } else {
-        res += cur;
-      }
-    }
-    return res;
-  }
-
-  /**
-   * 整数转罗马数字，greedy 尽可能先选出大的数字进行转换
-   *
-   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
-   *
-   * @param num the num
-   * @return string string
-   */
-  public String intToRoman(int num) {
-    final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
-    final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
-    StringBuilder res = new StringBuilder();
-    int cur = num;
-    for (int i = 0; i < ROMANs.length; i++) {
-      while (cur >= NUMs[i]) {
-        res.append(ROMANs[i]);
-        cur -= NUMs[i];
-      }
-    }
-    return res.toString();
-  }
-
-  /**
-   * Excel表列序号，26 转十进制，类似罗马数字转整数
-   *
-   * @param columnTitle the column title
-   * @return int int
-   */
-  public int titleToNumber(String ct) {
-    int res = 0;
-    for (char ch : ct.toCharArray()) {
-      res = res * 26 + (ch - 'A' + 1);
-    }
-    return res;
-  }
-
-  /**
-   * Excel表列名称，十进制转 26
-   *
-   * <p>一般进制转换无须进行额外操作，是因为我们是在「每一位数值范围在 [0,x)」的前提下进行「逢 x 进一」。
-   *
-   * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
-   *
-   * @param cn
-   * @return
-   */
-  public String convertToTitle(int cn) {
-    StringBuilder res = new StringBuilder();
-    while (cn > 0) {
-      cn -= 1;
-      res.append((char) (cn % 26 + 'A'));
-      cn /= 26;
-    }
-    res.reverse();
-    return res.toString();
-  }
-
-  /**
    * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
    *
    * @param nums the nums
@@ -223,24 +118,13 @@ class MMath {
   }
 
   /**
-   * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
+   * 1~n整数中1出现的次数 / 数字1的个数，如 1～12 这些整数中包含 1 的数字有 1、10、11、12 共 5 个
    *
-   * <p>记住公式即可 res=(res+m)%i
+   * <p>因此，将 1~n 的个位、十位、百位...1 出现次数相加，即为所求
    *
-   * @param n the n
-   * @param m the m
-   * @return the int
-   */
-  public int lastRemaining(int n, int m) {
-    int res = 0;
-    for (int i = 2; i <= n; i++) {
-      res = (res + m) % i;
-    }
-    return res;
-  }
-
-  /**
-   * 1~n整数中1出现的次数 / 数字1的个数
+   * <p>将 x 位数的 n 分为 nx...ni...n1，则记 nx...ni+1 为 high，ni 为 cur，剩余为 low，10^i 为 digit
+   *
+   * <p>cur 分三种情况讨论，1 由高低一起决定，0 & else 则出现次数由高位决定
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
@@ -249,22 +133,20 @@ class MMath {
    * @return int int
    */
   public int countDigitOne(int n) {
-    int res = 0;
+    int count = 0;
     int high = n / 10, cur = n % 10, low = 0, digit = 1;
     while (high != 0 || cur != 0) {
-      if (cur == 0) {
-        res += high * digit;
-      } else if (cur == 1) {
-        res += high * digit + low + 1;
-      } else {
-        res += (high + 1) * digit;
-      }
+      // 状态
+      if (cur == 0) count += high * digit;
+      else if (cur == 1) count += high * digit + low + 1;
+      else count += (high + 1) * digit;
+      // 递推
       low += cur * digit;
-      high /= 10;
       cur = high % 10;
+      high /= 10;
       digit *= 10;
     }
-    return res;
+    return count;
   }
 
   /**
@@ -294,7 +176,24 @@ class MMath {
   }
 
   /**
-   * 阶乘后点零，记住即可
+   * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
+   *
+   * <p>记住公式即可 res=(res+m)%i
+   *
+   * @param n the n
+   * @param m the m
+   * @return the int
+   */
+  public int lastRemaining(int n, int m) {
+    int leftIdx = 0;
+    for (int i = 2; i <= n; i++) {
+      leftIdx = (leftIdx + m) % i;
+    }
+    return leftIdx;
+  }
+
+  /**
+   * 阶乘后的零，记住即可
    *
    * <p>参考
    * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
@@ -435,6 +334,111 @@ class Digit {
       left /= 10;
     }
     return left == right || left == right / 10;
+  }
+}
+
+/** 进制转换 */
+class CConvert {
+  /**
+   * 罗马数字转整数
+   *
+   * <p>扩展1，汉字转阿拉伯数字
+   *
+   * <p>扩展2，IP 与 integer 互转，参下
+   *
+   * @param s the s
+   * @return int int
+   */
+  public int romanToInt(String s) {
+    Map<Character, Integer> hash =
+        new HashMap<>() {
+          {
+            //            put('一', 1);
+            //            put('二', 2);
+            //            put('三', 3);
+            //            put('四', 4);
+            //            put('五', 5);
+            //            put('六', 6);
+            //            put('七', 7);
+            //            put('八', 8);
+            //            put('九', 9);
+            //            put('十', 10);
+            //            put('百', 100);
+            //            put('千', 1000);
+            //            put('万', 10000);
+            put('I', 1);
+            put('V', 5);
+            put('X', 10);
+            put('L', 50);
+            put('C', 100);
+            put('D', 500);
+            put('M', 1000);
+          }
+        };
+    int res = 0;
+    for (int i = 0; i < s.length(); i++) {
+      int cur = hash.get(s.charAt(i)), nxt = hash.get(s.charAt(i + 1));
+      if (i < s.length() - 1 && cur < nxt) res -= cur;
+      else res += cur;
+    }
+    return res;
+  }
+
+  /**
+   * 整数转罗马数字，greedy 尽可能先选出大的数字进行转换
+   *
+   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
+   *
+   * @param num the num
+   * @return string string
+   */
+  public String intToRoman(int num) {
+    final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+    final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+    StringBuilder res = new StringBuilder();
+    int cur = num;
+    for (int i = 0; i < ROMANs.length; i++) {
+      while (cur >= NUMs[i]) {
+        res.append(ROMANs[i]);
+        cur -= NUMs[i];
+      }
+    }
+    return res.toString();
+  }
+
+  /**
+   * Excel表列序号，26 转十进制，类似罗马数字转整数
+   *
+   * @param columnTitle the column title
+   * @return int int
+   */
+  public int titleToNumber(String ct) {
+    int res = 0;
+    for (char ch : ct.toCharArray()) {
+      res = res * 26 + (ch - 'A' + 1);
+    }
+    return res;
+  }
+
+  /**
+   * Excel表列名称，十进制转 26
+   *
+   * <p>一般进制转换无须进行额外操作，是因为我们是在「每一位数值范围在 [0,x)」的前提下进行「逢 x 进一」。
+   *
+   * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
+   *
+   * @param cn
+   * @return
+   */
+  public String convertToTitle(int cn) {
+    StringBuilder res = new StringBuilder();
+    while (cn > 0) {
+      cn -= 1;
+      res.append((char) (cn % 26 + 'A'));
+      cn /= 26;
+    }
+    res.reverse();
+    return res.toString();
   }
 }
 
@@ -653,6 +657,8 @@ class DData {
   /**
    * 最小栈
    *
+   * <p>全局保存最小值，入栈存差并更新，出栈与取顶均需判负
+   *
    * @author cenghui
    */
   public class MinStack {
@@ -674,7 +680,6 @@ class DData {
     public void pop() {
       if (stack.isEmpty()) return;
       int pop = stack.pop();
-      // 弹出的是负值，要更新 min
       if (pop < 0) min -= pop;
     }
 
@@ -897,207 +902,5 @@ class BBit {
   }
 }
 
-// 参考图片即可
+// LFU 参考图片即可
 // https://leetcode-cn.com/problems/lfu-cache/solution/chao-xiang-xi-tu-jie-dong-tu-yan-shi-460-lfuhuan-c/
-// class LFUCache {
-//  // key->Node 这种结构的哈希表
-//  private final Map<Integer, Node> keyMap = new HashMap<>();
-//  // freq->LinkedList 这种结构的哈希表
-//  private final Map<Integer, LinkedList> freqMap = new HashMap<>();
-//  // 缓存的最大容量
-//  private final int capacity;
-//  // 记录缓存中最低频率
-//  private int minFreq = 0;
-//
-//  public LFUCache(int capacity) {
-//    //		if(capacity<=0) {
-//    //			throw new IllegalArgumentException();
-//    //		}
-//    this.capacity = capacity;
-//  }
-//
-//  /**
-//   * 获取一个元素，如果key不存在则返回-1，否则返回对应的value，同时更新被访问元素的频率
-//   *
-//   * @param key 要查找的关键字
-//   * @return 如果没找到则返回-1，否则返回对应的value
-//   */
-//  public int get(int key) {
-//    if (!this.keyMap.containsKey(key)) {
-//      return -1;
-//    }
-//    Node node = this.keyMap.get(key);
-//    this.increment(node);
-//    return node.getValue();
-//  }
-//
-//  /**
-//   * 插入指定的key和value，如果key存在则更新value，同时更新频率， 如果key不存并且缓存满了，则删除频率最低的元素，并插入新元素。否则，直接插入新元素
-//   *
-//   * @param key 要插入的关键字
-//   * @param value 要插入的值
-//   */
-//  public void put(int key, int value) {
-//    if (this.keyMap.containsKey(key)) {
-//      Node node = this.keyMap.get(key);
-//      node.updateValue(value);
-//      this.increment(node);
-//    } else {
-//      if (this.capacity == 0) {
-//        return;
-//      }
-//      if (this.keyMap.size() == this.capacity) {
-//        this.remoteMinFreqNode();
-//      }
-//      Node node = new Node(key, value, 1);
-//      this.increment(node, true);
-//      this.keyMap.put(key, node);
-//    }
-//  }
-//
-//  /**
-//   * 更新节点的访问频率
-//   *
-//   * @param node 要更新的节点
-//   */
-//  private void increment(Node node) {
-//    increment(node, false);
-//  }
-//
-//  /**
-//   * 更新节点的访问频率
-//   *
-//   * @param node 要更新的节点
-//   * @param isNewNode 是否是新节点，新插入的节点和非新插入节点更新逻辑不同
-//   */
-//  private void increment(Node node, boolean isNewNode) {
-//    if (isNewNode) {
-//      this.minFreq = 1;
-//      this.insertToLinkedList(node);
-//    } else {
-//      this.deleteNode(node);
-//      node.incrFreq();
-//      this.insertToLinkedList(node);
-//      if (!this.freqMap.containsKey(this.minFreq)) {
-//        ++this.minFreq;
-//      }
-//    }
-//  }
-//
-//  /**
-//   * 根据节点的频率，插入到对应的LinkedList中，如果LinkedList不存在则创建
-//   *
-//   * @param node 将要插入到LinkedList的节点
-//   */
-//  private void insertToLinkedList(Node node) {
-//    if (!this.freqMap.containsKey(node.getFreq())) {
-//      this.freqMap.put(node.getFreq(), new LinkedList());
-//    }
-//    LinkedList linkedList = this.freqMap.get(node.getFreq());
-//    linkedList.insertFirst(node);
-//  }
-//
-//  /**
-//   * 删除指定的节点，如果节点删除后，对应的双链表为空，则从__freqMap中删除这个链表
-//   *
-//   * @param node 将要删除的节点
-//   */
-//  private void deleteNode(Node node) {
-//    LinkedList linkedList = this.freqMap.get(node.getFreq());
-//    linkedList.deleteNode(node);
-//    if (linkedList.isEmpty()) {
-//      this.freqMap.remove(node.getFreq());
-//    }
-//  }
-//
-//  /** 删除频率最低的元素，从freqMap和keyMap中都要删除这个节点， 如果节点删除后对应的链表为空，则要从__freqMap中删除这个链表 */
-//  private void remoteMinFreqNode() {
-//    LinkedList linkedList = this.freqMap.get(this.minFreq);
-//    Node node = linkedList.getLastNode();
-//    linkedList.deleteNode(node);
-//    this.keyMap.remove(node.getKey());
-//    if (linkedList.isEmpty()) {
-//      this.freqMap.remove(node.getFreq());
-//    }
-//  }
-//
-//  /** 双链表中的链表节点对象 */
-//  protected class Node {
-//    // 对应输入的key
-//    private final int key;
-//    // 指向前一个节点的指针
-//    protected Node pre, next;
-//    // 对应输入的value
-//    private int value, freq;
-//
-//    public Node(int key, int value, int freq) {
-//      this.key = key;
-//      this.value = value;
-//      this.freq = freq;
-//    }
-//  }
-//
-//  /** 自定义的双向链表类 */
-//  protected class LinkedList {
-//    // 双向链表的头结点
-//    private final Node head, tail;
-//
-//    public LinkedList() {
-//      this.head = Node.createEmptyNode();
-//      this.tail = Node.createEmptyNode();
-//      this.head.next = this.tail;
-//      this.tail.pre = this.head;
-//    }
-//
-//    /**
-//     * 将指定的节点插入到链表的第一个位置
-//     *
-//     * @param node 将要插入的节点
-//     */
-//    public void insertFirst(Node node) {
-//      if (node == null) {
-//        throw new IllegalArgumentException();
-//      }
-//      node.next = this.head.next;
-//      this.head.next.pre = node;
-//      node.pre = this.head;
-//      this.head.next = node;
-//    }
-//
-//    /**
-//     * 从链表中删除指定的节点
-//     *
-//     * @param node 将要删除的节点
-//     */
-//    public void deleteNode(Node node) {
-//      if (node == null) {
-//        throw new IllegalArgumentException();
-//      }
-//      node.pre.next = node.next;
-//      node.next.pre = node.pre;
-//      node.pre = null;
-//      node.next = null;
-//    }
-//
-//    /**
-//     * 从链表中获取最后一个节点
-//     *
-//     * @return 双向链表中的最后一个节点，如果是空链表则返回None
-//     */
-//    public Node getLastNode() {
-//      if (this.head.next == this.tail) {
-//        return Node.createEmptyNode();
-//      }
-//      return this.tail.pre;
-//    }
-//
-//    /**
-//     * 判断链表是否为空，除了head和tail没有其他节点即为空链表
-//     *
-//     * @return 链表不空返回True，否则返回False
-//     */
-//    public boolean isEmpty() {
-//      return this.head.next == this.tail;
-//    }
-//  }
-// }
