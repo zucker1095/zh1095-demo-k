@@ -645,12 +645,8 @@ class EEncoding extends SString {
       idx += 1;
     }
     if (idx == s.length()) return 0;
-    if (s.charAt(idx) == '-') {
-      idx += 1;
-      isNegative = true;
-    } else if (s.charAt(idx) == '+') {
-      idx += 1;
-    }
+    if (s.charAt(idx) == '-') isNegative = true;
+    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
     while (idx < s.length()) {
       char ch = s.charAt(idx);
       if (ch < '0' || ch > '9') break;
@@ -667,39 +663,28 @@ class EEncoding extends SString {
   /**
    * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
    *
-   * <p>框架类似「移动零」与滑窗
-   *
-   * <p>1.前指针遍历 & 找到同个字母的连续末尾并统计个数
-   *
-   * <p>2.后指针的下一位写入数量，注意数字需逆序写，并步进该指针
+   * <p>框架类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
    *
    * @param chars the chars
    * @return int int
    */
   public int compress(char[] chars) {
-    // 写指针 & 读指针 & 上一段读指针的下一位
-    int lo = 0, hi = 0, pre = 0;
+    // write & read
+    int lo = 0, hi = 0;
     while (hi < chars.length) {
-      // 存在 aa to a2 因此到最后一位需特判
-      if (hi < chars.length - 1 && chars[hi] == chars[hi + 1]) {
-        hi += 1;
-        continue;
+      int cur = hi;
+      while (cur < chars.length && chars[hi] == chars[cur]) {
+        cur += 1;
       }
       chars[lo] = chars[hi];
       lo += 1;
-      int countDigit = hi - pre + 1;
-      if (countDigit > 1) {
-        final int start = lo;
-        // 短除法将数字倒序写入原字符串中，再将其反转
-        while (countDigit > 0) {
-          chars[lo] = (char) (countDigit % 10 + '0');
-          countDigit /= 10;
+      if (cur - hi > 1) {
+        for (char digit : Integer.toString(cur - hi).toCharArray()) {
+          chars[lo] = digit;
           lo += 1;
         }
-        reverseChs(chars, start, lo - 1);
       }
-      hi += 1;
-      pre = hi;
+      hi = cur;
     }
     //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
     return lo;
@@ -774,7 +759,7 @@ class WWord extends DefaultSString {
   /**
    * 翻转字符串里的单词，对于 Java 不可能实现实际的 O(1) space，因此要求 s 原地即可
    *
-   * <p>去空格 & 两次反转，全串与逐个单词
+   * <p>去空格 & 整串翻转 & 逐个翻转
    *
    * @param s the s
    * @return string string
@@ -782,7 +767,16 @@ class WWord extends DefaultSString {
   public String reverseWords(String s) {
     StringBuilder res = trimSpaces(s);
     reverse(res, 0, res.length() - 1);
-    reverseEachWord(res);
+    int lo = 0, hi = 0;
+    // 循环至单词的末尾 & 翻转单词 & 步进
+    while (lo < res.length()) {
+      while (hi < res.length() && res.charAt(hi) != ' ') {
+        hi += 1;
+      }
+      reverse(res, lo, hi - 1);
+      lo = hi + 1;
+      hi += 1;
+    }
     return res.toString();
   }
 
@@ -804,19 +798,6 @@ class WWord extends DefaultSString {
       lo += 1;
     }
     return res;
-  }
-
-  // 循环至单词的末尾 & 翻转单词 & 步进
-  private void reverseEachWord(StringBuilder sb) {
-    int lo = 0, hi = 0;
-    while (lo < sb.length()) {
-      while (hi < sb.length() && sb.charAt(hi) != ' ') {
-        hi += 1;
-      }
-      reverse(sb, lo, hi - 1);
-      lo = hi + 1;
-      hi += 1;
-    }
   }
 
   /**
@@ -843,6 +824,47 @@ class WWord extends DefaultSString {
       }
     }
     return dp[s.length()];
+  }
+
+  /**
+   * 实现strStr()，即 KMP
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/implement-strstr/solution/shua-chuan-lc-shuang-bai-po-su-jie-fa-km-tb86/
+   *
+   * @param haystack
+   * @param needle
+   * @return
+   */
+  public int strStr(String haystack, String needle) {
+    if (needle.isEmpty()) return 0;
+    // 使其下标从 1 开始
+    haystack = " " + haystack;
+    needle = " " + needle;
+    char[] s = haystack.toCharArray(), p = needle.toCharArray();
+    int[] next = new int[needle.length() + 1];
+    // 构造过程 i = 2，j = 0 开始，i 小于等于匹配串长度
+    for (int i = 2, j = 0; i <= needle.length(); i++) {
+      // 匹配不成功
+      while (j > 0 && p[i] != p[j + 1]) {
+        j = next[j];
+      }
+      if (p[i] == p[j + 1]) j += 1;
+      // 更新
+      next[i] = j;
+    }
+    // 匹配过程，i = 1，j = 0 开始，i 小于等于原串长度 【匹配 i 从 1 开始】
+    for (int i = 1, j = 0; i <= haystack.length(); i++) {
+      // 匹配不成功
+      while (j > 0 && s[i] != p[j + 1]) {
+        j = next[j];
+      }
+      // 匹配成功
+      if (s[i] == p[j + 1]) j += 1;
+      // 整一段匹配成功
+      if (j == needle.length()) return i - needle.length();
+    }
+    return -1;
   }
 
   /**

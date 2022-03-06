@@ -150,6 +150,69 @@ class MMath {
   }
 
   /**
+   * x的平方根，二分只能精确至后二位，建议采用牛顿迭代
+   *
+   * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid-1] 与 [mid..right]
+   *
+   * <p>如果 mid 下取整，在区间只有 22 个数的时候有 mid 的值等于 left，一旦进入分支 [mid..right] 区间不会再缩小，出现死循环
+   *
+   * <p>扩展1，精确至 k 位，只能使用牛顿迭代法，参考
+   * https://leetcode-cn.com/problems/sqrtx/solution/niu-dun-die-dai-fa-by-loafer/
+   *
+   * <p>扩展2，误差小于 1*10^(-k)，即精确至 k+1 位，同上
+   *
+   * @param x the x
+   * @return int int
+   */
+  public int mySqrt(int x) {
+    if (x == 0) return 0;
+    double pre = x;
+    while (true) {
+      // 2*cur=pre+x/pre
+      double cur = 0.5 * (pre + x / pre);
+      // 后 n 位此处定制
+      if (Math.abs(pre - cur) < 1e-7) break;
+      pre = cur;
+    }
+    return (int) pre;
+  }
+
+  /**
+   * Pow(x,n)，快速幂
+   *
+   * @param x the x
+   * @param n the n
+   * @return double double
+   */
+  public double myPow(double x, int n) {
+    return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
+  }
+
+  // 特判零次幂 & 递归二分 & 判断剩余幂
+  private double quickMulti(double x, int n) {
+    if (n == 0) return 1;
+    double y = quickMulti(x, n / 2);
+    return y * y * (((n & 1) == 0) ? 1 : x);
+  }
+
+  /**
+   * 平方数之和
+   *
+   * @param c
+   * @return
+   */
+  public boolean judgeSquareSum(int c) {
+    long a = 0, b = (long) Math.sqrt(c);
+    while (a <= b) {
+      long cur = a * a + b * b;
+      if (cur < c) a += 1;
+      else if (cur == c) return true;
+      else if (cur > c) b -= 1;
+    }
+    return false;
+  }
+
+  /**
    * 多数元素，摩尔投票，类比 Raft
    *
    * <p>尽管不通用，但对于本题方便理解和记忆
@@ -214,52 +277,6 @@ class MMath {
 /** 单个数字 */
 class Digit {
   private final String CHARS = "0123456789ABCDEF";
-
-  /**
-   * x的平方根，二分只能精确至后二位，建议采用牛顿迭代
-   *
-   * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid-1] 与 [mid..right]
-   *
-   * <p>如果 mid 下取整，在区间只有 22 个数的时候有 mid 的值等于 left，一旦进入分支 [mid..right] 区间不会再缩小，出现死循环
-   *
-   * <p>扩展1，精确至 k 位，只能使用牛顿迭代法，参考
-   * https://leetcode-cn.com/problems/sqrtx/solution/niu-dun-die-dai-fa-by-loafer/
-   *
-   * <p>扩展2，误差小于 1*10^(-k)，即精确至 k+1 位，同上
-   *
-   * @param x the x
-   * @return int int
-   */
-  public int mySqrt(int x) {
-    if (x == 0) return 0;
-    double pre = x;
-    while (true) {
-      // 2*cur=pre+x/pre
-      double cur = 0.5 * (pre + x / pre);
-      // 后 n 位此处定制
-      if (Math.abs(pre - cur) < 1e-7) break;
-      pre = cur;
-    }
-    return (int) pre;
-  }
-
-  /**
-   * Pow(x,n)，快速幂
-   *
-   * @param x the x
-   * @param n the n
-   * @return double double
-   */
-  public double myPow(double x, int n) {
-    return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
-  }
-
-  // 特判零次幂 & 递归二分 & 判断剩余幂
-  private double quickMulti(double x, int n) {
-    if (n == 0) return 1;
-    double y = quickMulti(x, n / 2);
-    return y * y * (((n & 1) == 0) ? 1 : x);
-  }
 
   /**
    * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
@@ -884,11 +901,13 @@ class BBit {
   }
 
   /**
-   * 只出现一次的数字
+   * 只出现一次的数字，其余均出现两次
    *
    * <p>扩展1，有序数组，参考「有序数组中的单一元素」
    *
    * <p>扩展2，只出现一次的字符，参考「第一个只出现一次的字符」
+   *
+   * <p>扩展3，其余均出现三次，参考「只出现一次的数字II」
    *
    * @param nums the nums
    * @return int int

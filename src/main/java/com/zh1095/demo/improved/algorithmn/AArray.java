@@ -500,6 +500,46 @@ class HHeap extends DefaultArray {
     }
     return res;
   }
+
+  /**
+   * 数据流的中位数，分别使用两个堆，保证大根堆元素始终多一个
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
+   *
+   * <p>扩展1，所有整数都在 [1,100]，空间上优化，额外建立一个长度为 101
+   * 的桶统计每个数的出现次数，同时记录数据流中总的元素数量，每次查找中位数时，先计算出中位数是第几位，从前往后扫描所有的桶得到答案
+   *
+   * <p>扩展2，PCT99 整数都在 [1,100]，对于 1% 采用哨兵机制进行解决，在常规的最小桶和最大桶两侧分别维护一个有序序列，即建立一个代表负无穷和正无穷的桶
+   */
+  public class MedianFinder {
+    private final PriorityQueue<Integer> minHeap = new PriorityQueue<>((a, b) -> a - b),
+        maxHeap = new PriorityQueue<>((a, b) -> b - a);
+
+    public void addNum(int num) {
+      if (maxHeap.size() == minHeap.size()) {
+        if (minHeap.isEmpty() || num <= minHeap.peek()) {
+          maxHeap.add(num);
+        } else {
+          maxHeap.add(minHeap.poll());
+          minHeap.add(num);
+        }
+      } else {
+        if (maxHeap.peek() <= num) {
+          minHeap.add(num);
+        } else {
+          minHeap.add(maxHeap.poll());
+          maxHeap.add(num);
+        }
+      }
+    }
+
+    public double findMedian() {
+      return maxHeap.size() == minHeap.size()
+          ? (maxHeap.peek() + minHeap.peek()) / 2.0
+          : maxHeap.peek();
+    }
+  }
 }
 
 /**
@@ -1088,21 +1128,6 @@ class Dichotomy extends DefaultArray {
     }
     return res.toArray(new int[res.size()][]);
   }
-
-  /**
-   * 数据流的中位数，分别使用两个堆并保证二者元素数目差值不超过 2 即可
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
-   */
-  //  class MedianFinder {
-  //
-  //    public MedianFinder() {}
-  //
-  //    public void addNum(int num) {}
-  //
-  //    public double findMedian() {}
-  //  }
 }
 
 /** 前缀和，区间和满足 target */
@@ -1131,7 +1156,7 @@ class PreSum {
   }
 
   /**
-   * 和为k的子数组
+   * 和为k的子数组，返回满足的子数组数量
    *
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
@@ -1145,18 +1170,16 @@ class PreSum {
   public int subarraySum(int[] nums, int k) {
     int count = 0, preSum = 0;
     // 对应的前缀和的个数
-    HashMap<Integer, Integer> idxBySum = new HashMap<>();
+    HashMap<Integer, Integer> countBySum = new HashMap<>();
     // 需要预存前缀和为 0，会漏掉前几位就满足的情况
     // 如 [1,1,0]，k=2 如果没有这行代码，则会返回 0 漏掉 1+1=2 与 1+1+0=2
     // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
-    idxBySum.put(0, 1);
+    countBySum.put(0, 1);
     for (int i = 0; i < nums.length; i++) {
       preSum += nums[i];
       // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
-      if (idxBySum.containsKey(preSum - k)) {
-        count += idxBySum.get(preSum - k);
-      }
-      idxBySum.put(preSum, idxBySum.getOrDefault(preSum, 0) + 1);
+      count += countBySum.getOrDefault(preSum - k, 0);
+      countBySum.put(preSum, countBySum.getOrDefault(preSum, 0) + 1);
     }
     return count;
   }
@@ -1164,30 +1187,59 @@ class PreSum {
   /**
    * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
    *
-   * <p>TODO 前缀和
-   *
-   * <p>扩展1，k 倍区间方案数，参考
+   * <p>扩展1，方案数参考
    * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
    *
    * @param nums the nums
-   * @param k the k
+   * @param target the target
    * @return boolean
    */
-  public boolean checkSubarraySum(int[] nums, int k) {
-    HashMap<Integer, Integer> idxBySum = new HashMap<>();
-    idxBySum.put(0, -1);
+  public boolean checkSubarraySum(int[] nums, int target) {
     int preSum = 0;
-    for (int i = 0; i < nums.length; ++i) {
+    HashMap<Integer, Integer> idxByMod = new HashMap<>();
+    idxByMod.put(0, -1);
+    for (int i = 0; i < nums.length; i++) {
       preSum += nums[i];
-      int key = k == 0 ? preSum : preSum % k;
-      if (idxBySum.containsKey(key)) {
-        if (i - idxBySum.get(key) >= 2) return true;
-        // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
-        continue;
-      }
-      idxBySum.put(key, i);
+      // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
+      int mod = target == 0 ? preSum : preSum % target, minIdx = idxByMod.getOrDefault(mod, -1);
+      if (minIdx == -1) idxByMod.put(mod, i);
+      else if (i - minIdx > 1) return true;
     }
+    //    long count = 0;
+    //    Map<Long, Integer> map = new HashMap<>();
+    //    map.put(0L, 1);
+    //    for (int num : nums) {
+    //      preSum += num;
+    //      long u = preSum % k;
+    //      if (map.containsKey(u)) count += map.get(u);
+    //      map.put(u, map.getOrDefault(u, 0) + 1);
+    //    }
     return false;
+  }
+
+  /**
+   * 和可被k整除的子数组
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
+   *
+   * @param A
+   * @param K
+   * @return
+   */
+  public int subarraysDivByK(int[] nums, int k) {
+    HashMap<Integer, Integer> countByRemainder = new HashMap<>();
+    countByRemainder.put(0, 1);
+    int preSum = 0, count = 0;
+    for (int num : nums) {
+      preSum += num;
+      // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
+      int remainder = (preSum % k + k) % k, curCount = countByRemainder.getOrDefault(remainder, 0);
+      // 余数的次数
+      count += curCount;
+      countByRemainder.put(remainder, curCount + 1);
+    }
+    return count;
   }
 
   /**
@@ -1260,9 +1312,7 @@ class PreSum {
   /**
    * 和至少为k的最短子数组，单调队列 & 前缀和
    *
-   * <p>TODO
-   *
-   * <p>需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
    *
    * @param nums the nums
    * @param k the k
@@ -1270,30 +1320,51 @@ class PreSum {
    */
   public int shortestSubarray(int[] nums, int k) {
     int len = nums.length;
-    long[] prefix = new long[len + 1];
+    long[] preSum = new long[len + 1];
     for (int i = 0; i < len; i++) {
-      prefix[i + 1] = prefix[i] + (long) nums[i];
+      preSum[i + 1] = preSum[i] + (long) nums[i];
     }
-    // len+1 is impossible
-    int res = len + 1;
-    // 单调队列
+    // impossible
+    int minLen = len + 1;
     Deque<Integer> mq = new LinkedList<>();
-    for (int i = 0; i < prefix.length; i++) {
+    for (int i = 0; i < preSum.length; i++) {
       // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
-      while (!mq.isEmpty() && prefix[i] <= prefix[mq.getLast()]) {
+      while (!mq.isEmpty() && preSum[i] <= preSum[mq.getLast()]) {
         mq.removeLast();
       }
-      while (!mq.isEmpty() && prefix[i] >= prefix[mq.getFirst()] + k) {
-        res = Math.min(res, i - mq.removeFirst());
+      while (!mq.isEmpty() && preSum[i] >= preSum[mq.getFirst()] + k) {
+        minLen = Math.min(minLen, i - mq.removeFirst());
       }
       mq.addLast(i);
     }
-    return res < len + 1 ? res : -1;
+    return minLen == len + 1 ? -1 : minLen;
   }
+
+  /**
+   * 统计「优美子数组」，区间包含 k 个奇数
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  //  public int numberOfSubarrays(int[] nums, int k) {
+  //    int oddnum = 0, count = 0;
+  //    HashMap<Integer, Integer> map = new HashMap<>();
+  //    map.put(0, 1);
+  //    // 相当于 presum
+  //    for (int x : nums) {
+  //      // 统计奇数个数
+  //      oddnum += x & 1;
+  //      if (map.containsKey(oddnum - k)) count += map.get(oddnum - k);
+  //      // 存入
+  //      map.put(oddnum, map.getOrDefault(oddnum, 0) + 1);
+  //    }
+  //    return count;
+  //  }
 }
 
 /** 遍历相关 */
-class Travesal extends DefaultArray {
+class Traversal extends DefaultArray {
   /**
    * 寻找重复数，无序找首个，快慢指针
    *
@@ -1404,7 +1475,7 @@ class Travesal extends DefaultArray {
   }
 
   /**
-   * 旋转图像
+   * 旋转图像 / 旋转矩阵
    *
    * <p>沿东南斜对角线 & 垂直中线翻转
    *
@@ -1595,12 +1666,7 @@ class Travesal extends DefaultArray {
     return lo;
   }
 
-  /***
-   *
-   * @param nums 原始数组
-   * @param maxIntervalSum 子数组各自的和的最大值
-   * @return 满足不超过「子数组各自的和的最大值」的分割数
-   */
+  // 满足不超过「子数组各自的和的最大值」的分割数
   private int split(int[] nums, int maxIntervalSum) {
     // 至少是一个分割 & 当前区间的和
     int splits = 1, curIntervalSum = 0;

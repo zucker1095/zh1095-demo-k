@@ -35,6 +35,16 @@ public class LList {
     return pre;
   }
 
+  private ListNode _reverseList(ListNode head) {
+    if (head == null || head.next == null) return head;
+    ListNode cur = _reverseList(head.next);
+    head.next.next = head;
+    // 防止链表循环
+    head.next = null;
+    // 每层递归函数都返回 cur 即最后一个节点
+    return cur;
+  }
+
   /**
    * 合并两个有序链表，正向，参考合并两个有序数组
    *
@@ -707,11 +717,8 @@ class DeleteList extends LList {
     dummy.next = head;
     ListNode cur = dummy.next;
     while (cur != null && cur.next != null) {
-      if (cur.val == cur.next.val) {
-        cur.next = cur.next.next;
-        continue;
-      }
-      cur = cur.next;
+      if (cur.val == cur.next.val) cur.next = cur.next.next;
+      else cur = cur.next;
     }
     return dummy.next;
   }
@@ -725,18 +732,16 @@ class DeleteList extends LList {
   private ListNode deleteDuplicatesII(ListNode head) {
     ListNode dummy = new ListNode();
     dummy.next = head;
-    // diff0
-    ListNode cur = dummy;
-    // diff1
-    while (cur.next != null && cur.next.next != null) {
-      // diff2
-      if (cur.next.val == cur.next.next.val) {
-        int target = cur.next.val;
-        // diff3
-        while (cur.next != null && cur.next.val == target) {
-          cur.next = cur.next.next;
+    ListNode pre = dummy, cur = dummy.next;
+    while (cur != null && cur.next != null) {
+      if (pre.next.val == cur.next.val) {
+        int target = pre.next.val;
+        while (cur.next != null && target == cur.next.val) {
+          cur = cur.next;
         }
-        continue;
+        pre.next = cur.next;
+      } else {
+        pre = cur;
       }
       cur = cur.next;
     }

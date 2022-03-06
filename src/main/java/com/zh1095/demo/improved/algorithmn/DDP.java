@@ -447,10 +447,10 @@ class SSubSequence extends Dichotomy {
    *
    * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
    *
-   * <p>tail[i] 表示长度为 i+1 的所有 LIS 的结尾的最小值
-   *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
+   * 与
+   * https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
    *
    * <p>扩展1，输出路径，参考
    * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
@@ -459,39 +459,40 @@ class SSubSequence extends Dichotomy {
    * @return int int
    */
   public int lengthOfLIS(int[] nums) {
+    // tail 最后一个已经赋值的元素的索引
     int len = nums.length, end = 0;
+    // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
     int[] tail = new int[len], dp = new int[len];
     tail[0] = nums[0];
     // dp[0] = 1;
     for (int i = 1; i < len; i++) {
+      // 插入或替换
       if (tail[end] < nums[i]) {
         end += 1;
         tail[end] = nums[i];
         // dp[i] = end + 1;
       } else {
-        // 替换
         int lo = lowerBound(Arrays.copyOfRange(tail, 0, end + 1), nums[i]);
         tail[lo] = nums[i];
         // dp[i] = lo + 1;
       }
     }
-    // getPath(nums,dp,end);
+    // findPath(nums,dp,end+1);
+    // 题目要求返回的是长度，因此 +1 后返回
     return end + 1;
   }
 
+  // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
+  // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
   // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
   // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
-  private int[] getPath(int[] nums, int[] dp, int end) {
-    int len = nums.length;
-    int[] path = new int[end + 1];
-    int j = end + 1;
-    // 需要反向从后往前找，因为相同长度的dp[i]，后面的肯定比前面的字典序小（值小）
-    // 反证：如果后面的比前面大，那么必定后面的长度 > 前面的长度
-    for (int i = len - 1; i >= 0 && j >= 0; i--) {
-      if (dp[i] == j) {
-        j -= 1;
-        path[j] = nums[i];
-      }
+  private int[] findPath(int[] nums, int[] dp, int len) {
+    int[] path = new int[len];
+    int count = len;
+    for (int i = nums.length - 1; i >= 0 && count >= 0; i--) {
+      if (dp[i] != count) continue;
+      count -= 1;
+      path[count] = nums[i];
     }
     return path;
   }
