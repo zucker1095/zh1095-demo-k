@@ -7,9 +7,11 @@ import java.util.*;
  *
  * <p>拼接需求，只增不减则 String，否则选非线程安全的 StringBuilder 即可
  *
- * <p>遍历需求，s.charAt() 即可，需要更改则 s.toCharArray()
+ * <p>对于 unicode 编码，字母与索引可以表示与 'a' 的偏移量，即 ch-'a'，而获取字母同理如 2+'a' is 'c'
  *
  * <p>取字符运算时需要 c-'0' 以隐式转为 int
+ *
+ * <p>遍历需求，s.charAt() 即可，需要更改则 s.toCharArray()
  *
  * @author cenghui
  */
@@ -604,24 +606,23 @@ class SSubString {
   }
 
   // TODO KMP 思想，类似于用伪链表把相同的字符给链接起来
-  private boolean isSubsequence2(String s, String t) {
-    t = ' ' + t;
-    // 存储每一个位置上 a-z 的下一个字符出现的位置
-    int[][] dp = new int[t.length()][26];
-    for (char c = 'a'; c <= 'z'; c++) {
-      // 表示接下来不会在出现该字符
-      int nxtIdx = -1;
-      for (int i = t.length() - 1; i >= 0; i--) {
-        // dp[i][c-'a']  加上外层循环  就是对每一个位置的 a-z 字符的处理
-        dp[i][c - 'a'] = nxtIdx;
-        // 表示当前位置有该字符，那么指向下一个该字符出现的位置就要被更新为 i
-        if (t.charAt(i) == c) nxtIdx = i;
+  // dp[i][p] 表示 patternStr[i+1:end] 区间内 p 的首个索引
+  // 在 dp 的定义下，如对于 "abac" 无法找到首个 a，因此需要前缀一个空格
+  // 该解法中对 patternStr 的处理与 mainStr 无关，且预处理完成后，可以利用预处理数组的信息，线性地算出任意一个字符串 mainStr 是否为 patternStr 的子串
+  private boolean isSubsequence2(String mainStr, String patternStr) {
+    patternStr = " " + patternStr;
+    int[][] dp = new int[patternStr.length()][26];
+    for (int ch = 0; ch < 26; ch++) {
+      int nxt = -1;
+      for (int i = patternStr.length() - 1; i >= 0; i--) {
+        dp[i][ch] = nxt;
+        if (patternStr.charAt(i) == ch + 'a') nxt = i;
       }
     }
+    // 起始位置是空字符
     int idx = 0;
-    for (int i = 0; i < s.length(); i++) {
-      // 因为加了' ' 则之后在处理第一个字符的时候  如果是在第一行，就会去第一行，不影响之后字符的判断
-      idx = dp[idx][s.charAt(i) - 'a'];
+    for (char ch : mainStr.toCharArray()) {
+      idx = dp[idx][ch - 'a'];
       if (idx == -1) return false;
     }
     return true;

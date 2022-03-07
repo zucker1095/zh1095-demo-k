@@ -75,7 +75,7 @@ class OOptimalSolution {
   }
 
   /**
-   * 接雨水，贪心，类似漏桶效应
+   * 接雨水，贪心，漏桶效应
    *
    * @param height the height
    * @return int int
@@ -443,6 +443,33 @@ class SSubArray {
 /** 子序列 */
 class SSubSequence extends Dichotomy {
   /**
+   * 最长连续序列，参考
+   * https://leetcode-cn.com/problems/longest-consecutive-sequence/solution/xiao-bai-lang-ha-xi-ji-he-ha-xi-biao-don-j5a2/
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int longestConsecutive(int[] nums) {
+    int maxLen = 0;
+    // 所在连续区间的长度
+    Map<Integer, Integer> lens = new HashMap<>(nums.length);
+    for (int num : nums) {
+      if (lens.containsKey(num)) continue;
+      // 左右连续区间，与当前数字所在连续区间的长度
+      int left = lens.getOrDefault(num - 1, 0),
+          right = lens.getOrDefault(num + 1, 0),
+          cur = 1 + left + right;
+      // 表示已经遍历过该值
+      lens.put(num, -1);
+      // 分别更新当前连续区间左右边界对应的区间长度
+      lens.put(num - left, cur);
+      lens.put(num + right, cur);
+      maxLen = Math.max(maxLen, cur);
+    }
+    return maxLen;
+  }
+
+  /**
    * 最长递增子序列 / 最长上升子序列，基于贪心
    *
    * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
@@ -467,14 +494,14 @@ class SSubSequence extends Dichotomy {
     // dp[0] = 1;
     for (int i = 1; i < len; i++) {
       // 插入或替换
-      if (tail[end] < nums[i]) {
-        end += 1;
-        tail[end] = nums[i];
-        // dp[i] = end + 1;
-      } else {
+      if (nums[i] <= tail[end]) {
         int lo = lowerBound(Arrays.copyOfRange(tail, 0, end + 1), nums[i]);
         tail[lo] = nums[i];
         // dp[i] = lo + 1;
+      } else {
+        end += 1;
+        tail[end] = nums[i];
+        // dp[i] = end + 1;
       }
     }
     // findPath(nums,dp,end+1);
@@ -495,35 +522,6 @@ class SSubSequence extends Dichotomy {
       path[count] = nums[i];
     }
     return path;
-  }
-
-  /**
-   * 最长连续序列，dp，时间 O(n)
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/longest-consecutive-sequence/solution/xiao-bai-lang-ha-xi-ji-he-ha-xi-biao-don-j5a2/
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int longestConsecutive(int[] nums) {
-    int res = 0;
-    // 所在连续区间的长度
-    Map<Integer, Integer> lens = new HashMap<>(nums.length);
-    for (int num : nums) {
-      if (lens.containsKey(num)) continue;
-      // 左连续区间的长度
-      int left = lens.get(num - 1), right = lens.get(num + 1);
-      // 当前连续区间的总长度
-      int cur = 1 + left + right;
-      res = Math.max(res, cur);
-      // 表示已经遍历过该值
-      lens.put(num, -1);
-      // 更新当前连续区间左边界和右边界对应的区间长度
-      lens.put(num - left, cur);
-      lens.put(num + right, cur);
-    }
-    return res;
   }
 
   /**
@@ -682,57 +680,12 @@ class SSubSequence extends Dichotomy {
  */
 class PPath {
   /**
-   * 不同路径I
-   *
-   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
-   *
-   * @param m the m
-   * @param n the n
-   * @return int int
-   */
-  public int uniquePaths(int m, int n) {
-    int[] dp = new int[n];
-    Arrays.fill(dp, 1);
-    for (int i = 1; i < m; i++) {
-      for (int j = 1; j < n; j++) {
-        dp[j] += dp[j - 1];
-      }
-    }
-    return dp[n - 1];
-  }
-
-  /**
-   * 不同路径II
-   *
-   * <p>dp[i][j] 表示由起点，即 [0][0] 达到 [i][j] 的路径总数
-   *
-   * @param obstacleGrid the obstacle grid
-   * @return int int
-   */
-  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
-    int m = obstacleGrid[0].length;
-    int[] dp = new int[m];
-    // 起点可能有障碍物
-    dp[0] = (obstacleGrid[0][0] == 1) ? 0 : 1;
-    for (int[] rows : obstacleGrid) {
-      for (int j = 0; j < m; ++j) {
-        if (rows[j] == 1) {
-          dp[j] = 0;
-        } else if (rows[j] == 0 && j >= 1) {
-          dp[j] = dp[j] + dp[j - 1];
-        }
-      }
-    }
-    return dp[m - 1];
-  }
-
-  /**
    * 最小路径和，题设自然数
    *
    * <p>参考
    * https://leetcode-cn.com/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/0/
    *
-   * <p>dp[i][j] 表示直到走到 (i,j) 的最小路径和
+   * <p>dp[i][j] 表示 (0,0) to (i,j) 的最小路径和
    *
    * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
    *
@@ -855,6 +808,51 @@ class PPath {
     int cur = left[0] + right[0] + root.val;
     int nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
     return new int[] {nxt, cur};
+  }
+
+  /**
+   * 不同路径I
+   *
+   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
+   *
+   * @param m the m
+   * @param n the n
+   * @return int int
+   */
+  public int uniquePaths(int m, int n) {
+    int[] dp = new int[n];
+    Arrays.fill(dp, 1);
+    for (int i = 1; i < m; i++) {
+      for (int j = 1; j < n; j++) {
+        dp[j] += dp[j - 1];
+      }
+    }
+    return dp[n - 1];
+  }
+
+  /**
+   * 不同路径II
+   *
+   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数
+   *
+   * @param obstacleGrid the obstacle grid
+   * @return int int
+   */
+  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+    int len = obstacleGrid[0].length;
+    int[] dp = new int[len];
+    // 起点可能有障碍物
+    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
+    for (int[] rows : obstacleGrid) {
+      for (int i = 0; i < len; i++) {
+        if (rows[i] == 1) {
+          dp[i] = 0;
+        } else if (rows[i] == 0 && i >= 1) {
+          dp[i] = dp[i] + dp[i - 1];
+        }
+      }
+    }
+    return dp[len - 1];
   }
 }
 

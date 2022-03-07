@@ -475,10 +475,10 @@ class DData {
    * <p>扩展3，带超时
    */
   public class LRUCache {
-    private final Map<Integer, DLinkedNode> cache = new HashMap<Integer, DLinkedNode>();
+    private final Map<Integer, DLinkedNode> cache = new HashMap<>();
+    // dummy
+    private final DLinkedNode head = new DLinkedNode(), tail = new DLinkedNode();
     private final int capacity;
-    private final DLinkedNode head, tail; // dummy
-    private int size;
     /**
      * Instantiates a new Lru cache.
      *
@@ -486,15 +486,9 @@ class DData {
      */
     public LRUCache(int capacity) {
       this.capacity = capacity;
-      head = new DLinkedNode();
-      tail = new DLinkedNode();
       head.next = tail;
       tail.prev = head;
-      //      ReadWriteLock lock = new ReentrantReadWriteLock();
-      //      rl = lock.readLock();
-      //      wl = lock.writeLock();
     }
-    //    private final Lock rl, wl;
 
     /**
      * get & moveToHead
@@ -504,9 +498,7 @@ class DData {
      */
     public int get(int key) {
       DLinkedNode node = cache.get(key);
-      if (node == null) {
-        return -1;
-      }
+      if (node == null) return -1;
       moveToHead(node);
       return node.value;
     }
@@ -529,11 +521,9 @@ class DData {
       DLinkedNode newNode = new DLinkedNode(key, value);
       cache.put(key, newNode);
       addToHead(newNode);
-      size += 1;
-      if (size > capacity) {
+      if (cache.size() > capacity) {
         DLinkedNode tail = removeTail();
         cache.remove(tail.key);
-        size -= 1;
       }
     }
 

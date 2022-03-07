@@ -209,17 +209,13 @@ public class AArray extends DefaultArray {
   /**
    * 两个数组的交集，重复 & 顺序
    *
-   * <p>扩展，有序则双指针 & 二分，否则对较小的数组建立 Hash 再遍历较大者
+   * <p>扩展1，有序则双指针 & 二分，否则对较小的数组建立映射再遍历较大者
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2
    * @return int [ ]
    */
   public int[] intersection(int[] nums1, int[] nums2) {
-    return intersection1(nums1, nums2);
-  }
-
-  private int[] intersection1(int[] nums1, int[] nums2) {
     Arrays.sort(nums1);
     Arrays.sort(nums2);
     int len1 = nums1.length, len2 = nums2.length;
@@ -227,8 +223,11 @@ public class AArray extends DefaultArray {
     int cur = 0, p1 = 0, p2 = 0;
     while (p1 < len1 && p2 < len2) {
       int num1 = nums1[p1], num2 = nums2[p2];
-      if (num1 < num2) p1 += 1;
-      else if (num1 == num2) {
+      if (num1 < num2) {
+        p1 += 1;
+      } else if (num1 > num2) {
+        p2 += 1;
+      } else if (num1 == num2) {
         // 保证加入元素的唯一性
         if (cur == 0 || num1 != res[cur - 1]) {
           res[cur] = num1;
@@ -236,24 +235,29 @@ public class AArray extends DefaultArray {
         }
         p1 += 1;
         p2 += 1;
-      } else p2 += 1;
+      }
     }
     return Arrays.copyOfRange(res, 0, cur);
   }
 
-  private int[] intersection2(int[] a, int[] b) {
-    int[] nums1 = (a.length < b.length) ? a : b, nums2 = (a.length < b.length) ? b : a;
-    Map<Integer, Boolean> map = new HashMap<>();
-    int cur = 0;
-    int[] res = new int[nums1.length];
-    for (int num : nums1) map.put(num, true);
-    for (int num : nums2) {
-      if (!map.containsKey(num) || !map.get(num)) continue;
-      res[cur] = num;
-      cur += 1;
-      map.put(num, false);
+  /**
+   * 获取最大与第二大的数，无序数组
+   *
+   * @param nums
+   * @return
+   */
+  public int[] getMaxAndSecond(int[] nums) {
+    if (nums.length < 1) return new int[2];
+    int max = nums[0], second = Integer.MIN_VALUE;
+    for (int i = 1; i < nums.length; i++) {
+      if (nums[i] <= max) {
+        second = Math.max(second, nums[i]);
+        continue;
+      }
+      second = max;
+      max = nums[i];
     }
-    return Arrays.copyOfRange(res, 0, cur);
+    return new int[] {max, second};
   }
 
   /**
@@ -412,29 +416,9 @@ class HHeap extends DefaultArray {
     }
   }
 
-  // v1 是否优先度高于 v2
+  // 小根堆 v1 是否优先度高于 v2
   private boolean priorityThan(int v1, int v2) {
     return v1 < v2;
-  }
-
-  /**
-   * 获取最大与第二大的数，无序数组
-   *
-   * @param nums
-   * @return
-   */
-  public int[] getMaxAndSecond(int[] nums) {
-    if (nums.length < 1) return new int[2];
-    int max = nums[0], second = Integer.MIN_VALUE;
-    for (int i = 1; i < nums.length; i++) {
-      if (nums[i] > max) {
-        second = max;
-        max = nums[i];
-      } else {
-        second = Math.max(second, nums[i]);
-      }
-    }
-    return new int[] {max, second};
   }
 
   /**
@@ -1441,6 +1425,24 @@ class Traversal extends DefaultArray {
   }
 
   /**
+   * 数组中重复的数字，数字范围在 [0,nums.length-1]，返回任意一个重复的数字
+   *
+   * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
+   *
+   * @param nums
+   * @return
+   */
+  public int findRepeatNumber(int[] nums) {
+    for (int i = 0; i < nums.length; i++) {
+      while (nums[i] != i) {
+        if (nums[i] == nums[nums[i]]) return nums[i];
+        swap(nums, i, nums[i]);
+      }
+    }
+    return -1;
+  }
+
+  /**
    * 缺失的第一个正数
    *
    * <p>原地哈希，缺失会命中错误索引，nums[nums[i]-1]!=nums[i]，类似数组中重复的数据
@@ -1493,10 +1495,9 @@ class Traversal extends DefaultArray {
       }
     }
     for (int i = 0; i < len; i++) {
-      int[] curRow = matrix[i];
       int lo = 0, hi = len - 1;
-      while (lo <= hi) {
-        swap(curRow, lo, hi);
+      while (lo < hi) {
+        swap(matrix[i], lo, hi);
         lo += 1;
         hi -= 1;
       }
@@ -1577,7 +1578,9 @@ class Traversal extends DefaultArray {
   }
 
   /**
-   * 字符的最短距离，依次正序和逆序遍历
+   * 字符的最短距离，返回 answer[i] 是 s[i] 与所有 s.chatAt(c) 的最小值
+   *
+   * <p>依次正序和逆序遍历
    *
    * <p>TODO
    *
@@ -1587,17 +1590,17 @@ class Traversal extends DefaultArray {
    */
   public int[] shortestToChar(String s, char c) {
     int len = s.length(), pre = Integer.MIN_VALUE / 2;
-    int[] res = new int[len];
+    int[] minDistances = new int[len];
     for (int i = 0; i < len; i++) {
       if (s.charAt(i) == c) pre = i;
-      res[i] = i - pre;
+      minDistances[i] = i - pre;
     }
     pre = Integer.MAX_VALUE / 2;
     for (int i = len - 1; i >= 0; i--) {
       if (s.charAt(i) == c) pre = i;
-      res[i] = Math.min(res[i], pre - i);
+      minDistances[i] = Math.min(minDistances[i], pre - i);
     }
-    return res;
+    return minDistances;
   }
 
   /**

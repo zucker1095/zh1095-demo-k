@@ -409,15 +409,9 @@ class MergeList extends LList {
   }
 
   /**
-   * 重排奇偶链表，参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
+   * 重排奇偶链表，分别取出奇偶链表，奇数位链表需断尾 & 反转偶数位链表 & 合并
    *
-   * <p>完全可以复用模板，三步曲如下
-   *
-   * <p>1.分别取出奇偶链表，奇数位链表需断尾
-   *
-   * <p>2.反转偶数位链表
-   *
-   * <p>3.合并二者即可
+   * <p>参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
    *
    * @param head
    * @return

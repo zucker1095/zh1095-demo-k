@@ -212,19 +212,16 @@ public class TTree {
   }
 
   /**
-   * 求根结点到叶子结点数字之和，bfs 维护两个队列 / 前序
+   * 求根结点到叶子结点数字之和，bfs 维护两个队列逐层相加 / 前序
    *
    * @param root the root
    * @return int int
    */
   public int sumNumbers(TreeNode root) {
-    return bfs(root);
     //    dfs12(root, 0);
     //    return res3;
-  }
-
-  private int bfs(TreeNode root) {
     if (root == null) return 0;
+    // 题设不会越界
     int sum = 0;
     Queue<TreeNode> nodeQueue = new LinkedList<>();
     Queue<Integer> numQueue = new LinkedList<>();
@@ -250,10 +247,10 @@ public class TTree {
     return sum;
   }
 
-  private void dfs12(TreeNode root, int path) {
+  private void dfs12(TreeNode root, int num) {
     if (root == null) return;
     // 题设不会越界
-    int cur = path * 10 + root.val;
+    int cur = num * 10 + root.val;
     if (root.left == null && root.right == null) {
       res3 += cur;
       return;
@@ -263,7 +260,7 @@ public class TTree {
   }
 
   /**
-   * 二叉树的下一个结点，给定一棵树中任一结点，返回其中序遍历顺序的下一个结点，提供结点的 next 指向父结点
+   * 二叉树的下一个节点，给定一棵树中任一结点，返回其中序遍历顺序的下一个结点，提供结点的 next 指向父结点
    *
    * <p>参考 https://mp.weixin.qq.com/s/yewlHvHSilMsrUMFIO8WAA
    *
@@ -292,12 +289,7 @@ public class TTree {
   }
 
   private class _TreeNode {
-    /** The Left. */
-    _TreeNode left,
-        /** The Right. */
-        right,
-        /** The Next. */
-        next;
+    private _TreeNode left, right, next;
   }
 
   /** 二叉树的序列化与反序列化，前序 */
@@ -603,6 +595,31 @@ class BBacktracking extends DDFS {
   }
 
   /**
+   * 二叉树的所有路径，前序，其实是回溯，由于 Java String immutable 才不需移除
+   *
+   * <p>BFS 解法参考「求根结点到叶子结点数字之和」分别维护一个结点与路径的队列
+   *
+   * @param root the root
+   * @return list
+   */
+  public List<String> binaryTreePaths(TreeNode root) {
+    List<String> res = new ArrayList<>();
+    backtracking12(root, "", res);
+    return res;
+  }
+
+  private void backtracking12(TreeNode root, String path, List<String> res) {
+    if (root == null) return;
+    if (root.left == null && root.right == null) {
+      res.add(path + root.val);
+      return;
+    }
+    String cur = path + root.val + "->";
+    backtracking12(root.left, cur, res);
+    backtracking12(root.right, cur, res);
+  }
+
+  /**
    * 分割回文串
    *
    * <p>1.预处理所有子串的回文情况
@@ -651,7 +668,10 @@ class BBacktracking extends DDFS {
   }
 
   /**
-   * 复原IP地址，特判多
+   * 复原IP地址
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/restore-ip-addresses/solution/hui-su-suan-fa-hua-tu-fen-xi-jian-zhi-tiao-jian-by/
    *
    * @param s the s
    * @return list list
@@ -667,31 +687,29 @@ class BBacktracking extends DDFS {
   }
 
   private void backtracking6(
-      String s, Deque<String> path, List<String> res, int start, int residue) {
-    if (start == s.length()) {
-      if (residue == 0) res.add(String.join(".", path));
+      String s, Deque<String> path, List<String> res, int begin, int segment) {
+    if (begin == s.length()) {
+      if (segment == 0) res.add(String.join(".", path));
       return;
     }
-    for (int i = start; i < start + 3 && i < s.length(); i++) {
-      if (residue * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
+    // 每段只截取三位数
+    for (int i = begin; i < begin + 3 && i < s.length(); i++) {
+      // 当前段分配的位数不够，或分配的位数过多，或数字过大
+      if (segment * 3 < s.length() - i || !isValidIpSegment(s, begin, i)) {
         continue;
       }
-      path.addLast(s.substring(start, i + 1));
-      backtracking6(s, path, res, i + 1, residue - 1);
+      path.addLast(s.substring(begin, i + 1));
+      backtracking6(s, path, res, i + 1, segment - 1);
       path.removeLast();
     }
   }
 
   private boolean isValidIpSegment(String s, int lo, int hi) {
-    int res = 0;
-    if (hi > lo && s.charAt(lo) == '0') {
-      return false;
-    }
-    while (lo <= hi) {
-      res = res * 10 + s.charAt(lo) - '0';
-      lo += 1;
-    }
-    return res >= 0 && res <= 255;
+    int len = hi - lo + 1;
+    // 前导零剪枝
+    if (len > 1 && s.charAt(lo) == '0') return false;
+    int num = len > 0 ? Integer.parseInt(s.substring(lo, hi + 1)) : 0;
+    return 0 <= num && num <= 255;
   }
 
   /**
@@ -959,31 +977,6 @@ class DDFS {
     }
     collect(root.left, k - 1);
     collect(root.right, k - 1);
-  }
-
-  /**
-   * 二叉树的所有路径，前序
-   *
-   * @param root the root
-   * @return list
-   */
-  public List<String> binaryTreePaths(TreeNode root) {
-    List<String> res = new ArrayList<>();
-    dfs13(root, "", res);
-    return res;
-  }
-
-  private void dfs13(TreeNode root, String path, List<String> res) {
-    // 如果为空，直接返回
-    if (root == null) return;
-    // 如果是叶子结点，说明找到了一条路径，把它加入到res中
-    if (root.left == null && root.right == null) {
-      res.add(path + root.val);
-      return;
-    }
-    // 如果不是叶子结点，在分别遍历他的左右子结点
-    dfs13(root.left, path + root.val + "->", res);
-    dfs13(root.right, path + root.val + "->", res);
   }
 }
 
