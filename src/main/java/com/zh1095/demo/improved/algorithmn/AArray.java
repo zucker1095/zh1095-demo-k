@@ -863,14 +863,13 @@ class Dichotomy extends DefaultArray {
   public int search(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
-      // 根据分支的逻辑将中间数改成上取整
+      // 根据分支的逻辑，将中间数改成上取整
       int mid = lo + (hi - lo + 1) / 2;
       if (nums[mid] < nums[hi]) {
-        // target 落在 [mid..right]
+        // target 落在 [mid...hi]
         if (nums[mid] <= target && target <= nums[hi]) lo = mid;
         else hi = mid - 1;
       } else {
-        // target 落在 [left..mid - 1]
         if (nums[lo] <= target && target <= nums[mid - 1]) hi = mid - 1;
         else lo = mid;
       }
@@ -956,7 +955,7 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 山脉数组中查找目标值
+   * 山脉数组中查找目标值，三段二分
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/find-in-mountain-array/solution/shi-yong-chao-hao-yong-de-er-fen-fa-mo-ban-python-/
@@ -979,20 +978,13 @@ class Dichotomy extends DefaultArray {
   private int search(MountainArray mountainArr, int target, int lo, int hi, boolean flag) {
     if (!flag) target *= -1;
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      int cur = mountainArr.get(mid) * (flag ? 1 : -1);
-      if (cur < target) {
-        lo = mid + 1;
-      } else if (cur == target) {
-        return mid;
-      } else {
-        hi = mid;
-      }
+      int mid = lo + (hi - lo) / 2, cur = mountainArr.get(mid) * (flag ? 1 : -1);
+      if (cur < target) lo = mid + 1;
+      else if (cur == target) return mid;
+      else hi = mid;
     }
-    int mid = lo + (hi - lo) / 2;
-    int cur = mountainArr.get(mid) * (flag ? 1 : -1);
-    if (cur == target) return lo;
-    return -1;
+    int mid = lo + (hi - lo) / 2, cur = mountainArr.get(mid) * (flag ? 1 : -1);
+    return cur == target ? lo : -1;
   }
 
   /**
@@ -1015,7 +1007,7 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 有序矩阵中第k小的元素，值域二分
+   * 有序矩阵中第k小的元素，题设元素唯一，因此对数值进行二分，即值域
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/solution/er-fen-chao-ji-jian-dan-by-jacksu1024/
@@ -1025,23 +1017,22 @@ class Dichotomy extends DefaultArray {
    * @return
    */
   public int kthSmallest(int[][] matrix, int k) {
+    // 左上角与右下角即数值的上下界
     int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
     while (lo < hi) {
-      // 每次循环都保证第 k 小的数在 [lo,hi]
       int mid = lo + (hi - lo) / 2;
-      // 找二维矩阵中 <=mid 的元素总个数，判断目标分别在 [lo,mid] 或 [mid+1,hi]
-      if (findLteMid(matrix, mid) < k) lo = mid + 1;
+      // 找二维矩阵中 <=mid 的元素总个数，判断目标分别在 [lo,mid] or [mid+1,hi]
+      if (countLte(matrix, mid) < k) lo = mid + 1;
       else hi = mid;
     }
     return hi;
   }
 
-  // 向右下角遍历，找每列最后一个 <=mid 的数即知道每一列有多少个数 <=mid
-  private int findLteMid(int[][] matrix, int mid) {
-    int count = 0;
-    int y = matrix.length - 1, x = 0;
+  // 从左下角开始遍历，找每列最后一个 <=target 的数即知道每一列有多少个数 <=target
+  private int countLte(int[][] matrix, int target) {
+    int count = 0, x = 0, y = matrix.length - 1;
     while (-1 < y && x < matrix[0].length) {
-      if (matrix[y][x] <= mid) {
+      if (matrix[y][x] <= target) {
         // 第 j 列有 i+1 个元素 <=mid
         count += y + 1;
         x += 1;
@@ -1114,7 +1105,11 @@ class Dichotomy extends DefaultArray {
   }
 }
 
-/** 前缀和，区间和满足 target */
+/**
+ * 前缀和，区间和满足 target
+ *
+ * <p>和严格相等则需要哈希，否则搭配滑窗
+ */
 class PreSum {
   /**
    * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
@@ -1131,16 +1126,17 @@ class PreSum {
    * @return int int
    */
   public int maxSubArray(int[] nums) {
-    int curSum = 0, res = nums[0];
+    if (nums.length < 1) return 0;
+    int curSum = 0, maxSum = nums[0];
     for (int num : nums) {
       curSum = curSum > 0 ? curSum + num : num;
-      res = Math.max(res, curSum);
+      maxSum = Math.max(maxSum, curSum);
     }
-    return res;
+    return maxSum;
   }
 
   /**
-   * 和为k的子数组，返回满足的子数组数量
+   * 和为k的子数组，严格相等，返回满足的子数组数量
    *
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
@@ -1152,7 +1148,7 @@ class PreSum {
    * @return int int
    */
   public int subarraySum(int[] nums, int k) {
-    int count = 0, preSum = 0;
+    int preSum = 0, count = 0;
     // 对应的前缀和的个数
     HashMap<Integer, Integer> countBySum = new HashMap<>();
     // 需要预存前缀和为 0，会漏掉前几位就满足的情况
@@ -1169,7 +1165,76 @@ class PreSum {
   }
 
   /**
-   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
+   * 连续数组，严格相等，最长
+   *
+   * <p>找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
+   *
+   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
+   *
+   * @param nums the nums
+   * @return int
+   */
+  public int findMaxLength(int[] nums) {
+    int preSum = 0, maxLen = 0;
+    // 总和及其首次出现的下标
+    Map<Integer, Integer> idxBySum = new HashMap<>();
+    // 可能存在前缀和刚好满足条件的情况
+    idxBySum.put(0, -1);
+    for (int i = 0; i < nums.length; i++) {
+      preSum += nums[i] == 0 ? -1 : 1;
+      // 因为求的是最长的长度，只记录前缀和第一次出现的下标
+      if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
+      else idxBySum.put(preSum, i);
+    }
+    return maxLen;
+  }
+
+  /**
+   * 长度最小的子数组，和至少，最短，前缀和搭配滑窗
+   *
+   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
+   *
+   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
+   *
+   * @param target the target
+   * @param nums the nums
+   * @return int int
+   */
+  public int minSubArrayLen(int target, int[] nums) {
+    int preSum = 0, minLen = nums.length + 1;
+    int lo = 0, hi = 0;
+    while (hi < nums.length) {
+      // in
+      preSum += nums[hi];
+      while (preSum >= target) {
+        minLen = Math.min(minLen, hi - lo + 1);
+        // out
+        preSum -= nums[lo];
+        lo += 1;
+      }
+      // 替换上一段 while
+      //      if (sum == target) {
+      //        // 入结果集
+      //        hi += 1;
+      //        continue;
+      //      }
+      //      while (sum > target) {
+      //        sum -= nums[lo];
+      //        if (sum == target) {
+      //          // 入结果集
+      //        }
+      //        lo += 1;
+      //      }
+      hi += 1;
+    }
+    return minLen == Integer.MAX_VALUE ? 0 : minLen;
+  }
+
+  /**
+   * 连续的子数组和，严格相等，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
    *
    * <p>扩展1，方案数参考
    * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
@@ -1202,7 +1267,7 @@ class PreSum {
   }
 
   /**
-   * 和可被k整除的子数组
+   * 和可被k整除的子数组，严格相等
    *
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
@@ -1212,9 +1277,9 @@ class PreSum {
    * @return
    */
   public int subarraysDivByK(int[] nums, int k) {
+    int preSum = 0, count = 0;
     HashMap<Integer, Integer> countByRemainder = new HashMap<>();
     countByRemainder.put(0, 1);
-    int preSum = 0, count = 0;
     for (int num : nums) {
       preSum += num;
       // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
@@ -1227,74 +1292,7 @@ class PreSum {
   }
 
   /**
-   * 连续数组，找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
-   *
-   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
-   *
-   * @param nums the nums
-   * @return int
-   */
-  public int findMaxLength(int[] nums) {
-    int preSum = 0, maxLen = 0;
-    // 总和及其首次出现的下标
-    Map<Integer, Integer> idxBySum = new HashMap<>();
-    // 可能存在前缀和刚好满足条件的情况
-    idxBySum.put(0, -1);
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i] == 0 ? -1 : 1;
-      // 因为求的是最长的长度，只记录前缀和第一次出现的下标
-      if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
-      else idxBySum.put(preSum, i);
-    }
-    return maxLen;
-  }
-
-  /**
-   * 长度最小的子数组，满足和不少于 target，前缀和搭配滑窗的思维
-   *
-   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
-   *
-   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
-   *
-   * @param target the target
-   * @param nums the nums
-   * @return int int
-   */
-  public int minSubArrayLen(int target, int[] nums) {
-    int minLen = Integer.MAX_VALUE, preSum = 0;
-    int lo = 0, hi = 0;
-    while (hi < nums.length) {
-      // in
-      preSum += nums[hi];
-      while (preSum >= target) {
-        minLen = Math.min(minLen, hi - lo + 1);
-        // out
-        preSum -= nums[lo];
-        lo += 1;
-      }
-      // 替换上一段 while
-      //      if (sum == target) {
-      //        // 入结果集
-      //        hi += 1;
-      //        continue;
-      //      }
-      //      while (sum > target) {
-      //        sum -= nums[lo];
-      //        if (sum == target) {
-      //          // 入结果集
-      //        }
-      //        lo += 1;
-      //      }
-      hi += 1;
-    }
-    return minLen == Integer.MAX_VALUE ? 0 : minLen;
-  }
-
-  /**
-   * 和至少为k的最短子数组，单调队列 & 前缀和
+   * 和至少为k的最短子数组，和至少，单调队列 & 前缀和
    *
    * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
    *
@@ -1303,13 +1301,11 @@ class PreSum {
    * @return int int
    */
   public int shortestSubarray(int[] nums, int k) {
-    int len = nums.length;
+    int len = nums.length, minLen = len + 1;
     long[] preSum = new long[len + 1];
     for (int i = 0; i < len; i++) {
       preSum[i + 1] = preSum[i] + (long) nums[i];
     }
-    // impossible
-    int minLen = len + 1;
     Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < preSum.length; i++) {
       // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
@@ -1347,10 +1343,10 @@ class PreSum {
   //  }
 }
 
-/** 遍历相关 */
-class Traversal extends DefaultArray {
+/** 重复，哈希有关 */
+class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，无序找首个，快慢指针
+   * 寻找重复数，无序找首个，快慢指针，与「环形链表II」一致
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1362,17 +1358,16 @@ class Traversal extends DefaultArray {
    * @return int int
    */
   public int findDuplicate(int[] nums) {
-    int lo = 0, hi = 0;
-    while (true) {
+    // 题设区间为 [1,n]
+    int lo = nums[0], hi = nums[nums[0]];
+    while (lo != hi) {
       lo = nums[lo];
       hi = nums[nums[hi]];
-      if (hi == lo) break;
     }
     int finder = 0;
-    while (true) {
-      finder = nums[finder];
+    while (lo != finder) {
       lo = nums[lo];
-      if (lo == finder) break;
+      finder = nums[finder];
     }
     return lo;
   }
@@ -1406,7 +1401,7 @@ class Traversal extends DefaultArray {
   //  }
 
   /**
-   * 数组中重复的数据，题设每个数字至多出现两次，且在 [1,n] 内
+   * 数组中重复的数据，返回所有重复数，每个数字至多出现两次，区间 [1,n]
    *
    * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
    *
@@ -1414,18 +1409,17 @@ class Traversal extends DefaultArray {
    * @return list list
    */
   public List<Integer> findDuplicates(int[] nums) {
-    List<Integer> res = new ArrayList<>();
+    List<Integer> duplicates = new ArrayList<>();
     for (int num : nums) {
       num *= num < 0 ? -1 : 1;
-      int idx = num - 1;
-      if (nums[idx] < 0) res.add(num);
-      else nums[idx] *= -1;
+      if (nums[num - 1] < 0) duplicates.add(num);
+      else nums[num - 1] *= -1;
     }
-    return res;
+    return duplicates;
   }
 
   /**
-   * 数组中重复的数字，数字范围在 [0,nums.length-1]，返回任意一个重复的数字
+   * 数组中重复的数字，返回任意一个重复的数字，区间 [0,nums.length-1]
    *
    * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
    *
@@ -1461,227 +1455,6 @@ class Traversal extends DefaultArray {
       if (nums[i] != i + 1) return i + 1;
     }
     return nums.length + 1;
-  }
-
-  /**
-   * 旋转数组，反转三次，all & [0,k-1] & [k,end]
-   *
-   * @param nums the nums
-   * @param k the k
-   */
-  public void rotate(int[] nums, int k) {
-    k %= nums.length;
-    reverse(nums, 0, nums.length - 1);
-    reverse(nums, 0, k - 1);
-    reverse(nums, k, nums.length - 1);
-  }
-
-  /**
-   * 旋转图像 / 旋转矩阵
-   *
-   * <p>沿东南斜对角线 & 垂直中线翻转
-   *
-   * <p>扩展1，翻转 180 度，则分别沿水平与垂直翻转，而 270 度则改为沿西南斜对角线
-   *
-   * @param matrix
-   */
-  public void rotate(int[][] matrix) {
-    int len = matrix.length;
-    for (int y = 0; y < len; y++) {
-      for (int x = 0; x < y; x++) {
-        int tmp = matrix[y][x];
-        matrix[y][x] = matrix[x][y];
-        matrix[x][y] = tmp;
-      }
-    }
-    for (int i = 0; i < len; i++) {
-      int lo = 0, hi = len - 1;
-      while (lo < hi) {
-        swap(matrix[i], lo, hi);
-        lo += 1;
-        hi -= 1;
-      }
-    }
-  }
-
-  /**
-   * 螺旋矩阵，遍历
-   *
-   * @param matrix
-   * @return
-   */
-  public List<Integer> spiralOrder(int[][] matrix) {
-    int row = matrix.length, col = matrix[0].length;
-    List<Integer> res = new ArrayList<>(row * col);
-    if (matrix.length == 0) return res;
-    int up = 0, down = row - 1, left = 0, right = col - 1;
-    while (true) {
-      for (int i = left; i <= right; i++) {
-        res.add(matrix[up][i]);
-      }
-      up += 1;
-      if (up > down) break;
-      for (int i = up; i <= down; i++) {
-        res.add(matrix[i][right]);
-      }
-      right -= 1;
-      if (right < left) break;
-      for (int i = right; i >= left; i--) {
-        res.add(matrix[down][i]);
-      }
-      down -= 1;
-      if (down < up) break;
-      for (int i = down; i >= up; i--) {
-        res.add(matrix[i][left]);
-      }
-      left += 1;
-      if (left > right) break;
-    }
-    return res;
-  }
-
-  /**
-   * 螺旋矩阵II，生成
-   *
-   * <p>left,right & up,down & right,left & down & up
-   *
-   * @param n
-   * @return
-   */
-  public int[][] generateMatrix(int n) {
-    int[][] res = new int[n][n];
-    int num = 1;
-    int left = 0, right = n - 1, up = 0, down = n - 1;
-    while (num <= n * n) {
-      for (int i = left; i <= right; i++) {
-        res[up][i] = num;
-        num += 1;
-      }
-      up += 1;
-      for (int i = up; i <= down; i++) {
-        res[i][right] = num;
-        num += 1;
-      }
-      right -= 1;
-      for (int i = right; i >= left; i--) {
-        res[down][i] = num;
-        num += 1;
-      }
-      down -= 1;
-      for (int i = down; i >= up; i--) {
-        res[i][left] = num;
-        num += 1;
-      }
-      left += 1;
-    }
-    return res;
-  }
-
-  /**
-   * 字符的最短距离，返回 answer[i] 是 s[i] 与所有 s.chatAt(c) 的最小值
-   *
-   * <p>依次正序和逆序遍历
-   *
-   * <p>TODO
-   *
-   * @param s
-   * @param c
-   * @return
-   */
-  public int[] shortestToChar(String s, char c) {
-    int len = s.length(), pre = Integer.MIN_VALUE / 2;
-    int[] minDistances = new int[len];
-    for (int i = 0; i < len; i++) {
-      if (s.charAt(i) == c) pre = i;
-      minDistances[i] = i - pre;
-    }
-    pre = Integer.MAX_VALUE / 2;
-    for (int i = len - 1; i >= 0; i--) {
-      if (s.charAt(i) == c) pre = i;
-      minDistances[i] = Math.min(minDistances[i], pre - i);
-    }
-    return minDistances;
-  }
-
-  /**
-   * 对角线遍历
-   *
-   * <p>扩展1，反对角线，则将下方 bXFlag 初始为 false
-   *
-   * @param matrix
-   * @return
-   */
-  public int[] findDiagonalOrder(int[][] matrix) {
-    if (matrix == null || matrix.length == 0) {
-      return new int[0];
-    }
-    int m = matrix.length, n = matrix[0].length;
-    int[] res = new int[m * n];
-    // 当前共遍历 k 个元素
-    int k = 0;
-    // 当前是否东北向遍历，反之为西南向
-    boolean bXFlag = true;
-    // 共有 m+n-1 条对角线
-    for (int i = 0; i < m + n - 1; i++) {
-      int pm = bXFlag ? m : n, pn = bXFlag ? n : m;
-      int x = (i < pm) ? i : pm - 1, y = i - x;
-      while (x >= 0 && y < pn) {
-        res[k] = bXFlag ? matrix[x][y] : matrix[y][x];
-        k += 1;
-        x -= 1;
-        y += 1;
-      }
-      bXFlag = !bXFlag;
-    }
-    return res;
-  }
-
-  /**
-   * 分割数组的最大值
-   *
-   * <p>TODO
-   *
-   * @param nums
-   * @param m
-   * @return
-   */
-  public int splitArray(int[] nums, int m) {
-    int max = 0, sum = 0;
-    // 计算子数组各自和的最大值的上下界
-    for (int num : nums) {
-      max = Math.max(max, num);
-      sum += num;
-    }
-    // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
-    int lo = max, hi = sum;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      int splits = split(nums, mid);
-      if (splits > m) {
-        // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要将「子数组各自的和的最大值」调大
-        // 下一轮搜索的区间是 [mid + 1, right]
-        lo = mid + 1;
-      } else {
-        // 下一轮搜索的区间是上一轮的反面区间 [left, mid]
-        hi = mid;
-      }
-    }
-    return lo;
-  }
-
-  // 满足不超过「子数组各自的和的最大值」的分割数
-  private int split(int[] nums, int maxIntervalSum) {
-    // 至少是一个分割 & 当前区间的和
-    int splits = 1, curIntervalSum = 0;
-    for (int num : nums) {
-      // 尝试加上当前遍历的这个数，如果加上去超过了「子数组各自的和的最大值」，就不加这个数，另起炉灶
-      if (curIntervalSum + num > maxIntervalSum) {
-        curIntervalSum = 0;
-        splits += 1;
-      }
-      curIntervalSum += num;
-    }
-    return splits;
   }
 }
 
@@ -1828,6 +1601,231 @@ class Delete extends DefaultArray {
   }
 }
 
+/** 遍历相关 */
+class Traversal extends DefaultArray {
+  /**
+   * 旋转数组，反转三次，all & [0,k-1] & [k,end]
+   *
+   * @param nums the nums
+   * @param k the k
+   */
+  public void rotate(int[] nums, int k) {
+    k %= nums.length;
+    reverse(nums, 0, nums.length - 1);
+    reverse(nums, 0, k - 1);
+    reverse(nums, k, nums.length - 1);
+  }
+
+  /**
+   * 旋转图像 / 旋转矩阵
+   *
+   * <p>沿东南斜对角线 & 垂直中线翻转
+   *
+   * <p>扩展1，翻转 180 度，则分别沿水平与垂直翻转，而 270 度则改为沿西南斜对角线
+   *
+   * @param matrix
+   */
+  public void rotate(int[][] matrix) {
+    int len = matrix.length;
+    for (int y = 0; y < len; y++) {
+      for (int x = 0; x < y; x++) {
+        int tmp = matrix[y][x];
+        matrix[y][x] = matrix[x][y];
+        matrix[x][y] = tmp;
+      }
+    }
+    for (int i = 0; i < len; i++) {
+      int lo = 0, hi = len - 1;
+      while (lo < hi) {
+        swap(matrix[i], lo, hi);
+        lo += 1;
+        hi -= 1;
+      }
+    }
+  }
+
+  /**
+   * 螺旋矩阵，遍历
+   *
+   * @param matrix
+   * @return
+   */
+  public List<Integer> spiralOrder(int[][] matrix) {
+    int row = matrix.length, col = matrix[0].length;
+    List<Integer> res = new ArrayList<>(row * col);
+    if (matrix.length == 0) return res;
+    int up = 0, down = row - 1, left = 0, right = col - 1;
+    while (true) {
+      for (int i = left; i <= right; i++) {
+        res.add(matrix[up][i]);
+      }
+      up += 1;
+      if (up > down) break;
+      for (int i = up; i <= down; i++) {
+        res.add(matrix[i][right]);
+      }
+      right -= 1;
+      if (right < left) break;
+      for (int i = right; i >= left; i--) {
+        res.add(matrix[down][i]);
+      }
+      down -= 1;
+      if (down < up) break;
+      for (int i = down; i >= up; i--) {
+        res.add(matrix[i][left]);
+      }
+      left += 1;
+      if (left > right) break;
+    }
+    return res;
+  }
+
+  /**
+   * 螺旋矩阵II，生成
+   *
+   * <p>left,right & up,down & right,left & down & up
+   *
+   * @param n
+   * @return
+   */
+  public int[][] generateMatrix(int n) {
+    int[][] res = new int[n][n];
+    int num = 1;
+    int left = 0, right = n - 1, up = 0, down = n - 1;
+    while (num <= n * n) {
+      for (int i = left; i <= right; i++) {
+        res[up][i] = num;
+        num += 1;
+      }
+      up += 1;
+      for (int i = up; i <= down; i++) {
+        res[i][right] = num;
+        num += 1;
+      }
+      right -= 1;
+      for (int i = right; i >= left; i--) {
+        res[down][i] = num;
+        num += 1;
+      }
+      down -= 1;
+      for (int i = down; i >= up; i--) {
+        res[i][left] = num;
+        num += 1;
+      }
+      left += 1;
+    }
+    return res;
+  }
+
+  /**
+   * 字符的最短距离，返回 answer[i] 是 s[i] 与所有 s.chatAt(c) 的最小值
+   *
+   * <p>依次正序和逆序遍历，分别找出距离向左或者向右下一个字符 C 的距离，答案就是这两个值的较小值
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/shortest-distance-to-a-character/solution/zi-fu-de-zui-duan-ju-chi-by-leetcode/
+   *
+   * @param s
+   * @param c
+   * @return
+   */
+  public int[] shortestToChar(String s, char c) {
+    int len = s.length(), pre = Integer.MIN_VALUE / 2;
+    int[] minDistances = new int[len];
+    for (int i = 0; i < len; i++) {
+      if (s.charAt(i) == c) pre = i;
+      minDistances[i] = i - pre;
+    }
+    pre = Integer.MAX_VALUE / 2;
+    for (int i = len - 1; i >= 0; i--) {
+      if (s.charAt(i) == c) pre = i;
+      minDistances[i] = Math.min(minDistances[i], pre - i);
+    }
+    return minDistances;
+  }
+
+  /**
+   * 对角线遍历
+   *
+   * <p>扩展1，反对角线，则将下方 bXFlag 初始为 false
+   *
+   * @param matrix
+   * @return
+   */
+  public int[] findDiagonalOrder(int[][] matrix) {
+    if (matrix == null || matrix.length == 0) {
+      return new int[0];
+    }
+    int m = matrix.length, n = matrix[0].length;
+    int[] res = new int[m * n];
+    // 当前共遍历 k 个元素
+    int k = 0;
+    // 当前是否东北向遍历，反之为西南向
+    boolean bXFlag = true;
+    // 共有 m+n-1 条对角线
+    for (int i = 0; i < m + n - 1; i++) {
+      int pm = bXFlag ? m : n, pn = bXFlag ? n : m;
+      int x = (i < pm) ? i : pm - 1, y = i - x;
+      while (x >= 0 && y < pn) {
+        res[k] = bXFlag ? matrix[x][y] : matrix[y][x];
+        k += 1;
+        x -= 1;
+        y += 1;
+      }
+      bXFlag = !bXFlag;
+    }
+    return res;
+  }
+
+  /**
+   * 分割数组的最大值
+   *
+   * <p>TODO
+   *
+   * @param nums
+   * @param m
+   * @return
+   */
+  public int splitArray(int[] nums, int m) {
+    int max = 0, sum = 0;
+    // 计算子数组各自和的最大值的上下界
+    for (int num : nums) {
+      max = Math.max(max, num);
+      sum += num;
+    }
+    // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
+    int lo = max, hi = sum;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      int splits = split(nums, mid);
+      if (splits > m) {
+        // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要将「子数组各自的和的最大值」调大
+        // 下一轮搜索的区间是 [mid + 1, right]
+        lo = mid + 1;
+      } else {
+        // 下一轮搜索的区间是上一轮的反面区间 [left, mid]
+        hi = mid;
+      }
+    }
+    return lo;
+  }
+
+  // 满足不超过「子数组各自的和的最大值」的分割数
+  private int split(int[] nums, int maxIntervalSum) {
+    // 至少是一个分割 & 当前区间的和
+    int splits = 1, curIntervalSum = 0;
+    for (int num : nums) {
+      // 尝试加上当前遍历的这个数，如果加上去超过了「子数组各自的和的最大值」，就不加这个数，另起炉灶
+      if (curIntervalSum + num > maxIntervalSum) {
+        curIntervalSum = 0;
+        splits += 1;
+      }
+      curIntervalSum += num;
+    }
+    return splits;
+  }
+}
+
 /** 字典序相关 */
 class DicOrder extends DefaultArray {
   /**
@@ -1861,6 +1859,8 @@ class DicOrder extends DefaultArray {
    *
    * <p>贪心，将最高位的 n 与后面 m 交换，后者需满足 m>n 且 m 尽可能靠后
    *
+   * <p>即找到当前位置右边最大的数字，并与当前交换，即为最大
+   *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
    *
@@ -1886,7 +1886,7 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 最大数，把数组排成最大的数，排序 & 贪心
+   * 最大数，把数组排成最大的数，排序，本质即一种贪心
    *
    * <p>对 nums 按照 ab>ba 为 b>a，前导零
    *

@@ -175,7 +175,7 @@ class OOptimalSolution {
   /**
    * 完全平方数，完全背包，类似「零钱兑换」
    *
-   * <p>dp[i] 表示和为 i 的完全平方数的最少数量，如 13=4+9 则 dp[13] 为 2
+   * <p>dp[i] 表示和为 i 的几个完全平方数的最少数量，如 13=4+9 则 dp[13] 为 2
    *
    * @param n the n
    * @return int
@@ -183,8 +183,9 @@ class OOptimalSolution {
   public int numSquares(int n) {
     int[] dp = new int[n + 1];
     for (int i = 1; i <= n; i++) {
+      // 至少全由 1 组成
       dp[i] = i;
-      for (int j = 1; i - j * j >= 0; j++) {
+      for (int j = 1; j * j <= i; j++) {
         dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
       }
     }
@@ -443,7 +444,9 @@ class SSubArray {
 /** 子序列 */
 class SSubSequence extends Dichotomy {
   /**
-   * 最长连续序列，参考
+   * 最长连续序列
+   *
+   * <p>参考
    * https://leetcode-cn.com/problems/longest-consecutive-sequence/solution/xiao-bai-lang-ha-xi-ji-he-ha-xi-biao-don-j5a2/
    *
    * @param nums the nums
@@ -951,8 +954,7 @@ class CCount {
    */
   public int numTrees(int n) {
     int[] dp = new int[n + 1];
-    dp[0] = 1;
-    dp[1] = 1;
+    dp[0] = dp[1] = 1;
     for (int i = 2; i < n + 1; i++) {
       for (int j = 1; j < i + 1; j++) {
         dp[i] += dp[j - 1] * dp[i - j];

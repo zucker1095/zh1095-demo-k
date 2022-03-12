@@ -343,26 +343,26 @@ class SStack {
    * @return the boolean
    */
   public boolean isValid(String s) {
+    if (s.length() % 2 == 1) return false;
     // 外层括弧定义一个 Anonymous Inner Class
     // 内层括弧上是一个 instance initializer block，在内部匿名类构造时被执行
-    Map<Character, Character> pairs = new HashMap<>(4);
-    pairs.put('[', ']');
-    pairs.put('(', ')');
-    pairs.put('{', '}');
-    pairs.put('?', '?');
+    Map<Character, Character> pairs = new HashMap<>(3);
+    pairs.put(')', '(');
+    pairs.put(']', '[');
+    pairs.put('}', '{');
     Deque<Character> stack = new ArrayDeque<>();
     // int level = 0;
     for (char ch : s.toCharArray()) {
-      if (pairs.containsKey(ch)) {
+      // 左括号入栈
+      if (!pairs.containsKey(ch)) {
         // if ((priorities.indexOf(ch) + 1) % 3 > level) return false;
-        stack.add(ch);
+        stack.addLast(ch);
         // level = Math.max((priorities.indexOf(ch) + 1) % 3, level);
         continue;
       }
-      if (stack.size() == 0 || stack.getLast() == pairs.get(ch)) {
-        return false;
-      }
+      // 右括号出栈并判断
       // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
+      if (stack.isEmpty() || stack.getLast() != pairs.get(ch)) return false;
       stack.removeLast();
     }
     //    int curLeft1 = 0, curLeft2 = 0, curLeft3 = 0;
@@ -373,20 +373,20 @@ class SStack {
     //      else if (ch == ']' || ch == '[') curLeft3 += weight;
     //      if (curLeft1 < 0 || curLeft2 < 0 || curLeft3 < 0) return false;
     //    }
-    return stack.size() == 0;
+    return stack.isEmpty();
   }
 
   /**
    * 有效的括号字符串，贪心
    *
+   * <p>维护未匹配的左括号数量可能的上下界，尽可能保证其合法，遍历结束时，所有的左括号都应和右括号匹配即下界为 0
+   *
+   * <p>1.下界至少为0
+   *
+   * <p>2.上界不能为负
+   *
    * <p>参考
-   * https://leetcode-cn.com/problems/valid-parenthesis-string/solution/you-xiao-de-gua-hao-zi-fu-chuan-by-leetc-osi3/
-   *
-   * <p>维护未匹配的左括号数量可能的上下界，未匹配的左括号数量必须非负，因此当最大值变成负数时，说明没有左括号可以和右括号匹配，返回
-   *
-   * <p>当最小值为 0 时，不应将最小值继续减少，以确保最小值非负
-   *
-   * <p>遍历结束时，所有的左括号都应和右括号匹配，因此只有当最小值为 0 时才满足
+   * https://leetcode-cn.com/problems/valid-parenthesis-string/solution/gong-shui-san-xie-yi-ti-shuang-jie-dong-801rq/
    *
    * @param s the s
    * @return boolean boolean
@@ -398,13 +398,14 @@ class SStack {
         minCount += 1;
         maxCount += 1;
       } else if (ch == ')') {
-        minCount = Math.max(minCount - 1, 0);
+        minCount -= 1;
         maxCount -= 1;
-        if (maxCount < 0) return false;
       } else if (ch == '*') {
-        minCount = Math.max(minCount - 1, 0);
+        minCount -= 1;
         maxCount += 1;
       }
+      minCount = Math.max(minCount, 0);
+      if (maxCount < 0) return false;
     }
     return minCount == 0;
   }

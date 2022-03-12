@@ -156,7 +156,7 @@ public class TTree {
    *
    * <p>特判匹配树 & 主树为空两种情况，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
    *
-   * <p>TODO 面试题 04.10.检查子树 找子结构 t572 找子树 t1376 找链表
+   * <p>面试题 04.10.检查子树 找子结构 t572 找子树 t1376 找链表
    *
    * @param root the root
    * @param subRoot the sub root
@@ -212,7 +212,7 @@ public class TTree {
   }
 
   /**
-   * 求根结点到叶子结点数字之和，bfs 维护两个队列逐层相加 / 前序
+   * 求根节点到叶节点数字之和，bfs 维护两个队列逐层相加 / 前序
    *
    * @param root the root
    * @return int int
@@ -784,10 +784,26 @@ class BBacktracking extends DDFS {
 class DDFS {
   /** The Directions. */
   protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-  // 二叉树中所有距离为 k 的结点，结果集
+  // 「二叉树中所有距离为k的结点」结果集
   private final List<Integer> res5 = new ArrayList<>();
-  // 二叉树中所有距离为 k 的结点，目标结点的父
+  // 「二叉树中所有距离为k的结点」，目标结点的父
   private TreeNode parent;
+
+  /**
+   * 坐标界内
+   *
+   * @param board the board
+   * @param i the
+   * @param j the j
+   * @return the boolean
+   */
+  protected boolean inArea(char[][] board, int i, int j) {
+    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
+  }
+
+  private boolean inArea(int[][] board, int i, int j) {
+    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
+  }
 
   /**
    * 岛屿数量
@@ -821,18 +837,6 @@ class DDFS {
   }
 
   /**
-   * 坐标未越界
-   *
-   * @param board the board
-   * @param i the
-   * @param j the j
-   * @return the boolean
-   */
-  protected boolean inArea(char[][] board, int i, int j) {
-    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
-  }
-
-  /**
    * 岛屿的最大面积
    *
    * @param grid the grid
@@ -857,35 +861,6 @@ class DDFS {
       res += dfs2(grid, r + dir[0], c + dir[1]);
     }
     return res;
-  }
-
-  /**
-   * Num distinct islands int.
-   *
-   * @param grid the grid
-   * @return the int
-   */
-  public int numDistinctIslands(int[][] grid) {
-    Set<String> res = new HashSet<>();
-    for (int i = 0; i < grid.length; i++) {
-      for (int j = 0; j < grid[0].length; j++) {
-        if (grid[i][j] != 1) continue;
-        StringBuilder path = new StringBuilder();
-        dfs5(grid, path, i, j, i, j);
-        res.add(path.toString());
-      }
-    }
-    return res.size();
-  }
-
-  private void dfs5(int[][] grid, StringBuilder path, int x, int y, int preX, int preY) {
-    if (!inArea(grid, x, y) || grid[x][y] == 0) return;
-    grid[x][y] = 0;
-    path.append(x - preX); // 记录相对横坐标
-    path.append(y - preY); // 记录相对纵坐标
-    for (int[] dir : DIRECTIONS) {
-      dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
-    }
   }
 
   /**
@@ -919,10 +894,6 @@ class DDFS {
       }
     }
     return memo[r][c];
-  }
-
-  private boolean inArea(int[][] board, int i, int j) {
-    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
   }
 
   /**
@@ -978,12 +949,41 @@ class DDFS {
     collect(root.left, k - 1);
     collect(root.right, k - 1);
   }
+
+  /**
+   * 不同岛屿的数量
+   *
+   * @param grid the grid
+   * @return the int
+   */
+  public int numDistinctIslands(int[][] grid) {
+    Set<String> path = new HashSet<>();
+    for (int i = 0; i < grid.length; i++) {
+      for (int j = 0; j < grid[0].length; j++) {
+        if (grid[i][j] != 1) continue;
+        StringBuilder curPath = new StringBuilder();
+        dfs5(grid, curPath, i, j, i, j);
+        path.add(curPath.toString());
+      }
+    }
+    return path.size();
+  }
+
+  private void dfs5(int[][] grid, StringBuilder path, int x, int y, int preX, int preY) {
+    if (!inArea(grid, x, y) || grid[x][y] == 0) return;
+    grid[x][y] = 0;
+    path.append(x - preX); // 记录相对横坐标
+    path.append(y - preY); // 记录相对纵坐标
+    for (int[] dir : DIRECTIONS) {
+      dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
+    }
+  }
 }
 
 /** 二叉搜索树，中序为主 */
 class BBST {
   private int count, res4;
-  // 当前和上次遍历结点，按照中序遍历，后者即前者的左侧
+  // 「二叉搜索树与双向链表」当前和上次遍历结点，按照中序遍历，后者即前者的左侧
   private TreeNode pre, cur;
 
   /**
@@ -1069,15 +1069,14 @@ class BBST {
   }
 
   /**
-   * 二叉树搜索的最小绝对差，中序，框架等同上方 inorderTraversal
+   * 二叉搜索树的最小绝对差，中序，框架等同上方 inorderTraversal
    *
    * @param root the root
    * @return minimum difference
    */
   public int getMinimumDifference(TreeNode root) {
+    int res = Integer.MAX_VALUE, pre = res;
     Deque<TreeNode> stack = new ArrayDeque<>();
-    int res = Integer.MAX_VALUE;
-    int pre = res;
     TreeNode cur = root;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
@@ -1100,18 +1099,20 @@ class BBST {
    * @param root the root
    */
   public void recoverTree(TreeNode root) {
+    TreeNode firstNode = null, secondNode = null, pre = new TreeNode(Integer.MIN_VALUE), cur = root;
     Deque<TreeNode> stack = new ArrayDeque<>();
-    TreeNode firstNode = null, secondNode = null;
-    TreeNode pre = new TreeNode(Integer.MIN_VALUE), cur = root;
     while (cur != null || !stack.isEmpty()) {
+      // 遍历
       while (cur != null) {
         stack.addLast(cur);
         cur = cur.left;
       }
       cur = stack.removeLast();
+      // 处理当前结点
       if (firstNode == null && pre.val > cur.val) firstNode = pre;
       if (firstNode != null && pre.val > cur.val) secondNode = cur;
       pre = cur;
+      // 步进
       cur = cur.right;
     }
     int tmp = firstNode.val;
@@ -1275,7 +1276,7 @@ class Postorder {
   }
 
   /**
-   * 二叉搜索树展开为链表，后序遍历
+   * 二叉树展开为链表，后序遍历
    *
    * @param root the root
    */
@@ -1287,7 +1288,9 @@ class Postorder {
     root.right = root.left;
     root.left = null;
     TreeNode tailRight = root;
-    while (tailRight.right != null) tailRight = tailRight.right;
+    while (tailRight.right != null) {
+      tailRight = tailRight.right;
+    }
     tailRight.right = oldRight;
   }
 
@@ -1351,10 +1354,12 @@ class Postorder {
   }
 
   /**
-   * 不同的二叉搜索树II，后序遍历
+   * 不同的二叉搜索树II，后序遍历，固定左遍历右
    *
    * <p>参考
    * https://leetcode-cn.com/problems/unique-binary-search-trees-ii/solution/cong-gou-jian-dan-ke-shu-dao-gou-jian-suo-you-shu-/
+   *
+   * <p>只返回总数参考「不同的二叉搜索树」
    *
    * @param n the n
    * @return list
@@ -1363,69 +1368,24 @@ class Postorder {
     return n < 1 ? new ArrayList<>() : dfs10(1, n);
   }
 
-  private List<TreeNode> dfs10(int start, int end) {
-    List<TreeNode> res = new ArrayList<>();
-    if (start > end) {
-      res.add(null);
-      return res;
+  private List<TreeNode> dfs10(int lo, int hi) {
+    List<TreeNode> path = new ArrayList<>();
+    if (lo > hi) {
+      path.add(null);
+      return path;
     }
-    for (int i = start; i <= end; i++) {
-      List<TreeNode> leftList = dfs10(start, i - 1), rightList = dfs10(i + 1, end);
-      // 固定左，遍历右
-      for (TreeNode left : leftList) {
-        for (TreeNode right : rightList) {
+    for (int i = lo; i <= hi; i++) {
+      List<TreeNode> leftPath = dfs10(lo, i - 1), rightPath = dfs10(i + 1, hi);
+      for (TreeNode left : leftPath) {
+        for (TreeNode right : rightPath) {
           TreeNode root = new TreeNode(i);
           root.left = left;
           root.right = right;
-          res.add(root);
+          path.add(root);
         }
       }
     }
-    return res;
-  }
-
-  /**
-   * 二叉树的最大深度，后序
-   *
-   * <p>扩展1，n 叉树，改用 bfs
-   *
-   * @param root the root
-   * @return int int
-   */
-  public int maxDepth(TreeNode root) {
-    return maxDepth2(root);
-  }
-
-  private int maxDepth1(TreeNode root) {
-    if (root == null) return 0;
-    int left = maxDepth1(root.left), right = maxDepth1(root.right);
-    return left > right ? left + 1 : right + 1;
-  }
-
-  private int maxDepth2(TreeNode root) {
-    if (root == null) {
-      return 0;
-    }
-    Deque<TreeNode> stack = new ArrayDeque<>();
-    // 下方先更新 depth 再赋值，因此 root 高度初始化此处可略
-    TreeNode cur = root;
-    int res = 0, depth = 0;
-    while (!stack.isEmpty() || cur != null) {
-      while (cur != null) {
-        depth += 1;
-        cur.val = depth;
-        stack.push(cur);
-        cur = cur.left;
-      }
-      // 若左边无路，就预备右拐。右拐之前，记录右拐点的基本信息
-      cur = stack.removeLast();
-      // 将右拐点出栈；此时栈顶为右拐点的前一个结点。在右拐点的右子树全被遍历完后，会预备在这个结点右拐
-      depth = cur.val;
-      // 预备右拐时，比较当前结点深度和之前存储的最大深度
-      res = Math.max(res, depth);
-      cur = cur.right;
-    }
-    return res;
+    return path;
   }
 
   private class Res {
@@ -1582,6 +1542,32 @@ class BBFS {
   }
 
   /**
+   * 二叉树的最大深度，后序
+   *
+   * <p>扩展1，n 叉树，参考「N叉树的最大深度」，下方改为遍历所有子结点即可
+   *
+   * @param root the root
+   * @return int int
+   */
+  public int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    int maxDepth = 0;
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+      int size = queue.size();
+      while (size > 0) {
+        TreeNode cur = queue.poll();
+        if (cur.left != null) queue.offer(cur.left);
+        if (cur.right != null) queue.offer(cur.right);
+        size -= 1;
+      }
+      maxDepth += 1;
+    }
+    return maxDepth;
+  }
+
+  /**
    * 翻转二叉树，迭代 bfs，逐一交换遍历的结点的左右子树即可
    *
    * @param root the root
@@ -1608,15 +1594,33 @@ class BBFS {
 }
 
 /**
- * 收集图相关，题型有如下类型
+ * 收集图相关，有如下题型
  *
  * <p>判断连通性，拓扑排序
  *
- * <p>求最短路径，Floyd 邻接矩阵 or Dijkstra 邻接表
+ * <p>求最短路径
  *
- * <p>求路径总数，Floyd
+ * <p>求路径总数
  */
 class GGraph {
+  // 分为存图与算法两步
+  // 存图分为两种
+  private void learn() {
+    // 点数与边数
+    int points, edges;
+
+    // 1.邻接矩阵，适合边数较多的稠密图
+    // int[][] matrix = new int[points][points];
+    // 增加一条 a->b 权重为 c 的边
+    // matrix[a][b] = c;
+
+    // 2.邻接表，适合稀疏图，类似数组头插存储单链表
+    //    int[] he = new int[points], // he 存储是某个节点所对应的边的集合（链表）的头结点
+    //        e = new int[edges], // e 由于访问某一条边指向的节点
+    //        ne = new int[edges], // ne 由于是以链表的形式进行存边，该数组就是用于找到下一条边
+    //        w = new int[edges]; // w 记录某边的权重
+  }
+
   /**
    * 课程表，判断连通性，拓扑排序
    *
@@ -1705,5 +1709,47 @@ class GGraph {
     }
     // 如果结果集中的数量不等于结点的数量，就不能完成课程任务，这一点是拓扑排序的结论
     return count == numCourses ? res : new int[0];
+  }
+
+  /**
+   * 网络延迟时间，到达所有结点的最短路径，floyd
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/network-delay-time/solution/gong-shui-san-xie-yi-ti-wu-jie-wu-chong-oghpz/
+   *
+   * @param times
+   * @param n
+   * @param k
+   * @return
+   */
+  public int networkDelayTime(int[][] times, int n, int k) {
+    int[][] matrix = new int[n][n];
+    // 初始化邻接矩阵
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= n; j++) {
+        matrix[i][j] = matrix[j][i] = i == j ? 0 : Integer.MAX_VALUE;
+      }
+    }
+    // 存图
+    for (int[] t : times) {
+      int u = t[0], v = t[1], c = t[2];
+      matrix[u][v] = c;
+    }
+    // 最短路
+    // floyd 基本流程为三层循环
+    // 枚举中转点 - 枚举起点 - 枚举终点 - 松弛操作
+    for (int p = 1; p <= n; p++) {
+      for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+          matrix[i][j] = Math.min(matrix[i][j], matrix[i][p] + matrix[p][j]);
+        }
+      }
+    }
+    // 遍历答案
+    int res = 0;
+    for (int i = 1; i <= n; i++) {
+      res = Math.max(res, matrix[k][i]);
+    }
+    return res >= Integer.MAX_VALUE / 2 ? -1 : res;
   }
 }

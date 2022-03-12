@@ -219,22 +219,18 @@ class ReverseList extends LList {
    * @return boolean boolean
    */
   public boolean isPalindrome(ListNode head) {
-    // cur 指向当前要反转的节点，dummy 作为头插法的头
-    ListNode dummy = new ListNode();
-    ListNode lo = head, hi = head;
-    // 保证 hi 非空
+    ListNode tail = new ListNode(), lo = head, hi = head;
     while (hi != null && hi.next != null) {
       ListNode cur = lo;
       lo = lo.next;
       hi = hi.next.next;
-      // 两次变向，反向头插，建议画图
-      cur.next = dummy.next;
-      dummy.next = cur;
+      // 两次变向，头插
+      cur.next = tail.next;
+      tail.next = cur;
     }
     // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一位
     if (hi != null) lo = lo.next;
-    // 分别指向反转后链表的头 & 后半部分链表的头
-    ListNode l1 = dummy.next, l2 = lo;
+    ListNode l1 = tail.next, l2 = lo;
     while (l1 != null && l2 != null) {
       if (l1.val != l2.val) return false;
       l1 = l1.next;
@@ -635,12 +631,12 @@ class CycleList extends LList {
       }
     }
     if (!hasCycle) return null;
-    ListNode start = head;
-    while (start != lo) {
-      start = start.next;
+    ListNode finder = head;
+    while (lo != finder) {
       lo = lo.next;
+      finder = finder.next;
     }
-    return start;
+    return lo;
   }
 
   /**

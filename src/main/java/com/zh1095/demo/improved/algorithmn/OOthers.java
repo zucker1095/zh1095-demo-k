@@ -256,7 +256,7 @@ class MMath {
   }
 
   /**
-   * 阶乘后的零，记住即可
+   * 阶乘后的零，求出一个数的阶乘末尾零的个数，如 5!=120 即 1
    *
    * <p>参考
    * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
@@ -332,7 +332,7 @@ class Digit {
   /**
    * 回文数
    *
-   * <p>0.特判负数 & 个位为 0
+   * <p>0.特判负数与十的倍数
    *
    * <p>1.为取出 x 的左右部分，每次进行取余操作取出最低的数字，并加到取出数的末尾
    *
@@ -342,22 +342,21 @@ class Digit {
    * @return boolean boolean
    */
   public boolean isPalindrome(int x) {
-    if (x < 0 || (x % 10 == 0 && x != 0)) {
-      return false;
+    if (x < 0 || (x % 10 == 0 && x != 0)) return false;
+    // 左右部分
+    int lo = x, hi = 0;
+    while (lo > hi) {
+      hi = hi * 10 + lo % 10;
+      lo /= 10;
     }
-    int left = x, right = 0;
-    while (left > right) {
-      right = right * 10 + left % 10;
-      left /= 10;
-    }
-    return left == right || left == right / 10;
+    return lo == hi || lo == hi / 10;
   }
 }
 
 /** 进制转换 */
 class CConvert {
   /**
-   * 罗马数字转整数
+   * 罗马数字转整数，遍历字符，从短开始匹
    *
    * <p>扩展1，汉字转阿拉伯数字
    *
@@ -367,7 +366,7 @@ class CConvert {
    * @return int int
    */
   public int romanToInt(String s) {
-    Map<Character, Integer> hash =
+    Map<Character, Integer> mark =
         new HashMap<>() {
           {
             //            put('一', 1);
@@ -394,7 +393,7 @@ class CConvert {
         };
     int res = 0;
     for (int i = 0; i < s.length(); i++) {
-      int cur = hash.get(s.charAt(i)), nxt = hash.get(s.charAt(i + 1));
+      int cur = mark.get(s.charAt(i)), nxt = mark.get(s.charAt(i + 1));
       if (i < s.length() - 1 && cur < nxt) res -= cur;
       else res += cur;
     }
@@ -410,11 +409,12 @@ class CConvert {
    * @return string string
    */
   public String intToRoman(int num) {
+    // 如果是哈希，保证 key 的遍历有序即可
     final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
     final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
     StringBuilder res = new StringBuilder();
     int cur = num;
-    for (int i = 0; i < ROMANs.length; i++) {
+    for (int i = 0; i < NUMs.length; i++) {
       while (cur >= NUMs[i]) {
         res.append(ROMANs[i]);
         cur -= NUMs[i];
