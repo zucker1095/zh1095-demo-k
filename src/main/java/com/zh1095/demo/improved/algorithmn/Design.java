@@ -321,7 +321,15 @@ class Compress {
 /** 容器类 */
 class Container {}
 
-/** 三种常用的限流算法 */
+/**
+ * 三种常用的限流算法
+ *
+ * <p>窗口
+ *
+ * <p>漏桶
+ *
+ * <p>令牌桶
+ */
 class Limiter {
   /** The interface L limiter. */
   public interface LLimiterImpl {
@@ -333,6 +341,7 @@ class Limiter {
      */
     boolean tryAcquire(long needTokenNum);
   }
+
   /**
    * 滑动窗口限流算法
    *
@@ -386,6 +395,7 @@ class Limiter {
       return res;
     }
   }
+
   /**
    * 令牌桶算法
    *
@@ -527,6 +537,7 @@ class CCache {
     Object value;
     /** The Expire. */
     long expire;
+
     private int lru;
     private boolean deleted;
 

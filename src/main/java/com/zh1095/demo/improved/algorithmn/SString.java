@@ -649,15 +649,14 @@ class EEncoding extends SString {
     if (idx == s.length()) return 0;
     if (s.charAt(idx) == '-') isNegative = true;
     if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
-    while (idx < s.length()) {
-      char ch = s.charAt(idx);
+    for (int i = idx; i < s.length(); i++) {
+      char ch = s.charAt(i);
       if (ch < '0' || ch > '9') break;
       int pre = res;
       res = res * 10 + (ch - '0');
       if (pre != res / 10) {
         return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
       }
-      idx += 1;
     }
     return res * (isNegative ? -1 : 1);
   }

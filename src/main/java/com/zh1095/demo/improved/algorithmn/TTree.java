@@ -22,7 +22,7 @@ public class TTree {
   private int res3 = 0;
 
   /**
-   * 中序遍历迭代，注意区分遍历 & 处理两个 step
+   * 中序遍历，迭代，注意区分遍历 & 处理两个 step
    *
    * <p>模板参考
    * https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/zhuan-ti-jiang-jie-er-cha-shu-qian-zhong-hou-xu-2/
@@ -673,6 +673,8 @@ class BBacktracking extends DDFS {
    * <p>参考
    * https://leetcode-cn.com/problems/restore-ip-addresses/solution/hui-su-suan-fa-hua-tu-fen-xi-jian-zhi-tiao-jian-by/
    *
+   * <p>TODO 扩展1，分割数字串为不超过 k 的多个子串，返回所有方案
+   *
    * @param s the s
    * @return list list
    */
@@ -987,6 +989,30 @@ class BBST {
   private TreeNode pre, cur;
 
   /**
+   * 验证二叉搜索树，模板参上「中序遍历」
+   *
+   * @param root
+   * @return
+   */
+  public boolean isValidBST(TreeNode root) {
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    TreeNode cur = root;
+    // Integer.MIN_VALUE 即可，此处仅为通过官方示例
+    double pre = -Double.MAX_VALUE;
+    while (cur != null || !stack.isEmpty()) {
+      while (cur != null) {
+        stack.addLast(cur);
+        cur = cur.left;
+      }
+      cur = stack.removeLast();
+      if (cur.val <= pre) return false;
+      pre = cur.val;
+      cur = cur.right;
+    }
+    return true;
+  }
+
+  /**
    * 二叉搜索树中的第k大的元素，右中左，对 k 做减法
    *
    * <p>扩展1，二叉搜索树中的第k小的元素，左中右，参下 annotate
@@ -1142,7 +1168,7 @@ class BBST {
   /**
    * 二叉搜索树与双向链表，生成正序链表，中序
    *
-   * <p>扩展1，逆序
+   * <p>扩展1，逆序，则右中左
    *
    * @param root the root
    * @return tree node
@@ -1160,10 +1186,8 @@ class BBST {
   private void dfs7(TreeNode head) {
     if (head == null) return;
     dfs7(head.left);
-    // 左
     if (pre == null) cur = head;
     else pre.right = head;
-    // 右
     head.left = pre;
     pre = head;
     dfs7(head.right);
@@ -1299,7 +1323,7 @@ class Postorder {
    *
    * <p>三步曲，先取单侧 & 更新双侧结果 & 返回单侧更大者
    *
-   * <p>扩展1，输出路径，参下 dfs
+   * <p>扩展1，输出路径，参考 https://blog.csdn.net/Ackerman2/article/details/119060128
    *
    * @param root the root
    * @return int int
@@ -1316,23 +1340,23 @@ class Postorder {
     return Math.max(left, right) + root.val;
   }
 
-  // https://blog.csdn.net/Ackerman2/article/details/119060128
   private Res _singleSide1(TreeNode root) {
     if (root == null) return new Res(0);
-    Res res = new Res(root.val);
-    Res left = _singleSide1(root.left), right = _singleSide1(root.right);
+    Res curRes = new Res(root.val),
+        left = _singleSide1(root.left),
+        right = _singleSide1(root.right);
     if (left.count > 0 && left.count > right.count) {
-      res.count += left.count;
-      res.path += left.path;
+      curRes.count += left.count;
+      curRes.path += left.path;
     } else if (right.count > 0 && right.count > left.count) {
-      res.count += right.count;
-      res.path += right.path;
+      curRes.count += right.count;
+      curRes.path += right.path;
     }
-    if (res.count > res1) {
-      res1 = res.count;
-      path = res.path;
+    if (curRes.count > res1) {
+      res1 = curRes.count;
+      path = curRes.path;
     }
-    return res;
+    return curRes;
   }
 
   /**
@@ -1596,11 +1620,13 @@ class BBFS {
 /**
  * 收集图相关，有如下题型
  *
- * <p>判断连通性，拓扑排序
+ * <p>判断两点之间的连通性，拓扑排序
  *
- * <p>求最短路径
+ * <p>求两点之间的最短路径
  *
- * <p>求路径总数
+ * <p>求两点之间的路径总数
+ *
+ * <p>求两点之间的权值最小的路径
  */
 class GGraph {
   // 分为存图与算法两步

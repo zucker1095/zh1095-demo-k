@@ -1,9 +1,6 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * 收集所有链表相关
@@ -125,6 +122,61 @@ public class LList {
       hi = hi.next;
     }
     return dummy.next;
+  }
+
+  /**
+   * 从链表中删去总和值为零的连续节点
+   *
+   * <p>TODO
+   *
+   * @param head
+   * @return
+   */
+  public ListNode removeZeroSumSublists(ListNode head) {
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    Map<Integer, ListNode> preSumByNode = new HashMap<>();
+    // 若同一和出现多次会覆盖，即记录该sum出现的最后一次节点
+    int preSum = 0;
+    ListNode cur = dummy;
+    while (cur != null) {
+      preSum += cur.val;
+      preSumByNode.put(preSum, cur);
+      cur = cur.next;
+    }
+    // 若当前节点处 sum 在下一处出现了则表明两结点之间所有节点和为 0 直接删除区间所有节点
+    preSum = 0;
+    cur = dummy;
+    while (cur != null) {
+      preSum += cur.val;
+      cur.next = preSumByNode.get(preSum).next;
+      cur = cur.next;
+    }
+    return dummy.next;
+  }
+
+  /**
+   * 链表中的下一个更大节点，单调栈
+   *
+   * @param head
+   * @return
+   */
+  public int[] nextLargerNodes(ListNode head) {
+    List<Integer> res = new ArrayList<>();
+    Deque<Integer> stack = new ArrayDeque<>();
+    ListNode cur = head;
+    while (cur != null) {
+      while (!stack.isEmpty() && cur.val > res.get(stack.peek())) {
+        res.set(stack.poll(), cur.val);
+      }
+      stack.offer(res.size());
+      res.add(cur.val);
+      cur = cur.next;
+    }
+    for (int i : stack) {
+      res.set(i, 0);
+    }
+    return res.stream().mapToInt(i -> i).toArray();
   }
 
   private class Node {

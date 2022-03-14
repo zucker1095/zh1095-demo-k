@@ -1141,7 +1141,7 @@ class PreSum {
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
    *
-   * <p>扩展1，求和为 k 的子数组中，最大的长度，参考「连续数组」
+   * <p>扩展1，求本题结果集中最大的长度，参考「连续数组」
    *
    * @param nums the nums
    * @param k the k
@@ -1149,11 +1149,10 @@ class PreSum {
    */
   public int subarraySum(int[] nums, int k) {
     int preSum = 0, count = 0;
-    // 对应的前缀和的个数
-    HashMap<Integer, Integer> countBySum = new HashMap<>();
-    // 需要预存前缀和为 0，会漏掉前几位就满足的情况
-    // 如 [1,1,0]，k=2 如果没有这行代码，则会返回 0 漏掉 1+1=2 与 1+1+0=2
+    // 需要预存前缀和为 0，否则会漏掉前几位就满足的情况
+    // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
     // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
+    HashMap<Integer, Integer> countBySum = new HashMap<>();
     countBySum.put(0, 1);
     for (int i = 0; i < nums.length; i++) {
       preSum += nums[i];
@@ -1254,6 +1253,7 @@ class PreSum {
       if (minIdx == -1) idxByMod.put(mod, i);
       else if (i - minIdx > 1) return true;
     }
+    // 方案数
     //    long count = 0;
     //    Map<Long, Integer> map = new HashMap<>();
     //    map.put(0L, 1);
