@@ -9,6 +9,13 @@ import java.util.concurrent.atomic.AtomicLong;
 /** 收集所有场景设计 & 系统设计类 */
 public class Design {}
 
+/** 设计 C 内存分配与释放 */
+class MMemory {
+  public void malloc() {}
+
+  public void free() {}
+}
+
 /** 压缩类 */
 class Compress {
   /**
@@ -72,54 +79,60 @@ class Compress {
     /**
      * Instantiates a new Bit map.
      *
+     * <p>1bit can store 8 data, so how many bits are needed for capacity data, so capacity/8+1
+     * right shifting 3 bits is equivalent to dividing by 8.
+     *
      * @param capacity the capacity
      */
     public BitMap(int capacity) {
-      // 1bit can store 8 data, so how many bits are needed for capacity data
-      // capacity/8+1 right shifting 3 bits is equivalent to dividing by 8.
       bits = new byte[(capacity >> 3) + 1];
     }
 
     /**
      * Add.
      *
+     * <p>After moving 1 to the left offset, that offset is naturally 1, and then do | with the
+     * previous data, so that offset is replaced with 1.
+     *
      * @param num the num
      */
     public void add(int num) {
-      int idx = num >> 3; // num/8 gets the index of byte[]
-      int offset = num & 0x07; // num%8 gets the offset of byte[index]
-      // After moving 1 to the left offset, that offset is naturally 1, and then do | with the
-      // previous data, so that offset is replaced with 1.
-      bits[idx] |= 1 << offset;
-    }
-
-    /**
-     * Contain boolean.
-     *
-     * @param num the num
-     * @return the boolean
-     */
-    public boolean contain(int num) {
-      int idx = num >> 3; // num/8 gets the index of byte[]
-      int offset = num & 0x07; // num%8 gets the offset of byte[index]
-      // After shifting 1 to the left offset, that offset is naturally 1, and then do & with the
-      // previous data to determine whether it is 0
-      return (bits[idx] & (1 << offset)) != 0;
+      bits[getIndex(num)] |= getOffsetBit(num);
     }
 
     /**
      * Clear.
      *
+     * <p>After moving 1 to the left offset, that offset is naturally 1, and then reverse it, and do
+     * & with the current value to clear the current offset.
+     *
      * @param num the num
      */
     public void clear(int num) {
-      // num/8 gets the index of byte[]
-      int idx = num >> 3;
-      // num%8 gets the position of byte[index]
-      int offset = num & 0x07;
-      // After moving 1 to the left offset, that offset is naturally 1, and then reverse it, and
-      // do & with the current value to clear the current offset.
-      bits[idx] &= ~(1 << offset);
+      bits[getIndex(num)] &= ~getOffsetBit(num);
+    }
+
+    /**
+     * Contain boolean.
+     *
+     * <p>After shifting 1 to the left offset, that offset is naturally 1, and then do & with the
+     * previous data to determine whether it is 0
+     *
+     * @param num the num
+     * @return the boolean
+     */
+    public boolean contain(int num) {
+      return (bits[getIndex(num)] & getOffsetBit(num)) != 0;
+    }
+
+    // num/8 gets the index of byte[]
+    private int getIndex(int num) {
+      return num >> 3;
+    }
+
+    // num%8 gets the position of byte[index]
+    private int getOffsetBit(int num) {
+      return 1 << (num & 0x07);
     }
   }
 
@@ -318,9 +331,6 @@ class Compress {
   }
 }
 
-/** 容器类 */
-class Container {}
-
 /**
  * 三种常用的限流算法
  *
@@ -476,6 +486,9 @@ class Limiter {
     }
   }
 }
+
+/** 容器类 */
+class Container {}
 
 /** 缓存类，LRU & LFU 参考 OOthers */
 class CCache {

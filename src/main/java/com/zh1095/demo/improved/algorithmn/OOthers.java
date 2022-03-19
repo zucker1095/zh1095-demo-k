@@ -86,7 +86,9 @@ class MMath {
   /**
    * rand7生成rand10 即[1,10]，等同进制转换的思路
    *
-   * <p>https://www.cnblogs.com/ymjyqsx/p/9561443.html
+   * <p>参考
+   * https://leetcode-cn.com/problems/implement-rand10-using-rand7/solution/cong-pao-ying-bi-kai-shi-xun-xu-jian-jin-ba-zhe-da/
+   * https://www.cnblogs.com/ymjyqsx/p/9561443.html
    *
    * <p>数学推论，记住即可 (randX-1)*Y+randY() -> 等概率[1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
    *
@@ -99,6 +101,8 @@ class MMath {
    * <p>rand5 to rand3 自旋，直接取，这种拒绝概率不大
    *
    * <p>rand5 to rand2 判断是否为 2 的倍数，类似本题 rand49 to rand10
+   *
+   * <p>扩展2，一个两面不均匀的硬币，正面概率 p，反面概率 1-p，怎么保证通过抛硬币的结果来实现 0 1 的均匀分布
    *
    * @return the int
    */
@@ -586,7 +590,7 @@ class DData {
   public class MyCircularQueue {
     private final int capacity;
     private final int[] data;
-    private int front, rear;
+    private int front, rear; // 虚拟头尾
 
     /**
      * Instantiates a new My circular queue.
@@ -608,8 +612,8 @@ class DData {
      */
     public boolean enQueue(int value) {
       if (isFull()) return false;
-      data[rear] = value;
-      rear = (rear + 1) % capacity;
+      data[rear] = value; // CAS
+      rear = (rear + 1) % capacity; // CAS
       return true;
     }
 

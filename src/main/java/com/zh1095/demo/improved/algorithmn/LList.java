@@ -125,37 +125,6 @@ public class LList {
   }
 
   /**
-   * 从链表中删去总和值为零的连续节点
-   *
-   * <p>TODO
-   *
-   * @param head
-   * @return
-   */
-  public ListNode removeZeroSumSublists(ListNode head) {
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    Map<Integer, ListNode> preSumByNode = new HashMap<>();
-    // 若同一和出现多次会覆盖，即记录该sum出现的最后一次节点
-    int preSum = 0;
-    ListNode cur = dummy;
-    while (cur != null) {
-      preSum += cur.val;
-      preSumByNode.put(preSum, cur);
-      cur = cur.next;
-    }
-    // 若当前节点处 sum 在下一处出现了则表明两结点之间所有节点和为 0 直接删除区间所有节点
-    preSum = 0;
-    cur = dummy;
-    while (cur != null) {
-      preSum += cur.val;
-      cur.next = preSumByNode.get(preSum).next;
-      cur = cur.next;
-    }
-    return dummy.next;
-  }
-
-  /**
    * 链表中的下一个更大节点，单调栈
    *
    * @param head
@@ -608,30 +577,33 @@ class MergeList extends LList {
   }
 
   /**
-   * 分隔链表
+   * 分隔链表，使得所有小于 x 的结点都出现在大于或等于 x 的结点之前
+   *
+   * <p>三链表，类似双路快排，尾插
    *
    * @param head the head
    * @param x the x
    * @return list node
    */
   public ListNode partition(ListNode head, int x) {
-    ListNode ltHead = new ListNode(0), gteHead = new ListNode(0);
-    ListNode ltTail = ltHead, gteTail = gteHead;
-    ListNode cur = head;
+    // head
+    ListNode ltDummy = new ListNode(), gteDummy = new ListNode();
+    // tail
+    ListNode ltCur = ltDummy, gteCur = gteDummy, cur = head;
     while (cur != null) {
-      // 如果当前节点的值小于x，则把当前节点挂到小链表的后面，变向 & 步进
+      // 如果当前节点的值小于x，则把当前节点挂到小链表的后面
       if (cur.val < x) {
-        ltTail.next = cur;
-        ltTail = ltTail.next;
+        ltCur.next = cur;
+        ltCur = ltCur.next;
       } else {
-        gteTail.next = cur;
-        gteTail = gteTail.next;
+        gteCur.next = cur;
+        gteCur = gteCur.next;
       }
       cur = cur.next;
     }
-    ltTail.next = gteHead.next;
-    gteTail.next = null;
-    return ltHead.next;
+    ltCur.next = gteDummy.next;
+    gteCur.next = null;
+    return ltDummy.next;
   }
 }
 
@@ -785,6 +757,38 @@ class DeleteList extends LList {
       } else {
         pre = cur;
       }
+      cur = cur.next;
+    }
+    return dummy.next;
+  }
+
+  /**
+   * 从链表中删去总和值为零的连续节点，前缀和
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/remove-zero-sum-consecutive-nodes-from-linked-list/solution/java-hashmap-liang-ci-bian-li-ji-ke-by-shane-34/
+   *
+   * @param head
+   * @return
+   */
+  public ListNode removeZeroSumSublists(ListNode head) {
+    ListNode dummy = new ListNode();
+    dummy.next = head;
+    Map<Integer, ListNode> preSumByNode = new HashMap<>();
+    // 建立前缀和，覆盖取最终出现的结点
+    int preSum = 0;
+    ListNode cur = dummy;
+    while (cur != null) {
+      preSum += cur.val;
+      preSumByNode.put(preSum, cur);
+      cur = cur.next;
+    }
+    // 若当前节点处 sum 在下一处出现，则表明两结点之间所有节点和为零，因此删除区间所有节点
+    preSum = 0;
+    cur = dummy;
+    while (cur != null) {
+      preSum += cur.val;
+      cur.next = preSumByNode.get(preSum).next;
       cur = cur.next;
     }
     return dummy.next;

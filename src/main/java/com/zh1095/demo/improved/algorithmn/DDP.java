@@ -325,6 +325,40 @@ class OOptimalSolution {
     }
     return res;
   }
+
+  /**
+   * 使序列递增的最小交换次数
+   *
+   * <p>对于位置 i 至少满足以下两种情况之一
+   *
+   * <p>A[i]>A[i-1] && B[i]>B[i-1] 与 A[i]>B[i-1] && B[i]>A[i-1]
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/minimum-swaps-to-make-sequences-increasing/solution/leetcode-801-wo-gan-jio-ying-gai-jiang-de-hen-tou-/
+   *
+   * @param nums1
+   * @param nums2
+   * @return
+   */
+  public int minSwap(int[] nums1, int[] nums2) {
+    // 分别保存不交换与交换的最小操作次数
+    int keep = 0, swap = 1;
+    for (int i = 1; i < nums1.length; i++) {
+      if (nums1[i - 1] < nums1[i] && nums2[i - 1] < nums2[i]) {
+        if (nums1[i - 1] < nums2[i] && nums2[i - 1] < nums1[i]) {
+          keep = Math.min(keep, swap);
+          swap = keep + 1;
+        } else {
+          swap += 1;
+        }
+      } else {
+        int pre = keep;
+        keep = swap;
+        swap = pre + 1;
+      }
+    }
+    return Math.min(keep, swap);
+  }
 }
 
 /**

@@ -451,58 +451,133 @@ class SStack {
   }
 
   /**
-   * 基本计算器 I & II 统一模板
+   * 判断两个字符串是否含义一致，二者只包含 (,),+,-,a-z 且保证字母不会连续，即合法的多元一次表达式
+   *
+   * <p>TODO 双栈，思路参下「基本计算器」
+   *
+   * @return
+   */
+  public boolean isSame(String s1, String s2) {
+    int[] count1 = countLetter(s1), count2 = countLetter(s2);
+    for (int i = 0; i < 26; i++) {
+      if (count1[i] != count2[i]) return false;
+    }
+    return true;
+  }
+
+  private int[] countLetter(String s) {
+    int[] counter = new int[26];
+    char[] chs = s.toCharArray();
+    int curNum = 0, curSign = 1;
+    Deque<Integer> numStack = new ArrayDeque<>(), opStack = new ArrayDeque<>();
+    for (int i = 0; i < chs.length; i++) {
+      if (chs[i] == ' ') continue;
+      if (chs[i] == '+' || chs[i] == '-') {
+        curSign = chs[i] == '+' ? 1 : -1;
+      } else if (chs[i] >= '0' && chs[i] <= '9') {
+        int num = chs[i] - '0';
+        while (i < chs.length - 1 && chs[i + 1] >= '0' && chs[i + 1] <= '9') { // 将这个数字找完
+          i += 1;
+          num = num * 10 + (chs[i] - '0');
+        }
+        curNum += curSign * num;
+      } else if (chs[i] == '(') { // 左括号，暂存结果
+        numStack.push(curNum);
+        opStack.push(curSign);
+        curNum = 0;
+        curSign = 1;
+      } else if (chs[i] == ')') { // 右括号更新结果
+        curNum = numStack.pop() + curNum * opStack.pop();
+      }
+    }
+    return counter;
+  }
+
+  /**
+   * 基本计算器 I & II 统一模板，双栈
    *
    * <p>TODO
    *
    * @param s the s
    * @return int int
    */
-  //  public int calculate(String s) {
-  //    return cal(s,0);
-  //  }
-  //  private int cal(String s, int begin) {
-  //    // 当前一层，即同属一个括号内的数字组
-  //    Deque<Integer> stack = new ArrayDeque<>();
-  //    // 同一层上一个括号遭遇的运算符
-  //    char preOper = '+';
-  //    // 同一运算符的累计值
-  //    int cur = 0;
-  //    while (begin < s.length()) {
-  //    char ch = s.charAt(begin);
-  //    begin += 1;
-  //    if (char == ' ') { // 空格跳过
-  //      continue
-  //    } else if '0' <= char && char <= '9' {
-  //      // (c - '0')的这个括号不能省略，否则可能造成整型溢出
-  //      // 因为c是一个 ASCII 码，如果不加括号就会先加后减，想象一下n如果接近 INT_MAX，就会溢出
-  //      cur = cur*10 + int(char-'0')
-  //    } else if char == '(' { // 左括号则递归处理
-  //      cur = cal(s, begin)
-  //    } else if char == ')' {
-  //      break
-  //    } else { // 还需要判断如果不是数字或空格，就把符号后边的数字处理后加入栈中，否则需要改动传入的s
-  //      switch pre {
-  //        case '+':
-  //          stack = append(stack, cur)
-  //        case '-':
-  //          stack = append(stack, -cur)
-  //        case '*':
-  //          stack[len(stack)-1] *= cur
-  //        default:
-  //          stack[len(stack)-1] /= cur
-  //      }
-  //      pre = rune(char) // 更新当前符号 & 重置当前层
-  //      cur = 0
-  //    }
-  //	}
-  //    int res = 0;
-  //    // 计算当前整一层的加和
-  //    for (int num : stack) {
-  //      res += num;
-  //    }
-  //    return res;
-  //  }
+  public int calculate(String s) {
+    Map<Character, Integer> priOps =
+        new HashMap<>() {
+          {
+            put('-', 1);
+            put('+', 1);
+            put('*', 2);
+            put('/', 2);
+            put('%', 2);
+            put('^', 3);
+          }
+        };
+    //    s = s.replaceAll(" ", "");
+    // 存放所有的数字
+    Deque<Integer> numStack = new ArrayDeque<>();
+    // 为了防止第一个数为负数
+    numStack.addLast(0);
+    // 存放所有「非数字以外」的操作
+    Deque<Character> opStack = new ArrayDeque<>();
+    char[] cs = s.toCharArray();
+    for (int i = 0; i < cs.length; i++) {
+      char cur = cs[i];
+      if (cur == ' ') continue;
+      if (cur == '(') {
+        opStack.addLast(cur);
+      } else if (cur == ')') {
+        // 计算到最近一个左括号为止
+        while (!opStack.isEmpty()) {
+          if (opStack.peekLast() == '(') {
+            opStack.pollLast();
+            break;
+          }
+          calc(numStack, opStack);
+        }
+      } else if (Character.isDigit(cur)) {
+        // 数字
+        int num = 0, idx = i;
+        // 将从 i 位置开始后面的连续数字整体取出，加入 nums
+        while (idx < cs.length && Character.isDigit(cs[idx])) {
+          num = num * 10 + (cs[idx] - '0');
+          idx += 1;
+        }
+        numStack.addLast(num);
+        i = idx - 1;
+      } else {
+        // 操作符
+        if (i > 0 && (cs[i - 1] == '(' || cs[i - 1] == '+' || cs[i - 1] == '-')) {
+          numStack.addLast(0);
+        }
+        // 有一个新操作要入栈时，先把栈内可以算的都算了
+        // 只有满足「栈内运算符」比「当前运算符」优先级高/同等，才进行运算
+        while (!opStack.isEmpty() && opStack.peekLast() != '(') {
+          if (priOps.get(opStack.peekLast()) < priOps.get(cur)) break;
+          calc(numStack, opStack);
+        }
+        opStack.addLast(cur);
+      }
+    }
+    // 将剩余的计算完
+    while (!opStack.isEmpty()) {
+      calc(numStack, opStack);
+    }
+    return numStack.peekLast();
+  }
+
+  private void calc(Deque<Integer> numStack, Deque<Character> opStack) {
+    if (opStack.isEmpty() || numStack.isEmpty() || numStack.size() < 2) return;
+    int res = 0, b = numStack.pollLast(), a = numStack.pollLast();
+    char op = opStack.pollLast();
+    if (op == '+') res = a + b;
+    else if (op == '-') res = a - b;
+    else if (op == '*') res = a * b;
+    else if (op == '/') res = a / b;
+    else if (op == '^') res = (int) Math.pow(a, b);
+    else if (op == '%') res = a % b;
+    numStack.addLast(res);
+  }
 }
 
 /** 子串相关 */
@@ -581,6 +656,51 @@ class SSubString {
       }
     }
     return true;
+  }
+
+  /**
+   * 实现strStr()，即 KMP
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/implement-strstr/solution/shua-chuan-lc-shuang-bai-po-su-jie-fa-km-tb86/
+   *
+   * @param haystack
+   * @param needle
+   * @return
+   */
+  public int strStr(String haystack, String needle) {
+    if (needle.isEmpty()) return 0;
+    // 分别读取原串和匹配串的长度
+    int lenH = haystack.length(), lenN = needle.length();
+    // 原串和匹配串前面都加空格，使其下标从 1 开始
+    haystack = " " + haystack;
+    needle = " " + needle;
+    char[] hayChs = haystack.toCharArray(), needChs = needle.toCharArray();
+    // 构建 next 数组，和匹配串相关
+    int[] next = new int[lenN + 1];
+    // 构造过程 i=2 j=0 开始，i 小于等于匹配串长度
+    for (int i = 2, j = 0; i <= lenN; i++) {
+      // 匹配不成功的话，j = next(j)
+      while (j > 0 && needChs[i] != needChs[j + 1]) {
+        j = next[j];
+      }
+      // 匹配成功的话，先让 j++
+      if (needChs[i] == needChs[j + 1]) j += 1;
+      // 更新 next[i]，结束本次循环，i++
+      next[i] = j;
+    }
+    // 匹配过程，i=1 j=0 开始，i 小于等于原串长度
+    for (int i = 1, j = 0; i <= lenH; i++) {
+      // 匹配不成功 j = next(j)
+      while (j > 0 && hayChs[i] != needChs[j + 1]) {
+        j = next[j];
+      }
+      // 匹配成功的话，先让 j++，结束本次循环后 i++
+      if (hayChs[i] == needChs[j + 1]) j += 1;
+      // 整一段匹配成功，直接返回下标
+      if (j == lenN) return i - lenN;
+    }
+    return -1;
   }
 
   /**
@@ -679,6 +799,7 @@ class EEncoding extends SString {
       }
       chars[lo] = chars[hi];
       lo += 1;
+      // 多位数字逐位写入
       if (cur - hi > 1) {
         for (char digit : Integer.toString(cur - hi).toCharArray()) {
           chars[lo] = digit;
@@ -825,47 +946,6 @@ class WWord extends DefaultSString {
       }
     }
     return dp[s.length()];
-  }
-
-  /**
-   * 实现strStr()，即 KMP
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/implement-strstr/solution/shua-chuan-lc-shuang-bai-po-su-jie-fa-km-tb86/
-   *
-   * @param haystack
-   * @param needle
-   * @return
-   */
-  public int strStr(String haystack, String needle) {
-    if (needle.isEmpty()) return 0;
-    // 使其下标从 1 开始
-    haystack = " " + haystack;
-    needle = " " + needle;
-    char[] s = haystack.toCharArray(), p = needle.toCharArray();
-    int[] next = new int[needle.length() + 1];
-    // 构造过程 i = 2，j = 0 开始，i 小于等于匹配串长度
-    for (int i = 2, j = 0; i <= needle.length(); i++) {
-      // 匹配不成功
-      while (j > 0 && p[i] != p[j + 1]) {
-        j = next[j];
-      }
-      if (p[i] == p[j + 1]) j += 1;
-      // 更新
-      next[i] = j;
-    }
-    // 匹配过程，i = 1，j = 0 开始，i 小于等于原串长度 【匹配 i 从 1 开始】
-    for (int i = 1, j = 0; i <= haystack.length(); i++) {
-      // 匹配不成功
-      while (j > 0 && s[i] != p[j + 1]) {
-        j = next[j];
-      }
-      // 匹配成功
-      if (s[i] == p[j + 1]) j += 1;
-      // 整一段匹配成功
-      if (j == needle.length()) return i - needle.length();
-    }
-    return -1;
   }
 
   /**

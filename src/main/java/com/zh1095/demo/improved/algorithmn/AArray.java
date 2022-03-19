@@ -1447,7 +1447,7 @@ class DDuplicate extends DefaultArray {
   public int firstMissingPositive(int[] nums) {
     for (int i = 0; i < nums.length; i++) {
       // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
-      while (nums[i] > 0 && nums[i] <= nums.length && nums[nums[i] - 1] != nums[i]) {
+      while (nums[i] > 0 && nums[i] <= nums.length && nums[i] != nums[nums[i] - 1]) {
         swap(nums, nums[i] - 1, i);
       }
     }
@@ -1857,9 +1857,7 @@ class DicOrder extends DefaultArray {
   /**
    * 最大交换，只交换一次任意两位的数，使其结果数值是所有方案中最大的
    *
-   * <p>贪心，将最高位的 n 与后面 m 交换，后者需满足 m>n 且 m 尽可能靠后
-   *
-   * <p>即找到当前位置右边最大的数字，并与当前交换，即为最大
+   * <p>贪心，将较高位的 n 与后面 m 交换，需满足 m>n 且 m 尽可能靠后
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
@@ -1869,12 +1867,12 @@ class DicOrder extends DefaultArray {
    */
   public int maximumSwap(int num) {
     char[] chs = Integer.toString(num).toCharArray();
-    // 记录每个数字出现的最后一次出现的下标
+    // 记录每个数字最后的索引
     int[] lastIdx = new int[10];
     for (int i = 0; i < chs.length; i++) {
       lastIdx[chs[i] - '0'] = i;
     }
-    // 顺序遍历找到当前位置右边的最大的数字，并交换
+    // 查找比当前数字更大且更低位的数字
     for (int i = 0; i < chs.length; i++) {
       for (int d = 9; d > chs[i] - '0'; d--) {
         if (lastIdx[d] <= i) continue;

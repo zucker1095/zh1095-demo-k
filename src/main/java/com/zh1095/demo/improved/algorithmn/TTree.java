@@ -122,18 +122,38 @@ public class TTree {
   }
 
   /**
-   * 路径总和，从根出发要求达到叶，前序遍历，记录路径则参下「路径总和II」回溯
+   * 路径总和，从根出发要求达到叶，BFS / 前序，前者模板与下方「求根节点到叶节点数字之和」一致
+   *
+   * <p>记录路径则参下「路径总和II」回溯
    *
    * @param root the root
    * @param targetSum the target sum
    * @return boolean boolean
    */
-  public boolean hasPathSum(TreeNode root, int targetSum) {
+  public boolean hasPathSum(TreeNode root, int sum) {
     if (root == null) return false;
-    if (root.left == null && root.right == null) return targetSum == root.val;
-    // 剪枝
-    return hasPathSum(root.left, targetSum - root.val)
-        || hasPathSum(root.right, targetSum - root.val);
+    Queue<TreeNode> nodeQueue = new LinkedList<>();
+    Queue<Integer> numQueue = new LinkedList<>();
+    nodeQueue.offer(root);
+    numQueue.offer(root.val);
+    while (!nodeQueue.isEmpty()) {
+      TreeNode node = nodeQueue.poll();
+      int num = numQueue.poll();
+      TreeNode left = node.left, right = node.right;
+      if (left == null && right == null) {
+        if (num == sum) return true;
+        continue;
+      }
+      if (left != null) {
+        nodeQueue.offer(left);
+        numQueue.offer(left.val + num);
+      }
+      if (right != null) {
+        nodeQueue.offer(right);
+        numQueue.offer(right.val + num);
+      }
+    }
+    return false;
   }
 
   /**
@@ -212,7 +232,7 @@ public class TTree {
   }
 
   /**
-   * 求根节点到叶节点数字之和，bfs 维护两个队列逐层相加 / 前序
+   * 求根节点到叶节点数字之和，BFS 维护两个队列逐层相加 / 前序，前者参上「路径总和」
    *
    * @param root the root
    * @return int int
@@ -237,11 +257,11 @@ public class TTree {
       }
       if (left != null) {
         nodeQueue.offer(left);
-        numQueue.offer(num * 10 + left.val);
+        numQueue.offer(left.val + num * 10);
       }
       if (right != null) {
         nodeQueue.offer(right);
-        numQueue.offer(num * 10 + right.val);
+        numQueue.offer(right.val + num * 10);
       }
     }
     return sum;
@@ -339,6 +359,10 @@ public class TTree {
  * <p>按照子组列的顺序，建议按照表格记忆
  */
 class BBacktracking extends DDFS {
+  private final String[] LetterMap = {
+    " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
+  };
+
   /**
    * 路径总和II，从根出发要求达到叶，需要记录路径
    *
@@ -712,6 +736,31 @@ class BBacktracking extends DDFS {
     if (len > 1 && s.charAt(lo) == '0') return false;
     int num = len > 0 ? Integer.parseInt(s.substring(lo, hi + 1)) : 0;
     return 0 <= num && num <= 255;
+  }
+
+  /**
+   * 电话号码的字母组合
+   *
+   * @param digits
+   * @return
+   */
+  public List<String> letterCombinations(String digits) {
+    if (digits == null || digits.length() == 0) return new ArrayList<>();
+    List<String> res = new ArrayList<>();
+    backtracking13(digits, new StringBuilder(), res, 0);
+    return res;
+  }
+
+  private void backtracking13(String str, StringBuilder path, List<String> res, int idx) {
+    if (idx == str.length()) {
+      res.add(path.toString());
+      return;
+    }
+    for (char ch : LetterMap[str.charAt(idx) - '0'].toCharArray()) {
+      path.append(ch);
+      backtracking13(str, path, res, idx + 1);
+      path.deleteCharAt(path.length() - 1);
+    }
   }
 
   /**
