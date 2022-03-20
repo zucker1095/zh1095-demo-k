@@ -95,6 +95,66 @@ public class SString extends DefaultSString {
   }
 
   /**
+   * 字符串转换整数，如 " -26" to 26
+   *
+   * <p>去空格 & 判正负 & 逐位加 & 判溢出
+   *
+   * @param s the s
+   * @return the int
+   */
+  public int myAtoi(String s) {
+    int idx = 0, res = 0;
+    boolean isNegative = false;
+    while (idx < s.length() && s.charAt(idx) == ' ') {
+      idx += 1;
+    }
+    if (idx == s.length()) return 0;
+    if (s.charAt(idx) == '-') isNegative = true;
+    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
+    for (int i = idx; i < s.length(); i++) {
+      char ch = s.charAt(i);
+      if (ch < '0' || ch > '9') break;
+      int pre = res;
+      res = res * 10 + (ch - '0');
+      if (pre != res / 10) {
+        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      }
+    }
+    return res * (isNegative ? -1 : 1);
+  }
+
+  /**
+   * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
+   *
+   * <p>框架类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
+   *
+   * @param chars the chars
+   * @return int int
+   */
+  public int compress(char[] chars) {
+    // write & read
+    int lo = 0, hi = 0;
+    while (hi < chars.length) {
+      int cur = hi;
+      while (cur < chars.length && chars[hi] == chars[cur]) {
+        cur += 1;
+      }
+      chars[lo] = chars[hi];
+      lo += 1;
+      // 多位数字逐位写入
+      if (cur - hi > 1) {
+        for (char digit : Integer.toString(cur - hi).toCharArray()) {
+          chars[lo] = digit;
+          lo += 1;
+        }
+      }
+      hi = cur;
+    }
+    //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
+    return lo;
+  }
+
+  /**
    * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
    *
    * <p>TODO 参考 https://juejin.cn/post/6844904058357022728
@@ -132,6 +192,34 @@ public class SString extends DefaultSString {
     }
     return ' ';
   }
+
+  /**
+   * 比较版本号，逐个区间计数
+   *
+   * @param version1 the version 1
+   * @param version2 the version 2
+   * @return int int
+   */
+  public int compareVersion(String version1, String version2) {
+    int len1 = version1.length(), len2 = version2.length();
+    int p1 = 0, p2 = 0;
+    while (p1 < len1 || p2 < len2) {
+      int n1 = 0, n2 = 0;
+      while (p1 < len1 && version1.charAt(p1) != '.') {
+        n1 = n1 * 10 + version1.charAt(p1) - '0';
+        p1 += 1;
+      }
+      // 跳过点号
+      p1 += 1;
+      while (p2 < len2 && version2.charAt(p2) != '.') {
+        n2 = n2 * 10 + version2.charAt(p2) - '0';
+        p2 += 1;
+      }
+      p2 += 1;
+      if (n1 != n2) return n1 > n2 ? 1 : -1;
+    }
+    return 0;
+  }
 }
 
 /**
@@ -149,13 +237,14 @@ class WWindow {
    * @return the int
    */
   public int lengthOfLongestSubstring(String s) {
+    // ASCII 表总长 128
     int[] window = new int[128];
     int res = 1;
     int lo = 0, hi = 0;
     while (hi < s.length()) {
-      char add = s.charAt(hi);
-      window[add] += 1;
-      while (window[add] == 2) {
+      char in = s.charAt(hi);
+      window[in] += 1;
+      while (window[in] == 2) {
         char out = s.charAt(lo);
         window[out] -= 1;
         lo += 1;
@@ -174,16 +263,17 @@ class WWindow {
    * @return string string
    */
   public String minWindow(String s, String t) {
-    int lo = 0, hi = 0;
-    int counter = t.length(), start = 0, end = Integer.MAX_VALUE;
-    int[] need = new int[128];
-    for (int i = 0; i < t.length(); i++) {
-      need[t.charAt(i)] += 1;
+    // 遍历的指针与结果的始末
+    int lo = 0, hi = 0, start = 0, end = Integer.MAX_VALUE;
+    int counter = t.length();
+    int[] needle = new int[128];
+    for (char ch : t.toCharArray()) {
+      needle[ch] += 1;
     }
     while (hi < s.length()) {
-      char add = s.charAt(hi);
-      if (need[add] > 0) counter -= 1;
-      need[add] -= 1;
+      char in = s.charAt(hi);
+      if (needle[in] > 0) counter -= 1;
+      needle[in] -= 1;
       hi += 1;
       while (counter == 0) {
         if (end - start > hi - lo) {
@@ -191,8 +281,8 @@ class WWindow {
           end = hi;
         }
         char out = s.charAt(lo);
-        if (need[out] == 0) counter += 1;
-        need[out] += 1;
+        if (needle[out] == 0) counter += 1;
+        needle[out] += 1;
         lo += 1;
       }
     }
@@ -234,24 +324,24 @@ class WWindow {
    * @return int [ ]
    */
   public int[] maxSlidingWindow(int[] nums, int k) {
-    int[] res = new int[nums.length - k + 1];
+    int[] segmentMax = new int[nums.length - k + 1];
     Deque<Integer> monotonicQueue = new LinkedList<>();
     for (int i = 0; i < nums.length; i++) {
       // offer
-      while (monotonicQueue.size() > 0 && monotonicQueue.getLast() < nums[i]) {
-        monotonicQueue.removeLast();
+      while (monotonicQueue.size() > 0 && monotonicQueue.peekLast() < nums[i]) {
+        monotonicQueue.pollLast();
       }
-      monotonicQueue.addLast(nums[i]);
+      monotonicQueue.offerLast(nums[i]);
       if (i < k - 1) continue;
       int outIdx = i - k + 1;
       //      res[outIdx] = mq.max();
-      res[outIdx] = monotonicQueue.getFirst();
+      segmentMax[outIdx] = monotonicQueue.peekFirst();
       //      mq.poll(nums[outIdx]);
-      if (monotonicQueue.size() > 0 && monotonicQueue.getFirst() == nums[outIdx]) {
-        monotonicQueue.removeFirst();
+      if (monotonicQueue.size() > 0 && monotonicQueue.peekFirst() == nums[outIdx]) {
+        monotonicQueue.pollFirst();
       }
     }
-    return res;
+    return segmentMax;
   }
 
   /**
@@ -451,9 +541,65 @@ class SStack {
   }
 
   /**
+   * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
+   *
+   * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
+   *
+   * <p>Integer.parseInt(c + "") 改为 c - '0'
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String decodeString(String s) {
+    int curCount = 0;
+    StringBuilder curStr = new StringBuilder();
+    Deque<Integer> countStack = new ArrayDeque<>();
+    Deque<String> strStack = new ArrayDeque<>();
+    for (int i = 0; i < s.length(); i++) {
+      char ch = s.charAt(i);
+      if (ch == '[') {
+        countStack.addLast(curCount);
+        strStack.addLast(curStr.toString());
+        curCount = 0;
+        curStr = new StringBuilder();
+      } else if (ch == ']') {
+        int preCount = countStack.removeLast();
+        String preStr = strStack.removeLast();
+        curStr = new StringBuilder(preStr + curStr.toString().repeat(preCount));
+      } else if (ch >= '0' && ch <= '9') {
+        curCount = curCount * 10 + (ch - '0');
+      } else {
+        curStr.append(ch);
+      }
+    }
+    return curStr.toString();
+  }
+
+  /**
+   * 简化路径
+   *
+   * @param path
+   * @return
+   */
+  public String simplifyPath(String path) {
+    Deque<String> stack = new ArrayDeque<>();
+    for (String segment : path.split("/")) {
+      if (!stack.isEmpty() && segment.equals("..")) stack.pollLast();
+      else if (!" ..".contains(segment)) stack.offerLast(segment);
+    }
+    StringBuilder res = new StringBuilder();
+    for (String i : stack) {
+      res.append("/" + i);
+    }
+    return res.length() == 0 ? "/" : res.toString();
+  }
+
+  /**
    * 判断两个字符串是否含义一致，二者只包含 (,),+,-,a-z 且保证字母不会连续，即合法的多元一次表达式
    *
-   * <p>TODO 双栈，思路参下「基本计算器」
+   * <p>只有加减与括号，则展开括号并单栈暂存运算符即可，代码模板参下「字符串解码」
+   *
+   * <p>思路参考「基本计算器」https://leetcode-cn.com/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-wo-yao-chu-qu-luan-nae94/
    *
    * @return
    */
@@ -466,37 +612,25 @@ class SStack {
   }
 
   private int[] countLetter(String s) {
-    int[] counter = new int[26];
-    char[] chs = s.toCharArray();
-    int curNum = 0, curSign = 1;
-    Deque<Integer> numStack = new ArrayDeque<>(), opStack = new ArrayDeque<>();
-    for (int i = 0; i < chs.length; i++) {
-      if (chs[i] == ' ') continue;
-      if (chs[i] == '+' || chs[i] == '-') {
-        curSign = chs[i] == '+' ? 1 : -1;
-      } else if (chs[i] >= '0' && chs[i] <= '9') {
-        int num = chs[i] - '0';
-        while (i < chs.length - 1 && chs[i + 1] >= '0' && chs[i + 1] <= '9') { // 将这个数字找完
-          i += 1;
-          num = num * 10 + (chs[i] - '0');
-        }
-        curNum += curSign * num;
-      } else if (chs[i] == '(') { // 左括号，暂存结果
-        numStack.push(curNum);
-        opStack.push(curSign);
-        curNum = 0;
-        curSign = 1;
-      } else if (chs[i] == ')') { // 右括号更新结果
-        curNum = numStack.pop() + curNum * opStack.pop();
-      }
+    int[] curCounter = new int[26];
+    int curSign = 1;
+    Deque<Integer> opStack = new ArrayDeque<>();
+    opStack.addLast(1);
+    for (char ch : s.toCharArray()) {
+      ch = Character.toLowerCase(ch);
+      if ('a' <= ch && ch <= 'z') curCounter[ch - 'a'] += curSign == 1 ? 1 : -1;
+      else if (ch == '+') curSign = opStack.getLast();
+      else if (ch == '-') curSign = -opStack.getLast();
+      else if (ch == '(') opStack.addLast(curSign);
+      else if (ch == ')') opStack.removeLast();
     }
-    return counter;
+    return curCounter;
   }
 
   /**
-   * 基本计算器 I & II 统一模板，双栈
+   * 基本计算器
    *
-   * <p>TODO
+   * <p>扩展1，同时有括号与五种运算符，才使用双栈，否则建议单栈即可
    *
    * @param s the s
    * @return int int
@@ -514,15 +648,15 @@ class SStack {
           }
         };
     //    s = s.replaceAll(" ", "");
-    // 存放所有的数字
+    // 所有的数字
     Deque<Integer> numStack = new ArrayDeque<>();
-    // 为了防止第一个数为负数
+    // 防止第一个数为负数
     numStack.addLast(0);
-    // 存放所有「非数字以外」的操作
+    // 存放所有非数字的操作
     Deque<Character> opStack = new ArrayDeque<>();
-    char[] cs = s.toCharArray();
-    for (int i = 0; i < cs.length; i++) {
-      char cur = cs[i];
+    char[] chs = s.toCharArray();
+    for (int i = 0; i < chs.length; i++) {
+      char cur = chs[i];
       if (cur == ' ') continue;
       if (cur == '(') {
         opStack.addLast(cur);
@@ -539,15 +673,15 @@ class SStack {
         // 数字
         int num = 0, idx = i;
         // 将从 i 位置开始后面的连续数字整体取出，加入 nums
-        while (idx < cs.length && Character.isDigit(cs[idx])) {
-          num = num * 10 + (cs[idx] - '0');
+        while (idx < chs.length && Character.isDigit(chs[idx])) {
+          num = num * 10 + (chs[idx] - '0');
           idx += 1;
         }
         numStack.addLast(num);
         i = idx - 1;
       } else {
         // 操作符
-        if (i > 0 && (cs[i - 1] == '(' || cs[i - 1] == '+' || cs[i - 1] == '-')) {
+        if (i > 0 && (chs[i - 1] == '(' || chs[i - 1] == '+' || chs[i - 1] == '-')) {
           numStack.addLast(0);
         }
         // 有一个新操作要入栈时，先把栈内可以算的都算了
@@ -568,14 +702,14 @@ class SStack {
 
   private void calc(Deque<Integer> numStack, Deque<Character> opStack) {
     if (opStack.isEmpty() || numStack.isEmpty() || numStack.size() < 2) return;
-    int res = 0, b = numStack.pollLast(), a = numStack.pollLast();
+    int res = 0, cur = numStack.pollLast(), pre = numStack.pollLast();
     char op = opStack.pollLast();
-    if (op == '+') res = a + b;
-    else if (op == '-') res = a - b;
-    else if (op == '*') res = a * b;
-    else if (op == '/') res = a / b;
-    else if (op == '^') res = (int) Math.pow(a, b);
-    else if (op == '%') res = a % b;
+    if (op == '+') res = pre + cur;
+    else if (op == '-') res = pre - cur;
+    else if (op == '*') res = pre * cur;
+    else if (op == '/') res = pre / cur;
+    else if (op == '^') res = (int) Math.pow(pre, cur);
+    else if (op == '%') res = pre % cur;
     numStack.addLast(res);
   }
 }
@@ -659,7 +793,7 @@ class SSubString {
   }
 
   /**
-   * 实现strStr()，即 KMP
+   * 实现strStr()，返回 haystack 中匹配 needle 的首个子串的首个字符的索引
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/implement-strstr/solution/shua-chuan-lc-shuang-bai-po-su-jie-fa-km-tb86/
@@ -750,134 +884,8 @@ class SSubString {
   }
 }
 
-/** 字符串遍历与编码相关 */
-class EEncoding extends SString {
-  /**
-   * 字符串转换整数，如 " -26" to 26
-   *
-   * <p>去空格 & 判正负 & 逐位加 & 判溢出
-   *
-   * @param s the s
-   * @return the int
-   */
-  public int myAtoi(String s) {
-    int idx = 0, res = 0;
-    boolean isNegative = false;
-    while (idx < s.length() && s.charAt(idx) == ' ') {
-      idx += 1;
-    }
-    if (idx == s.length()) return 0;
-    if (s.charAt(idx) == '-') isNegative = true;
-    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
-    for (int i = idx; i < s.length(); i++) {
-      char ch = s.charAt(i);
-      if (ch < '0' || ch > '9') break;
-      int pre = res;
-      res = res * 10 + (ch - '0');
-      if (pre != res / 10) {
-        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-      }
-    }
-    return res * (isNegative ? -1 : 1);
-  }
-
-  /**
-   * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
-   *
-   * <p>框架类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
-   *
-   * @param chars the chars
-   * @return int int
-   */
-  public int compress(char[] chars) {
-    // write & read
-    int lo = 0, hi = 0;
-    while (hi < chars.length) {
-      int cur = hi;
-      while (cur < chars.length && chars[hi] == chars[cur]) {
-        cur += 1;
-      }
-      chars[lo] = chars[hi];
-      lo += 1;
-      // 多位数字逐位写入
-      if (cur - hi > 1) {
-        for (char digit : Integer.toString(cur - hi).toCharArray()) {
-          chars[lo] = digit;
-          lo += 1;
-        }
-      }
-      hi = cur;
-    }
-    //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
-    return lo;
-  }
-
-  /**
-   * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
-   *
-   * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
-   *
-   * <p>Integer.parseInt(c + "") 改为 c - '0'
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String decodeString(String s) {
-    int curCount = 0;
-    StringBuilder curStr = new StringBuilder();
-    Deque<Integer> countStack = new ArrayDeque<>();
-    Deque<String> strStack = new ArrayDeque<>();
-    for (int i = 0; i < s.length(); i++) {
-      char ch = s.charAt(i);
-      if (ch == '[') {
-        countStack.addLast(curCount);
-        strStack.addLast(curStr.toString());
-        curCount = 0;
-        curStr = new StringBuilder();
-      } else if (ch == ']') {
-        int preCount = countStack.removeLast();
-        String preStr = strStack.removeLast();
-        curStr = new StringBuilder(preStr + curStr.toString().repeat(preCount));
-      } else if (ch >= '0' && ch <= '9') {
-        curCount = curCount * 10 + (ch - '0');
-      } else {
-        curStr.append(ch);
-      }
-    }
-    return curStr.toString();
-  }
-}
-
 /** 子串相关，单词搜索参考 TTree */
 class WWord extends DefaultSString {
-  /**
-   * 比较版本号，逐个区间计数
-   *
-   * @param version1 the version 1
-   * @param version2 the version 2
-   * @return int int
-   */
-  public int compareVersion(String version1, String version2) {
-    int len1 = version1.length(), len2 = version2.length();
-    int p1 = 0, p2 = 0;
-    while (p1 < len1 || p2 < len2) {
-      int n1 = 0, n2 = 0;
-      while (p1 < len1 && version1.charAt(p1) != '.') {
-        n1 = n1 * 10 + version1.charAt(p1) - '0';
-        p1 += 1;
-      }
-      // 跳过点号
-      p1 += 1;
-      while (p2 < len2 && version2.charAt(p2) != '.') {
-        n2 = n2 * 10 + version2.charAt(p2) - '0';
-        p2 += 1;
-      }
-      p2 += 1;
-      if (n1 != n2) return n1 > n2 ? 1 : -1;
-    }
-    return 0;
-  }
-
   /**
    * 翻转字符串里的单词，对于 Java 不可能实现实际的 O(1) space，因此要求 s 原地即可
    *

@@ -39,10 +39,10 @@ public class TTree {
     TreeNode cur = root;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
-        stack.addLast(cur); // 1.traverse
+        stack.offerLast(cur); // 1.traverse
         cur = cur.left;
       }
-      cur = stack.removeLast(); // 2.handle
+      cur = stack.pollLast(); // 2.handle
       res.add(cur.val);
       cur = cur.right;
     }
@@ -62,10 +62,10 @@ public class TTree {
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         res.add(cur.val);
-        stack.addLast(cur);
+        stack.offerLast(cur);
         cur = cur.right; // left pre
       }
-      cur = stack.removeLast();
+      cur = stack.pollLast();
       cur = cur.left; // right pre
     }
     Collections.reverse(res);
@@ -379,18 +379,18 @@ class BBacktracking extends DDFS {
   private void backtracking0(
       TreeNode root, Deque<Integer> path, List<List<Integer>> res, int targetSum) {
     if (root == null) return;
-    path.addLast(root.val);
+    path.offerLast(root.val);
     if (targetSum - root.val == 0 && root.left == null && root.right == null) {
       // path 全局唯一，须做拷贝
       res.add(new ArrayList<>(path));
       // return 前须重置
-      path.removeLast();
+      path.pollLast();
       return;
     }
     backtracking0(root.left, path, res, targetSum - root.val);
     backtracking0(root.right, path, res, targetSum - root.val);
     // 递归完成以后，必须重置变量
-    path.removeLast();
+    path.pollLast();
   }
 
   /**
@@ -436,9 +436,9 @@ class BBacktracking extends DDFS {
   private void backtracking1(int[] nums, Deque<Integer> path, List<List<Integer>> res, int start) {
     res.add(new ArrayList<>(path));
     for (int i = start; i < nums.length; i++) {
-      path.addLast(nums[i]);
+      path.offerLast(nums[i]);
       backtracking1(nums, path, res, i + 1);
-      path.removeLast();
+      path.pollLast();
     }
   }
 
@@ -462,9 +462,9 @@ class BBacktracking extends DDFS {
     if (target == 0) res.add(new ArrayList<>(path));
     for (int i = start; i < candidates.length; i++) {
       if (candidates[i] > target) break;
-      path.addLast(candidates[i]);
+      path.offerLast(candidates[i]);
       backtracking2(candidates, path, res, i, target - candidates[i]);
-      path.removeLast();
+      path.pollLast();
     }
   }
 
@@ -489,9 +489,9 @@ class BBacktracking extends DDFS {
     for (int i = start; i < candidates.length; i++) {
       if (candidates[i] > target) break;
       if (i > start && candidates[i - 1] == candidates[i]) continue;
-      path.addLast(candidates[i]);
+      path.offerLast(candidates[i]);
       backtracking3(candidates, path, res, i + 1, target - candidates[i]);
-      path.removeLast();
+      path.pollLast();
     }
   }
 
@@ -517,9 +517,9 @@ class BBacktracking extends DDFS {
     for (int i = 0; i < nums.length; i++) {
       if (visited[i]) continue;
       visited[i] = true;
-      path.addLast(nums[i]);
+      path.offerLast(nums[i]);
       backtracking4(nums, path, res, visited);
-      path.removeLast();
+      path.pollLast();
       visited[i] = false;
     }
   }
@@ -547,9 +547,9 @@ class BBacktracking extends DDFS {
     for (int i = 0; i < nums.length; i++) {
       if (visited[i] || (i > 0 && nums[i] == nums[i - 1] && !visited[i])) continue;
       visited[i] = true;
-      path.addLast(nums[i]);
+      path.offerLast(nums[i]);
       backtracking5(nums, path, res, visited);
-      path.removeLast();
+      path.pollLast();
       visited[i] = false;
     }
   }
@@ -685,9 +685,9 @@ class BBacktracking extends DDFS {
     }
     for (int i = idx; i < s.length(); i++) {
       if (!dp[idx][i]) continue;
-      path.addLast(s.substring(idx, i + 1));
+      path.offerLast(s.substring(idx, i + 1));
       backtracking11(s, path, res, i + 1, dp);
-      path.removeLast();
+      path.pollLast();
     }
   }
 
@@ -724,9 +724,9 @@ class BBacktracking extends DDFS {
       if (segment * 3 < s.length() - i || !isValidIpSegment(s, begin, i)) {
         continue;
       }
-      path.addLast(s.substring(begin, i + 1));
+      path.offerLast(s.substring(begin, i + 1));
       backtracking6(s, path, res, i + 1, segment - 1);
-      path.removeLast();
+      path.pollLast();
     }
   }
 
@@ -976,17 +976,14 @@ class DDFS {
       parent = pre;
       return true;
     }
-    // 如果我成了左儿子的儿子，那我的父就是我的新的左儿子
     if (dfs4(cur, cur.left, target)) {
       cur.left = pre;
       return true;
     }
-    // 如果我成了我右儿子的儿子，那我的父就是我的新的右儿子
     if (dfs4(cur, cur.right, target)) {
       cur.right = pre;
       return true;
     }
-    // 递归的时候返回父
     return false;
   }
 
@@ -1050,10 +1047,10 @@ class BBST {
     double pre = -Double.MAX_VALUE;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
-        stack.addLast(cur);
+        stack.offerLast(cur);
         cur = cur.left;
       }
-      cur = stack.removeLast();
+      cur = stack.pollLast();
       if (cur.val <= pre) return false;
       pre = cur.val;
       cur = cur.right;
@@ -1076,13 +1073,13 @@ class BBST {
     TreeNode cur = root;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
-        stack.push(cur);
-        cur = cur.right; // left
+        stack.offerLast(cur);
+        cur = cur.right;
       }
-      cur = stack.pop();
+      cur = stack.pollLast();
       count -= 1;
       if (count == 0) return cur.val;
-      cur = cur.left; // right
+      cur = cur.left;
     }
     // impossible
     return -1;
@@ -1098,23 +1095,24 @@ class BBST {
   public TreeNode insertIntoBST(TreeNode root, int val) {
     if (root == null) return new TreeNode(val);
     TreeNode cur = root;
-    while (true) {
+    while (cur != null) {
       if (cur.val < val) {
         if (cur.right == null) {
           cur.right = new TreeNode(val);
-          return root;
+          break;
         } else {
           cur = cur.right;
         }
       } else {
         if (cur.left == null) {
           cur.left = new TreeNode(val);
-          return root;
+          break;
         } else {
           cur = cur.left;
         }
       }
     }
+    return root;
   }
 
   /**
@@ -1144,7 +1142,7 @@ class BBST {
   }
 
   /**
-   * 二叉搜索树的最小绝对差，中序，框架等同上方 inorderTraversal
+   * 二叉搜索树的最小绝对差，中序，框架等同上方「中序遍历」
    *
    * @param root the root
    * @return minimum difference
@@ -1155,10 +1153,10 @@ class BBST {
     TreeNode cur = root;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
-        stack.addLast(cur);
+        stack.offerLast(cur);
         cur = cur.left;
       }
-      cur = stack.removeLast();
+      cur = stack.pollLast();
       res = Math.min(res, Math.abs(cur.val - pre));
       pre = cur.val;
       cur = cur.right;
@@ -1167,7 +1165,7 @@ class BBST {
   }
 
   /**
-   * 恢复二叉搜索树，中序，框架保持 inorderTraversal
+   * 恢复二叉搜索树，中序，框架保持「中序遍历」
    *
    * <p>找到两个错误结点并交换
    *
@@ -1179,10 +1177,10 @@ class BBST {
     while (cur != null || !stack.isEmpty()) {
       // 遍历
       while (cur != null) {
-        stack.addLast(cur);
+        stack.offerLast(cur);
         cur = cur.left;
       }
-      cur = stack.removeLast();
+      cur = stack.pollLast();
       // 处理当前结点
       if (firstNode == null && pre.val > cur.val) firstNode = pre;
       if (firstNode != null && pre.val > cur.val) secondNode = cur;
@@ -1263,7 +1261,7 @@ class BBST {
     public BSTIterator(TreeNode root) {
       TreeNode cur = root;
       while (cur != null) {
-        stack.push(cur);
+        stack.offerLast(cur);
         cur = cur.left;
       }
     }
@@ -1274,11 +1272,11 @@ class BBST {
      * @return the int
      */
     public int next() {
-      TreeNode cur = stack.pop();
+      TreeNode cur = stack.pollLast();
       if (cur.right != null) {
         TreeNode nxt = cur.right;
         while (nxt != null) {
-          stack.push(nxt);
+          stack.offerLast(nxt);
           nxt = nxt.left;
         }
       }
@@ -1512,13 +1510,13 @@ class BBFS {
     List<Integer> res = new ArrayList<>();
     if (root == null) return res;
     Deque<TreeNode> queue = new LinkedList<>();
-    queue.addLast(root);
+    queue.offerLast(root);
     while (!queue.isEmpty()) {
       res.add(queue.getLast().val);
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.removeFirst();
-        if (cur.left != null) queue.addLast(cur.left);
-        if (cur.right != null) queue.addLast(cur.right);
+        if (cur.left != null) queue.offerLast(cur.left);
+        if (cur.right != null) queue.offerLast(cur.right);
       }
     }
     return res;
@@ -1542,7 +1540,7 @@ class BBFS {
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
         if (isOdd) {
-          levelList.addLast(cur.val);
+          levelList.offerLast(cur.val);
         } else {
           levelList.addFirst(cur.val);
         }
@@ -1568,11 +1566,11 @@ class BBFS {
   private boolean isCompleteTree(TreeNode root) {
     if (root == null) return true;
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.add(root);
+    queue.offer(root);
     boolean isPreNull = false;
     while (!queue.isEmpty()) {
       for (int i = queue.size(); i > 0; i--) {
-        TreeNode cur = queue.remove();
+        TreeNode cur = queue.poll();
         if (cur == null) {
           isPreNull = true;
           continue;
@@ -1593,25 +1591,25 @@ class BBFS {
    */
   public int widthOfBinaryTree(TreeNode root) {
     if (root == null) return 0;
-    int res = 0;
+    int maxWidth = 0;
     Deque<TreeNode> queue = new LinkedList<>();
     root.val = 0;
-    queue.add(root);
+    queue.offer(root);
     while (!queue.isEmpty()) {
-      res = Math.max(res, queue.getLast().val - queue.getFirst().val + 1);
+      maxWidth = Math.max(maxWidth, queue.peekLast().val - queue.peekFirst().val + 1);
       for (int i = queue.size(); i > 0; i--) {
-        TreeNode cur = queue.removeFirst();
+        TreeNode cur = queue.poll();
         if (cur.left != null) {
-          queue.add(cur.left);
+          queue.offer(cur.left);
           cur.left.val = cur.val * 2 + 1;
         }
         if (cur.right != null) {
-          queue.add(cur.right);
+          queue.offer(cur.right);
           cur.right.val = cur.val * 2 + 2;
         }
       }
     }
-    return res;
+    return maxWidth;
   }
 
   /**
@@ -1651,18 +1649,14 @@ class BBFS {
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
+      TreeNode tmp = root.left;
+      root.left = root.right;
+      root.right = tmp;
       TreeNode cur = queue.poll();
-      swap(cur);
       if (cur.left != null) queue.offer(cur.left);
       if (cur.right != null) queue.offer(cur.right);
     }
     return root;
-  }
-
-  private void swap(TreeNode cur) {
-    TreeNode tmp = cur.left;
-    cur.left = cur.right;
-    cur.right = tmp;
   }
 }
 

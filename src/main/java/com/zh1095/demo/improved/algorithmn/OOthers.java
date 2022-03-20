@@ -57,6 +57,28 @@ public class OOthers {
   }
 
   /**
+   * 范围求和II，求所有 op 交集的最大面积
+   *
+   * <p>每次均对于 [0,a] & [0,b] 操作，因此最大值必出现在 (0,0)，问题转换为，什么范围内的数与位置 (0,0) 上的值相等，即什么范围会被每一次操作所覆盖
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/range-addition-ii/solution/gong-shui-san-xie-jian-dan-mo-ni-ti-by-a-006h/
+   *
+   * @param m
+   * @param n
+   * @param ops
+   * @return
+   */
+  public int maxCount(int m, int n, int[][] ops) {
+    int minX = m, minY = n;
+    for (int[] op : ops) {
+      minX = Math.min(minX, op[0]);
+      minY = Math.min(minY, op[1]);
+    }
+    return minX * minY;
+  }
+
+  /**
    * 划分字母区间
    *
    * <p>TODO

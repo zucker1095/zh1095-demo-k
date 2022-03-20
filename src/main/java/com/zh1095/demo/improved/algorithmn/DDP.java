@@ -1,9 +1,6 @@
 package com.zh1095.demo.improved.algorithmn;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 收集 DP 相关
@@ -358,6 +355,60 @@ class OOptimalSolution {
       }
     }
     return Math.min(keep, swap);
+  }
+
+  /**
+   * 柱状图中最大的矩形
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
+   *
+   * @param heights
+   * @return
+   */
+  public int largestRectangleArea(int[] heights) {
+    int maxArea = 0;
+    Deque<Integer> stack = new ArrayDeque<>();
+    int[] newHeights = new int[heights.length + 2];
+    for (int i = 1; i < heights.length + 1; i++) {
+      newHeights[i] = heights[i - 1];
+    }
+    for (int i = 0; i < newHeights.length; i++) {
+      while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
+        int cur = stack.pollLast(), pre = stack.peekLast();
+        maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
+      }
+      stack.offerLast(i);
+    }
+    return maxArea;
+  }
+
+  /**
+   * 最大矩形
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalRectangle(char[][] matrix) {
+    int maxArea = 0, row = matrix.length, col = matrix[0].length;
+    int[] newHeights = new int[col + 2];
+    for (int i = 0; i < row; i++) {
+      Deque<Integer> stack = new ArrayDeque<>();
+      for (int j = 0; j < col + 2; j++) {
+        if (j >= 1 && j <= col) {
+          newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
+        }
+        while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
+          int cur = stack.pollLast(), pre = stack.peekLast();
+          maxArea = Math.max(maxArea, (j - pre - 1) * newHeights[cur]);
+        }
+        stack.offerLast(j);
+      }
+    }
+    return maxArea;
   }
 }
 

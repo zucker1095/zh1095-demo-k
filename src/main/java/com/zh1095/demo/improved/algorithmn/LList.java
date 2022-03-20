@@ -19,6 +19,14 @@ public class LList {
    * @return the list node
    */
   public ListNode reverseList(ListNode head) {
+    // 递归
+    //    if (head == null || head.next == null) return head;
+    //    // 后半部分反转的头，即反转前 head 链表的尾
+    //    ListNode newHead = reverseList(head.next);
+    //    head.next.next = head;
+    //    head.next = null;
+    //    return newHead;
+    // 迭代
     ListNode pre = null, cur = head, nxt;
     while (cur != null) {
       // 1.暂存
@@ -30,16 +38,6 @@ public class LList {
       cur = nxt;
     }
     return pre;
-  }
-
-  private ListNode _reverseList(ListNode head) {
-    if (head == null || head.next == null) return head;
-    ListNode cur = _reverseList(head.next);
-    head.next.next = head;
-    // 防止链表循环
-    head.next = null;
-    // 每层递归函数都返回 cur 即最后一个节点
-    return cur;
   }
 
   /**
@@ -127,22 +125,24 @@ public class LList {
   /**
    * 链表中的下一个更大节点，单调栈
    *
+   * <p>TODO
+   *
    * @param head
    * @return
    */
   public int[] nextLargerNodes(ListNode head) {
     List<Integer> res = new ArrayList<>();
-    Deque<Integer> stack = new ArrayDeque<>();
+    Deque<Integer> monotonousStack = new ArrayDeque<>();
     ListNode cur = head;
     while (cur != null) {
-      while (!stack.isEmpty() && cur.val > res.get(stack.peek())) {
-        res.set(stack.poll(), cur.val);
+      while (!monotonousStack.isEmpty() && cur.val > res.get(monotonousStack.peekLast())) {
+        res.set(monotonousStack.pollLast(), cur.val);
       }
-      stack.offer(res.size());
+      monotonousStack.offerLast(res.size());
       res.add(cur.val);
       cur = cur.next;
     }
-    for (int i : stack) {
+    for (int i : monotonousStack) {
       res.set(i, 0);
     }
     return res.stream().mapToInt(i -> i).toArray();
@@ -558,21 +558,20 @@ class MergeList extends LList {
    * @param head the head
    */
   public void reorderList(ListNode head) {
+    // 至少需要有两个点
     if (head == null || head.next == null || head.next.next == null) {
       return;
     }
-    ListNode lo = middleNode(head);
-    ListNode first = lo.next;
-    lo.next = null;
-    // 第二个链表倒置
-    first = reverseList(first);
-    // 链表节点依次连接
-    while (first != null) {
-      ListNode nxt = first.next;
-      first.next = head.next;
-      head.next = first;
-      head = first.next;
-      first = nxt;
+    ListNode p1 = head, p1Tail = middleNode(head), p2 = p1Tail.next, p2Nxt;
+    p1Tail.next = null;
+    p2 = reverseList(p2);
+    // 合并两个链表即可
+    while (p2 != null) {
+      p2Nxt = p2.next;
+      p2.next = p1.next;
+      p1.next = p2;
+      p1 = p2.next;
+      p2 = p2Nxt;
     }
   }
 
@@ -701,7 +700,6 @@ class DeleteList extends LList {
       hi = hi.next;
       lo = lo.next;
     }
-    // lo.next 即倒数第 n 个
     lo.next = lo.next.next;
     return dummy.next;
   }
@@ -772,12 +770,11 @@ class DeleteList extends LList {
    * @return
    */
   public ListNode removeZeroSumSublists(ListNode head) {
-    ListNode dummy = new ListNode();
+    ListNode dummy = new ListNode(), cur = dummy;
     dummy.next = head;
     Map<Integer, ListNode> preSumByNode = new HashMap<>();
     // 建立前缀和，覆盖取最终出现的结点
     int preSum = 0;
-    ListNode cur = dummy;
     while (cur != null) {
       preSum += cur.val;
       preSumByNode.put(preSum, cur);

@@ -92,121 +92,6 @@ public class AArray extends DefaultArray {
   }
 
   /**
-   * 三数之和
-   *
-   * @param nums the nums
-   * @return list list
-   */
-  public List<List<Integer>> threeSum(int[] nums) {
-    final int target = 0, limit = 3;
-    List<List<Integer>> res = new ArrayList<>();
-    Arrays.sort(nums);
-    for (int i = 0; i < nums.length - (limit - 1); i++) {
-      int num = nums[i];
-      if (num > target) break;
-      for (List<Integer> cur : twoSum(nums, i, target - num)) {
-        cur.add(num);
-        res.add(cur);
-      }
-    }
-    return res;
-  }
-
-  /**
-   * 两数之和
-   *
-   * @param nums the nums
-   * @param start the start
-   * @param target the target
-   * @return the list
-   */
-  public List<List<Integer>> twoSum(int[] nums, int start, int target) {
-    List<List<Integer>> res = new ArrayList<>();
-    int lo = start, hi = nums.length - 1;
-    while (lo < hi) {
-      int sum = nums[lo] + nums[hi];
-      if (sum < target) lo += 1;
-      else if (sum == target) res.add(Arrays.asList(nums[lo], nums[hi]));
-      else hi -= 1;
-      lo += 1;
-    }
-    return res;
-  }
-
-  /**
-   * 最接近的三数之和，题设解唯一
-   *
-   * @param nums the nums
-   * @param target the target
-   * @return int
-   */
-  public int threeSumClosest(int[] nums, int target) {
-    Arrays.sort(nums);
-    // 题设至少三位
-    int res = nums[0] + nums[1] + nums[2];
-    for (int i = 0; i < nums.length; i++) {
-      int pivot = nums[i];
-      int lo = i + 1, hi = nums.length - 1;
-      while (lo < hi) {
-        int sum = pivot + nums[lo] + nums[hi];
-        res = Math.abs(target - sum) < Math.abs(target - res) ? sum : res;
-        if (sum < target) lo += 1;
-        else if (sum == target) return res;
-        else hi -= 1;
-      }
-    }
-    return res;
-  }
-
-  /**
-   * 将数组分成和相等的三部分，无序数组，且有正负
-   *
-   * <p>求和 & 特判 & 二分判断左右区间总和是否为 sum/3
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/partition-array-into-three-parts-with-equal-sum/solution/java-shi-yong-shuang-zhi-zhen-by-sugar-31/
-   *
-   * @param arr
-   * @return
-   */
-  public boolean canThreePartsEqualSum(int[] nums) {
-    int sum = 0;
-    for (int i : nums) {
-      sum += i;
-    }
-    // 特判总和非 3 的倍数
-    if (sum % 3 != 0) return false;
-    int lo = 0, hi = nums.length - 1;
-    int loSum = nums[lo], hiSum = nums[hi];
-    // 使用 left+1<right 防止只能将数组分成两个部分
-    // 如 [1,-1,1,-1]，使用 left<right 作为判断条件就会出错
-    while (lo + 1 < hi) {
-      // 左右两边都等于 sum/3 ，中间也一定等于
-      if (loSum == sum / 3 && hiSum == sum / 3) return true;
-      if (loSum != sum / 3) {
-        lo += 1;
-        loSum += nums[lo];
-      }
-      if (hiSum != sum / 3) {
-        hi -= 1;
-        hiSum += nums[hi];
-      }
-    }
-    return false;
-  }
-
-  /**
-   * 四数之和
-   *
-   * <p>TODO
-   *
-   * @param nums
-   * @param target
-   * @return
-   */
-  //  public List<List<Integer>> fourSum(int[] nums, int target) {}
-
-  /**
    * 两个数组的交集，重复 & 顺序
    *
    * <p>扩展1，有序则双指针 & 二分，否则对较小的数组建立映射再遍历较大者
@@ -1105,12 +990,124 @@ class Dichotomy extends DefaultArray {
   }
 }
 
-/**
- * 前缀和，区间和满足 target
- *
- * <p>和严格相等则需要哈希，否则搭配滑窗
- */
-class PreSum {
+/** 区间和相关，包括组合数字之和与前缀和 */
+class SSum extends DefaultArray {
+  /**
+   * 三数之和
+   *
+   * @param nums the nums
+   * @return list list
+   */
+  public List<List<Integer>> threeSum(int[] nums) {
+    final int target = 0, limit = 3;
+    List<List<Integer>> res = new ArrayList<>();
+    Arrays.sort(nums);
+    for (int i = 0; i < nums.length - (limit - 1); i++) {
+      int num = nums[i];
+      if (num > target) break;
+      for (List<Integer> cur : twoSum(nums, i, target - num)) {
+        cur.add(num);
+        res.add(cur);
+      }
+    }
+    return res;
+  }
+
+  /**
+   * 两数之和
+   *
+   * @param nums the nums
+   * @param start the start
+   * @param target the target
+   * @return the list
+   */
+  public List<List<Integer>> twoSum(int[] nums, int start, int target) {
+    List<List<Integer>> res = new ArrayList<>();
+    int lo = start, hi = nums.length - 1;
+    while (lo < hi) {
+      int sum = nums[lo] + nums[hi];
+      if (sum < target) lo += 1;
+      else if (sum == target) res.add(Arrays.asList(nums[lo], nums[hi]));
+      else hi -= 1;
+      lo += 1;
+    }
+    return res;
+  }
+
+  /**
+   * 最接近的三数之和，题设解唯一
+   *
+   * @param nums the nums
+   * @param target the target
+   * @return int
+   */
+  public int threeSumClosest(int[] nums, int target) {
+    Arrays.sort(nums);
+    // 题设至少三位
+    int res = nums[0] + nums[1] + nums[2];
+    for (int i = 0; i < nums.length; i++) {
+      int pivot = nums[i];
+      int lo = i + 1, hi = nums.length - 1;
+      while (lo < hi) {
+        int sum = pivot + nums[lo] + nums[hi];
+        res = Math.abs(target - sum) < Math.abs(target - res) ? sum : res;
+        if (sum < target) lo += 1;
+        else if (sum == target) return res;
+        else hi -= 1;
+      }
+    }
+    return res;
+  }
+
+  /**
+   * 将数组分成和相等的三部分，无序数组，且有正负
+   *
+   * <p>求和 & 特判 & 二分判断左右区间总和是否为 sum/3
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/partition-array-into-three-parts-with-equal-sum/solution/java-shi-yong-shuang-zhi-zhen-by-sugar-31/
+   *
+   * @param arr
+   * @return
+   */
+  public boolean canThreePartsEqualSum(int[] nums) {
+    int sum = 0;
+    for (int i : nums) {
+      sum += i;
+    }
+    // 特判总和非 3 的倍数
+    if (sum % 3 != 0) return false;
+    int lo = 0, hi = nums.length - 1;
+    int loSum = nums[lo], hiSum = nums[hi];
+    // 使用 left+1<right 防止只能将数组分成两个部分
+    // 如 [1,-1,1,-1]，使用 left<right 作为判断条件就会出错
+    while (lo + 1 < hi) {
+      // 左右两边都等于 sum/3 ，中间也一定等于
+      if (loSum == sum / 3 && hiSum == sum / 3) return true;
+      if (loSum != sum / 3) {
+        lo += 1;
+        loSum += nums[lo];
+      }
+      if (hiSum != sum / 3) {
+        hi -= 1;
+        hiSum += nums[hi];
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 四数之和
+   *
+   * <p>TODO
+   *
+   * @param nums
+   * @param target
+   * @return
+   */
+
+  // ! 以下均为前缀和，适合区间和满足 target，和严格相等则需要哈希，否则搭配滑窗
+
   /**
    * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
    *
@@ -1229,7 +1226,7 @@ class PreSum {
       //      }
       hi += 1;
     }
-    return minLen == Integer.MAX_VALUE ? 0 : minLen;
+    return minLen == nums.length + 1 ? 0 : minLen;
   }
 
   /**
@@ -1341,6 +1338,7 @@ class PreSum {
   //    }
   //    return count;
   //  }
+
 }
 
 /** 重复，哈希有关 */
@@ -1458,8 +1456,26 @@ class DDuplicate extends DefaultArray {
   }
 }
 
-/** TODO 移除相关，类似滑窗，后期考虑同步后者的模板 */
+/** 移除相关，类似滑窗 */
 class Delete extends DefaultArray {
+  /**
+   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
+   *
+   * <p>扩展1，链表参考「奇偶链表」
+   *
+   * @param nums
+   * @return
+   */
+  public int[] exchange(int[] nums) {
+    int lo = 0;
+    for (int hi = 0; hi < nums.length; hi++) {
+      if ((nums[hi] & 1) == 0) continue;
+      swap(nums, lo, hi);
+      lo += 1;
+    }
+    return nums;
+  }
+
   /**
    * 移动零，遇到目标则跳过
    *
@@ -1470,15 +1486,15 @@ class Delete extends DefaultArray {
    * @param nums the nums
    */
   public void moveZeroes(int[] nums) {
-    final int target = 0; // diff 1
-    int last = 0, k = 0;
+    final int target = 0, k = 0; // diff 1
+    int lo = 0;
     for (int hi = 0; hi < nums.length; hi++) {
       //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3) {
-      if (last >= k && target == nums[hi]) {
+      if (lo >= k && target == nums[hi]) {
         continue;
       }
-      swap(nums, last, hi); // diff 2
-      last += 1;
+      swap(nums, lo, hi); // diff 2
+      lo += 1;
     }
   }
 
@@ -1490,16 +1506,14 @@ class Delete extends DefaultArray {
    * @return
    */
   public String moveChars(String str, char target) {
-    char[] res = str.toCharArray();
-    int last = 0;
-    for (int hi = 0; hi < str.length(); hi++) {
-      if (target == str.charAt(hi)) {
-        continue;
-      }
-      res[last] = str.charAt(hi);
-      last += 1;
+    char[] chs = str.toCharArray();
+    int lo = 0;
+    for (int hi = 0; hi < chs.length; hi++) {
+      if (target == chs[hi]) continue;
+      swap(chs, lo, hi);
+      lo += 1;
     }
-    return String.valueOf(Arrays.copyOfRange(res, 0, last));
+    return String.valueOf(Arrays.copyOfRange(chs, 0, lo));
   }
 
   /**
@@ -1526,13 +1540,14 @@ class Delete extends DefaultArray {
    */
   private int removeDuplicatesI(int[] nums) {
     // final int target = nums[last - k];
-    int last = 0, k = 1;
-    for (int num : nums) {
-      if (last >= k && nums[last - k] == num) continue;
-      nums[last] = num;
-      last += 1;
+    int lo = 0, k = 1;
+    for (int hi = 0; hi < nums.length; hi++) {
+      int num = nums[hi];
+      if (lo >= k && nums[lo - k] == num) continue;
+      nums[lo] = num;
+      lo += 1;
     }
-    return last;
+    return lo;
   }
 
   /**
@@ -1545,13 +1560,14 @@ class Delete extends DefaultArray {
    */
   private int removeDuplicatesII(int[] nums) {
     // final int target = nums[last - k];
-    int last = 0, k = 2;
-    for (int num : nums) {
-      if (last >= k && nums[last - k] == num) continue;
-      nums[last] = num;
-      last += 1;
+    int lo = 0, k = 2;
+    for (int hi = 0; hi < nums.length; hi++) {
+      int num = nums[hi];
+      if (lo >= k && nums[lo - k] == num) continue;
+      nums[lo] = num;
+      lo += 1;
     }
-    return last;
+    return lo;
   }
 
   /**
@@ -1568,36 +1584,18 @@ class Delete extends DefaultArray {
    */
   public String removeDuplicates(String s) {
     StringBuilder stack = new StringBuilder();
-    int nextTop = -1;
-    for (int i = 0; i < s.length(); ++i) {
-      char ch = s.charAt(i);
-      if (nextTop >= 0 && stack.charAt(nextTop) == ch) {
-        stack.deleteCharAt(nextTop);
-        nextTop -= 1;
+    int stackTop = -1;
+    for (int hi = 0; hi < s.length(); hi++) {
+      char ch = s.charAt(hi);
+      if (stackTop >= 0 && stack.charAt(stackTop) == ch) {
+        stack.deleteCharAt(stackTop);
+        stackTop -= 1;
       } else {
         stack.append(ch);
-        nextTop += 1;
+        stackTop += 1;
       }
     }
     return stack.toString();
-  }
-
-  /**
-   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
-   *
-   * <p>扩展1，链表参考「奇偶链表」
-   *
-   * @param nums
-   * @return
-   */
-  public int[] exchange(int[] nums) {
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
-      if ((nums[hi] & 1) == 0) continue;
-      swap(nums, lo, hi);
-      lo += 1;
-    }
-    return nums;
   }
 }
 
@@ -1840,16 +1838,18 @@ class DicOrder extends DefaultArray {
    * @param nums the nums
    */
   public void nextPermutation(int[] nums) {
-    // for (int i = nums.length - 2; i > 0; i--) {
-    for (int i = nums.length - 1; i > 0; i--) {
-      if (nums[i] <= nums[i - 1]) continue;
-      // 左闭右开
-      Arrays.sort(nums, i, nums.length);
-      for (int j = i; j < nums.length; j++) {
-        if (nums[j] <= nums[i - 1]) continue;
-        swap(nums, i - 1, j);
-        return;
+    int idx = nums.length - 1; // nums.length - 2
+    while (idx > 0) {
+      if (nums[idx] > nums[idx - 1]) {
+        Arrays.sort(nums, idx, nums.length);
+        break;
       }
+      idx -= 1;
+    }
+    for (int j = idx; j < nums.length; j++) {
+      if (nums[j] <= nums[idx - 1]) continue;
+      swap(nums, idx - 1, j);
+      return;
     }
     Arrays.sort(nums);
   }
