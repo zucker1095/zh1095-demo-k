@@ -342,17 +342,17 @@ class MergeList extends LList {
     //    return reverseList(addTwoNumbers1(p1, p2));
     Deque<Integer> st1 = new ArrayDeque<>(), st2 = new ArrayDeque<>();
     while (l1 != null) {
-      st1.push(l1.val);
+      st1.offerLast(l1.val);
       l1 = l1.next;
     }
     while (l2 != null) {
-      st2.push(l2.val);
+      st2.offerLast(l2.val);
       l2 = l2.next;
     }
     ListNode head = null;
     int carry = 0;
     while (!st1.isEmpty() || !st2.isEmpty() || carry > 0) {
-      int n1 = st1.isEmpty() ? 0 : st1.pop(), n2 = st2.isEmpty() ? 0 : st2.pop();
+      int n1 = st1.isEmpty() ? 0 : st1.pollLast(), n2 = st2.isEmpty() ? 0 : st2.pollLast();
       int tmp = n1 + n2 + carry;
       carry = tmp / 10;
       ListNode cur = new ListNode(tmp % 10);
@@ -376,15 +376,13 @@ class MergeList extends LList {
         new PriorityQueue<>(
             lists.length,
             (ListNode n1, ListNode n2) -> {
-              if (n1.val < n2.val) return -1;
-              else if (n1.val == n2.val) return 0;
-              else return 1;
+              return n1.val - n2.val;
             });
-    for (ListNode node : lists) {
-      if (node == null) continue;
-      pq.add(node);
+    for (ListNode head : lists) {
+      if (head == null) continue;
+      pq.offer(head);
     }
-    ListNode dummy = new ListNode(0), cur = dummy;
+    ListNode dummy = new ListNode(), cur = dummy;
     while (!pq.isEmpty()) {
       cur.next = pq.poll();
       cur = cur.next;
@@ -476,10 +474,10 @@ class MergeList extends LList {
       lo = lo.next;
       hi = hi.next.next;
     }
-    ListNode tmp = lo.next;
+    ListNode l2Head = lo.next;
     lo.next = null;
-    ListNode left = sortList1(head), right = sortList1(tmp);
-    return mergeTwoLists(left, right);
+    ListNode l1 = sortList1(head), l2 = sortList1(l2Head);
+    return mergeTwoLists(l1, l2);
   }
 
   private ListNode sortList2(ListNode head) {

@@ -18,11 +18,7 @@ interface MountainArray {
  * <p>排序，掌握快速 & 归并 & 堆即可，参考
  * https://leetcode-cn.com/problems/sort-an-array/solution/fu-xi-ji-chu-pai-xu-suan-fa-java-by-liweiwei1419/
  *
- * <p>寻找 & 统计，二分参考 https://www.zhihu.com/question/36132386/answer/530313852
- *
- * <p>相加 & 相乘
- *
- * <p>删除
+ * <p>区分 start & end 与 lo & hi，前组静态，表示索引或上下界，后组动态，大部分情况向中碰撞
  *
  * <p>随机遍历则 for (int i = 0; i < nums.length; i++) & continue 即可，否则
  *
@@ -103,19 +99,19 @@ public class AArray extends DefaultArray {
   public int[] intersection(int[] nums1, int[] nums2) {
     Arrays.sort(nums1);
     Arrays.sort(nums2);
-    int len1 = nums1.length, len2 = nums2.length;
-    int[] res = new int[len1 + len2];
+    int l1 = nums1.length, l2 = nums2.length;
+    int[] res = new int[l1 + l2];
     int cur = 0, p1 = 0, p2 = 0;
-    while (p1 < len1 && p2 < len2) {
-      int num1 = nums1[p1], num2 = nums2[p2];
-      if (num1 < num2) {
+    while (p1 < l1 && p2 < l2) {
+      int n1 = nums1[p1], n2 = nums2[p2];
+      if (n1 < n2) {
         p1 += 1;
-      } else if (num1 > num2) {
+      } else if (n1 > n2) {
         p2 += 1;
-      } else if (num1 == num2) {
+      } else if (n1 == n2) {
         // 保证加入元素的唯一性
-        if (cur == 0 || num1 != res[cur - 1]) {
-          res[cur] = num1;
+        if (cur == 0 || n1 != res[cur - 1]) {
+          res[cur] = n1;
           cur += 1;
         }
         p1 += 1;
@@ -490,42 +486,40 @@ class MMerge extends DefaultArray {
    * <p>bottom-to-up 迭代，参考排序链表
    *
    * @param nums the nums
-   * @param lo the lo
+   * @param start the lo
    * @param hi the hi
    */
-  public void mergeSort(int[] nums, int lo, int hi) {
+  public void mergeSort(int[] nums, int start, int end) {
     if (nums.length < 2) return;
     divide1(nums, new int[nums.length], 0, nums.length - 1);
   }
 
-  // 取中二分 & 合
-  private void divide1(int[] nums, int[] tmp, int lo, int hi) {
+  private void divide1(int[] nums, int[] tmp, int start, int end) {
     // 对于双指针，假如迭代内部基于比较，则不需要=，假如需要统计每个元素，则需要
-    if (lo >= hi) return;
-    int mid = lo + (hi - lo) / 2;
-    divide1(nums, tmp, lo, mid);
-    divide1(nums, tmp, mid + 1, hi);
+    if (start >= end) return;
+    int mid = start + (end - start) / 2;
+    divide1(nums, tmp, start, mid);
+    divide1(nums, tmp, mid + 1, end);
     // curing 因为此时 [lo,mid]&[mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
-    if (nums[mid] <= nums[mid + 1]) {
-      return;
-    }
-    merge1(nums, tmp, lo, mid, hi); // 区间两两相邻合并
+    if (nums[mid] <= nums[mid + 1]) return;
+    // 合并 nums[start,mid] & nums[mid+1,end]
+    merge1(nums, tmp, start, mid, end);
   }
 
   // 合并 nums[lo:mid] & nums[mid+1:hi] 即排序区间 [lo,hi]
   // 四种情况，其一遍历结束 & 比较
   // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
-  private void merge1(int[] nums, int[] tmp, int lo, int mid, int hi) {
+  private void merge1(int[] nums, int[] tmp, int start, int mid, int end) {
     // 前后指针未逾界，且数组至少有两个元素
-    if (hi - lo >= 1) {
-      System.arraycopy(nums, lo, tmp, lo, hi + 1 - lo);
+    if (end - start >= 1) {
+      System.arraycopy(nums, start, tmp, start, end + 1 - start);
     }
-    int p1 = lo, p2 = mid + 1;
-    for (int i = lo; i <= hi; i++) {
+    int p1 = start, p2 = mid + 1;
+    for (int i = start; i <= end; i++) {
       if (p1 == mid + 1) {
         nums[i] = tmp[p2];
         p2 += 1;
-      } else if (p2 == hi + 1) {
+      } else if (p2 == end + 1) {
         nums[i] = tmp[p1];
         p1 += 1;
       } else if (tmp[p1] <= tmp[p2]) {
@@ -550,28 +544,26 @@ class MMerge extends DefaultArray {
     return res;
   }
 
-  private void divide2(int[] nums, int[] tmp, int lo, int hi) {
-    if (lo == hi) return;
-    int mid = lo + (hi - lo) / 2;
-    divide2(nums, tmp, lo, mid);
-    divide2(nums, tmp, mid + 1, hi);
-    if (nums[mid] <= nums[mid + 1]) {
-      return;
-    }
-    res += mergeAndCount(nums, tmp, lo, mid, hi);
+  private void divide2(int[] nums, int[] tmp, int start, int end) {
+    if (start == end) return;
+    int mid = start + (end - start) / 2;
+    divide2(nums, tmp, start, mid);
+    divide2(nums, tmp, mid + 1, end);
+    if (nums[mid] <= nums[mid + 1]) return;
+    res += mergeAndCount(nums, tmp, start, mid, end);
   }
 
-  private int mergeAndCount(int[] nums, int[] tmp, int lo, int mid, int hi) {
-    int cur = 0;
-    if (hi - lo + 1 >= 0) {
-      System.arraycopy(nums, lo, tmp, lo, hi - lo + 1);
+  private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
+    int count = 0;
+    if (end - start + 1 >= 0) {
+      System.arraycopy(nums, start, tmp, start, end - start + 1);
     }
-    int p1 = lo, p2 = mid + 1;
-    for (int i = lo; i <= hi; i++) {
+    int p1 = start, p2 = mid + 1;
+    for (int i = start; i <= end; i++) {
       if (p1 == mid + 1) {
         nums[i] = tmp[p2];
         p2 += 1;
-      } else if (p2 == hi + 1) {
+      } else if (p2 == end + 1) {
         nums[i] = tmp[p1];
         p1 += 1;
       } else if (tmp[p1] <= tmp[p2]) {
@@ -580,10 +572,10 @@ class MMerge extends DefaultArray {
       } else if (tmp[p1] > tmp[p2]) {
         nums[i] = tmp[p2];
         p2 += 1;
-        cur += mid - p1 + 1;
+        count += mid - p1 + 1;
       }
     }
-    return cur;
+    return count;
   }
 
   /**
@@ -697,14 +689,11 @@ class Dichotomy extends DefaultArray {
    * @return int [ ]
    */
   public int[] searchRange(int[] nums, int target) {
-    int[] res = new int[] {-1, -1};
-    if (nums.length < 1 || nums[0] > target || nums[nums.length - 1] < target) {
-      return res;
+    if (nums.length < 1 || target < nums[0] || nums[nums.length - 1] < target) {
+      return new int[] {-1, -1};
     }
     int lower = lowerBound(nums, target);
-    if (lower == -1) {
-      return res;
-    }
+    if (lower == -1) return new int[] {-1, -1};
     int upper = upperBound(nums, target, lower);
     return new int[] {lower, upper};
   }
@@ -861,7 +850,7 @@ class Dichotomy extends DefaultArray {
   }
 
   private int search(MountainArray mountainArr, int target, int lo, int hi, boolean flag) {
-    if (!flag) target *= -1;
+    target *= flag ? 1 : -1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2, cur = mountainArr.get(mid) * (flag ? 1 : -1);
       if (cur < target) lo = mid + 1;
@@ -910,7 +899,7 @@ class Dichotomy extends DefaultArray {
       if (countLte(matrix, mid) < k) lo = mid + 1;
       else hi = mid;
     }
-    return hi;
+    return lo;
   }
 
   // 从左下角开始遍历，找每列最后一个 <=target 的数即知道每一列有多少个数 <=target
@@ -930,7 +919,7 @@ class Dichotomy extends DefaultArray {
   }
 
   /**
-   * 有序数组中的单一元素，下述代码适配无序
+   * 有序数组中的单一元素，无序也适用
    *
    * <p>假设所有数字都成对，那么所有数字的下标必定同时偶数和奇数，因此比对 nums[mid]
    *
@@ -944,16 +933,10 @@ class Dichotomy extends DefaultArray {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      // 移除中心元素后，其右侧的数量为奇数，如 1144 5 5688
-      if (mid % 2 == 0 && nums[mid] == nums[mid + 1]) {
-        lo = mid + 2;
-      } else if (mid % 2 == 1 && nums[mid] == nums[mid - 1]) {
-        // 同上，但如 11445 5 66899
-        lo = mid + 1;
-      } else {
-        // 取中心值时会向下取整，如 11455 6 68899 & 1145 5 6688
-        hi = mid;
-      }
+      if (mid % 2 == 0 && nums[mid] == nums[mid + 1])
+        lo = mid + 2; // 移除中心元素后，其右侧的数量为奇数，如 1144 5 5688
+      else if (mid % 2 == 1 && nums[mid] == nums[mid - 1]) lo = mid + 1; // 同上，但如 11445 5 66899
+      else hi = mid; // 取中心值时会向下取整，如 11455 6 68899 & 1145 5 6688
     }
     return nums[lo];
   }
@@ -1106,239 +1089,240 @@ class SSum extends DefaultArray {
    * @return
    */
 
-  // ! 以下均为前缀和，适合区间和满足 target，和严格相等则需要哈希，否则搭配滑窗
-
-  /**
-   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
-   *
-   * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
-   *
-   * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
-   *
-   * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
-   *
-   * <p>扩展2，返回最大和的子序列
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int maxSubArray(int[] nums) {
-    if (nums.length < 1) return 0;
-    int curSum = 0, maxSum = nums[0];
-    for (int num : nums) {
-      curSum = curSum > 0 ? curSum + num : num;
-      maxSum = Math.max(maxSum, curSum);
-    }
-    return maxSum;
-  }
-
-  /**
-   * 和为k的子数组，严格相等，返回满足的子数组数量
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
-   *
-   * <p>扩展1，求本题结果集中最大的长度，参考「连续数组」
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int int
-   */
-  public int subarraySum(int[] nums, int k) {
-    int preSum = 0, count = 0;
-    // 需要预存前缀和为 0，否则会漏掉前几位就满足的情况
-    // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
-    // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
-    HashMap<Integer, Integer> countBySum = new HashMap<>();
-    countBySum.put(0, 1);
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i];
-      // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
-      count += countBySum.getOrDefault(preSum - k, 0);
-      countBySum.put(preSum, countBySum.getOrDefault(preSum, 0) + 1);
-    }
-    return count;
-  }
-
-  /**
-   * 连续数组，严格相等，最长
-   *
-   * <p>找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
-   *
-   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
-   *
-   * @param nums the nums
-   * @return int
-   */
-  public int findMaxLength(int[] nums) {
-    int preSum = 0, maxLen = 0;
-    // 总和及其首次出现的下标
-    Map<Integer, Integer> idxBySum = new HashMap<>();
-    // 可能存在前缀和刚好满足条件的情况
-    idxBySum.put(0, -1);
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i] == 0 ? -1 : 1;
-      // 因为求的是最长的长度，只记录前缀和第一次出现的下标
-      if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
-      else idxBySum.put(preSum, i);
-    }
-    return maxLen;
-  }
-
-  /**
-   * 长度最小的子数组，和至少，最短，前缀和搭配滑窗
-   *
-   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
-   *
-   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
-   *
-   * @param target the target
-   * @param nums the nums
-   * @return int int
-   */
-  public int minSubArrayLen(int target, int[] nums) {
-    int preSum = 0, minLen = nums.length + 1;
-    int lo = 0, hi = 0;
-    while (hi < nums.length) {
-      // in
-      preSum += nums[hi];
-      while (preSum >= target) {
-        minLen = Math.min(minLen, hi - lo + 1);
-        // out
-        preSum -= nums[lo];
-        lo += 1;
+  /** 以下均为前缀和，适合区间和满足 target，和严格相等则需要哈希，否则搭配滑窗 */
+  public class Presum {
+    /**
+     * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
+     *
+     * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
+     *
+     * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
+     *
+     * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
+     *
+     * <p>扩展2，返回最大和的子序列
+     *
+     * @param nums the nums
+     * @return int int
+     */
+    public int maxSubArray(int[] nums) {
+      if (nums.length < 1) return 0;
+      int curSum = 0, maxSum = nums[0];
+      for (int num : nums) {
+        curSum = curSum > 0 ? curSum + num : num;
+        maxSum = Math.max(maxSum, curSum);
       }
-      // 替换上一段 while
-      //      if (sum == target) {
-      //        // 入结果集
-      //        hi += 1;
-      //        continue;
-      //      }
-      //      while (sum > target) {
-      //        sum -= nums[lo];
-      //        if (sum == target) {
-      //          // 入结果集
-      //        }
-      //        lo += 1;
-      //      }
-      hi += 1;
+      return maxSum;
     }
-    return minLen == nums.length + 1 ? 0 : minLen;
-  }
 
-  /**
-   * 连续的子数组和，严格相等，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
-   *
-   * <p>扩展1，方案数参考
-   * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
-   *
-   * @param nums the nums
-   * @param target the target
-   * @return boolean
-   */
-  public boolean checkSubarraySum(int[] nums, int target) {
-    int preSum = 0;
-    HashMap<Integer, Integer> idxByMod = new HashMap<>();
-    idxByMod.put(0, -1);
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i];
-      // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
-      int mod = target == 0 ? preSum : preSum % target, minIdx = idxByMod.getOrDefault(mod, -1);
-      if (minIdx == -1) idxByMod.put(mod, i);
-      else if (i - minIdx > 1) return true;
+    /**
+     * 和为k的子数组，严格相等，返回满足的子数组数量
+     *
+     * <p>参考
+     * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
+     *
+     * <p>扩展1，求本题结果集中最大的长度，参考「连续数组」
+     *
+     * @param nums the nums
+     * @param k the k
+     * @return int int
+     */
+    public int subarraySum(int[] nums, int k) {
+      int preSum = 0, count = 0;
+      // 需要预存前缀和为 0，否则会漏掉前几位就满足的情况
+      // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
+      // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
+      HashMap<Integer, Integer> countBySum = new HashMap<>();
+      countBySum.put(0, 1);
+      for (int i = 0; i < nums.length; i++) {
+        preSum += nums[i];
+        // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
+        count += countBySum.getOrDefault(preSum - k, 0);
+        countBySum.put(preSum, countBySum.getOrDefault(preSum, 0) + 1);
+      }
+      return count;
     }
-    // 方案数
-    //    long count = 0;
-    //    Map<Long, Integer> map = new HashMap<>();
-    //    map.put(0L, 1);
-    //    for (int num : nums) {
-    //      preSum += num;
-    //      long u = preSum % k;
-    //      if (map.containsKey(u)) count += map.get(u);
-    //      map.put(u, map.getOrDefault(u, 0) + 1);
+
+    /**
+     * 连续数组，严格相等，最长
+     *
+     * <p>找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
+     *
+     * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
+     *
+     * <p>参考
+     * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
+     *
+     * @param nums the nums
+     * @return int
+     */
+    public int findMaxLength(int[] nums) {
+      int preSum = 0, maxLen = 0;
+      // 总和及其首次出现的下标
+      Map<Integer, Integer> idxBySum = new HashMap<>();
+      // 可能存在前缀和刚好满足条件的情况
+      idxBySum.put(0, -1);
+      for (int i = 0; i < nums.length; i++) {
+        preSum += nums[i] == 0 ? -1 : 1;
+        // 因为求的是最长的长度，只记录前缀和第一次出现的下标
+        if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
+        else idxBySum.put(preSum, i);
+      }
+      return maxLen;
+    }
+
+    /**
+     * 长度最小的子数组，和至少，最短，前缀和搭配滑窗
+     *
+     * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
+     *
+     * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
+     *
+     * @param target the target
+     * @param nums the nums
+     * @return int int
+     */
+    public int minSubArrayLen(int target, int[] nums) {
+      int preSum = 0, minLen = nums.length + 1;
+      int lo = 0, hi = 0;
+      while (hi < nums.length) {
+        // in
+        preSum += nums[hi];
+        while (preSum >= target) {
+          minLen = Math.min(minLen, hi - lo + 1);
+          // out
+          preSum -= nums[lo];
+          lo += 1;
+        }
+        // 替换上一段 while
+        //      if (sum == target) {
+        //        // 入结果集
+        //        hi += 1;
+        //        continue;
+        //      }
+        //      while (sum > target) {
+        //        sum -= nums[lo];
+        //        if (sum == target) {
+        //          // 入结果集
+        //        }
+        //        lo += 1;
+        //      }
+        hi += 1;
+      }
+      return minLen == nums.length + 1 ? 0 : minLen;
+    }
+
+    /**
+     * 连续的子数组和，严格相等，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
+     *
+     * <p>扩展1，方案数参考
+     * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
+     *
+     * @param nums the nums
+     * @param target the target
+     * @return boolean
+     */
+    public boolean checkSubarraySum(int[] nums, int target) {
+      int preSum = 0;
+      HashMap<Integer, Integer> idxByMod = new HashMap<>();
+      idxByMod.put(0, -1);
+      for (int i = 0; i < nums.length; i++) {
+        preSum += nums[i];
+        // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
+        int mod = target == 0 ? preSum : preSum % target, minIdx = idxByMod.getOrDefault(mod, -1);
+        if (minIdx == -1) idxByMod.put(mod, i);
+        else if (i - minIdx > 1) return true;
+      }
+      // 方案数
+      //    long count = 0;
+      //    Map<Long, Integer> map = new HashMap<>();
+      //    map.put(0L, 1);
+      //    for (int num : nums) {
+      //      preSum += num;
+      //      long u = preSum % k;
+      //      if (map.containsKey(u)) count += map.get(u);
+      //      map.put(u, map.getOrDefault(u, 0) + 1);
+      //    }
+      return false;
+    }
+
+    /**
+     * 和可被k整除的子数组，严格相等
+     *
+     * <p>参考
+     * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
+     *
+     * @param A
+     * @param K
+     * @return
+     */
+    public int subarraysDivByK(int[] nums, int k) {
+      int preSum = 0, count = 0;
+      HashMap<Integer, Integer> countByRemainder = new HashMap<>();
+      countByRemainder.put(0, 1);
+      for (int num : nums) {
+        preSum += num;
+        // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
+        int remainder = (preSum % k + k) % k,
+            curCount = countByRemainder.getOrDefault(remainder, 0);
+        // 余数的次数
+        count += curCount;
+        countByRemainder.put(remainder, curCount + 1);
+      }
+      return count;
+    }
+
+    /**
+     * 和至少为k的最短子数组，和至少，单调队列 & 前缀和
+     *
+     * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+     *
+     * @param nums the nums
+     * @param k the k
+     * @return int int
+     */
+    public int shortestSubarray(int[] nums, int k) {
+      int len = nums.length, minLen = len + 1;
+      long[] preSum = new long[len + 1];
+      for (int i = 0; i < len; i++) {
+        preSum[i + 1] = preSum[i] + (long) nums[i];
+      }
+      Deque<Integer> mq = new LinkedList<>();
+      for (int i = 0; i < preSum.length; i++) {
+        // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
+        while (!mq.isEmpty() && preSum[i] <= preSum[mq.getLast()]) {
+          mq.removeLast();
+        }
+        while (!mq.isEmpty() && preSum[i] >= preSum[mq.getFirst()] + k) {
+          minLen = Math.min(minLen, i - mq.removeFirst());
+        }
+        mq.addLast(i);
+      }
+      return minLen == len + 1 ? -1 : minLen;
+    }
+
+    /**
+     * 统计「优美子数组」，区间包含 k 个奇数
+     *
+     * @param nums
+     * @param k
+     * @return
+     */
+    //  public int numberOfSubarrays(int[] nums, int k) {
+    //    int oddnum = 0, count = 0;
+    //    HashMap<Integer, Integer> map = new HashMap<>();
+    //    map.put(0, 1);
+    //    // 相当于 presum
+    //    for (int x : nums) {
+    //      // 统计奇数个数
+    //      oddnum += x & 1;
+    //      if (map.containsKey(oddnum - k)) count += map.get(oddnum - k);
+    //      // 存入
+    //      map.put(oddnum, map.getOrDefault(oddnum, 0) + 1);
     //    }
-    return false;
+    //    return count;
+    //  }
   }
-
-  /**
-   * 和可被k整除的子数组，严格相等
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
-   *
-   * @param A
-   * @param K
-   * @return
-   */
-  public int subarraysDivByK(int[] nums, int k) {
-    int preSum = 0, count = 0;
-    HashMap<Integer, Integer> countByRemainder = new HashMap<>();
-    countByRemainder.put(0, 1);
-    for (int num : nums) {
-      preSum += num;
-      // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
-      int remainder = (preSum % k + k) % k, curCount = countByRemainder.getOrDefault(remainder, 0);
-      // 余数的次数
-      count += curCount;
-      countByRemainder.put(remainder, curCount + 1);
-    }
-    return count;
-  }
-
-  /**
-   * 和至少为k的最短子数组，和至少，单调队列 & 前缀和
-   *
-   * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int int
-   */
-  public int shortestSubarray(int[] nums, int k) {
-    int len = nums.length, minLen = len + 1;
-    long[] preSum = new long[len + 1];
-    for (int i = 0; i < len; i++) {
-      preSum[i + 1] = preSum[i] + (long) nums[i];
-    }
-    Deque<Integer> mq = new LinkedList<>();
-    for (int i = 0; i < preSum.length; i++) {
-      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
-      while (!mq.isEmpty() && preSum[i] <= preSum[mq.getLast()]) {
-        mq.removeLast();
-      }
-      while (!mq.isEmpty() && preSum[i] >= preSum[mq.getFirst()] + k) {
-        minLen = Math.min(minLen, i - mq.removeFirst());
-      }
-      mq.addLast(i);
-    }
-    return minLen == len + 1 ? -1 : minLen;
-  }
-
-  /**
-   * 统计「优美子数组」，区间包含 k 个奇数
-   *
-   * @param nums
-   * @param k
-   * @return
-   */
-  //  public int numberOfSubarrays(int[] nums, int k) {
-  //    int oddnum = 0, count = 0;
-  //    HashMap<Integer, Integer> map = new HashMap<>();
-  //    map.put(0, 1);
-  //    // 相当于 presum
-  //    for (int x : nums) {
-  //      // 统计奇数个数
-  //      oddnum += x & 1;
-  //      if (map.containsKey(oddnum - k)) count += map.get(oddnum - k);
-  //      // 存入
-  //      map.put(oddnum, map.getOrDefault(oddnum, 0) + 1);
-  //    }
-  //    return count;
-  //  }
-
 }
 
 /** 重复，哈希有关 */
@@ -1517,9 +1501,9 @@ class Delete extends DefaultArray {
   }
 
   /**
-   * 删除排序数组中的重复项，保留 k 位
+   * 删除排序数组中的重复项，保留 k 位，I & II 通用
    *
-   * <p>遇到目标则跳过
+   * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
    *
    * <p>扩展1，参考删除字符串中的所有相邻重复项
    *
@@ -1527,40 +1511,12 @@ class Delete extends DefaultArray {
    * @return the int
    */
   public int removeDuplicates(int[] nums) {
-    return removeDuplicatesI(nums);
+    return removeDuplicates(nums, 1);
   }
 
-  /**
-   * 删除排序数组中的重复项I，每个元素至多出现一次
-   *
-   * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
-   *
-   * @param nums the nums
-   * @return int the lo
-   */
-  private int removeDuplicatesI(int[] nums) {
+  private int removeDuplicates(int[] nums, int k) {
     // final int target = nums[last - k];
-    int lo = 0, k = 1;
-    for (int hi = 0; hi < nums.length; hi++) {
-      int num = nums[hi];
-      if (lo >= k && nums[lo - k] == num) continue;
-      nums[lo] = num;
-      lo += 1;
-    }
-    return lo;
-  }
-
-  /**
-   * 删除排序数组中的重复项II，每个元素至多出现两次
-   *
-   * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
-   *
-   * @param nums the nums
-   * @return the int
-   */
-  private int removeDuplicatesII(int[] nums) {
-    // final int target = nums[last - k];
-    int lo = 0, k = 2;
+    int lo = 0;
     for (int hi = 0; hi < nums.length; hi++) {
       int num = nums[hi];
       if (lo >= k && nums[lo - k] == num) continue;
@@ -1884,13 +1840,13 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 最大数，把数组排成最大的数，排序，本质即一种贪心
+   * 最大数，把数组排成最大的数，排序，即贪心
    *
    * <p>对 nums 按照 ab>ba 为 b>a，前导零
    *
-   * <p>1.先单独证明两个数需要满足该定律，比如 3 & 30 有 330>303 显然 3 需要安排至 30 前，即表现为 3<30
+   * <p>先单独证明两个数需要满足该定律，比如 3 & 30 有 330>303 显然 3 需要安排至 30 前，即表现为 3<30
    *
-   * <p>2.然后证明传递性，即两两之间都要满足该性质，参考
+   * <p>再证明传递性，即两两之间都要满足该性质，参考
    * https://leetcode-cn.com/problems/largest-number/solution/gong-shui-san-xie-noxiang-xin-ke-xue-xi-vn86e/
    *
    * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba 为 a>b 即可，参考
@@ -1914,38 +1870,6 @@ class DicOrder extends DefaultArray {
       begin += 1;
     }
     return res.substring(begin);
-  }
-
-  /**
-   * 移掉k位数字，字典序，单调栈，原地栈
-   *
-   * <p>特判移完
-   *
-   * <p>入栈
-   *
-   * @param num the num
-   * @param k the k
-   * @return string string
-   */
-  public String removeKdigits(String num, int k) {
-    if (num.length() == k) {
-      return "0";
-    }
-    StringBuilder stack = new StringBuilder();
-    for (int i = 0; i < num.length(); i++) {
-      char ch = num.charAt(i);
-      while (k > 0 && stack.length() != 0 && stack.charAt(stack.length() - 1) > ch) {
-        stack.deleteCharAt(stack.length() - 1);
-        k -= 1;
-      }
-      if (ch == '0' && stack.length() == 0) {
-        continue;
-      }
-      stack.append(ch);
-    }
-    // 判断是否移足 k 位
-    String res = stack.substring(0, Math.max(stack.length() - k, 0));
-    return res.length() == 0 ? "0" : res;
   }
 
   /**
@@ -1995,6 +1919,103 @@ class DicOrder extends DefaultArray {
   }
 
   /**
+   * 字典序排数
+   *
+   * <p>TODO
+   *
+   * @param n the n
+   * @return list list
+   */
+  //  public List<Integer> lexicalOrder(int n) { }
+
+  /**
+   * 拼接最大数，两个无序正整数数组，共取 k 个拼接为数字，求该数最大的方案
+   *
+   * <p>TODO
+   *
+   * @param nums1 the nums 1
+   * @param nums2 the nums 2
+   * @param k the k
+   * @return int [ ]
+   */
+  //  public int[] maxNumber(int[] nums1, int[] nums2, int k) {}
+}
+
+/** 单调栈，用于找「下一个更大」场景，其余栈相关参考 SString */
+class MonotonicStack {
+  /**
+   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
+   *
+   * @param temperatures the t
+   * @return int [ ]
+   */
+  public int[] dailyTemperatures(int[] temperatures) {
+    Deque<Integer> stack = new ArrayDeque<>();
+    int[] res = new int[temperatures.length];
+    for (int i = 0; i < temperatures.length; i++) {
+      // 更新 res[pre] 直到满足其数字超过 temperatures[i]
+      while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
+        int preIdx = stack.removeLast();
+        res[preIdx] = i - preIdx;
+      }
+      stack.addLast(i);
+    }
+    return res;
+  }
+
+  /**
+   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
+   *
+   * @param nums the nums
+   * @return int [ ]
+   */
+  public int[] nextGreaterElements(int[] nums) {
+    Deque<Integer> stack = new ArrayDeque<>();
+    int len = nums.length;
+    int[] res = new int[len];
+    Arrays.fill(res, -1);
+    for (int i = 0; i < 2 * len; i++) {
+      while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()]) {
+        res[stack.removeLast()] = nums[i % len];
+      }
+      stack.addLast(i % len);
+    }
+    return res;
+  }
+
+  /**
+   * 移掉k位数字，字典序，单调栈，原地栈
+   *
+   * <p>特判移完
+   *
+   * <p>入栈
+   *
+   * @param num the num
+   * @param k the k
+   * @return string string
+   */
+  public String removeKdigits(String num, int k) {
+    if (num.length() == k) {
+      return "0";
+    }
+    StringBuilder stack = new StringBuilder();
+    for (int i = 0; i < num.length(); i++) {
+      char ch = num.charAt(i);
+      while (k > 0 && stack.length() != 0 && stack.charAt(stack.length() - 1) > ch) {
+        stack.deleteCharAt(stack.length() - 1);
+        k -= 1;
+      }
+      if (ch == '0' && stack.length() == 0) {
+        continue;
+      }
+      stack.append(ch);
+    }
+    // 判断是否移足 k 位
+    String res = stack.substring(0, Math.max(stack.length() - k, 0));
+    return res.length() == 0 ? "0" : res;
+  }
+
+  /**
    * 去除重复字母 / 不同字符的最小子序列，且要求之后的整体字典序最小
    *
    * <p>greedy - 结果中第一个字母的字典序靠前的优先级最高
@@ -2029,28 +2050,6 @@ class DicOrder extends DefaultArray {
     }
     return res.toString();
   }
-
-  /**
-   * 字典序排数
-   *
-   * <p>TODO
-   *
-   * @param n the n
-   * @return list list
-   */
-  //  public List<Integer> lexicalOrder(int n) { }
-
-  /**
-   * 拼接最大数，两个无序正整数数组，共取 k 个拼接为数字，求该数最大的方案
-   *
-   * <p>TODO
-   *
-   * @param nums1 the nums 1
-   * @param nums2 the nums 2
-   * @param k the k
-   * @return int [ ]
-   */
-  //  public int[] maxNumber(int[] nums1, int[] nums2, int k) {}
 }
 
 /** 提供一些数组的通用方法 */

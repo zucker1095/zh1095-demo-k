@@ -54,7 +54,7 @@ public class SString extends DefaultSString {
     return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
   }
 
-  // ASCII 编码允许直接相减
+  // ASCII 允许相减
   private int getInt(char num) {
     return '0' <= num && num <= '9' ? num - '0' : num - 'a' + 10;
   }
@@ -317,7 +317,7 @@ class WWindow {
   }
 
   /**
-   * 滑动窗口的最大值，offer & max & poll
+   * 滑动窗口的最大值，单调队列，双端实现，offer & max & poll
    *
    * @param nums the nums
    * @param k the k
@@ -498,46 +498,6 @@ class SStack {
       if (maxCount < 0) return false;
     }
     return minCount == 0;
-  }
-
-  /**
-   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
-   *
-   * @param temperatures the t
-   * @return int [ ]
-   */
-  public int[] dailyTemperatures(int[] temperatures) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int[] res = new int[temperatures.length];
-    for (int i = 0; i < temperatures.length; i++) {
-      // 更新 res[pre] 直到满足其数字超过 temperatures[i]
-      while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
-        int preIdx = stack.removeLast();
-        res[preIdx] = i - preIdx;
-      }
-      stack.addLast(i);
-    }
-    return res;
-  }
-
-  /**
-   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
-   *
-   * @param nums the nums
-   * @return int [ ]
-   */
-  public int[] nextGreaterElements(int[] nums) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int len = nums.length;
-    int[] res = new int[len];
-    Arrays.fill(res, -1);
-    for (int i = 0; i < 2 * len; i++) {
-      while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()]) {
-        res[stack.removeLast()] = nums[i % len];
-      }
-      stack.addLast(i % len);
-    }
-    return res;
   }
 
   /**
