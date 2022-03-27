@@ -16,8 +16,6 @@ import java.util.*;
  * @author cenghui
  */
 public class SString extends DefaultSString {
-  private final String HEX_CHAR = "0123456789abcdef";
-
   /**
    * 字符串相加，双指针同时遍历 & 比对 & 最后处理高位，模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
@@ -39,8 +37,7 @@ public class SString extends DefaultSString {
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
     int carry = 0;
     while (p1 >= 0 || p2 >= 0 || carry != 0) {
-      int n1 = p1 >= 0 ? getInt(num1.charAt(p1)) : 0;
-      int n2 = p2 >= 0 ? getInt(num2.charAt(p2)) : 0;
+      int n1 = p1 < 0 ? 0 : getInt(num1.charAt(p1)), n2 = p2 < 0 ? 0 : getInt(num1.charAt(p2));
       int tmp = n1 + n2 + carry;
       carry = tmp / base;
       res.append(getChar(tmp % base));
@@ -95,85 +92,6 @@ public class SString extends DefaultSString {
   }
 
   /**
-   * 字符串转换整数，如 " -26" to 26
-   *
-   * <p>去空格 & 判正负 & 逐位加 & 判溢出
-   *
-   * @param s the s
-   * @return the int
-   */
-  public int myAtoi(String s) {
-    int idx = 0, res = 0;
-    boolean isNegative = false;
-    while (idx < s.length() && s.charAt(idx) == ' ') {
-      idx += 1;
-    }
-    if (idx == s.length()) return 0;
-    if (s.charAt(idx) == '-') isNegative = true;
-    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
-    for (int i = idx; i < s.length(); i++) {
-      char ch = s.charAt(i);
-      if (ch < '0' || ch > '9') break;
-      int pre = res;
-      res = res * 10 + (ch - '0');
-      if (pre != res / 10) {
-        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-      }
-    }
-    return res * (isNegative ? -1 : 1);
-  }
-
-  /**
-   * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
-   *
-   * <p>框架类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
-   *
-   * @param chars the chars
-   * @return int int
-   */
-  public int compress(char[] chars) {
-    // write & read
-    int lo = 0, hi = 0;
-    while (hi < chars.length) {
-      int cur = hi;
-      while (cur < chars.length && chars[hi] == chars[cur]) {
-        cur += 1;
-      }
-      chars[lo] = chars[hi];
-      lo += 1;
-      // 多位数字逐位写入
-      if (cur - hi > 1) {
-        for (char digit : Integer.toString(cur - hi).toCharArray()) {
-          chars[lo] = digit;
-          lo += 1;
-        }
-      }
-      hi = cur;
-    }
-    //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
-    return lo;
-  }
-
-  /**
-   * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
-   *
-   * <p>TODO 参考 https://juejin.cn/post/6844904058357022728
-   *
-   * @param num the num
-   * @return string string
-   */
-  public String toHex(int num) {
-    if (num == 0) return "0";
-    long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
-    StringBuilder res = new StringBuilder();
-    while (cur != 0) {
-      res.append(HEX_CHAR.charAt((int) (cur % 16)));
-      cur /= 16;
-    }
-    return res.reverse().toString();
-  }
-
-  /**
    * 第一个只出现一次的字符，对原串遍历两次
    *
    * <p>扩展1，第二个，下方找两次即可
@@ -182,13 +100,13 @@ public class SString extends DefaultSString {
    * @return char char
    */
   public char firstUniqChar(String s) {
-    int[] count = new int[26];
+    int[] counter = new int[26];
     char[] chs = s.toCharArray();
     for (char ch : chs) {
-      count[ch - 'a'] += 1;
+      counter[ch - 'a'] += 1;
     }
     for (char ch : chs) {
-      if (count[ch - 'a'] == 1) return ch;
+      if (counter[ch - 'a'] == 1) return ch;
     }
     return ' ';
   }
@@ -841,6 +759,193 @@ class SSubString {
       if (idx == -1) return false;
     }
     return true;
+  }
+}
+
+/** 进制转换，编码相关 */
+class CConvert {
+  private final String HEX_CHAR = "0123456789abcdef";
+
+  /**
+   * 字符串转换整数，如 " -26" to 26
+   *
+   * <p>去空格 & 判正负 & 逐位加 & 判溢出
+   *
+   * @param s the s
+   * @return the int
+   */
+  public int myAtoi(String s) {
+    int idx = 0, res = 0;
+    boolean isNegative = false;
+    while (idx < s.length() && s.charAt(idx) == ' ') {
+      idx += 1;
+    }
+    if (idx == s.length()) return 0;
+    if (s.charAt(idx) == '-') isNegative = true;
+    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
+    for (int i = idx; i < s.length(); i++) {
+      char ch = s.charAt(i);
+      if (ch < '0' || ch > '9') break;
+      int pre = res;
+      res = res * 10 + (ch - '0');
+      if (pre != res / 10) {
+        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      }
+    }
+    return res * (isNegative ? -1 : 1);
+  }
+
+  /**
+   * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
+   *
+   * <p>框架类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
+   *
+   * @param chars the chars
+   * @return int int
+   */
+  public int compress(char[] chars) {
+    // write & read
+    int lo = 0, hi = 0;
+    while (hi < chars.length) {
+      int cur = hi;
+      while (cur < chars.length && chars[hi] == chars[cur]) {
+        cur += 1;
+      }
+      chars[lo] = chars[hi];
+      lo += 1;
+      // 多位数字逐位写入
+      if (cur - hi > 1) {
+        for (char digit : Integer.toString(cur - hi).toCharArray()) {
+          chars[lo] = digit;
+          lo += 1;
+        }
+      }
+      hi = cur;
+    }
+    //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
+    return lo;
+  }
+
+  /**
+   * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
+   *
+   * <p>TODO 参考 https://juejin.cn/post/6844904058357022728
+   *
+   * @param num the num
+   * @return string string
+   */
+  public String toHex(int num) {
+    if (num == 0) return "0";
+    long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
+    StringBuilder res = new StringBuilder();
+    while (cur != 0) {
+      res.append(HEX_CHAR.charAt((int) (cur % 16)));
+      cur /= 16;
+    }
+    return res.reverse().toString();
+  }
+
+  /**
+   * 罗马数字转整数，遍历字符，从短开始匹
+   *
+   * <p>扩展1，汉字转阿拉伯数字
+   *
+   * <p>扩展2，IP 与 integer 互转，参下
+   *
+   * @param s the s
+   * @return int int
+   */
+  public int romanToInt(String s) {
+    Map<Character, Integer> mark =
+        new HashMap<>() {
+          {
+            //            put('一', 1);
+            //            put('二', 2);
+            //            put('三', 3);
+            //            put('四', 4);
+            //            put('五', 5);
+            //            put('六', 6);
+            //            put('七', 7);
+            //            put('八', 8);
+            //            put('九', 9);
+            //            put('十', 10);
+            //            put('百', 100);
+            //            put('千', 1000);
+            //            put('万', 10000);
+            put('I', 1);
+            put('V', 5);
+            put('X', 10);
+            put('L', 50);
+            put('C', 100);
+            put('D', 500);
+            put('M', 1000);
+          }
+        };
+    int res = 0;
+    for (int i = 0; i < s.length(); i++) {
+      int cur = mark.get(s.charAt(i)), nxt = mark.get(s.charAt(i + 1));
+      if (i < s.length() - 1 && cur < nxt) res -= cur;
+      else res += cur;
+    }
+    return res;
+  }
+
+  /**
+   * 整数转罗马数字，greedy 尽可能先选出大的数字进行转换
+   *
+   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
+   *
+   * @param num the num
+   * @return string string
+   */
+  public String intToRoman(int num) {
+    // 如果是哈希，保证 key 的遍历有序即可
+    final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+    final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+    StringBuilder res = new StringBuilder();
+    int cur = num;
+    for (int i = 0; i < NUMs.length; i++) {
+      while (cur >= NUMs[i]) {
+        res.append(ROMANs[i]);
+        cur -= NUMs[i];
+      }
+    }
+    return res.toString();
+  }
+
+  /**
+   * Excel表列序号，26 转十进制，类似罗马数字转整数
+   *
+   * @param columnTitle the column title
+   * @return int int
+   */
+  public int titleToNumber(String ct) {
+    int res = 0;
+    for (char ch : ct.toCharArray()) {
+      res = res * 26 + (ch - 'A' + 1);
+    }
+    return res;
+  }
+
+  /**
+   * Excel表列名称，十进制转 26
+   *
+   * <p>一般进制转换无须进行额外操作，是因为我们是在「每一位数值范围在 [0,x)」的前提下进行「逢 x 进一」。
+   *
+   * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
+   *
+   * @param cn
+   * @return
+   */
+  public String convertToTitle(int cn) {
+    StringBuilder res = new StringBuilder();
+    while (cn > 0) {
+      cn -= 1;
+      res.append((char) (cn % 26 + 'A'));
+      cn /= 26;
+    }
+    res.reverse();
+    return res.toString();
   }
 }
 

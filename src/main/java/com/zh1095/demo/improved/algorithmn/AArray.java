@@ -606,7 +606,7 @@ class MMerge extends DefaultArray {
  *
  * <p>lo<=hi 明确碰撞的含义
  */
-class Dichotomy extends DefaultArray {
+class DichotomyClassic extends DefaultArray {
   /**
    * 寻找两个有序数组的中位数，单数组已去重，相互之间可能有重，联合对两个数组二分求 topk 则复杂度为 log(m+n)
    *
@@ -860,7 +860,9 @@ class Dichotomy extends DefaultArray {
     int mid = lo + (hi - lo) / 2, cur = mountainArr.get(mid) * (flag ? 1 : -1);
     return cur == target ? lo : -1;
   }
+}
 
+class DichotomyElse extends DefaultArray {
   /**
    * 搜索二维矩阵，建议模拟 BST 以右上角作根开始遍历，复杂度 m+n
    *
@@ -1088,240 +1090,284 @@ class SSum extends DefaultArray {
    * @param target
    * @return
    */
+}
 
-  /** 以下均为前缀和，适合区间和满足 target，和严格相等则需要哈希，否则搭配滑窗 */
-  public class Presum {
-    /**
-     * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
-     *
-     * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
-     *
-     * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
-     *
-     * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
-     *
-     * <p>扩展2，返回最大和的子序列
-     *
-     * @param nums the nums
-     * @return int int
-     */
-    public int maxSubArray(int[] nums) {
-      if (nums.length < 1) return 0;
-      int curSum = 0, maxSum = nums[0];
-      for (int num : nums) {
-        curSum = curSum > 0 ? curSum + num : num;
-        maxSum = Math.max(maxSum, curSum);
-      }
-      return maxSum;
+/** 以下均为前缀和，适合区间和满足 target，和严格相等则需要哈希，否则搭配滑窗 */
+class Presum {
+  /**
+   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
+   *
+   * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
+   *
+   * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
+   *
+   * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
+   *
+   * <p>扩展2，返回最大和的子序列
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int maxSubArray(int[] nums) {
+    if (nums.length < 1) return 0;
+    int curSum = 0, maxSum = nums[0];
+    for (int num : nums) {
+      curSum = curSum > 0 ? curSum + num : num;
+      maxSum = Math.max(maxSum, curSum);
     }
+    return maxSum;
+  }
 
-    /**
-     * 和为k的子数组，严格相等，返回满足的子数组数量
-     *
-     * <p>参考
-     * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
-     *
-     * <p>扩展1，求本题结果集中最大的长度，参考「连续数组」
-     *
-     * @param nums the nums
-     * @param k the k
-     * @return int int
-     */
-    public int subarraySum(int[] nums, int k) {
-      int preSum = 0, count = 0;
-      // 需要预存前缀和为 0，否则会漏掉前几位就满足的情况
-      // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
-      // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
-      HashMap<Integer, Integer> countBySum = new HashMap<>();
-      countBySum.put(0, 1);
-      for (int i = 0; i < nums.length; i++) {
-        preSum += nums[i];
-        // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
-        count += countBySum.getOrDefault(preSum - k, 0);
-        countBySum.put(preSum, countBySum.getOrDefault(preSum, 0) + 1);
-      }
-      return count;
+  /**
+   * 和为k的子数组，严格相等，返回满足的子数组数量
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
+   *
+   * <p>扩展1，求本题结果集中最大的长度，参考「连续数组」
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int int
+   */
+  public int subarraySum(int[] nums, int k) {
+    int preSum = 0, count = 0;
+    // 需要预存前缀和为 0，否则会漏掉前几位就满足的情况
+    // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
+    // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
+    HashMap<Integer, Integer> countBySum = new HashMap<>();
+    countBySum.put(0, 1);
+    for (int i = 0; i < nums.length; i++) {
+      preSum += nums[i];
+      // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
+      count += countBySum.getOrDefault(preSum - k, 0);
+      countBySum.put(preSum, countBySum.getOrDefault(preSum, 0) + 1);
     }
+    return count;
+  }
 
-    /**
-     * 连续数组，严格相等，最长
-     *
-     * <p>找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
-     *
-     * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
-     *
-     * <p>参考
-     * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
-     *
-     * @param nums the nums
-     * @return int
-     */
-    public int findMaxLength(int[] nums) {
-      int preSum = 0, maxLen = 0;
-      // 总和及其首次出现的下标
-      Map<Integer, Integer> idxBySum = new HashMap<>();
-      // 可能存在前缀和刚好满足条件的情况
-      idxBySum.put(0, -1);
-      for (int i = 0; i < nums.length; i++) {
-        preSum += nums[i] == 0 ? -1 : 1;
-        // 因为求的是最长的长度，只记录前缀和第一次出现的下标
-        if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
-        else idxBySum.put(preSum, i);
-      }
-      return maxLen;
+  /**
+   * 连续数组，严格相等，最长
+   *
+   * <p>找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
+   *
+   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
+   *
+   * @param nums the nums
+   * @return int
+   */
+  public int findMaxLength(int[] nums) {
+    int preSum = 0, maxLen = 0;
+    // 总和及其首次出现的下标
+    Map<Integer, Integer> idxBySum = new HashMap<>();
+    // 可能存在前缀和刚好满足条件的情况
+    idxBySum.put(0, -1);
+    for (int i = 0; i < nums.length; i++) {
+      preSum += nums[i] == 0 ? -1 : 1;
+      // 因为求的是最长的长度，只记录前缀和第一次出现的下标
+      if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
+      else idxBySum.put(preSum, i);
     }
+    return maxLen;
+  }
 
-    /**
-     * 长度最小的子数组，和至少，最短，前缀和搭配滑窗
-     *
-     * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
-     *
-     * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
-     *
-     * @param target the target
-     * @param nums the nums
-     * @return int int
-     */
-    public int minSubArrayLen(int target, int[] nums) {
-      int preSum = 0, minLen = nums.length + 1;
-      int lo = 0, hi = 0;
-      while (hi < nums.length) {
-        // in
-        preSum += nums[hi];
-        while (preSum >= target) {
-          minLen = Math.min(minLen, hi - lo + 1);
-          // out
-          preSum -= nums[lo];
-          lo += 1;
-        }
-        // 替换上一段 while
-        //      if (sum == target) {
-        //        // 入结果集
-        //        hi += 1;
-        //        continue;
-        //      }
-        //      while (sum > target) {
-        //        sum -= nums[lo];
-        //        if (sum == target) {
-        //          // 入结果集
-        //        }
-        //        lo += 1;
-        //      }
-        hi += 1;
+  /**
+   * 长度最小的子数组，和至少，最短，前缀和搭配滑窗
+   *
+   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
+   *
+   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
+   *
+   * @param target the target
+   * @param nums the nums
+   * @return int int
+   */
+  public int minSubArrayLen(int target, int[] nums) {
+    int preSum = 0, minLen = nums.length + 1;
+    int lo = 0, hi = 0;
+    while (hi < nums.length) {
+      // in
+      preSum += nums[hi];
+      while (preSum >= target) {
+        minLen = Math.min(minLen, hi - lo + 1);
+        // out
+        preSum -= nums[lo];
+        lo += 1;
       }
-      return minLen == nums.length + 1 ? 0 : minLen;
+      // 替换上一段 while
+      //      if (sum == target) {
+      //        // 入结果集
+      //        hi += 1;
+      //        continue;
+      //      }
+      //      while (sum > target) {
+      //        sum -= nums[lo];
+      //        if (sum == target) {
+      //          // 入结果集
+      //        }
+      //        lo += 1;
+      //      }
+      hi += 1;
     }
+    return minLen == nums.length + 1 ? 0 : minLen;
+  }
 
-    /**
-     * 连续的子数组和，严格相等，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
-     *
-     * <p>扩展1，方案数参考
-     * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
-     *
-     * @param nums the nums
-     * @param target the target
-     * @return boolean
-     */
-    public boolean checkSubarraySum(int[] nums, int target) {
-      int preSum = 0;
-      HashMap<Integer, Integer> idxByMod = new HashMap<>();
-      idxByMod.put(0, -1);
-      for (int i = 0; i < nums.length; i++) {
-        preSum += nums[i];
-        // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
-        int mod = target == 0 ? preSum : preSum % target, minIdx = idxByMod.getOrDefault(mod, -1);
-        if (minIdx == -1) idxByMod.put(mod, i);
-        else if (i - minIdx > 1) return true;
-      }
-      // 方案数
-      //    long count = 0;
-      //    Map<Long, Integer> map = new HashMap<>();
-      //    map.put(0L, 1);
-      //    for (int num : nums) {
-      //      preSum += num;
-      //      long u = preSum % k;
-      //      if (map.containsKey(u)) count += map.get(u);
-      //      map.put(u, map.getOrDefault(u, 0) + 1);
-      //    }
-      return false;
+  /**
+   * 连续的子数组和，严格相等，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
+   *
+   * <p>扩展1，方案数参考
+   * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
+   *
+   * @param nums the nums
+   * @param target the target
+   * @return boolean
+   */
+  public boolean checkSubarraySum(int[] nums, int target) {
+    int preSum = 0;
+    HashMap<Integer, Integer> idxByMod = new HashMap<>();
+    idxByMod.put(0, -1);
+    for (int i = 0; i < nums.length; i++) {
+      preSum += nums[i];
+      // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
+      int mod = target == 0 ? preSum : preSum % target, minIdx = idxByMod.getOrDefault(mod, -1);
+      if (minIdx == -1) idxByMod.put(mod, i);
+      else if (i - minIdx > 1) return true;
     }
-
-    /**
-     * 和可被k整除的子数组，严格相等
-     *
-     * <p>参考
-     * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
-     *
-     * @param A
-     * @param K
-     * @return
-     */
-    public int subarraysDivByK(int[] nums, int k) {
-      int preSum = 0, count = 0;
-      HashMap<Integer, Integer> countByRemainder = new HashMap<>();
-      countByRemainder.put(0, 1);
-      for (int num : nums) {
-        preSum += num;
-        // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
-        int remainder = (preSum % k + k) % k,
-            curCount = countByRemainder.getOrDefault(remainder, 0);
-        // 余数的次数
-        count += curCount;
-        countByRemainder.put(remainder, curCount + 1);
-      }
-      return count;
-    }
-
-    /**
-     * 和至少为k的最短子数组，和至少，单调队列 & 前缀和
-     *
-     * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
-     *
-     * @param nums the nums
-     * @param k the k
-     * @return int int
-     */
-    public int shortestSubarray(int[] nums, int k) {
-      int len = nums.length, minLen = len + 1;
-      long[] preSum = new long[len + 1];
-      for (int i = 0; i < len; i++) {
-        preSum[i + 1] = preSum[i] + (long) nums[i];
-      }
-      Deque<Integer> mq = new LinkedList<>();
-      for (int i = 0; i < preSum.length; i++) {
-        // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
-        while (!mq.isEmpty() && preSum[i] <= preSum[mq.getLast()]) {
-          mq.removeLast();
-        }
-        while (!mq.isEmpty() && preSum[i] >= preSum[mq.getFirst()] + k) {
-          minLen = Math.min(minLen, i - mq.removeFirst());
-        }
-        mq.addLast(i);
-      }
-      return minLen == len + 1 ? -1 : minLen;
-    }
-
-    /**
-     * 统计「优美子数组」，区间包含 k 个奇数
-     *
-     * @param nums
-     * @param k
-     * @return
-     */
-    //  public int numberOfSubarrays(int[] nums, int k) {
-    //    int oddnum = 0, count = 0;
-    //    HashMap<Integer, Integer> map = new HashMap<>();
-    //    map.put(0, 1);
-    //    // 相当于 presum
-    //    for (int x : nums) {
-    //      // 统计奇数个数
-    //      oddnum += x & 1;
-    //      if (map.containsKey(oddnum - k)) count += map.get(oddnum - k);
-    //      // 存入
-    //      map.put(oddnum, map.getOrDefault(oddnum, 0) + 1);
+    // 方案数
+    //    long count = 0;
+    //    Map<Long, Integer> map = new HashMap<>();
+    //    map.put(0L, 1);
+    //    for (int num : nums) {
+    //      preSum += num;
+    //      long u = preSum % k;
+    //      if (map.containsKey(u)) count += map.get(u);
+    //      map.put(u, map.getOrDefault(u, 0) + 1);
     //    }
-    //    return count;
-    //  }
+    return false;
+  }
+
+  /**
+   * 和可被k整除的子数组，严格相等
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
+   *
+   * @param A
+   * @param K
+   * @return
+   */
+  public int subarraysDivByK(int[] nums, int k) {
+    int preSum = 0, count = 0;
+    HashMap<Integer, Integer> countByRemainder = new HashMap<>();
+    countByRemainder.put(0, 1);
+    for (int num : nums) {
+      preSum += num;
+      // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
+      int remainder = (preSum % k + k) % k, curCount = countByRemainder.getOrDefault(remainder, 0);
+      // 余数的次数
+      count += curCount;
+      countByRemainder.put(remainder, curCount + 1);
+    }
+    return count;
+  }
+
+  /**
+   * 和至少为k的最短子数组，和至少，单调队列 & 前缀和
+   *
+   * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int int
+   */
+  public int shortestSubarray(int[] nums, int k) {
+    int len = nums.length, minLen = len + 1;
+    long[] preSum = new long[len + 1];
+    for (int i = 0; i < len; i++) {
+      preSum[i + 1] = preSum[i] + (long) nums[i];
+    }
+    Deque<Integer> mq = new LinkedList<>();
+    for (int i = 0; i < preSum.length; i++) {
+      // Want opt(y) = largest x with prefix[x]<=prefix[y]-K
+      while (!mq.isEmpty() && preSum[i] <= preSum[mq.getLast()]) {
+        mq.removeLast();
+      }
+      while (!mq.isEmpty() && preSum[i] >= preSum[mq.getFirst()] + k) {
+        minLen = Math.min(minLen, i - mq.removeFirst());
+      }
+      mq.addLast(i);
+    }
+    return minLen == len + 1 ? -1 : minLen;
+  }
+
+  /**
+   * 统计「优美子数组」，区间包含 k 个奇数
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  //  public int numberOfSubarrays(int[] nums, int k) {
+  //    int oddnum = 0, count = 0;
+  //    HashMap<Integer, Integer> map = new HashMap<>();
+  //    map.put(0, 1);
+  //    // 相当于 presum
+  //    for (int x : nums) {
+  //      // 统计奇数个数
+  //      oddnum += x & 1;
+  //      if (map.containsKey(oddnum - k)) count += map.get(oddnum - k);
+  //      // 存入
+  //      map.put(oddnum, map.getOrDefault(oddnum, 0) + 1);
+  //    }
+  //    return count;
+  //  }
+
+  /**
+   * 最大子矩阵，元素和最大
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/max-submatrix-lcci/solution/zhe-yao-cong-zui-da-zi-xu-he-shuo-qi-you-jian-dao-/
+   *
+   * @param matrix the matrix
+   * @return int [ ]
+   */
+  public int[] getMaxMatrix(int[][] matrix) {
+    // 保存最大子矩阵的左上角和右下角的行列坐标
+    int[] res = new int[4];
+    int N = matrix.length, M = matrix[0].length;
+    int[] preSum = new int[M]; // 记录当前i~j行组成大矩阵的每一列的和，将二维转化为一维
+    // 相当于dp[i],dp_i 与最大值
+    int sum = 0, maxSum = Integer.MIN_VALUE;
+    int bestr1 = 0, bestc1 = 0; // 暂时记录左上角，相当于begin
+    for (int i = 0; i < N; i++) { // 以i为上边，从上而下扫描
+      for (int t = 0; t < M; t++) {
+        preSum[t] = 0; // 每次更换子矩形上边，就要清空b，重新计算每列的和
+      }
+      for (int j = i; j < N; j++) { // 子矩阵的下边，从i到N-1，不断增加子矩阵的高
+        // 一下就相当于求一次最大子序列和
+        sum = 0; // 从头开始求dp
+        for (int k = 0; k < M; k++) {
+          preSum[k] += matrix[j][k];
+          // 我们只是不断增加其高，也就是下移矩阵下边，所有这个矩阵每列的和只需要加上新加的哪一行的元素
+          // 因为我们求dp[i]的时候只需要dp[i-1]和nums[i],所有在我们不断更新b数组时就可以求出当前位置的dp_i
+          if (sum > 0) {
+            sum += preSum[k];
+          } else {
+            sum = preSum[k];
+            bestr1 = i; // 自立门户，暂时保存其左上角
+            bestc1 = k;
+          }
+          if (sum > maxSum) {
+            maxSum = sum;
+            res = new int[] {bestr1, bestc1, j, k};
+          }
+        }
+      }
+    }
+    return res;
   }
 }
 

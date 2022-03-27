@@ -3,7 +3,7 @@ package com.zh1095.demo.improved.algorithmn;
 import java.util.*;
 
 /**
- * 收集所有链表相关
+ * 收集所有链表相关，建议直接记代码行数，因为链表的题型基本没有冗余的步骤
  *
  * <p>尾插 & 暂存 & 变向 & 步进
  *
@@ -84,7 +84,13 @@ public class LList {
   }
 
   /**
-   * 复制带随机指针的链表，即深拷贝，三次遍历
+   * 复制带随机指针的链表，三次遍历
+   *
+   * <p>1.在每个原节点后面创建一个新节点
+   *
+   * <p>2.逐一设置新节点的随机节点
+   *
+   * <p>3.分离两个链表
    *
    * <p>参考
    * https://leetcode-cn.com/problems/copy-list-with-random-pointer/solution/liang-chong-shi-xian-tu-jie-138-fu-zhi-dai-sui-ji-/
@@ -93,26 +99,22 @@ public class LList {
    * @return
    */
   public Node copyRandomList(Node head) {
-    if (head == null) return null;
     Node cur = head;
-    // 1.在每个原节点后面创建一个新节点
     while (cur != null) {
       Node newNode = new Node(cur.val);
       newNode.next = cur.next;
       cur.next = newNode;
       cur = newNode.next;
     }
-    // 2.逐一设置新节点的随机节点
+
     cur = head;
     while (cur != null) {
-      if (cur.random != null) {
-        cur.next.random = cur.random.next;
-      }
+      // 保证 DAG
+      if (cur.random != null) cur.next.random = cur.random.next;
       cur = cur.next.next;
     }
-    // 3.分离两个链表
-    Node dummy = new Node(-1);
-    Node lo = dummy, hi = head;
+
+    Node dummy = new Node(-1), lo = dummy, hi = head;
     while (hi != null) {
       lo.next = hi.next;
       lo = lo.next;
@@ -125,7 +127,8 @@ public class LList {
   /**
    * 链表中的下一个更大节点，单调栈
    *
-   * <p>TODO
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/next-greater-node-in-linked-list/solution/javati-jie-dan-diao-zhan-fa-by-maugahm-4-gl74/
    *
    * @param head
    * @return
@@ -249,7 +252,7 @@ class ReverseList extends LList {
       cur.next = tail.next;
       tail.next = cur;
     }
-    // 此时链表长度为奇数，应该跳过中心节点，否则下方比对 lo 会多一位
+    // 长度为奇数应跳过中点，否则下方比对 lo 会多一位
     if (hi != null) lo = lo.next;
     ListNode l1 = tail.next, l2 = lo;
     while (l1 != null && l2 != null) {
@@ -299,7 +302,7 @@ class ReverseList extends LList {
   }
 }
 
-/** 收集合并，重排相关 */
+/** 收集合并相关 */
 class MergeList extends LList {
   /**
    * 两数相加，本质即外排，考虑进位即可
@@ -319,27 +322,27 @@ class MergeList extends LList {
   // 123 & 45 -> 573
   private ListNode addTwoNumbers1(ListNode l1, ListNode l2) {
     final int base = 10; // 36 进制
-    ListNode dummy = new ListNode();
+    ListNode dummy = new ListNode(), cur = dummy, p1 = l1, p2 = l2;
     int carry = 0;
-    ListNode p1 = l1, p2 = l2, cur = dummy;
     while (p1 != null || p2 != null || carry != 0) {
       int n1 = p1 == null ? 0 : p1.val, n2 = p2 == null ? 0 : p2.val;
       int tmp = n1 + n2 + carry;
       carry = tmp / base;
       cur.next = new ListNode(tmp % base);
+      cur = cur.next;
       p1 = p1 == null ? null : p1.next;
       p2 = p2 == null ? null : p2.next;
-      cur = cur.next;
     }
     return dummy.next;
   }
 
   // 123 & 45 -> 168
   // 分别反转两个链表 & 正序计算 & 反转整个链表
-  // 允许空间，则分别遍历建栈，注意需要逆序尾插
+  // 允许空间，则分别遍历建栈，注意需要逆序尾插，即 cur->head
   private ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
     //    ListNode p1 = reverseList(l1), p2 = reverseList(l2);
     //    return reverseList(addTwoNumbers1(p1, p2));
+    final int base = 10; // 36 进制
     Deque<Integer> st1 = new ArrayDeque<>(), st2 = new ArrayDeque<>();
     while (l1 != null) {
       st1.offerLast(l1.val);
@@ -354,8 +357,8 @@ class MergeList extends LList {
     while (!st1.isEmpty() || !st2.isEmpty() || carry > 0) {
       int n1 = st1.isEmpty() ? 0 : st1.pollLast(), n2 = st2.isEmpty() ? 0 : st2.pollLast();
       int tmp = n1 + n2 + carry;
-      carry = tmp / 10;
-      ListNode cur = new ListNode(tmp % 10);
+      carry = tmp / base;
+      ListNode cur = new ListNode(tmp % base);
       cur.next = head;
       head = cur;
     }
@@ -397,7 +400,10 @@ class MergeList extends LList {
     int mid = lo + (hi - lo) / 2;
     return mergeTwoLists(divide(lists, lo, mid), divide(lists, mid + 1, hi));
   }
+}
 
+/** 重排链表 */
+class ReorderList extends LList {
   /**
    * 奇偶链表，如 1234 至 1324，暂存偶头 & 奇偶 & 变向步进
    *
@@ -770,20 +776,20 @@ class DeleteList extends LList {
   public ListNode removeZeroSumSublists(ListNode head) {
     ListNode dummy = new ListNode(), cur = dummy;
     dummy.next = head;
-    Map<Integer, ListNode> preSumByNode = new HashMap<>();
+    Map<Integer, ListNode> presumByLastNode = new HashMap<>();
     // 建立前缀和，覆盖取最终出现的结点
-    int preSum = 0;
+    int presum = 0;
     while (cur != null) {
-      preSum += cur.val;
-      preSumByNode.put(preSum, cur);
+      presum += cur.val;
+      presumByLastNode.put(presum, cur);
       cur = cur.next;
     }
     // 若当前节点处 sum 在下一处出现，则表明两结点之间所有节点和为零，因此删除区间所有节点
-    preSum = 0;
+    presum = 0;
     cur = dummy;
     while (cur != null) {
-      preSum += cur.val;
-      cur.next = preSumByNode.get(preSum).next;
+      presum += cur.val;
+      cur.next = presumByLastNode.get(presum).next;
       cur = cur.next;
     }
     return dummy.next;

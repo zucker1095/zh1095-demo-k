@@ -30,7 +30,7 @@ public class DDP {}
  *
  * @author cenghui
  */
-class SSubArray {
+class OptimalSubArray {
   /**
    * 最长重复子数组 / 最长公共子串，区别于子序列的代码
    *
@@ -130,36 +130,7 @@ class SSubArray {
 }
 
 /** 子序列 */
-class SSubSequence extends Dichotomy {
-  /**
-   * 最长连续序列
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/longest-consecutive-sequence/solution/xiao-bai-lang-ha-xi-ji-he-ha-xi-biao-don-j5a2/
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int longestConsecutive(int[] nums) {
-    int maxLen = 0;
-    // 所在连续区间的长度
-    Map<Integer, Integer> lens = new HashMap<>(nums.length);
-    for (int num : nums) {
-      if (lens.containsKey(num)) continue;
-      // 左右连续区间，与当前数字所在连续区间的长度
-      int left = lens.getOrDefault(num - 1, 0),
-          right = lens.getOrDefault(num + 1, 0),
-          cur = 1 + left + right;
-      // 表示已经遍历过该值
-      lens.put(num, -1);
-      // 分别更新当前连续区间左右边界对应的区间长度
-      lens.put(num - left, cur);
-      lens.put(num + right, cur);
-      maxLen = Math.max(maxLen, cur);
-    }
-    return maxLen;
-  }
-
+class OptimalSubSequence extends DichotomyClassic {
   /**
    * 最长递增子序列 / 最长上升子序列，基于贪心
    *
@@ -213,6 +184,35 @@ class SSubSequence extends Dichotomy {
       path[count] = nums[i];
     }
     return path;
+  }
+
+  /**
+   * 最长连续序列
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-consecutive-sequence/solution/xiao-bai-lang-ha-xi-ji-he-ha-xi-biao-don-j5a2/
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int longestConsecutive(int[] nums) {
+    int maxLen = 0;
+    // 所在连续区间的长度
+    Map<Integer, Integer> lens = new HashMap<>(nums.length);
+    for (int num : nums) {
+      if (lens.containsKey(num)) continue;
+      // 左右连续区间，与当前数字所在连续区间的长度
+      int left = lens.getOrDefault(num - 1, 0),
+          right = lens.getOrDefault(num + 1, 0),
+          cur = 1 + left + right;
+      // 表示已经遍历过该值
+      lens.put(num, -1);
+      // 分别更新当前连续区间左右边界对应的区间长度
+      lens.put(num - left, cur);
+      lens.put(num + right, cur);
+      maxLen = Math.max(maxLen, cur);
+    }
+    return maxLen;
   }
 
   /**
@@ -365,7 +365,7 @@ class SSubSequence extends Dichotomy {
 }
 
 /** 最优解，状态压缩 & 双指针 */
-class OOptimalSolution {
+class OptimalElse {
   /**
    * 买卖股票的最佳时机 I~III
    *
@@ -592,87 +592,6 @@ class OOptimalSolution {
   }
 
   /**
-   * 最大正方形，找到只包含 1 的最大正方形
-   *
-   * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
-   *
-   * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
-   *
-   * @param matrix the matrix
-   * @return int int
-   */
-  public int maximalSquare(char[][] matrix) {
-    // 特判
-    if (matrix == null || matrix.length < 1 || matrix[0].length < 1) {
-      return 0;
-    }
-    int maxSide = 0;
-    // 相当于已经预处理新增第一行、第一列均为0
-    int[] dp = new int[matrix[0].length + 1];
-    int northwest = 0;
-    for (char[] chs : matrix) {
-      northwest = 0; // 遍历每行时，还原回辅助的原值0
-      for (int col = 0; col < matrix[0].length; col++) {
-        int nextNorthwest = dp[col + 1];
-        if (chs[col] == '1') {
-          dp[col + 1] = Math.min(Math.min(dp[col], dp[col + 1]), northwest) + 1;
-          // maxSide = max(maxSide, dp[row+1][col+1]);
-          maxSide = Math.max(maxSide, dp[col + 1]);
-        } else {
-          dp[col + 1] = 0;
-        }
-        northwest = nextNorthwest;
-      }
-    }
-    return maxSide * maxSide;
-  }
-
-  /**
-   * 最大子矩阵，元素和最大
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/max-submatrix-lcci/solution/zhe-yao-cong-zui-da-zi-xu-he-shuo-qi-you-jian-dao-/
-   *
-   * @param matrix the matrix
-   * @return int [ ]
-   */
-  public int[] getMaxMatrix(int[][] matrix) {
-    // 保存最大子矩阵的左上角和右下角的行列坐标
-    int[] res = new int[4];
-    int N = matrix.length, M = matrix[0].length;
-    int[] preSum = new int[M]; // 记录当前i~j行组成大矩阵的每一列的和，将二维转化为一维
-    // 相当于dp[i],dp_i 与最大值
-    int sum = 0, maxSum = Integer.MIN_VALUE;
-    int bestr1 = 0, bestc1 = 0; // 暂时记录左上角，相当于begin
-    for (int i = 0; i < N; i++) { // 以i为上边，从上而下扫描
-      for (int t = 0; t < M; t++) {
-        preSum[t] = 0; // 每次更换子矩形上边，就要清空b，重新计算每列的和
-      }
-      for (int j = i; j < N; j++) { // 子矩阵的下边，从i到N-1，不断增加子矩阵的高
-        // 一下就相当于求一次最大子序列和
-        sum = 0; // 从头开始求dp
-        for (int k = 0; k < M; k++) {
-          preSum[k] += matrix[j][k];
-          // 我们只是不断增加其高，也就是下移矩阵下边，所有这个矩阵每列的和只需要加上新加的哪一行的元素
-          // 因为我们求dp[i]的时候只需要dp[i-1]和nums[i],所有在我们不断更新b数组时就可以求出当前位置的dp_i
-          if (sum > 0) {
-            sum += preSum[k];
-          } else {
-            sum = preSum[k];
-            bestr1 = i; // 自立门户，暂时保存其左上角
-            bestc1 = k;
-          }
-          if (sum > maxSum) {
-            maxSum = sum;
-            res = new int[] {bestr1, bestc1, j, k};
-          }
-        }
-      }
-    }
-    return res;
-  }
-
-  /**
    * 使序列递增的最小交换次数
    *
    * <p>对于位置 i 至少满足以下两种情况之一
@@ -705,60 +624,6 @@ class OOptimalSolution {
     }
     return Math.min(keep, swap);
   }
-
-  /**
-   * 柱状图中最大的矩形
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
-   *
-   * @param heights
-   * @return
-   */
-  public int largestRectangleArea(int[] heights) {
-    int maxArea = 0;
-    Deque<Integer> stack = new ArrayDeque<>();
-    int[] newHeights = new int[heights.length + 2];
-    for (int i = 1; i < heights.length + 1; i++) {
-      newHeights[i] = heights[i - 1];
-    }
-    for (int i = 0; i < newHeights.length; i++) {
-      while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
-        int cur = stack.pollLast(), pre = stack.peekLast();
-        maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
-      }
-      stack.offerLast(i);
-    }
-    return maxArea;
-  }
-
-  /**
-   * 最大矩形
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
-   *
-   * @param matrix
-   * @return
-   */
-  public int maximalRectangle(char[][] matrix) {
-    int maxArea = 0, row = matrix.length, col = matrix[0].length;
-    int[] newHeights = new int[col + 2];
-    for (int i = 0; i < row; i++) {
-      Deque<Integer> stack = new ArrayDeque<>();
-      for (int j = 0; j < col + 2; j++) {
-        if (j >= 1 && j <= col) {
-          newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
-        }
-        while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
-          int cur = stack.pollLast(), pre = stack.peekLast();
-          maxArea = Math.max(maxArea, (j - pre - 1) * newHeights[cur]);
-        }
-        stack.offerLast(j);
-      }
-    }
-    return maxArea;
-  }
 }
 
 /**
@@ -766,7 +631,7 @@ class OOptimalSolution {
  *
  * @author cenghui
  */
-class PPath {
+class OptimalPath {
   /**
    * 最小路径和，题设自然数
    *
@@ -897,50 +762,98 @@ class PPath {
     int nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
     return new int[] {nxt, cur};
   }
+}
 
+/** 收集矩形相关，矩阵参下路径 */
+class OptimalRectangle {
   /**
-   * 不同路径I
+   * 最大正方形，找到只包含 1 的最大正方形
    *
-   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
+   * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
    *
-   * @param m the m
-   * @param n the n
+   * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
+   *
+   * @param matrix the matrix
    * @return int int
    */
-  public int uniquePaths(int m, int n) {
-    int[] dp = new int[n];
-    Arrays.fill(dp, 1);
-    for (int i = 1; i < m; i++) {
-      for (int j = 1; j < n; j++) {
-        dp[j] += dp[j - 1];
+  public int maximalSquare(char[][] matrix) {
+    // 特判
+    if (matrix == null || matrix.length < 1 || matrix[0].length < 1) {
+      return 0;
+    }
+    int maxSide = 0;
+    // 相当于已经预处理新增第一行、第一列均为0
+    int[] dp = new int[matrix[0].length + 1];
+    int northwest = 0;
+    for (char[] chs : matrix) {
+      northwest = 0; // 遍历每行时，还原回辅助的原值0
+      for (int col = 0; col < matrix[0].length; col++) {
+        int nextNorthwest = dp[col + 1];
+        if (chs[col] == '1') {
+          dp[col + 1] = Math.min(Math.min(dp[col], dp[col + 1]), northwest) + 1;
+          // maxSide = max(maxSide, dp[row+1][col+1]);
+          maxSide = Math.max(maxSide, dp[col + 1]);
+        } else {
+          dp[col + 1] = 0;
+        }
+        northwest = nextNorthwest;
       }
     }
-    return dp[n - 1];
+    return maxSide * maxSide;
   }
 
   /**
-   * 不同路径II
+   * 柱状图中最大的矩形
    *
-   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
    *
-   * @param obstacleGrid the obstacle grid
-   * @return int int
+   * @param heights
+   * @return
    */
-  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
-    int len = obstacleGrid[0].length;
-    int[] dp = new int[len];
-    // 起点可能有障碍物
-    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
-    for (int[] rows : obstacleGrid) {
-      for (int i = 0; i < len; i++) {
-        if (rows[i] == 1) {
-          dp[i] = 0;
-        } else if (rows[i] == 0 && i >= 1) {
-          dp[i] = dp[i] + dp[i - 1];
+  public int largestRectangleArea(int[] heights) {
+    int maxArea = 0;
+    Deque<Integer> stack = new ArrayDeque<>();
+    int[] newHeights = new int[heights.length + 2];
+    for (int i = 1; i < heights.length + 1; i++) {
+      newHeights[i] = heights[i - 1];
+    }
+    for (int i = 0; i < newHeights.length; i++) {
+      while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
+        int cur = stack.pollLast(), pre = stack.peekLast();
+        maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
+      }
+      stack.offerLast(i);
+    }
+    return maxArea;
+  }
+
+  /**
+   * 最大矩形
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalRectangle(char[][] matrix) {
+    int maxArea = 0, row = matrix.length, col = matrix[0].length;
+    int[] newHeights = new int[col + 2];
+    for (int i = 0; i < row; i++) {
+      Deque<Integer> stack = new ArrayDeque<>();
+      for (int j = 0; j < col + 2; j++) {
+        if (j >= 1 && j <= col) {
+          newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
         }
+        while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
+          int cur = stack.pollLast(), pre = stack.peekLast();
+          maxArea = Math.max(maxArea, (j - pre - 1) * newHeights[cur]);
+        }
+        stack.offerLast(j);
       }
     }
-    return dp[len - 1];
+    return maxArea;
   }
 }
 
@@ -998,6 +911,51 @@ class CCount {
     dp[0] = 1;
     for (int coin : coins) for (int i = coin; i <= amount; i++) dp[i] += dp[i - coin];
     return dp[amount];
+  }
+
+  /**
+   * 不同路径I
+   *
+   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
+   *
+   * @param m the m
+   * @param n the n
+   * @return int int
+   */
+  public int uniquePaths(int m, int n) {
+    int[] dp = new int[n];
+    Arrays.fill(dp, 1);
+    for (int i = 1; i < m; i++) {
+      for (int j = 1; j < n; j++) {
+        dp[j] += dp[j - 1];
+      }
+    }
+    return dp[n - 1];
+  }
+
+  /**
+   * 不同路径II
+   *
+   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数
+   *
+   * @param obstacleGrid the obstacle grid
+   * @return int int
+   */
+  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+    int len = obstacleGrid[0].length;
+    int[] dp = new int[len];
+    // 起点可能有障碍物
+    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
+    for (int[] rows : obstacleGrid) {
+      for (int i = 0; i < len; i++) {
+        if (rows[i] == 1) {
+          dp[i] = 0;
+        } else if (rows[i] == 0 && i >= 1) {
+          dp[i] = dp[i] + dp[i - 1];
+        }
+      }
+    }
+    return dp[len - 1];
   }
 
   /**

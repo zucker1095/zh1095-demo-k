@@ -238,6 +238,7 @@ public class TTree {
 
   /** 二叉树的序列化与反序列化，前序 */
   public class Codec {
+    private int idx;
 
     /**
      * Serialize string.
@@ -245,7 +246,6 @@ public class TTree {
      * @param root the root
      * @return the string
      */
-    // Encodes a tree to a single string.
     public String serialize(TreeNode root) {
       return root == null
           ? "null"
@@ -258,18 +258,18 @@ public class TTree {
      * @param data the data
      * @return the tree node
      */
-    // Decodes your encoded data to tree.
     public TreeNode deserialize(String data) {
-      Queue<String> queue = new LinkedList<>(Arrays.asList(data.split(",")));
-      return dfs(queue);
+      return traversal(data.split(","));
     }
 
-    private TreeNode dfs(Queue<String> queue) {
-      String val = queue.poll();
+    private TreeNode traversal(String[] vals) {
+      if (idx >= vals.length) return null;
+      String val = vals[idx];
+      idx += 1;
       if ("null".equals(val)) return null;
       TreeNode root = new TreeNode(Integer.parseInt(val));
-      root.left = dfs(queue);
-      root.right = dfs(queue);
+      root.left = traversal(vals);
+      root.right = traversal(vals);
       return root;
     }
   }
@@ -481,12 +481,7 @@ class DDFS {
 }
 
 /** 二叉搜索树，中序为主 */
-class BBST {
-  // 「二叉搜索树中的第k大的元素」
-  private int count;
-  // 「二叉搜索树与双向链表」当前和上次遍历结点，按照中序遍历，后者即前者的左侧
-  private TreeNode pre, cur;
-
+class BBSTInorder {
   /**
    * 验证二叉搜索树，模板参上「中序遍历」
    *
@@ -537,6 +532,117 @@ class BBST {
     // impossible
     return -1;
   }
+
+  /**
+   * 二叉搜索树的最小绝对差，中序，框架等同上方「中序遍历」
+   *
+   * @param root the root
+   * @return minimum difference
+   */
+  public int getMinimumDifference(TreeNode root) {
+    int res = Integer.MAX_VALUE, pre = res;
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    TreeNode cur = root;
+    while (cur != null || !stack.isEmpty()) {
+      while (cur != null) {
+        stack.offerLast(cur);
+        cur = cur.left;
+      }
+      cur = stack.pollLast();
+      res = Math.min(res, Math.abs(cur.val - pre));
+      pre = cur.val;
+      cur = cur.right;
+    }
+    return res;
+  }
+
+  /**
+   * 恢复二叉搜索树，中序，框架保持「中序遍历」
+   *
+   * <p>找到两个错误结点并交换
+   *
+   * @param root the root
+   */
+  public void recoverTree(TreeNode root) {
+    TreeNode firstNode = null, secondNode = null, pre = new TreeNode(Integer.MIN_VALUE), cur = root;
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    while (cur != null || !stack.isEmpty()) {
+      // 遍历
+      while (cur != null) {
+        stack.offerLast(cur);
+        cur = cur.left;
+      }
+      cur = stack.pollLast();
+      // 处理当前结点
+      if (firstNode == null && pre.val > cur.val) firstNode = pre;
+      if (firstNode != null && pre.val > cur.val) secondNode = cur;
+      pre = cur;
+      // 步进
+      cur = cur.right;
+    }
+    int tmp = firstNode.val;
+    firstNode.val = secondNode.val;
+    secondNode.val = tmp;
+  }
+
+  /**
+   * 二叉搜索树迭代器
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/binary-search-tree-iterator/solution/fu-xue-ming-zhu-dan-diao-zhan-die-dai-la-dkrm/
+   *
+   * <p>均摊复杂度是 O(1)，调用 next()，如果栈顶元素有右子树，则把所有右边结点即其所有左孩子全部放到了栈中，下次调用 next() 直接访问栈顶
+   *
+   * <p>空间复杂度 O(h)，h 为数的高度，因为栈中只保留了左结点，栈中元素最多时，即树高
+   */
+  public class BSTIterator {
+    private final Deque<TreeNode> stack = new ArrayDeque<>();
+
+    /**
+     * Instantiates a new Bst iterator.
+     *
+     * @param root the root
+     */
+    public BSTIterator(TreeNode root) {
+      TreeNode cur = root;
+      while (cur != null) {
+        stack.offerLast(cur);
+        cur = cur.left;
+      }
+    }
+
+    /**
+     * Next int.
+     *
+     * @return the int
+     */
+    public int next() {
+      TreeNode cur = stack.pollLast();
+      if (cur.right != null) {
+        TreeNode nxt = cur.right;
+        while (nxt != null) {
+          stack.offerLast(nxt);
+          nxt = nxt.left;
+        }
+      }
+      return cur.val;
+    }
+
+    /**
+     * Has next boolean.
+     *
+     * @return the boolean
+     */
+    public boolean hasNext() {
+      return !stack.isEmpty();
+    }
+  }
+}
+
+/** 二叉搜索树，深搜为主 */
+class BBSTDFS {
+  // 「二叉搜索树与双向链表」当前和上次遍历结点，按照中序遍历，后者即前者的左侧
+  private TreeNode pre, cur;
 
   /**
    * 二叉搜索树中的插入操作，比当前小，则入左，否则入右
@@ -595,58 +701,6 @@ class BBST {
   }
 
   /**
-   * 二叉搜索树的最小绝对差，中序，框架等同上方「中序遍历」
-   *
-   * @param root the root
-   * @return minimum difference
-   */
-  public int getMinimumDifference(TreeNode root) {
-    int res = Integer.MAX_VALUE, pre = res;
-    Deque<TreeNode> stack = new ArrayDeque<>();
-    TreeNode cur = root;
-    while (cur != null || !stack.isEmpty()) {
-      while (cur != null) {
-        stack.offerLast(cur);
-        cur = cur.left;
-      }
-      cur = stack.pollLast();
-      res = Math.min(res, Math.abs(cur.val - pre));
-      pre = cur.val;
-      cur = cur.right;
-    }
-    return res;
-  }
-
-  /**
-   * 恢复二叉搜索树，中序，框架保持「中序遍历」
-   *
-   * <p>找到两个错误结点并交换
-   *
-   * @param root the root
-   */
-  public void recoverTree(TreeNode root) {
-    TreeNode firstNode = null, secondNode = null, pre = new TreeNode(Integer.MIN_VALUE), cur = root;
-    Deque<TreeNode> stack = new ArrayDeque<>();
-    while (cur != null || !stack.isEmpty()) {
-      // 遍历
-      while (cur != null) {
-        stack.offerLast(cur);
-        cur = cur.left;
-      }
-      cur = stack.pollLast();
-      // 处理当前结点
-      if (firstNode == null && pre.val > cur.val) firstNode = pre;
-      if (firstNode != null && pre.val > cur.val) secondNode = cur;
-      pre = cur;
-      // 步进
-      cur = cur.right;
-    }
-    int tmp = firstNode.val;
-    firstNode.val = secondNode.val;
-    secondNode.val = tmp;
-  }
-
-  /**
    * 将有序数组转换为二叉搜索树，前序，类似双路快排，以升序数组的中间元素作 root
    *
    * @param nums the nums
@@ -691,59 +745,6 @@ class BBST {
     head.left = pre;
     pre = head;
     dfs7(head.right);
-  }
-
-  /**
-   * 二叉搜索树迭代器
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/binary-search-tree-iterator/solution/fu-xue-ming-zhu-dan-diao-zhan-die-dai-la-dkrm/
-   *
-   * <p>均摊复杂度是 O(1)，调用 next()，如果栈顶元素有右子树，则把所有右边结点即其所有左孩子全部放到了栈中，下次调用 next() 直接访问栈顶
-   *
-   * <p>空间复杂度 O(h)，h 为数的高度，因为栈中只保留了左结点，栈中元素最多时，即树高
-   */
-  public class BSTIterator {
-    private final Deque<TreeNode> stack = new ArrayDeque<>();
-
-    /**
-     * Instantiates a new Bst iterator.
-     *
-     * @param root the root
-     */
-    public BSTIterator(TreeNode root) {
-      TreeNode cur = root;
-      while (cur != null) {
-        stack.offerLast(cur);
-        cur = cur.left;
-      }
-    }
-
-    /**
-     * Next int.
-     *
-     * @return the int
-     */
-    public int next() {
-      TreeNode cur = stack.pollLast();
-      if (cur.right != null) {
-        TreeNode nxt = cur.right;
-        while (nxt != null) {
-          stack.offerLast(nxt);
-          nxt = nxt.left;
-        }
-      }
-      return cur.val;
-    }
-
-    /**
-     * Has next boolean.
-     *
-     * @return the boolean
-     */
-    public boolean hasNext() {
-      return !stack.isEmpty();
-    }
   }
 }
 
@@ -933,483 +934,6 @@ class Postorder {
   }
 }
 
-/**
- * 回溯，前序与后序结合，遵从如下规范
- *
- * <p>入参顺序为 selection, path, res(if need), ...args
- *
- * <p>按照子组列的顺序，建议按照表格记忆
- */
-class BBacktracking extends DDFS {
-  private final String[] LetterMap = {
-    " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
-  };
-
-  /**
-   * 复原IP地址
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/restore-ip-addresses/solution/hui-su-suan-fa-hua-tu-fen-xi-jian-zhi-tiao-jian-by/
-   *
-   * <p>TODO 扩展1，分割数字串为不超过 k 的多个子串，返回所有方案
-   *
-   * @param s the s
-   * @return list list
-   */
-  public List<String> restoreIpAddresses(String s) {
-    List<String> res = new ArrayList<>();
-    // 特判
-    if (s.length() > 12 || s.length() < 4) {
-      return res;
-    }
-    backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
-    return res;
-  }
-
-  private void backtracking6(
-      String s, Deque<String> path, List<String> res, int begin, int segment) {
-    if (begin == s.length()) {
-      if (segment == 0) res.add(String.join(".", path));
-      return;
-    }
-    // 每段只截取三位数
-    for (int i = begin; i < begin + 3 && i < s.length(); i++) {
-      // 当前段分配的位数不够，或分配的位数过多，或数字过大
-      if (segment * 3 < s.length() - i || !isValidIpSegment(s, begin, i)) {
-        continue;
-      }
-      path.offerLast(s.substring(begin, i + 1));
-      backtracking6(s, path, res, i + 1, segment - 1);
-      path.pollLast();
-    }
-  }
-
-  private boolean isValidIpSegment(String s, int lo, int hi) {
-    int len = hi - lo + 1;
-    // 前导零剪枝
-    if (len > 1 && s.charAt(lo) == '0') return false;
-    int num = len > 0 ? Integer.parseInt(s.substring(lo, hi + 1)) : 0;
-    return 0 <= num && num <= 255;
-  }
-
-  /**
-   * 分割回文串
-   *
-   * <p>1.预处理所有子串的回文情况
-   *
-   * <p>2.暴力回溯
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/palindrome-partitioning/solution/hui-su-you-hua-jia-liao-dong-tai-gui-hua-by-liweiw/
-   *
-   * @param s the s
-   * @return list
-   */
-  public List<List<String>> partition(String s) {
-    List<List<String>> res = new ArrayList<>();
-    backtracking11(s, new ArrayDeque<String>(), res, 0, parseString(s));
-    return res;
-  }
-
-  // 预处理 dp[i][j] 表示 s[i][j] 是否是回文
-  // 状态转移，在 s[i] == s[j] 的时候，dp[i][j] 参考 dp[i + 1][j - 1]
-  private boolean[][] parseString(String s) {
-    int len = s.length();
-    char[] chs = s.toCharArray();
-    boolean[][] dp = new boolean[len][len];
-    for (int hi = 0; hi < len; hi++) {
-      // 双指针碰撞表示一个字符的时候也需要判断
-      for (int lo = 0; lo <= hi; lo++) {
-        dp[lo][hi] = chs[lo] == chs[hi] && (hi - lo <= 2 || dp[lo + 1][hi - 1]);
-      }
-    }
-    return dp;
-  }
-
-  private void backtracking11(
-      String s, Deque<String> path, List<List<String>> res, int idx, boolean[][] dp) {
-    if (idx == s.length()) {
-      res.add(new ArrayList<>(path));
-      return;
-    }
-    for (int i = idx; i < s.length(); i++) {
-      if (!dp[idx][i]) continue;
-      path.offerLast(s.substring(idx, i + 1));
-      backtracking11(s, path, res, i + 1, dp);
-      path.pollLast();
-    }
-  }
-
-  /**
-   * 电话号码的字母组合
-   *
-   * @param digits
-   * @return
-   */
-  public List<String> letterCombinations(String digits) {
-    if (digits == null || digits.length() == 0) return new ArrayList<>();
-    List<String> res = new ArrayList<>();
-    backtracking13(digits, new StringBuilder(), res, 0);
-    return res;
-  }
-
-  private void backtracking13(String str, StringBuilder path, List<String> res, int idx) {
-    if (idx == str.length()) {
-      res.add(path.toString());
-      return;
-    }
-    for (char ch : LetterMap[str.charAt(idx) - '0'].toCharArray()) {
-      path.append(ch);
-      backtracking13(str, path, res, idx + 1);
-      path.deleteCharAt(path.length() - 1);
-    }
-  }
-
-  /**
-   * 解数独，暴力回溯
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/sudoku-solver/solution/37-jie-shu-du-hui-su-sou-suo-suan-fa-xiang-jie-by-/
-   *
-   * @param board the board
-   */
-  public void solveSudoku(char[][] board) {
-    backtracking10(board);
-  }
-
-  /**
-   * 验证IP地址
-   *
-   * <p>TODO
-   *
-   * @param queryIP
-   * @return
-   */
-  // public String validIPAddress(String queryIP) {}
-
-  // 1.跳过原始数字
-  // 2.位置放 k 是否合适，是则，找到合适一组立刻返回
-  // 3.九个数都试完，说明该棋盘无解
-  private boolean backtracking10(char[][] board) {
-    for (int y = 0; y < 9; y++) {
-      for (int x = 0; x < 9; x++) {
-        if (board[y][x] != '.') continue;
-        for (char k = '1'; k <= '9'; k++) {
-          if (!isValidSudoku(y, x, k, board)) continue;
-          board[y][x] = k;
-          if (backtracking10(board)) return true;
-          board[y][x] = '.';
-        }
-        return false;
-      }
-    }
-    // 遍历完没有返回 false，说明找到合适棋盘位置
-    return true;
-  }
-
-  // 判断棋盘是否合法有如下三个维度，同行，同列，九宫格里是否重复
-  private boolean isValidSudoku(int row, int col, char val, char[][] board) {
-    for (int i = 0; i < 9; i++) {
-      if (board[row][i] == val) return false;
-    }
-    for (int j = 0; j < 9; j++) {
-      if (board[j][col] == val) return false;
-    }
-    int startRow = (row / 3) * 3, startCol = (col / 3) * 3;
-    for (int i = startRow; i < startRow + 3; i++) {
-      for (int j = startCol; j < startCol + 3; j++) {
-        if (board[i][j] == val) return false;
-      }
-    }
-    return true;
-  }
-
-  public class Search {
-    /**
-     * 路径总和II，从根出发要求达到叶，需要记录路径
-     *
-     * @param root the root
-     * @param targetSum the target sum
-     * @return list list
-     */
-    public List<List<Integer>> pathSum(TreeNode root, int targetSum) {
-      List<List<Integer>> res = new ArrayList<>();
-      backtracking0(root, new ArrayDeque<>(), res, targetSum);
-      return res;
-    }
-
-    private void backtracking0(
-        TreeNode root, Deque<Integer> path, List<List<Integer>> res, int targetSum) {
-      if (root == null) return;
-      path.offerLast(root.val);
-      if (targetSum - root.val == 0 && root.left == null && root.right == null) {
-        // path 全局唯一，须做拷贝
-        res.add(new ArrayList<>(path));
-        // return 前须重置
-        path.pollLast();
-        return;
-      }
-      backtracking0(root.left, path, res, targetSum - root.val);
-      backtracking0(root.right, path, res, targetSum - root.val);
-      // 递归完成以后，必须重置变量
-      path.pollLast();
-    }
-
-    /**
-     * 路径总和III，返回路径总数，但从任意点出发，回溯 & 前缀和
-     *
-     * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
-     *
-     * @param root the root
-     * @param targetSum the target sum
-     * @return int int
-     */
-    public int pathSumIII(TreeNode root, int targetSum) {
-      Map<Long, Integer> prefix = new HashMap<>() {};
-      prefix.put(0L, 1); // base case
-      return backtracking9(root, prefix, 0, targetSum);
-    }
-
-    private int backtracking9(TreeNode root, Map<Long, Integer> preSum, long cur, int targetSum) {
-      if (root == null) return 0;
-      cur += root.val;
-      int res = preSum.getOrDefault(cur - targetSum, 0);
-      preSum.put(cur, preSum.getOrDefault(cur, 0) + 1);
-      res +=
-          backtracking9(root.left, preSum, cur, targetSum)
-              + backtracking9(root.right, preSum, cur, targetSum);
-      preSum.put(cur, preSum.getOrDefault(cur, 0) - 1);
-      return res;
-    }
-
-    /**
-     * 括号生成，括号相关的参考「最长有效括号」与「有效的括号」
-     *
-     * @param n the n
-     * @return list list
-     */
-    public List<String> generateParenthesis(int n) {
-      List<String> res = new ArrayList<>();
-      // 需要特判，否则入串
-      if (n <= 0) return res;
-      backtracking7(n, n, "", res);
-      return res;
-    }
-
-    // 此处的可选集为左右括号的剩余量，因为每次尝试，都使用新的字符串，所以无需显示回溯
-    private void backtracking7(int left, int right, String path, List<String> res) {
-      if (left == 0 && right == 0) {
-        res.add(path);
-        return;
-      }
-      if (left > right) return;
-      if (left > 0) backtracking7(left - 1, right, path + "(", res);
-      if (right > 0) backtracking7(left, right - 1, path + ")", res);
-    }
-
-    /**
-     * 单词搜索
-     *
-     * @param board the board
-     * @param word the word
-     * @return boolean boolean
-     */
-    public boolean exist(char[][] board, String word) {
-      int rows = board.length, cols = board[0].length;
-      boolean[][] visited = new boolean[rows][cols];
-      for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-          if (backtracking8(board, i, j, word, 0, visited)) return true;
-        }
-      }
-      return false;
-    }
-
-    private boolean backtracking8(
-        char[][] board, int r, int c, String word, int start, boolean[][] visited) {
-      if (start == word.length() - 1) {
-        return board[r][c] == word.charAt(start);
-      }
-      if (board[r][c] != word.charAt(start)) {
-        return false;
-      }
-      visited[r][c] = true;
-      for (int[] dir : DIRECTIONS) {
-        int newX = r + dir[0], newY = c + dir[1];
-        if (!visited[newX][newY]
-            && inArea(board, newX, newY)
-            && backtracking8(board, newX, newY, word, start + 1, visited)) {
-          return true;
-        }
-      }
-      visited[r][c] = false;
-      return false;
-    }
-
-    /**
-     * 二叉树的所有路径，前序，其实是回溯，由于 Java String immutable 才不需移除
-     *
-     * <p>BFS 解法参考「求根结点到叶子结点数字之和」分别维护一个结点与路径的队列
-     *
-     * @param root the root
-     * @return list
-     */
-    public List<String> binaryTreePaths(TreeNode root) {
-      List<String> res = new ArrayList<>();
-      backtracking12(root, "", res);
-      return res;
-    }
-
-    private void backtracking12(TreeNode root, String path, List<String> res) {
-      if (root == null) return;
-      if (root.left == null && root.right == null) {
-        res.add(path + root.val);
-        return;
-      }
-      String cur = path + root.val + "->";
-      backtracking12(root.left, cur, res);
-      backtracking12(root.right, cur, res);
-    }
-  }
-
-  public class Combinatorics {
-    /**
-     * 子集
-     *
-     * @param nums the nums
-     * @return the list
-     */
-    public List<List<Integer>> subsets(int[] nums) {
-      List<List<Integer>> res = new ArrayList<>();
-      if (nums.length == 0) return res;
-      backtracking1(nums, new ArrayDeque<>(), res, 0);
-      return res;
-    }
-
-    private void backtracking1(
-        int[] nums, Deque<Integer> path, List<List<Integer>> res, int start) {
-      res.add(new ArrayList<>(path));
-      for (int i = start; i < nums.length; i++) {
-        path.offerLast(nums[i]);
-        backtracking1(nums, path, res, i + 1);
-        path.pollLast();
-      }
-    }
-
-    /**
-     * 组合总和I
-     *
-     * @param candidates the candidates
-     * @param target the target
-     * @return the list
-     */
-    public List<List<Integer>> combinationSum(int[] candidates, int target) {
-      List<List<Integer>> res = new ArrayList<>();
-      if (candidates.length == 0) return res;
-      Arrays.sort(candidates);
-      backtracking2(candidates, new ArrayDeque<>(), res, 0, target);
-      return res;
-    }
-
-    private void backtracking2(
-        int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
-      if (target == 0) res.add(new ArrayList<>(path));
-      for (int i = start; i < candidates.length; i++) {
-        if (candidates[i] > target) break;
-        path.offerLast(candidates[i]);
-        backtracking2(candidates, path, res, i, target - candidates[i]);
-        path.pollLast();
-      }
-    }
-
-    /**
-     * 组合总和II
-     *
-     * @param candidates the candidates
-     * @param target the target
-     * @return the list
-     */
-    public List<List<Integer>> combinationSum2(int[] candidates, int target) {
-      List<List<Integer>> res = new ArrayList<>();
-      if (candidates.length == 0) return res;
-      Arrays.sort(candidates);
-      backtracking3(candidates, new ArrayDeque<>(), res, 0, target);
-      return res;
-    }
-
-    private void backtracking3(
-        int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
-      if (target == 0) res.add(new ArrayList<>(path));
-      for (int i = start; i < candidates.length; i++) {
-        if (candidates[i] > target) break;
-        if (i > start && candidates[i - 1] == candidates[i]) continue;
-        path.offerLast(candidates[i]);
-        backtracking3(candidates, path, res, i + 1, target - candidates[i]);
-        path.pollLast();
-      }
-    }
-
-    /**
-     * 全排列I
-     *
-     * @param nums the nums
-     * @return the list
-     */
-    public List<List<Integer>> permute(int[] nums) {
-      List<List<Integer>> res = new ArrayList<>();
-      if (nums.length == 0) return res;
-      backtracking4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
-      return res;
-    }
-
-    private void backtracking4(
-        int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] visited) {
-      if (path.size() == nums.length) {
-        res.add(new ArrayList<>(path));
-        return;
-      }
-      for (int i = 0; i < nums.length; i++) {
-        if (visited[i]) continue;
-        visited[i] = true;
-        path.offerLast(nums[i]);
-        backtracking4(nums, path, res, visited);
-        path.pollLast();
-        visited[i] = false;
-      }
-    }
-
-    /**
-     * 全排列II
-     *
-     * @param nums the nums
-     * @return the list
-     */
-    public List<List<Integer>> permuteUnique(int[] nums) {
-      List<List<Integer>> res = new ArrayList<>();
-      if (nums.length == 0) return res;
-      Arrays.sort(nums);
-      backtracking5(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
-      return res;
-    }
-
-    private void backtracking5(
-        int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] visited) {
-      if (path.size() == nums.length) {
-        res.add(new ArrayList<>(path));
-        return;
-      }
-      for (int i = 0; i < nums.length; i++) {
-        if (visited[i] || (i > 0 && nums[i] == nums[i - 1] && !visited[i])) continue;
-        visited[i] = true;
-        path.offerLast(nums[i]);
-        backtracking5(nums, path, res, visited);
-        path.pollLast();
-        visited[i] = false;
-      }
-    }
-  }
-}
-
 /** 广度优先搜索 */
 class BBFS {
   /**
@@ -1593,7 +1117,7 @@ class BBFS {
 }
 
 /** 比对多棵树 */
-class Compare {
+class MultiTrees {
   /**
    * 合并二叉树，前序
    *
@@ -1683,6 +1207,482 @@ class Compare {
       queue.offer(q.left);
       queue.offer(p.right);
       queue.offer(q.right);
+    }
+    return true;
+  }
+}
+
+/**
+ * 回溯，前序与后序结合，遵从如下规范
+ *
+ * <p>入参顺序为 selection, path, res(if need), ...args
+ *
+ * <p>按照子组列的顺序，建议按照表格记忆
+ */
+class BacktrackingCombinatorics {
+  /**
+   * 子集
+   *
+   * @param nums the nums
+   * @return the list
+   */
+  public List<List<Integer>> subsets(int[] nums) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (nums.length == 0) return res;
+    backtracking1(nums, new ArrayDeque<>(), res, 0);
+    return res;
+  }
+
+  private void backtracking1(int[] nums, Deque<Integer> path, List<List<Integer>> res, int start) {
+    res.add(new ArrayList<>(path));
+    for (int i = start; i < nums.length; i++) {
+      path.offerLast(nums[i]);
+      backtracking1(nums, path, res, i + 1);
+      path.pollLast();
+    }
+  }
+
+  /**
+   * 组合总和I
+   *
+   * @param candidates the candidates
+   * @param target the target
+   * @return the list
+   */
+  public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (candidates.length == 0) return res;
+    Arrays.sort(candidates);
+    backtracking2(candidates, new ArrayDeque<>(), res, 0, target);
+    return res;
+  }
+
+  private void backtracking2(
+      int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
+    if (target == 0) res.add(new ArrayList<>(path));
+    for (int i = start; i < candidates.length; i++) {
+      if (candidates[i] > target) break;
+      path.offerLast(candidates[i]);
+      backtracking2(candidates, path, res, i, target - candidates[i]);
+      path.pollLast();
+    }
+  }
+
+  /**
+   * 组合总和II
+   *
+   * @param candidates the candidates
+   * @param target the target
+   * @return the list
+   */
+  public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (candidates.length == 0) return res;
+    Arrays.sort(candidates);
+    backtracking3(candidates, new ArrayDeque<>(), res, 0, target);
+    return res;
+  }
+
+  private void backtracking3(
+      int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
+    if (target == 0) res.add(new ArrayList<>(path));
+    for (int i = start; i < candidates.length; i++) {
+      if (candidates[i] > target) break;
+      if (i > start && candidates[i - 1] == candidates[i]) continue;
+      path.offerLast(candidates[i]);
+      backtracking3(candidates, path, res, i + 1, target - candidates[i]);
+      path.pollLast();
+    }
+  }
+
+  /**
+   * 全排列I
+   *
+   * @param nums the nums
+   * @return the list
+   */
+  public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (nums.length == 0) return res;
+    backtracking4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
+    return res;
+  }
+
+  private void backtracking4(
+      int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] visited) {
+    if (path.size() == nums.length) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int i = 0; i < nums.length; i++) {
+      if (visited[i]) continue;
+      visited[i] = true;
+      path.offerLast(nums[i]);
+      backtracking4(nums, path, res, visited);
+      path.pollLast();
+      visited[i] = false;
+    }
+  }
+
+  /**
+   * 全排列II
+   *
+   * @param nums the nums
+   * @return the list
+   */
+  public List<List<Integer>> permuteUnique(int[] nums) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (nums.length == 0) return res;
+    Arrays.sort(nums);
+    backtracking5(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
+    return res;
+  }
+
+  private void backtracking5(
+      int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] visited) {
+    if (path.size() == nums.length) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int i = 0; i < nums.length; i++) {
+      if (visited[i] || (i > 0 && nums[i] == nums[i - 1] && !visited[i])) continue;
+      visited[i] = true;
+      path.offerLast(nums[i]);
+      backtracking5(nums, path, res, visited);
+      path.pollLast();
+      visited[i] = false;
+    }
+  }
+}
+
+class BacktrackingSearch extends DDFS {
+  /**
+   * 路径总和II，从根出发要求达到叶，需要记录路径
+   *
+   * @param root the root
+   * @param targetSum the target sum
+   * @return list list
+   */
+  public List<List<Integer>> pathSum(TreeNode root, int targetSum) {
+    List<List<Integer>> res = new ArrayList<>();
+    backtracking0(root, new ArrayDeque<>(), res, targetSum);
+    return res;
+  }
+
+  private void backtracking0(
+      TreeNode root, Deque<Integer> path, List<List<Integer>> res, int targetSum) {
+    if (root == null) return;
+    path.offerLast(root.val);
+    if (targetSum - root.val == 0 && root.left == null && root.right == null) {
+      // path 全局唯一，须做拷贝
+      res.add(new ArrayList<>(path));
+      // return 前须重置
+      path.pollLast();
+      return;
+    }
+    backtracking0(root.left, path, res, targetSum - root.val);
+    backtracking0(root.right, path, res, targetSum - root.val);
+    // 递归完成以后，必须重置变量
+    path.pollLast();
+  }
+
+  /**
+   * 路径总和III，返回路径总数，但从任意点出发，回溯 & 前缀和
+   *
+   * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
+   *
+   * @param root the root
+   * @param targetSum the target sum
+   * @return int int
+   */
+  public int pathSumIII(TreeNode root, int targetSum) {
+    Map<Long, Integer> prefix = new HashMap<>() {};
+    prefix.put(0L, 1); // base case
+    return backtracking9(root, prefix, 0, targetSum);
+  }
+
+  private int backtracking9(TreeNode root, Map<Long, Integer> preSum, long cur, int targetSum) {
+    if (root == null) return 0;
+    cur += root.val;
+    int res = preSum.getOrDefault(cur - targetSum, 0);
+    preSum.put(cur, preSum.getOrDefault(cur, 0) + 1);
+    res +=
+        backtracking9(root.left, preSum, cur, targetSum)
+            + backtracking9(root.right, preSum, cur, targetSum);
+    preSum.put(cur, preSum.getOrDefault(cur, 0) - 1);
+    return res;
+  }
+
+  /**
+   * 括号生成，括号相关的参考「最长有效括号」与「有效的括号」
+   *
+   * @param n the n
+   * @return list list
+   */
+  public List<String> generateParenthesis(int n) {
+    List<String> res = new ArrayList<>();
+    // 需要特判，否则入串
+    if (n <= 0) return res;
+    backtracking7(n, n, "", res);
+    return res;
+  }
+
+  // 此处的可选集为左右括号的剩余量，因为每次尝试，都使用新的字符串，所以无需显示回溯
+  private void backtracking7(int left, int right, String path, List<String> res) {
+    if (left == 0 && right == 0) {
+      res.add(path);
+      return;
+    }
+    if (left > right) return;
+    if (left > 0) backtracking7(left - 1, right, path + "(", res);
+    if (right > 0) backtracking7(left, right - 1, path + ")", res);
+  }
+
+  /**
+   * 单词搜索
+   *
+   * @param board the board
+   * @param word the word
+   * @return boolean boolean
+   */
+  public boolean exist(char[][] board, String word) {
+    int rows = board.length, cols = board[0].length;
+    boolean[][] visited = new boolean[rows][cols];
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        if (backtracking8(board, i, j, word, 0, visited)) return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean backtracking8(
+      char[][] board, int r, int c, String word, int start, boolean[][] visited) {
+    if (start == word.length() - 1) {
+      return board[r][c] == word.charAt(start);
+    }
+    if (board[r][c] != word.charAt(start)) {
+      return false;
+    }
+    visited[r][c] = true;
+    for (int[] dir : DIRECTIONS) {
+      int newX = r + dir[0], newY = c + dir[1];
+      if (!visited[newX][newY]
+          && inArea(board, newX, newY)
+          && backtracking8(board, newX, newY, word, start + 1, visited)) {
+        return true;
+      }
+    }
+    visited[r][c] = false;
+    return false;
+  }
+
+  /**
+   * 二叉树的所有路径，前序，其实是回溯，由于 Java String immutable 才不需移除
+   *
+   * <p>BFS 解法参考「求根结点到叶子结点数字之和」分别维护一个结点与路径的队列
+   *
+   * @param root the root
+   * @return list
+   */
+  public List<String> binaryTreePaths(TreeNode root) {
+    List<String> res = new ArrayList<>();
+    backtracking12(root, "", res);
+    return res;
+  }
+
+  private void backtracking12(TreeNode root, String path, List<String> res) {
+    if (root == null) return;
+    if (root.left == null && root.right == null) {
+      res.add(path + root.val);
+      return;
+    }
+    String cur = path + root.val + "->";
+    backtracking12(root.left, cur, res);
+    backtracking12(root.right, cur, res);
+  }
+}
+
+class BacktrackingElse extends DDFS {
+  private final String[] LetterMap = {
+    " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
+  };
+
+  /**
+   * 复原IP地址
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/restore-ip-addresses/solution/hui-su-suan-fa-hua-tu-fen-xi-jian-zhi-tiao-jian-by/
+   *
+   * <p>TODO 扩展1，分割数字串为不超过 k 的多个子串，返回所有方案
+   *
+   * @param s the s
+   * @return list list
+   */
+  public List<String> restoreIpAddresses(String s) {
+    List<String> res = new ArrayList<>();
+    // 特判
+    if (s.length() > 12 || s.length() < 4) {
+      return res;
+    }
+    backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
+    return res;
+  }
+
+  private void backtracking6(
+      String s, Deque<String> path, List<String> res, int begin, int segment) {
+    if (begin == s.length()) {
+      if (segment == 0) res.add(String.join(".", path));
+      return;
+    }
+    // 每段只截取三位数
+    for (int i = begin; i < begin + 3 && i < s.length(); i++) {
+      // 当前段分配的位数不够，或分配的位数过多，或数字过大
+      if (segment * 3 < s.length() - i || !isValidIpSegment(s, begin, i)) {
+        continue;
+      }
+      path.offerLast(s.substring(begin, i + 1));
+      backtracking6(s, path, res, i + 1, segment - 1);
+      path.pollLast();
+    }
+  }
+
+  private boolean isValidIpSegment(String s, int lo, int hi) {
+    int len = hi - lo + 1;
+    // 前导零剪枝
+    if (len > 1 && s.charAt(lo) == '0') return false;
+    int num = len > 0 ? Integer.parseInt(s.substring(lo, hi + 1)) : 0;
+    return 0 <= num && num <= 255;
+  }
+
+  /**
+   * 分割回文串
+   *
+   * <p>1.预处理所有子串的回文情况
+   *
+   * <p>2.暴力回溯
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/palindrome-partitioning/solution/hui-su-you-hua-jia-liao-dong-tai-gui-hua-by-liweiw/
+   *
+   * @param s the s
+   * @return list
+   */
+  public List<List<String>> partition(String s) {
+    List<List<String>> res = new ArrayList<>();
+    backtracking11(s, new ArrayDeque<String>(), res, 0, parseString(s));
+    return res;
+  }
+
+  // 预处理 dp[i][j] 表示 s[i][j] 是否是回文
+  // 状态转移，在 s[i] == s[j] 的时候，dp[i][j] 参考 dp[i + 1][j - 1]
+  private boolean[][] parseString(String s) {
+    int len = s.length();
+    char[] chs = s.toCharArray();
+    boolean[][] dp = new boolean[len][len];
+    for (int hi = 0; hi < len; hi++) {
+      // 双指针碰撞表示一个字符的时候也需要判断
+      for (int lo = 0; lo <= hi; lo++) {
+        dp[lo][hi] = chs[lo] == chs[hi] && (hi - lo <= 2 || dp[lo + 1][hi - 1]);
+      }
+    }
+    return dp;
+  }
+
+  private void backtracking11(
+      String s, Deque<String> path, List<List<String>> res, int idx, boolean[][] dp) {
+    if (idx == s.length()) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int i = idx; i < s.length(); i++) {
+      if (!dp[idx][i]) continue;
+      path.offerLast(s.substring(idx, i + 1));
+      backtracking11(s, path, res, i + 1, dp);
+      path.pollLast();
+    }
+  }
+
+  /**
+   * 电话号码的字母组合
+   *
+   * @param digits
+   * @return
+   */
+  public List<String> letterCombinations(String digits) {
+    if (digits == null || digits.length() == 0) return new ArrayList<>();
+    List<String> res = new ArrayList<>();
+    backtracking13(digits, new StringBuilder(), res, 0);
+    return res;
+  }
+
+  private void backtracking13(String str, StringBuilder path, List<String> res, int idx) {
+    if (idx == str.length()) {
+      res.add(path.toString());
+      return;
+    }
+    for (char ch : LetterMap[str.charAt(idx) - '0'].toCharArray()) {
+      path.append(ch);
+      backtracking13(str, path, res, idx + 1);
+      path.deleteCharAt(path.length() - 1);
+    }
+  }
+
+  /**
+   * 解数独，暴力回溯
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/sudoku-solver/solution/37-jie-shu-du-hui-su-sou-suo-suan-fa-xiang-jie-by-/
+   *
+   * @param board the board
+   */
+  public void solveSudoku(char[][] board) {
+    backtracking10(board);
+  }
+
+  /**
+   * 验证IP地址
+   *
+   * <p>TODO
+   *
+   * @param queryIP
+   * @return
+   */
+  // public String validIPAddress(String queryIP) {}
+
+  // 1.跳过原始数字
+  // 2.位置放 k 是否合适，是则，找到合适一组立刻返回
+  // 3.九个数都试完，说明该棋盘无解
+  private boolean backtracking10(char[][] board) {
+    for (int y = 0; y < 9; y++) {
+      for (int x = 0; x < 9; x++) {
+        if (board[y][x] != '.') continue;
+        for (char k = '1'; k <= '9'; k++) {
+          if (!isValidSudoku(y, x, k, board)) continue;
+          board[y][x] = k;
+          if (backtracking10(board)) return true;
+          board[y][x] = '.';
+        }
+        return false;
+      }
+    }
+    // 遍历完没有返回 false，说明找到合适棋盘位置
+    return true;
+  }
+
+  // 判断棋盘是否合法有如下三个维度，同行，同列，九宫格里是否重复
+  private boolean isValidSudoku(int row, int col, char val, char[][] board) {
+    for (int i = 0; i < 9; i++) {
+      if (board[row][i] == val) return false;
+    }
+    for (int j = 0; j < 9; j++) {
+      if (board[j][col] == val) return false;
+    }
+    int startRow = (row / 3) * 3, startCol = (col / 3) * 3;
+    for (int i = startRow; i < startRow + 3; i++) {
+      for (int j = startCol; j < startCol + 3; j++) {
+        if (board[i][j] == val) return false;
+      }
     }
     return true;
   }

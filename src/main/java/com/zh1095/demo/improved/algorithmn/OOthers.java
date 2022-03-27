@@ -300,191 +300,6 @@ class MMath {
   }
 }
 
-/** 单个数字 */
-class Digit {
-  private final String CHARS = "0123456789ABCDEF";
-
-  /**
-   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
-   *
-   * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
-   *
-   * @param num the num
-   * @param radix the radix
-   * @return string string
-   */
-  public String baseConvert(int num, int radix) {
-    if (num == 0) {
-      return "0";
-    }
-    StringBuilder res = new StringBuilder();
-    boolean f = false;
-    if (num < 0) {
-      f = true;
-      num = -num;
-    }
-    while (num != 0) {
-      res.append(CHARS.charAt(num % radix));
-      num /= radix;
-    }
-    if (f) {
-      res.append("-");
-    }
-    return res.reverse().toString();
-  }
-
-  /**
-   * 第n位数字
-   *
-   * <p>一位数 9 个 -> 1 * 9，二位数 90 个 -> 2 * 90，其余同理
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int findNthDigit(int n) {
-    int cur = 1, base = 9, k = n;
-    while (k > cur * base) {
-      k -= cur * base;
-      cur += 1;
-      base *= 10;
-      if (cur > Integer.MAX_VALUE / base) break;
-    }
-    k -= 1;
-    int num = (int) Math.pow(10, cur - 1) + k / cur;
-    int idx = k % cur;
-    return num / (int) Math.pow(10, cur - 1 - idx) % 10;
-  }
-
-  /**
-   * 回文数
-   *
-   * <p>0.特判负数与十的倍数
-   *
-   * <p>1.为取出 x 的左右部分，每次进行取余操作取出最低的数字，并加到取出数的末尾
-   *
-   * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
-   *
-   * @param x the x
-   * @return boolean boolean
-   */
-  public boolean isPalindrome(int x) {
-    if (x < 0 || (x % 10 == 0 && x != 0)) return false;
-    // 左右部分
-    int lo = x, hi = 0;
-    while (lo > hi) {
-      hi = hi * 10 + lo % 10;
-      lo /= 10;
-    }
-    return lo == hi || lo == hi / 10;
-  }
-}
-
-/** 进制转换 */
-class CConvert {
-  /**
-   * 罗马数字转整数，遍历字符，从短开始匹
-   *
-   * <p>扩展1，汉字转阿拉伯数字
-   *
-   * <p>扩展2，IP 与 integer 互转，参下
-   *
-   * @param s the s
-   * @return int int
-   */
-  public int romanToInt(String s) {
-    Map<Character, Integer> mark =
-        new HashMap<>() {
-          {
-            //            put('一', 1);
-            //            put('二', 2);
-            //            put('三', 3);
-            //            put('四', 4);
-            //            put('五', 5);
-            //            put('六', 6);
-            //            put('七', 7);
-            //            put('八', 8);
-            //            put('九', 9);
-            //            put('十', 10);
-            //            put('百', 100);
-            //            put('千', 1000);
-            //            put('万', 10000);
-            put('I', 1);
-            put('V', 5);
-            put('X', 10);
-            put('L', 50);
-            put('C', 100);
-            put('D', 500);
-            put('M', 1000);
-          }
-        };
-    int res = 0;
-    for (int i = 0; i < s.length(); i++) {
-      int cur = mark.get(s.charAt(i)), nxt = mark.get(s.charAt(i + 1));
-      if (i < s.length() - 1 && cur < nxt) res -= cur;
-      else res += cur;
-    }
-    return res;
-  }
-
-  /**
-   * 整数转罗马数字，greedy 尽可能先选出大的数字进行转换
-   *
-   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
-   *
-   * @param num the num
-   * @return string string
-   */
-  public String intToRoman(int num) {
-    // 如果是哈希，保证 key 的遍历有序即可
-    final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
-    final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
-    StringBuilder res = new StringBuilder();
-    int cur = num;
-    for (int i = 0; i < NUMs.length; i++) {
-      while (cur >= NUMs[i]) {
-        res.append(ROMANs[i]);
-        cur -= NUMs[i];
-      }
-    }
-    return res.toString();
-  }
-
-  /**
-   * Excel表列序号，26 转十进制，类似罗马数字转整数
-   *
-   * @param columnTitle the column title
-   * @return int int
-   */
-  public int titleToNumber(String ct) {
-    int res = 0;
-    for (char ch : ct.toCharArray()) {
-      res = res * 26 + (ch - 'A' + 1);
-    }
-    return res;
-  }
-
-  /**
-   * Excel表列名称，十进制转 26
-   *
-   * <p>一般进制转换无须进行额外操作，是因为我们是在「每一位数值范围在 [0,x)」的前提下进行「逢 x 进一」。
-   *
-   * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
-   *
-   * @param cn
-   * @return
-   */
-  public String convertToTitle(int cn) {
-    StringBuilder res = new StringBuilder();
-    while (cn > 0) {
-      cn -= 1;
-      res.append((char) (cn % 26 + 'A'));
-      cn /= 26;
-    }
-    res.reverse();
-    return res.toString();
-  }
-}
-
 /** 构建新数据结构 */
 class DData {
   /**
@@ -852,6 +667,85 @@ class DData {
   }
 }
 
+/** 单个数字 */
+class Digit {
+  private final String CHARS = "0123456789ABCDEF";
+
+  /**
+   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
+   *
+   * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   *
+   * @param num the num
+   * @param radix the radix
+   * @return string string
+   */
+  public String baseConvert(int num, int radix) {
+    if (num == 0) {
+      return "0";
+    }
+    StringBuilder res = new StringBuilder();
+    boolean f = false;
+    if (num < 0) {
+      f = true;
+      num = -num;
+    }
+    while (num != 0) {
+      res.append(CHARS.charAt(num % radix));
+      num /= radix;
+    }
+    if (f) {
+      res.append("-");
+    }
+    return res.reverse().toString();
+  }
+
+  /**
+   * 第n位数字
+   *
+   * <p>一位数 9 个 -> 1 * 9，二位数 90 个 -> 2 * 90，其余同理
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int findNthDigit(int n) {
+    int cur = 1, base = 9, k = n;
+    while (k > cur * base) {
+      k -= cur * base;
+      cur += 1;
+      base *= 10;
+      if (cur > Integer.MAX_VALUE / base) break;
+    }
+    k -= 1;
+    int num = (int) Math.pow(10, cur - 1) + k / cur;
+    int idx = k % cur;
+    return num / (int) Math.pow(10, cur - 1 - idx) % 10;
+  }
+
+  /**
+   * 回文数
+   *
+   * <p>0.特判负数与十的倍数
+   *
+   * <p>1.为取出 x 的左右部分，每次进行取余操作取出最低的数字，并加到取出数的末尾
+   *
+   * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
+   *
+   * @param x the x
+   * @return boolean boolean
+   */
+  public boolean isPalindrome(int x) {
+    if (x < 0 || (x % 10 == 0 && x != 0)) return false;
+    // 左右部分
+    int lo = x, hi = 0;
+    while (lo > hi) {
+      hi = hi * 10 + lo % 10;
+      lo /= 10;
+    }
+    return lo == hi || lo == hi / 10;
+  }
+}
+
 /** 二进制，位运算相关，掌握常见的运算符即可，现场推，毕竟命中率超低 */
 class BBit {
   /**
@@ -900,6 +794,36 @@ class BBit {
   }
 
   /**
+   * 只出现一次的数字II，其余均出现三次
+   *
+   * <p>利用 int 固定为 32 bit，使用一个长度为 32 的数组 cnt[] 记录下所有数值的每一位共出现了多少次 1，再对 cnt[] 数组的每一位进行 mod 3
+   * 操作，重新拼凑出只出现一次的数
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/single-number-ii/solution/gong-shui-san-xie-yi-ti-san-jie-ha-xi-bi-fku8/
+   *
+   * <p>扩展1，有序数组，参考「有序数组中的单一元素」
+   *
+   * <p>扩展2，只出现一次的字符，参考「第一个只出现一次的字符」
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int singleNumber(int[] nums) {
+    int[] counter = new int[32];
+    for (int num : nums) {
+      for (int i = 0; i < 32; i++) {
+        if (((num >> i) & 1) == 1) counter[i] += 1;
+      }
+    }
+    int target = 0;
+    for (int i = 0; i < 32; i++) {
+      if ((counter[i] % 3 & 1) == 1) target += (1 << i);
+    }
+    return target;
+  }
+
+  /**
    * 位1的个数，you need to treat n as an unsigned value
    *
    * <p>逐位与判断即可
@@ -912,26 +836,6 @@ class BBit {
     while (n != 0) {
       res += n & 1;
       n >>>= 1;
-    }
-    return res;
-  }
-
-  /**
-   * 只出现一次的数字，其余均出现两次
-   *
-   * <p>扩展1，有序数组，参考「有序数组中的单一元素」
-   *
-   * <p>扩展2，只出现一次的字符，参考「第一个只出现一次的字符」
-   *
-   * <p>扩展3，其余均出现三次，参考「只出现一次的数字II」
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int singleNumber(int[] nums) {
-    int res = 0;
-    for (int num : nums) {
-      res ^= num;
     }
     return res;
   }
