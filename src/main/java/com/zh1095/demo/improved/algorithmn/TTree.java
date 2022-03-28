@@ -19,6 +19,7 @@ import java.util.*;
  * @author cenghui
  */
 public class TTree {
+  // 「求根节点到叶节点数字之和」
   private int res3 = 0;
 
   /**
@@ -100,8 +101,7 @@ public class TTree {
     //    }
     if (preLo > preHi) return null;
     TreeNode root = new TreeNode(preorder[preLo]);
-    int idx = idxByValInorder.get(preorder[preLo]);
-    int countLeft = idx - inLo;
+    int idx = idxByValInorder.get(preorder[preLo]), countLeft = idx - inLo;
     root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, idxByValInorder, inLo);
     root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, idxByValInorder, idx + 1);
     //    postorder.add(preorder[preLo]);
@@ -113,8 +113,7 @@ public class TTree {
       int[] postrorder, int postLo, int postHi, Map<Integer, Integer> idxByValInorder, int inLo) {
     if (postLo > postHi) return null;
     TreeNode root = new TreeNode(postrorder[postHi]);
-    int idx = idxByValInorder.get(postrorder[postHi]);
-    int countLeft = idx - inLo;
+    int idx = idxByValInorder.get(postrorder[postHi]), countLeft = idx - inLo;
     root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, idxByValInorder, inLo);
     root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, idxByValInorder, idx + 1);
     return root;
@@ -172,9 +171,9 @@ public class TTree {
     nodeQueue.offer(root);
     numQueue.offer(root.val);
     while (!nodeQueue.isEmpty()) {
-      TreeNode node = nodeQueue.poll();
+      TreeNode cur = nodeQueue.poll();
       int num = numQueue.poll();
-      TreeNode left = node.left, right = node.right;
+      TreeNode left = cur.left, right = cur.right;
       if (left == null && right == null) {
         sum += num;
         continue;
@@ -223,9 +222,7 @@ public class TTree {
     // 否则，找第一个当前结点是父结点左孩子的结点
     _TreeNode cur = node;
     while (cur.next != null) {
-      if (cur.next.left.equals(cur)) {
-        return cur.next;
-      }
+      if (cur.next.left.equals(cur)) return cur.next;
       cur = cur.next;
     }
     // 退到根结点仍没找到
@@ -480,7 +477,7 @@ class DDFS {
   }
 }
 
-/** 二叉搜索树，中序为主 */
+/** 二叉搜索树，中序为主，模板与「中序遍历」一致 */
 class BBSTInorder {
   /**
    * 验证二叉搜索树，模板参上「中序遍历」
@@ -754,7 +751,8 @@ class Postorder {
   private int maxSum = Integer.MIN_VALUE;
   // 「二叉树的直径」
   private int curDiameter = 0;
-  private String path;
+  // 「二叉树中的最大路径和」
+  private String maxPath;
 
   /**
    * 平衡二叉树，前序递归
@@ -773,33 +771,6 @@ class Postorder {
     int right = getHeight(root.right);
     if (right == -1) return -1;
     return Math.abs(left - right) < 2 ? Math.max(left, right) + 1 : -1;
-  }
-
-  /**
-   * 二叉树的最近公共祖先，后序遍历
-   *
-   * <p>特判 & 剪枝，判断 p & q 均在左子树内 & 返回非空结点
-   *
-   * <p>TODO 扩展1，n 叉树，先找到两条路径查找第一个相交的结点即可，如果用后序遍历需要把每个分支都写清楚是否为空比较麻烦
-   *
-   * @param root the root
-   * @param p the p
-   * @param q the q
-   * @return tree node
-   */
-  public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
-    if (root == null || root == p || root == q) {
-      return root;
-    }
-    TreeNode left = lowestCommonAncestor(root.left, p, q);
-    if (left != null && left != q && left != p) {
-      return left;
-    }
-    TreeNode right = lowestCommonAncestor(root.right, p, q);
-    if (left != null && right != null) {
-      return root;
-    }
-    return left == null ? right : left;
   }
 
   /**
@@ -857,7 +828,7 @@ class Postorder {
     }
     if (curRes.count > maxSum) {
       maxSum = curRes.count;
-      path = curRes.path;
+      maxPath = curRes.path;
     }
     return curRes;
   }
@@ -968,9 +939,9 @@ class BBFS {
     Deque<TreeNode> queue = new LinkedList<>();
     queue.offerLast(root);
     while (!queue.isEmpty()) {
-      res.add(queue.getLast().val);
+      res.add(queue.peekLast().val);
       for (int i = queue.size(); i > 0; i--) {
-        TreeNode cur = queue.removeFirst();
+        TreeNode cur = queue.pollFirst();
         if (cur.left != null) queue.offerLast(cur.left);
         if (cur.right != null) queue.offerLast(cur.right);
       }
@@ -995,17 +966,11 @@ class BBFS {
       Deque<Integer> levelList = new LinkedList<>();
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
-        if (isOdd) {
-          levelList.offerLast(cur.val);
-        } else {
-          levelList.addFirst(cur.val);
-        }
-        if (cur.left != null) {
-          queue.add(cur.left);
-        }
-        if (cur.right != null) {
-          queue.add(cur.right);
-        }
+        if (cur.left != null) queue.offer(cur.left);
+        if (cur.right != null) queue.offer(cur.right);
+
+        if (isOdd) levelList.offerLast(cur.val);
+        else levelList.offerFirst(cur.val);
       }
       res.add(new ArrayList<>(levelList));
       isOdd = !isOdd;
@@ -1082,12 +1047,10 @@ class BBFS {
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
-      int size = queue.size();
-      while (size > 0) {
+      for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
         if (cur.left != null) queue.offer(cur.left);
         if (cur.right != null) queue.offer(cur.right);
-        size -= 1;
       }
       maxDepth += 1;
     }
@@ -1119,6 +1082,33 @@ class BBFS {
 /** 比对多棵树 */
 class MultiTrees {
   /**
+   * 二叉树的最近公共祖先，后序遍历
+   *
+   * <p>特判 & 剪枝，判断 p & q 均在左子树内 & 返回非空结点
+   *
+   * <p>TODO 扩展1，n 叉树，先找到两条路径查找第一个相交的结点即可，如果用后序遍历需要把每个分支都写清楚是否为空比较麻烦
+   *
+   * @param root the root
+   * @param p the p
+   * @param q the q
+   * @return tree node
+   */
+  public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+    if (root == null || root == p || root == q) {
+      return root;
+    }
+    TreeNode left = lowestCommonAncestor(root.left, p, q);
+    if (left != null && left != q && left != p) {
+      return left;
+    }
+    TreeNode right = lowestCommonAncestor(root.right, p, q);
+    if (left != null && right != null) {
+      return root;
+    }
+    return left == null ? right : left;
+  }
+
+  /**
    * 合并二叉树，前序
    *
    * @param r1 the r 1
@@ -1127,7 +1117,7 @@ class MultiTrees {
    */
   public TreeNode mergeTrees(TreeNode r1, TreeNode r2) {
     if (r1 == null || r2 == null) return r1 == null ? r2 : r1;
-    Queue<TreeNode> queue = new LinkedList<TreeNode>();
+    Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(r1);
     queue.offer(r2);
     while (queue.size() > 0) {
@@ -1215,7 +1205,7 @@ class MultiTrees {
 /**
  * 回溯，前序与后序结合，遵从如下规范
  *
- * <p>入参顺序为 selection, path, res(if need), ...args
+ * <p>入参顺序为 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
  *
  * <p>按照子组列的顺序，建议按照表格记忆
  */
@@ -1458,12 +1448,9 @@ class BacktrackingSearch extends DDFS {
 
   private boolean backtracking8(
       char[][] board, int r, int c, String word, int start, boolean[][] visited) {
-    if (start == word.length() - 1) {
-      return board[r][c] == word.charAt(start);
-    }
-    if (board[r][c] != word.charAt(start)) {
-      return false;
-    }
+    if (start == word.length() - 1) return board[r][c] == word.charAt(start);
+    if (board[r][c] != word.charAt(start)) return false;
+
     visited[r][c] = true;
     for (int[] dir : DIRECTIONS) {
       int newX = r + dir[0], newY = c + dir[1];
@@ -1530,18 +1517,18 @@ class BacktrackingElse extends DDFS {
   }
 
   private void backtracking6(
-      String s, Deque<String> path, List<String> res, int begin, int segment) {
-    if (begin == s.length()) {
+      String s, Deque<String> path, List<String> res, int start, int segment) {
+    if (start == s.length()) {
       if (segment == 0) res.add(String.join(".", path));
       return;
     }
     // 每段只截取三位数
-    for (int i = begin; i < begin + 3 && i < s.length(); i++) {
+    for (int i = start; i < start + 3 && i < s.length(); i++) {
       // 当前段分配的位数不够，或分配的位数过多，或数字过大
-      if (segment * 3 < s.length() - i || !isValidIpSegment(s, begin, i)) {
+      if (segment * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
         continue;
       }
-      path.offerLast(s.substring(begin, i + 1));
+      path.offerLast(s.substring(start, i + 1));
       backtracking6(s, path, res, i + 1, segment - 1);
       path.pollLast();
     }

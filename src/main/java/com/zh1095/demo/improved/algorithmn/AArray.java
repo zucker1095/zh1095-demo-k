@@ -73,7 +73,7 @@ public class AArray extends DefaultArray {
    */
   public void merge(int[] nums1, int m, int[] nums2, int n) {
     int p1 = m - 1, p2 = n - 1;
-    for (int cur = m + n - 1; cur >= 0; cur--) {
+    for (int i = m + n - 1; i >= 0; i--) {
       int n1 = curNum(nums1, p1), n2 = curNum(nums2, p2);
       int bigger = 0;
       if (n1 <= n2) {
@@ -83,7 +83,7 @@ public class AArray extends DefaultArray {
         bigger = n2;
         p2 -= 1; // nextIdx()
       }
-      nums1[cur] = bigger;
+      nums1[i] = bigger;
     }
   }
 
@@ -479,7 +479,9 @@ class QQuick extends DefaultArray {
 }
 
 class MMerge extends DefaultArray {
-  private int res = 0;
+  // 「数组中的逆序对」
+  private int count = 0;
+
   /**
    * 归并排序，up-to-bottom 递归，先分后合
    *
@@ -541,7 +543,7 @@ class MMerge extends DefaultArray {
   public int reversePairs(int[] nums) {
     if (nums.length < 2) return 0;
     divide2(nums, new int[nums.length], 0, nums.length - 1);
-    return res;
+    return count;
   }
 
   private void divide2(int[] nums, int[] tmp, int start, int end) {
@@ -550,7 +552,7 @@ class MMerge extends DefaultArray {
     divide2(nums, tmp, start, mid);
     divide2(nums, tmp, mid + 1, end);
     if (nums[mid] <= nums[mid + 1]) return;
-    res += mergeAndCount(nums, tmp, start, mid, end);
+    count += mergeAndCount(nums, tmp, start, mid, end);
   }
 
   private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
@@ -636,28 +638,25 @@ class DichotomyClassic extends DefaultArray {
   // 迭代，特判其一为空 & 其一遍历结束 & k 为 1
   private int getKSmallElement1(int[] nums1, int[] nums2, int k) {
     int l1 = nums1.length, l2 = nums2.length;
-    int p1 = 0, p2 = 0, curRanking = k;
-    while (true) {
-      // 去重1
-      if (p1 == l1) {
-        return nums2[p2 + curRanking - 1];
-      } else if (p2 == l2) {
-        return nums1[p1 + curRanking - 1];
-      } else if (curRanking == 1) {
-        return Math.min(nums1[p1], nums2[p2]);
-      }
-      int half = curRanking / 2;
-      int newIdx1 = Math.min(p1 + half, l1) - 1, newIdx2 = Math.min(p2 + half, l2) - 1;
-      int num1 = nums1[newIdx1], num2 = nums2[newIdx2];
-      // 去重2
-      if (num1 <= num2) {
-        curRanking -= (newIdx1 - p1 + 1);
-        p1 = newIdx1 + 1;
+    int p1 = 0, p2 = 0, ranking = k;
+    while (p1 < l1 && p2 < l2 && ranking > 1) {
+      int half = ranking / 2,
+          newP1 = Math.min(p1 + half, l1) - 1,
+          newP2 = Math.min(p2 + half, l2) - 1;
+      int n1 = nums1[newP1], n2 = nums2[newP2];
+      // 去重
+      if (n1 <= n2) {
+        ranking -= (newP1 - p1 + 1);
+        p1 = newP1 + 1;
       } else {
-        curRanking -= (newIdx2 - p2 + 1);
-        p2 = newIdx2 + 1;
+        ranking -= (newP2 - p2 + 1);
+        p2 = newP2 + 1;
       }
     }
+    // 去重
+    if (p1 == l1) return nums2[p2 + ranking - 1];
+    if (p2 == l2) return nums1[p1 + ranking - 1];
+    return Math.min(nums1[p1], nums2[p2]);
   }
 
   // 尾递归
@@ -665,14 +664,14 @@ class DichotomyClassic extends DefaultArray {
   private int getkSmallElement2(
       int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
     if (k == 1) return Math.min(nums1[lo1], nums2[lo2]);
-    int len1 = hi1 - lo1 + 1, len2 = hi2 - lo2 + 1;
+    int l1 = hi1 - lo1 + 1, l2 = hi2 - lo2 + 1;
     // 让 len1 的长度小于 len2，这样就能保证如果有数组空了，一定是 len1
-    if (len1 > len2) {
+    if (l1 > l2) {
       return getkSmallElement2(nums2, lo2, hi2, nums1, lo1, hi1, k);
-    } else if (len1 == 0) {
+    } else if (l1 == 0) {
       return nums2[lo2 + k - 1];
     }
-    int p1 = lo1 + Math.min(len1, k / 2) - 1, p2 = lo2 + Math.min(len2, k / 2) - 1;
+    int p1 = lo1 + Math.min(l1, k / 2) - 1, p2 = lo2 + Math.min(l2, k / 2) - 1;
     return (nums1[p1] > nums2[p2])
         ? getkSmallElement2(nums1, lo1, hi1, nums2, p2 + 1, hi2, k - (p2 - lo2 + 1))
         : getkSmallElement2(nums1, p1 + 1, hi1, nums2, lo2, hi2, k - (p1 - lo1 + 1));
@@ -784,8 +783,8 @@ class DichotomyClassic extends DefaultArray {
     while (lo < hi) {
       int mid = (lo + hi) / 2;
       if (nums[mid] < nums[hi]) hi = mid;
-      else if (nums[mid] > nums[hi]) lo = mid + 1;
-      else hi -= 1; // 比上方多的一个判断
+      else if (nums[mid] == nums[hi]) hi -= 1; // 比上方多的一个判断
+      else lo = mid + 1;
     }
     return nums[lo];
   }
@@ -845,6 +844,7 @@ class DichotomyClassic extends DefaultArray {
       if (mountainArr.get(mid) < mountainArr.get(mid + 1)) lo = mid + 1;
       else hi = mid;
     }
+    // 模板同上「二分查找」最终需要检查左边界合法性
     int peak = lo, idx = search(mountainArr, target, 0, peak, true);
     return idx != -1 ? idx : search(mountainArr, target, peak + 1, mountainArr.length() - 1, false);
   }
@@ -874,7 +874,7 @@ class DichotomyElse extends DefaultArray {
    */
   public boolean searchMatrix(int[][] matrix, int target) {
     int y = 0, x = matrix[0].length - 1;
-    while (y < matrix.length && x >= 0) {
+    while (-1 < x && y < matrix.length) {
       if (matrix[y][x] < target) y += 1;
       else if (matrix[y][x] == target) return true;
       else if (matrix[y][x] > target) x -= 1;
@@ -935,8 +935,8 @@ class DichotomyElse extends DefaultArray {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      if (mid % 2 == 0 && nums[mid] == nums[mid + 1])
-        lo = mid + 2; // 移除中心元素后，其右侧的数量为奇数，如 1144 5 5688
+      // 移除中心元素后，其右侧的数量为奇数，如 1144 5 5688
+      if (mid % 2 == 0 && nums[mid] == nums[mid + 1]) lo = mid + 2;
       else if (mid % 2 == 1 && nums[mid] == nums[mid - 1]) lo = mid + 1; // 同上，但如 11445 5 66899
       else hi = mid; // 取中心值时会向下取整，如 11455 6 68899 & 1145 5 6688
     }
@@ -1092,7 +1092,7 @@ class SSum extends DefaultArray {
    */
 }
 
-/** 以下均为前缀和，适合区间和满足 target，和严格相等则需要哈希，否则搭配滑窗 */
+/** 以下均为前缀和，适合区间和满足 target，严格相等搭配哈希，否则搭配滑窗 */
 class Presum {
   /**
    * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
@@ -1519,10 +1519,8 @@ class Delete extends DefaultArray {
     final int target = 0, k = 0; // diff 1
     int lo = 0;
     for (int hi = 0; hi < nums.length; hi++) {
-      //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3) {
-      if (lo >= k && target == nums[hi]) {
-        continue;
-      }
+      //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3)
+      if (lo >= k && target == nums[hi]) continue;
       swap(nums, lo, hi); // diff 2
       lo += 1;
     }
@@ -1587,9 +1585,8 @@ class Delete extends DefaultArray {
   public String removeDuplicates(String s) {
     StringBuilder stack = new StringBuilder();
     int stackTop = -1;
-    for (int hi = 0; hi < s.length(); hi++) {
-      char ch = s.charAt(hi);
-      if (stackTop >= 0 && stack.charAt(stackTop) == ch) {
+    for (char ch : s.toCharArray()) {
+      if (0 <= stackTop && stack.charAt(stackTop) == ch) {
         stack.deleteCharAt(stackTop);
         stackTop -= 1;
       } else {
@@ -1911,11 +1908,11 @@ class DicOrder extends DefaultArray {
     for (String str : strs) {
       res.append(str);
     }
-    int begin = 0;
-    while (begin < nums.length - 1 && res.charAt(begin) == '0') {
-      begin += 1;
+    int start = 0;
+    while (start < nums.length - 1 && res.charAt(start) == '0') {
+      start += 1;
     }
-    return res.substring(begin);
+    return res.substring(start);
   }
 
   /**
@@ -1931,8 +1928,8 @@ class DicOrder extends DefaultArray {
     while (count < k) {
       // 当前 prefix 峰的值
       int curCount = count(n, prefix);
-      // 本层，往下层遍历，一直遍历到第 K 个推出循环
       if (curCount + count > k) {
+        // 本层，往下层遍历，一直遍历到第 K 个推出循环
         prefix *= 10;
         count += 1;
       } else {

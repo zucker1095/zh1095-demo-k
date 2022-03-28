@@ -364,6 +364,144 @@ class OptimalSubSequence extends DichotomyClassic {
   }
 }
 
+/**
+ * 路径相关，其余如海岛类 & 最长递增路径，参考 TTree
+ *
+ * @author cenghui
+ */
+class OptimalPath {
+  /**
+   * 最小路径和，题设自然数
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/0/
+   *
+   * <p>dp[i][j] 表示 (0,0) to (i,j) 的最小路径和
+   *
+   * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
+   *
+   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历，参下 annotate
+   *
+   * <p>扩展2，存在负值点
+   *
+   * @param grid the grid
+   * @return int int
+   */
+  public int minPathSum(int[][] grid) {
+    int len = grid[0].length;
+    int[] dp = new int[len];
+    dp[0] = grid[0][0];
+    for (int i = 1; i < len; i++) {
+      dp[i] = dp[i - 1] + grid[0][i];
+    }
+    for (int i = 1; i < grid.length; i++) {
+      dp[0] += grid[i][0];
+      for (int j = 1; j < len; j++) {
+        dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
+      }
+    }
+    //    List<Integer> res = new ArrayList<>();
+    //    int i = grid.length - 1, j = grid[0].length - 1;
+    //    res.add(grid[i][j]);
+    //    int sum = dp[i][j];
+    //    while (i > 0 || j > 0) {
+    //      sum -= grid[i][j];
+    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
+    //        res.add(grid[i][j - 1]);
+    //        j -=1;
+    //      } else {
+    //        res.add(grid[i - 1][j]);
+    //        i -=1;
+    //      }
+    //    }
+    //    return res;
+    return dp[len - 1];
+  }
+
+  /**
+   * 三角形的最小路径和，bottom to up
+   *
+   * <p>dp[i][j] 表示由 triangle[0][0] 达到 triangle[i][j] 的最小路径长度
+   *
+   * @param triangle the triangle
+   * @return int int
+   */
+  public int minimumTotal(List<List<Integer>> triangle) {
+    int len = triangle.get(triangle.size() - 1).size();
+    int[] dp = new int[len + 1];
+    for (int i = len - 1; i >= 0; i--) {
+      for (int j = 0; j <= i; j++) {
+        dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
+      }
+    }
+    return dp[0];
+  }
+
+  /**
+   * 打家劫舍
+   *
+   * <p>dp[i] 表示 nums[0,i] 产生的最大金额
+   *
+   * <p>dp[i] = Math.max(dp[i-1], nums[i-1] + dp[i-2]);
+   *
+   * <p>扩展1，记录路径，参下 annotate
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int rob(int[] nums) {
+    return rob2(nums);
+  }
+
+  private int rob1(int[] nums) {
+    int pre = 0, cur = 0;
+    //    StringBuilder pathPre = new StringBuilder(), pathCur = new StringBuilder();
+    for (int num : nums) {
+      //      if (cur > pre + num) {
+      //        pathCur = new StringBuilder(pathPre.toString());
+      //        cur = cur;
+      //      } else {
+      //        String tmp1 = pathPre.toString();
+      //        pathPre = new StringBuilder(pathCur.toString()).append(num);
+      //        pathCur = new StringBuilder(tmp1);
+      //        int tmp2 = Math.max(cur, pre + num);
+      //        pre = cur;
+      //        cur = tmp2;
+      //      }
+      int tmp2 = Math.max(cur, pre + num);
+      pre = cur;
+      cur = tmp2;
+    }
+    return cur;
+  }
+
+  private int rob2(int[] nums) {
+    if (nums.length < 2) return nums[0];
+    return Math.max(
+        rob1(Arrays.copyOfRange(nums, 0, nums.length - 1)),
+        rob1(Arrays.copyOfRange(nums, 1, nums.length)));
+  }
+
+  /**
+   * 打家劫舍III，树状，后序遍历，两种选择，遍历与否当前点
+   *
+   * @param root the root
+   * @return int int
+   */
+  public int rob(TreeNode root) {
+    int[] res = dfs11(root);
+    return Math.max(res[0], res[1]);
+  }
+
+  private int[] dfs11(TreeNode root) {
+    if (root == null) return new int[2];
+    int[] left = dfs11(root.left), right = dfs11(root.right);
+    int cur = left[0] + right[0] + root.val;
+    int nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
+    return new int[] {nxt, cur};
+  }
+}
+
 /** 最优解，状态压缩 & 双指针 */
 class OptimalElse {
   /**
@@ -627,237 +765,6 @@ class OptimalElse {
 }
 
 /**
- * 路径相关，其余如海岛类 & 最长递增路径，参考 TTree
- *
- * @author cenghui
- */
-class OptimalPath {
-  /**
-   * 最小路径和，题设自然数
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/0/
-   *
-   * <p>dp[i][j] 表示 (0,0) to (i,j) 的最小路径和
-   *
-   * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
-   *
-   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历，参下 annotate
-   *
-   * <p>扩展2，存在负值点
-   *
-   * @param grid the grid
-   * @return int int
-   */
-  public int minPathSum(int[][] grid) {
-    int len = grid[0].length;
-    int[] dp = new int[len];
-    dp[0] = grid[0][0];
-    for (int i = 1; i < len; i++) {
-      dp[i] = dp[i - 1] + grid[0][i];
-    }
-    for (int i = 1; i < grid.length; i++) {
-      dp[0] += grid[i][0];
-      for (int j = 1; j < len; j++) {
-        dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
-      }
-    }
-    //    List<Integer> res = new ArrayList<>();
-    //    int i = grid.length - 1, j = grid[0].length - 1;
-    //    res.add(grid[i][j]);
-    //    int sum = dp[i][j];
-    //    while (i > 0 || j > 0) {
-    //      sum -= grid[i][j];
-    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
-    //        res.add(grid[i][j - 1]);
-    //        j -=1;
-    //      } else {
-    //        res.add(grid[i - 1][j]);
-    //        i -=1;
-    //      }
-    //    }
-    //    return res;
-    return dp[len - 1];
-  }
-
-  /**
-   * 三角形的最小路径和，bottom to up
-   *
-   * <p>dp[i][j] 表示由 triangle[0][0] 达到 triangle[i][j] 的最小路径长度
-   *
-   * @param triangle the triangle
-   * @return int int
-   */
-  public int minimumTotal(List<List<Integer>> triangle) {
-    int len = triangle.get(triangle.size() - 1).size();
-    int[] dp = new int[len + 1];
-    for (int i = len - 1; i >= 0; i--) {
-      for (int j = 0; j <= i; j++) {
-        dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
-      }
-    }
-    return dp[0];
-  }
-
-  /**
-   * 打家劫舍
-   *
-   * <p>dp[i] 表示 nums[0,i] 产生的最大金额
-   *
-   * <p>dp[i] = Math.max(dp[i-1], nums[i-1] + dp[i-2]);
-   *
-   * <p>扩展1，记录路径，参下 annotate
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int rob(int[] nums) {
-    return rob2(nums);
-  }
-
-  private int rob1(int[] nums) {
-    int pre = 0, cur = 0;
-    //    StringBuilder pathPre = new StringBuilder(), pathCur = new StringBuilder();
-    for (int num : nums) {
-      //      if (cur > pre + num) {
-      //        pathCur = new StringBuilder(pathPre.toString());
-      //        cur = cur;
-      //      } else {
-      //        String tmp1 = pathPre.toString();
-      //        pathPre = new StringBuilder(pathCur.toString()).append(num);
-      //        pathCur = new StringBuilder(tmp1);
-      //        int tmp2 = Math.max(cur, pre + num);
-      //        pre = cur;
-      //        cur = tmp2;
-      //      }
-      int tmp2 = Math.max(cur, pre + num);
-      pre = cur;
-      cur = tmp2;
-    }
-    return cur;
-  }
-
-  private int rob2(int[] nums) {
-    if (nums.length < 2) return nums[0];
-    return Math.max(
-        rob1(Arrays.copyOfRange(nums, 0, nums.length - 1)),
-        rob1(Arrays.copyOfRange(nums, 1, nums.length)));
-  }
-
-  /**
-   * 打家劫舍III，树状，后序遍历，两种选择，遍历与否当前点
-   *
-   * @param root the root
-   * @return int int
-   */
-  public int rob(TreeNode root) {
-    int[] res = dfs11(root);
-    return Math.max(res[0], res[1]);
-  }
-
-  private int[] dfs11(TreeNode root) {
-    if (root == null) return new int[2];
-    int[] left = dfs11(root.left), right = dfs11(root.right);
-    int cur = left[0] + right[0] + root.val;
-    int nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
-    return new int[] {nxt, cur};
-  }
-}
-
-/** 收集矩形相关，矩阵参下路径 */
-class OptimalRectangle {
-  /**
-   * 最大正方形，找到只包含 1 的最大正方形
-   *
-   * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
-   *
-   * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
-   *
-   * @param matrix the matrix
-   * @return int int
-   */
-  public int maximalSquare(char[][] matrix) {
-    // 特判
-    if (matrix == null || matrix.length < 1 || matrix[0].length < 1) {
-      return 0;
-    }
-    int maxSide = 0;
-    // 相当于已经预处理新增第一行、第一列均为0
-    int[] dp = new int[matrix[0].length + 1];
-    int northwest = 0;
-    for (char[] chs : matrix) {
-      northwest = 0; // 遍历每行时，还原回辅助的原值0
-      for (int col = 0; col < matrix[0].length; col++) {
-        int nextNorthwest = dp[col + 1];
-        if (chs[col] == '1') {
-          dp[col + 1] = Math.min(Math.min(dp[col], dp[col + 1]), northwest) + 1;
-          // maxSide = max(maxSide, dp[row+1][col+1]);
-          maxSide = Math.max(maxSide, dp[col + 1]);
-        } else {
-          dp[col + 1] = 0;
-        }
-        northwest = nextNorthwest;
-      }
-    }
-    return maxSide * maxSide;
-  }
-
-  /**
-   * 柱状图中最大的矩形
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
-   *
-   * @param heights
-   * @return
-   */
-  public int largestRectangleArea(int[] heights) {
-    int maxArea = 0;
-    Deque<Integer> stack = new ArrayDeque<>();
-    int[] newHeights = new int[heights.length + 2];
-    for (int i = 1; i < heights.length + 1; i++) {
-      newHeights[i] = heights[i - 1];
-    }
-    for (int i = 0; i < newHeights.length; i++) {
-      while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
-        int cur = stack.pollLast(), pre = stack.peekLast();
-        maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
-      }
-      stack.offerLast(i);
-    }
-    return maxArea;
-  }
-
-  /**
-   * 最大矩形
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
-   *
-   * @param matrix
-   * @return
-   */
-  public int maximalRectangle(char[][] matrix) {
-    int maxArea = 0, row = matrix.length, col = matrix[0].length;
-    int[] newHeights = new int[col + 2];
-    for (int i = 0; i < row; i++) {
-      Deque<Integer> stack = new ArrayDeque<>();
-      for (int j = 0; j < col + 2; j++) {
-        if (j >= 1 && j <= col) {
-          newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
-        }
-        while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
-          int cur = stack.pollLast(), pre = stack.peekLast();
-          maxArea = Math.max(maxArea, (j - pre - 1) * newHeights[cur]);
-        }
-        stack.offerLast(j);
-      }
-    }
-    return maxArea;
-  }
-}
-
-/**
  * 统计
  *
  * <p>区分统计排列 & 组合的区别
@@ -1037,5 +944,98 @@ class CCount {
       pre = tmp;
     }
     return cur;
+  }
+}
+
+/** 收集矩形相关，矩阵参下路径 */
+class OptimalRectangle {
+  /**
+   * 最大正方形，找到只包含 1 的最大正方形
+   *
+   * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
+   *
+   * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
+   *
+   * @param matrix the matrix
+   * @return int int
+   */
+  public int maximalSquare(char[][] matrix) {
+    // 特判
+    if (matrix == null || matrix.length < 1 || matrix[0].length < 1) {
+      return 0;
+    }
+    int maxSide = 0;
+    // 相当于已经预处理新增第一行、第一列均为0
+    int[] dp = new int[matrix[0].length + 1];
+    int northwest = 0;
+    for (char[] chs : matrix) {
+      northwest = 0; // 遍历每行时，还原回辅助的原值0
+      for (int col = 0; col < matrix[0].length; col++) {
+        int nextNorthwest = dp[col + 1];
+        if (chs[col] == '1') {
+          dp[col + 1] = Math.min(Math.min(dp[col], dp[col + 1]), northwest) + 1;
+          // maxSide = max(maxSide, dp[row+1][col+1]);
+          maxSide = Math.max(maxSide, dp[col + 1]);
+        } else {
+          dp[col + 1] = 0;
+        }
+        northwest = nextNorthwest;
+      }
+    }
+    return maxSide * maxSide;
+  }
+
+  /**
+   * 柱状图中最大的矩形
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
+   *
+   * @param heights
+   * @return
+   */
+  public int largestRectangleArea(int[] heights) {
+    int maxArea = 0;
+    Deque<Integer> stack = new ArrayDeque<>();
+    int[] newHeights = new int[heights.length + 2];
+    for (int i = 1; i < heights.length + 1; i++) {
+      newHeights[i] = heights[i - 1];
+    }
+    for (int i = 0; i < newHeights.length; i++) {
+      while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
+        int cur = stack.pollLast(), pre = stack.peekLast();
+        maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
+      }
+      stack.offerLast(i);
+    }
+    return maxArea;
+  }
+
+  /**
+   * 最大矩形
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalRectangle(char[][] matrix) {
+    int maxArea = 0, row = matrix.length, col = matrix[0].length;
+    int[] newHeights = new int[col + 2];
+    for (int i = 0; i < row; i++) {
+      Deque<Integer> stack = new ArrayDeque<>();
+      for (int j = 0; j < col + 2; j++) {
+        if (j >= 1 && j <= col) {
+          newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
+        }
+        while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
+          int cur = stack.pollLast(), pre = stack.peekLast();
+          maxArea = Math.max(maxArea, (j - pre - 1) * newHeights[cur]);
+        }
+        stack.offerLast(j);
+      }
+    }
+    return maxArea;
   }
 }

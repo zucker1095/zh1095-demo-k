@@ -66,6 +66,7 @@ public class SString extends DefaultSString {
    * @return string string
    */
   public String multiply(String num1, String num2) {
+    final int base = 10;
     // 特判
     if (num1.equals("0") || num2.equals("0")) {
       return "0";
@@ -77,8 +78,8 @@ public class SString extends DefaultSString {
       for (int j = num2.length() - 1; j >= 0; j--) {
         int n2 = num2.charAt(j) - '0';
         int sum = res[i + j + 1] + n1 * n2;
-        res[i + j + 1] = sum % 10;
-        res[i + j] += sum / 10;
+        res[i + j + 1] = sum % base;
+        res[i + j] += sum / base;
       }
     }
     // 跳过前导零
@@ -89,6 +90,34 @@ public class SString extends DefaultSString {
       idx += 1;
     }
     return ans.toString();
+  }
+
+  /**
+   * 比较版本号，逐个区间计数
+   *
+   * @param version1 the version 1
+   * @param version2 the version 2
+   * @return int int
+   */
+  public int compareVersion(String version1, String version2) {
+    int l1 = version1.length(), l2 = version2.length();
+    int p1 = 0, p2 = 0;
+    while (p1 < l1 || p2 < l2) {
+      int n1 = 0, n2 = 0;
+      while (p1 < l1 && version1.charAt(p1) != '.') {
+        n1 = n1 * 10 + version1.charAt(p1) - '0';
+        p1 += 1;
+      }
+      // 跳过点号
+      p1 += 1;
+      while (p2 < l2 && version2.charAt(p2) != '.') {
+        n2 = n2 * 10 + version2.charAt(p2) - '0';
+        p2 += 1;
+      }
+      p2 += 1;
+      if (n1 != n2) return n1 > n2 ? 1 : -1;
+    }
+    return 0;
   }
 
   /**
@@ -109,34 +138,6 @@ public class SString extends DefaultSString {
       if (counter[ch - 'a'] == 1) return ch;
     }
     return ' ';
-  }
-
-  /**
-   * 比较版本号，逐个区间计数
-   *
-   * @param version1 the version 1
-   * @param version2 the version 2
-   * @return int int
-   */
-  public int compareVersion(String version1, String version2) {
-    int len1 = version1.length(), len2 = version2.length();
-    int p1 = 0, p2 = 0;
-    while (p1 < len1 || p2 < len2) {
-      int n1 = 0, n2 = 0;
-      while (p1 < len1 && version1.charAt(p1) != '.') {
-        n1 = n1 * 10 + version1.charAt(p1) - '0';
-        p1 += 1;
-      }
-      // 跳过点号
-      p1 += 1;
-      while (p2 < len2 && version2.charAt(p2) != '.') {
-        n2 = n2 * 10 + version2.charAt(p2) - '0';
-        p2 += 1;
-      }
-      p2 += 1;
-      if (n1 != n2) return n1 > n2 ? 1 : -1;
-    }
-    return 0;
   }
 }
 
@@ -160,9 +161,9 @@ class WWindow {
     int res = 1;
     int lo = 0, hi = 0;
     while (hi < s.length()) {
-      char in = s.charAt(hi);
-      window[in] += 1;
-      while (window[in] == 2) {
+      char add = s.charAt(hi);
+      window[add] += 1;
+      while (window[add] == 2) {
         char out = s.charAt(lo);
         window[out] -= 1;
         lo += 1;
@@ -174,7 +175,7 @@ class WWindow {
   }
 
   /**
-   * 最小覆盖字串，判断频率 & 计数 & 步进
+   * 最小覆盖字串，频率 & 计数 & 步进
    *
    * @param s main
    * @param t pattern
@@ -182,16 +183,16 @@ class WWindow {
    */
   public String minWindow(String s, String t) {
     // 遍历的指针与结果的始末
-    int lo = 0, hi = 0, start = 0, end = Integer.MAX_VALUE;
-    int counter = t.length();
+    int lo = 0, hi = 0;
+    int start = 0, end = Integer.MAX_VALUE, counter = t.length();
     int[] needle = new int[128];
     for (char ch : t.toCharArray()) {
       needle[ch] += 1;
     }
     while (hi < s.length()) {
-      char in = s.charAt(hi);
-      if (needle[in] > 0) counter -= 1;
-      needle[in] -= 1;
+      char add = s.charAt(hi);
+      if (needle[add] > 0) counter -= 1;
+      needle[add] -= 1;
       hi += 1;
       while (counter == 0) {
         if (end - start > hi - lo) {
@@ -216,7 +217,7 @@ class WWindow {
    */
   public int lengthOfLongestSubstringKDistinct(String s, int k) {
     int lo = 0, hi = 0;
-    int res = 0, counter = k;
+    int maxLen = 0, counter = k;
     int[] window = new int[128];
     while (hi < s.length()) {
       char add = s.charAt(hi);
@@ -229,9 +230,9 @@ class WWindow {
         window[out] -= 1;
         lo += 1;
       }
-      res = Math.max(res, hi - lo + 1);
+      maxLen = Math.max(maxLen, hi - lo + 1);
     }
-    return res;
+    return maxLen;
   }
 
   /**
@@ -279,15 +280,13 @@ class WWindow {
       counter[s.charAt(i)] += 1;
     }
     for (int ch : counter) {
-      if (counter[ch] >= k) {
-        continue;
-      }
+      if (counter[ch] >= k) continue;
       // 找到次数少于 k 的字符串，则切分为多个小段分治
-      int res = 0;
+      int count = 0;
       for (String seg : s.split(String.valueOf(ch))) {
-        res = Math.max(res, longestSubstring(seg, k));
+        count = Math.max(count, longestSubstring(seg, k));
       }
-      return res;
+      return count;
     }
     // 原字符串没有小于 k 的字符串
     return s.length();
@@ -475,34 +474,44 @@ class SStack {
   /**
    * 判断两个字符串是否含义一致，二者只包含 (,),+,-,a-z 且保证字母不会连续，即合法的多元一次表达式
    *
-   * <p>只有加减与括号，则展开括号并单栈暂存运算符即可，代码模板参下「字符串解码」
+   * <p>只有加减与括号，则展开括号并单栈暂存运算符即可，代码模板参下「基本计算器II」
    *
-   * <p>思路参考「基本计算器」https://leetcode-cn.com/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-wo-yao-chu-qu-luan-nae94/
+   * <p>参考
+   * https://leetcode-cn.com/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-wo-yao-chu-qu-luan-nae94/
    *
    * @return
    */
   public boolean isSame(String s1, String s2) {
-    int[] count1 = countLetter(s1), count2 = countLetter(s2);
+    int[] counter1 = countLetter(s1), counter2 = countLetter(s2);
     for (int i = 0; i < 26; i++) {
-      if (count1[i] != count2[i]) return false;
+      if (counter1[i] != counter2[i]) return false;
     }
     return true;
   }
 
   private int[] countLetter(String s) {
-    int[] curCounter = new int[26];
-    int curSign = 1;
+    int[] counter = new int[26];
+    int sign = 1;
     Deque<Integer> opStack = new ArrayDeque<>();
-    opStack.addLast(1);
+    opStack.offerLast(sign);
     for (char ch : s.toCharArray()) {
       ch = Character.toLowerCase(ch);
-      if ('a' <= ch && ch <= 'z') curCounter[ch - 'a'] += curSign == 1 ? 1 : -1;
-      else if (ch == '+') curSign = opStack.getLast();
-      else if (ch == '-') curSign = -opStack.getLast();
-      else if (ch == '(') opStack.addLast(curSign);
-      else if (ch == ')') opStack.removeLast();
+      if ('a' <= ch && ch <= 'z') counter[ch - 'a'] += sign;
+      else if (ch == '(') opStack.offerLast(sign);
+      else if (ch == ')') opStack.pollLast();
+      else if (ch == '+') sign = opStack.peekLast();
+      else if (ch == '-') sign = -opStack.peekLast();
+      // 基本计算器II
+      //      else {
+      //        while (i < n && Character.isDigit(s.charAt(i))) {
+      //          long num = 0;
+      //          num = num * 10 + s.charAt(i) - '0';
+      //          i++;
+      //        }
+      //        res += sign * num;
+      //      }
     }
-    return curCounter;
+    return counter;
   }
 
   /**
@@ -601,9 +610,9 @@ class SSubString {
    * @return string string
    */
   public String longestCommonPrefix(String[] strs) {
-    // 需要特判
     if (strs.length == 0) return "";
     int count = strs.length;
+    // 需要特判
     for (int i = 0; i < strs[0].length(); i++) {
       char pivot = strs[0].charAt(i);
       for (int j = 1; j < count; j++) {
@@ -622,7 +631,6 @@ class SSubString {
    * @return the string
    */
   public String longestPalindrome(String s) {
-    if (s == null || s.length() < 1) return "";
     int lo = 0, hi = 0;
     for (int i = 0; i < s.length(); i++) {
       int odd = findLongestPalindrome(s, i, i), even = findLongestPalindrome(s, i, i + 1);
@@ -637,7 +645,7 @@ class SSubString {
 
   // 分别从 lo & hi 扩散，直到二者所在字符不同
   private int findLongestPalindrome(String s, int lo, int hi) {
-    while (lo > -1 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
+    while (-1 < lo && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
       lo -= 1;
       hi += 1;
     }
@@ -777,20 +785,21 @@ class CConvert {
   public int myAtoi(String s) {
     int idx = 0, res = 0;
     boolean isNegative = false;
+
     while (idx < s.length() && s.charAt(idx) == ' ') {
       idx += 1;
     }
     if (idx == s.length()) return 0;
+
     if (s.charAt(idx) == '-') isNegative = true;
-    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
+    else if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
+
     for (int i = idx; i < s.length(); i++) {
       char ch = s.charAt(i);
       if (ch < '0' || ch > '9') break;
       int pre = res;
       res = res * 10 + (ch - '0');
-      if (pre != res / 10) {
-        return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-      }
+      if (pre != res / 10) return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
     }
     return res * (isNegative ? -1 : 1);
   }
@@ -836,8 +845,8 @@ class CConvert {
    */
   public String toHex(int num) {
     if (num == 0) return "0";
-    long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
     StringBuilder res = new StringBuilder();
+    long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
     while (cur != 0) {
       res.append(HEX_CHAR.charAt((int) (cur % 16)));
       cur /= 16;
@@ -881,13 +890,13 @@ class CConvert {
             put('M', 1000);
           }
         };
-    int res = 0;
+    int num = 0;
     for (int i = 0; i < s.length(); i++) {
       int cur = mark.get(s.charAt(i)), nxt = mark.get(s.charAt(i + 1));
-      if (i < s.length() - 1 && cur < nxt) res -= cur;
-      else res += cur;
+      if (i < s.length() - 1 && cur < nxt) num -= cur;
+      else num += cur;
     }
-    return res;
+    return num;
   }
 
   /**
@@ -902,15 +911,15 @@ class CConvert {
     // 如果是哈希，保证 key 的遍历有序即可
     final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
     final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
-    StringBuilder res = new StringBuilder();
+    StringBuilder roman = new StringBuilder();
     int cur = num;
     for (int i = 0; i < NUMs.length; i++) {
       while (cur >= NUMs[i]) {
-        res.append(ROMANs[i]);
+        roman.append(ROMANs[i]);
         cur -= NUMs[i];
       }
     }
-    return res.toString();
+    return roman.toString();
   }
 
   /**
@@ -952,7 +961,7 @@ class CConvert {
 /** 子串相关，单词搜索参考 TTree */
 class WWord extends DefaultSString {
   /**
-   * 翻转字符串里的单词，对于 Java 不可能实现实际的 O(1) space，因此要求 s 原地即可
+   * 翻转字符串里的单词，Java 无法实现 O(1) space，因此要求 s 原地即可
    *
    * <p>去空格 & 整串翻转 & 逐个翻转
    *
@@ -960,19 +969,19 @@ class WWord extends DefaultSString {
    * @return string string
    */
   public String reverseWords(String s) {
-    StringBuilder res = trimSpaces(s);
-    reverse(res, 0, res.length() - 1);
+    StringBuilder str = trimSpaces(s);
+    reverse(str, 0, str.length() - 1);
     int lo = 0, hi = 0;
     // 循环至单词的末尾 & 翻转单词 & 步进
-    while (lo < res.length()) {
-      while (hi < res.length() && res.charAt(hi) != ' ') {
+    while (lo < str.length()) {
+      while (hi < str.length() && str.charAt(hi) != ' ') {
         hi += 1;
       }
-      reverse(res, lo, hi - 1);
+      reverse(str, lo, hi - 1);
       lo = hi + 1;
       hi += 1;
     }
-    return res.toString();
+    return str.toString();
   }
 
   // 去除字符首尾空格，并只保留单词间一个空格
@@ -984,15 +993,15 @@ class WWord extends DefaultSString {
     while (lo <= hi && s.charAt(hi) == ' ') {
       hi -= 1;
     }
-    StringBuilder res = new StringBuilder();
+    StringBuilder str = new StringBuilder();
     while (lo <= hi) {
       char ch = s.charAt(lo);
-      if (ch != ' ' || res.charAt(res.length() - 1) != ' ') {
-        res.append(ch);
+      if (ch != ' ' || str.charAt(str.length() - 1) != ' ') {
+        str.append(ch);
       }
       lo += 1;
     }
-    return res;
+    return str;
   }
 
   /**
