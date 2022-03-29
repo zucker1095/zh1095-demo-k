@@ -388,9 +388,7 @@ class SStack {
    *
    * <p>维护未匹配的左括号数量可能的上下界，尽可能保证其合法，遍历结束时，所有的左括号都应和右括号匹配即下界为 0
    *
-   * <p>1.下界至少为0
-   *
-   * <p>2.上界不能为负
+   * <p>下界至少为0，且上界不能为负
    *
    * <p>参考
    * https://leetcode-cn.com/problems/valid-parenthesis-string/solution/gong-shui-san-xie-yi-ti-shuang-jie-dong-801rq/
@@ -450,25 +448,6 @@ class SStack {
       }
     }
     return curStr.toString();
-  }
-
-  /**
-   * 简化路径
-   *
-   * @param path
-   * @return
-   */
-  public String simplifyPath(String path) {
-    Deque<String> stack = new ArrayDeque<>();
-    for (String segment : path.split("/")) {
-      if (!stack.isEmpty() && segment.equals("..")) stack.pollLast();
-      else if (!" ..".contains(segment)) stack.offerLast(segment);
-    }
-    StringBuilder res = new StringBuilder();
-    for (String i : stack) {
-      res.append("/" + i);
-    }
-    return res.length() == 0 ? "/" : res.toString();
   }
 
   /**
@@ -598,6 +577,85 @@ class SStack {
     else if (op == '^') res = (int) Math.pow(pre, cur);
     else if (op == '%') res = pre % cur;
     numStack.addLast(res);
+  }
+
+  /**
+   * 简化路径
+   *
+   * @param path
+   * @return
+   */
+  public String simplifyPath(String path) {
+    Deque<String> stack = new ArrayDeque<>();
+    for (String segment : path.split("/")) {
+      if (segment.equals("..") && !stack.isEmpty()) stack.pollLast();
+      else if (!" ..".contains(segment)) stack.offerLast(segment);
+    }
+    StringBuilder res = new StringBuilder();
+    for (String str : stack) {
+      res.append("/" + str);
+    }
+    return res.length() == 0 ? "/" : res.toString();
+  }
+
+  /**
+   * 验证栈序列，贪心，原地模拟
+   *
+   * <p>将 pushed 队列中的每个数都 push 到栈中，同时检查这个数是不是 popped 序列中下一个要 pop 的值，如果是就把它 pop 出来。
+   *
+   * <p>最后，检查不是所有的该 pop 出来的值都是 pop
+   *
+   * <p>扩展1，入序列为 [1,n]，参下 annotate
+   *
+   * @param pushed
+   * @param popped
+   * @return
+   */
+  public boolean validateStackSequences(int[] pushed, int[] popped) {
+    int stackTop = 0, outIdx = 0;
+    //    for (int add = 0; i < N; i++) {
+    for (int add : pushed) {
+      pushed[stackTop] = add;
+      stackTop += 1;
+      while (stackTop != 0 && pushed[stackTop - 1] == popped[outIdx]) {
+        stackTop -= 1;
+        outIdx += 1;
+      }
+    }
+    return stackTop == 0;
+  }
+
+  /**
+   * 移除无效的括号
+   *
+   * <p>当遇到左括号时，确认栈中左括号数量 +1 <= 栈中右括号数量 + 尚未遍历的右括号数量
+   *
+   * <p>当遇到右括号时，确认栈中左括号数量 大于 栈中右括号数量
+   *
+   * @param s
+   * @return
+   */
+  public String minRemoveToMakeValid(String s) {
+    int unusedRight = 0;
+    char[] chs = s.toCharArray();
+    for (char ch : chs) {
+      if (ch == ')') unusedRight += 1;
+    }
+    // 原地重写
+    int write = 0, curLeft = 0, curRight = 0;
+    for (char ch : chs) {
+      if (ch == '(') {
+        if (curLeft + 1 > curRight + unusedRight) continue;
+        curLeft += 1;
+      } else if (ch == ')') {
+        unusedRight -= 1;
+        if (curLeft <= curRight) continue;
+        curRight += 1;
+      }
+      chs[write] = ch;
+      write += 1;
+    }
+    return String.valueOf(Arrays.copyOfRange(chs, 0, write));
   }
 }
 

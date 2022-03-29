@@ -192,10 +192,10 @@ class MMath {
    */
   public int mySqrt(int x) {
     if (x == 0) return 0;
-    double pre = x;
+    double pre = x, cur = 0;
     while (true) {
-      // 2*cur=pre+x/pre
-      double cur = 0.5 * (pre + x / pre);
+      // 2*cur = pre+x/pre
+      cur = (pre + x / pre) * 0.5;
       // 后 n 位此处定制
       if (Math.abs(pre - cur) < 1e-7) break;
       pre = cur;
@@ -799,8 +799,12 @@ class BBit {
    * <p>利用 int 固定为 32 bit，使用一个长度为 32 的数组 cnt[] 记录下所有数值的每一位共出现了多少次 1，再对 cnt[] 数组的每一位进行 mod 3
    * 操作，重新拼凑出只出现一次的数
    *
+   * <p>如果一个数字出现三次,那么它的二进制表示的每一位(0或者1)也出现三次。如果把所有出现三次的数字的二进制表示的每一位都分别加起来,那么每一位的和都能被3整除
+   *
+   * <p>如果某一位的和能被3整除,那么那个只出现一次的数字二进制表示中对应的那一位是0;否则就是1
+   *
    * <p>TODO 参考
-   * https://leetcode-cn.com/problems/single-number-ii/solution/gong-shui-san-xie-yi-ti-san-jie-ha-xi-bi-fku8/
+   * https://leetcode-cn.com/problems/shu-zu-zhong-shu-zi-chu-xian-de-ci-shu-ii-lcof/solution/javashi-xian-jian-zhi-si-lu-wei-yun-suan-zhu-wei-t/F
    *
    * <p>扩展1，有序数组，参考「有序数组中的单一元素」
    *
@@ -810,15 +814,21 @@ class BBit {
    * @return int int
    */
   public int singleNumber(int[] nums) {
-    int[] counter = new int[32];
+    if (nums.length < 1) return -1;
+    int[] bitSum = new int[32];
     for (int num : nums) {
-      for (int i = 0; i < 32; i++) {
-        if (((num >> i) & 1) == 1) counter[i] += 1;
+      int bitMask = 1;
+      // 首位为符号位
+      for (int i = 31; i >= 0; i--) {
+        if ((num & bitMask) != 0) bitSum[i] += 1;
+        bitMask <<= 1;
       }
     }
     int target = 0;
+    // 这种做法使得本算法同样适用于负数的情况
     for (int i = 0; i < 32; i++) {
-      if ((counter[i] % 3 & 1) == 1) target += (1 << i);
+      target += bitSum[i] % 3;
+      target <<= 1;
     }
     return target;
   }
@@ -832,12 +842,12 @@ class BBit {
    * @return int int
    */
   public int hammingWeight(int n) {
-    int res = 0;
+    int count = 0;
     while (n != 0) {
-      res += n & 1;
+      count += n & 1;
       n >>>= 1;
     }
-    return res;
+    return count;
   }
 }
 

@@ -408,11 +408,11 @@ class DDFS {
    * @return list list
    */
   public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    // 首先把树分为两棵，分别以目标结点及其父结点为根
+    // 1.把树分为两棵，分别以目标结点及其父结点为根
     dfs4(null, root, target);
-    // 搜索以目标结点为根的中树深度为 k 的结点
+    // 2.以目标结点为根的中树深度为 k 的结点
     collect(target, k);
-    // 搜索以目标结点父为根的树，、深度为 k-1 的结点
+    // 3.以目标结点父为根的树，、深度为 k-1 的结点
     collect(parent, k - 1);
     return res5;
   }
@@ -585,12 +585,12 @@ class BBSTInorder {
   /**
    * 二叉搜索树迭代器
    *
-   * <p>参考
-   * https://leetcode-cn.com/problems/binary-search-tree-iterator/solution/fu-xue-ming-zhu-dan-diao-zhan-die-dai-la-dkrm/
-   *
    * <p>均摊复杂度是 O(1)，调用 next()，如果栈顶元素有右子树，则把所有右边结点即其所有左孩子全部放到了栈中，下次调用 next() 直接访问栈顶
    *
    * <p>空间复杂度 O(h)，h 为数的高度，因为栈中只保留了左结点，栈中元素最多时，即树高
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/binary-search-tree-iterator/solution/fu-xue-ming-zhu-dan-diao-zhan-die-dai-la-dkrm/
    */
   public class BSTIterator {
     private final Deque<TreeNode> stack = new ArrayDeque<>();
@@ -614,13 +614,10 @@ class BBSTInorder {
      * @return the int
      */
     public int next() {
-      TreeNode cur = stack.pollLast();
-      if (cur.right != null) {
-        TreeNode nxt = cur.right;
-        while (nxt != null) {
-          stack.offerLast(nxt);
-          nxt = nxt.left;
-        }
+      TreeNode cur = stack.pollLast(), nxt = cur.right;
+      while (nxt != null) {
+        stack.offerLast(nxt);
+        nxt = nxt.left;
       }
       return cur.val;
     }
@@ -749,10 +746,10 @@ class BBSTDFS {
 class Postorder {
   // 「二叉树的最大路径和」
   private int maxSum = Integer.MIN_VALUE;
+  // 「二叉树中的最大路径和」follow up 需要输出的路径
+  private String maxPath;
   // 「二叉树的直径」
   private int curDiameter = 0;
-  // 「二叉树中的最大路径和」
-  private String maxPath;
 
   /**
    * 平衡二叉树，前序递归
@@ -854,10 +851,10 @@ class Postorder {
   /**
    * 不同的二叉搜索树II，后序遍历，固定左遍历右
    *
+   * <p>只返回总数参考「不同的二叉搜索树」
+   *
    * <p>参考
    * https://leetcode-cn.com/problems/unique-binary-search-trees-ii/solution/cong-gou-jian-dan-ke-shu-dao-gou-jian-suo-you-shu-/
-   *
-   * <p>只返回总数参考「不同的二叉搜索树」
    *
    * @param n the n
    * @return list
@@ -1142,7 +1139,7 @@ class MultiTrees {
   }
 
   /**
-   * 另一棵树的子树
+   * 另一棵树的子树 / 树的子结构
    *
    * <p>特判匹配树 & 主树为空两种情况，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
    *
@@ -1153,11 +1150,23 @@ class MultiTrees {
    * @return boolean boolean
    */
   public boolean isSubtree(TreeNode root, TreeNode subRoot) {
-    if (subRoot == null) return true;
-    if (root == null) return false;
-    return isSubtree(root.left, subRoot)
-        || isSubtree(root.right, subRoot)
-        || isSameTree(root, subRoot);
+    //    if (subRoot == null) return true;
+    //    if (root == null) return false;
+    //    return isSubtree(root.left, subRoot)
+    //        || isSubtree(root.right, subRoot)
+    //        || isSameTree(root, subRoot);
+    if (subRoot == null) return false;
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+      TreeNode curRoot = queue.poll();
+      if (curRoot.val == subRoot.val && isSameTree(curRoot, subRoot)) {
+        return true;
+      }
+      if (curRoot.left != null) queue.offer(curRoot.left);
+      if (curRoot.right != null) queue.offer(curRoot.right);
+    }
+    return false;
   }
 
   /**
@@ -1186,17 +1195,16 @@ class MultiTrees {
     queue.offer(p);
     queue.offer(q);
     while (!queue.isEmpty()) {
-      p = queue.poll();
-      q = queue.poll();
-      if (p == null && q == null) continue;
-      if (p == null || q == null || p.val != q.val) {
+      TreeNode n1 = queue.poll(), n2 = queue.poll();
+      if (n1 == null && n2 == null) continue;
+      if (n1 == null || n2 == null || n1.val != n2.val) {
         return false;
       }
       // 顺序
-      queue.offer(p.left);
-      queue.offer(q.left);
-      queue.offer(p.right);
-      queue.offer(q.right);
+      queue.offer(n1.left);
+      queue.offer(n2.left);
+      queue.offer(n1.right);
+      queue.offer(n2.right);
     }
     return true;
   }
@@ -1411,21 +1419,28 @@ class BacktrackingSearch extends DDFS {
    */
   public List<String> generateParenthesis(int n) {
     List<String> res = new ArrayList<>();
-    // 需要特判，否则入串
-    if (n <= 0) return res;
-    backtracking7(n, n, "", res);
+    // 需要特判
+    if (n > 0) backtracking7(n, n, new StringBuilder(), res);
     return res;
   }
 
-  // 此处的可选集为左右括号的剩余量，因为每次尝试，都使用新的字符串，所以无需显示回溯
-  private void backtracking7(int left, int right, String path, List<String> res) {
+  // 可选集为左右括号的剩余量
+  private void backtracking7(int left, int right, StringBuilder path, List<String> res) {
     if (left == 0 && right == 0) {
-      res.add(path);
+      res.add(path.toString());
       return;
     }
     if (left > right) return;
-    if (left > 0) backtracking7(left - 1, right, path + "(", res);
-    if (right > 0) backtracking7(left, right - 1, path + ")", res);
+    if (left > 0) {
+      path.append('(');
+      backtracking7(left - 1, right, path, res);
+      path.deleteCharAt(path.length() - 1);
+    }
+    if (right > 0) {
+      path.append(')');
+      backtracking7(left, right - 1, path, res);
+      path.deleteCharAt(path.length() - 1);
+    }
   }
 
   /**

@@ -405,6 +405,38 @@ class HHeap extends DefaultArray {
           : maxHeap.peek();
     }
   }
+
+  /**
+   * 数据流的第k大
+   *
+   * <p>小根堆
+   */
+  public class KthLargest {
+    // 创建一个小根堆
+    private final int[] heap;
+    private final int ranking;
+    int size = 0;
+
+    public KthLargest(int k, int[] nums) {
+      heap = new int[k];
+      ranking = k;
+      for (int i = 0; i < nums.length; i++) {
+        add(nums[i]);
+      }
+    }
+
+    public int add(int val) {
+      if (size < ranking) {
+        heap[size] = val;
+        swim(heap, size);
+        size += 1;
+      } else if (heap[0] < val) {
+        heap[0] = val;
+        sink(heap, 0, ranking - 1);
+      }
+      return heap[0];
+    }
+  }
 }
 
 /**
@@ -1186,8 +1218,8 @@ class Presum {
    * @return int int
    */
   public int minSubArrayLen(int target, int[] nums) {
-    int preSum = 0, minLen = nums.length + 1;
     int lo = 0, hi = 0;
+    int preSum = 0, minLen = nums.length + 1;
     while (hi < nums.length) {
       // in
       preSum += nums[hi];
