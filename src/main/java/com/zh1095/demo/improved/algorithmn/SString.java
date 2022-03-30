@@ -818,7 +818,7 @@ class SSubString {
         if (patternStr.charAt(i) == ch + 'a') nxt = i;
       }
     }
-    // 起始位置是空字符
+    // 起始位置空串
     int idx = 0;
     for (char ch : mainStr.toCharArray()) {
       idx = dp[idx][ch - 'a'];
@@ -850,7 +850,7 @@ class CConvert {
     if (idx == s.length()) return 0;
 
     if (s.charAt(idx) == '-') isNegative = true;
-    else if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
+    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
 
     for (int i = idx; i < s.length(); i++) {
       char ch = s.charAt(i);

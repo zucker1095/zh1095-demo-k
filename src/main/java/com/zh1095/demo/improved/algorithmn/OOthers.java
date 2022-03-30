@@ -736,13 +736,13 @@ class Digit {
    */
   public boolean isPalindrome(int x) {
     if (x < 0 || (x % 10 == 0 && x != 0)) return false;
-    // 左右部分
-    int lo = x, hi = 0;
-    while (lo > hi) {
-      hi = hi * 10 + lo % 10;
-      lo /= 10;
+    // 高低位
+    int high = x, low = 0;
+    while (high > low) {
+      low = low * 10 + high % 10;
+      high /= 10;
     }
-    return lo == hi || lo == hi / 10;
+    return high == low || high == low / 10;
   }
 }
 

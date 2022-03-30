@@ -925,6 +925,32 @@ class BBFS {
   }
 
   /**
+   * 二叉树的层序遍历II，选用链表
+   *
+   * @param root
+   * @return
+   */
+  public List<List<Integer>> levelOrderBottom(TreeNode root) {
+    List<List<Integer>> res = new LinkedList<List<Integer>>();
+    if (root == null) return res;
+    Queue<TreeNode> queue = new LinkedList<TreeNode>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+      List<Integer> curLevel = new ArrayList<Integer>();
+      for (int i = queue.size(); i > 0; i--) {
+        TreeNode cur = queue.poll();
+        curLevel.add(cur.val);
+        TreeNode left = cur.left, right = cur.right;
+        if (left != null) queue.offer(left);
+        if (right != null) queue.offer(right);
+      }
+      // 因此上方选用链表
+      res.add(0, curLevel);
+    }
+    return res;
+  }
+
+  /**
    * 二叉树的右视图
    *
    * @param root the root
@@ -1079,11 +1105,16 @@ class BBFS {
 /** 比对多棵树 */
 class MultiTrees {
   /**
-   * 二叉树的最近公共祖先，后序遍历
+   * 二叉树的最近公共祖先，结点互异，后序遍历 / 转换为相交链表
    *
    * <p>特判 & 剪枝，判断 p & q 均在左子树内 & 返回非空结点
    *
-   * <p>TODO 扩展1，n 叉树，先找到两条路径查找第一个相交的结点即可，如果用后序遍历需要把每个分支都写清楚是否为空比较麻烦
+   * <p>存储所有结点的父结点，然后通过结点的父结点从 p 结点开始不断往上跳，并记录已经访问过的结点，再从 q 结点开始不断往上跳，如果碰到已经访问过的结点，则为所求
+   *
+   * <p>扩展1，三个结点，设先对 n1 & n2 求 lca，再将 lca & n3 求即为结果
+   *
+   * <p>扩展2，n 叉树，参考
+   * http://www.oier.cc/%E6%B4%9B%E8%B0%B7p3379%E3%80%90%E6%A8%A1%E6%9D%BF%E3%80%91%E6%9C%80%E8%BF%91%E5%85%AC%E5%85%B1%E7%A5%96%E5%85%88%EF%BC%88lca%EF%BC%89/
    *
    * @param root the root
    * @param p the p
@@ -1177,8 +1208,11 @@ class MultiTrees {
    * @return boolean
    */
   public boolean flipEquiv(TreeNode root1, TreeNode root2) {
-    if (root1 == root2) return true;
+    // 1.相等
+    if (root1.equals(root2)) return true;
+    // 2.仅其一空或值不等
     if (root1 == null || root2 == null || root1.val != root2.val) return false;
+    // 3.同侧同时比较，再异侧
     return flipEquiv(root1.left, root2.left) && flipEquiv(root1.right, root2.right)
         || flipEquiv(root1.left, root2.right) && flipEquiv(root1.right, root2.left);
   }
