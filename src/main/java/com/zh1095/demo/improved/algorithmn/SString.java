@@ -430,8 +430,7 @@ class SStack {
     StringBuilder curStr = new StringBuilder();
     Deque<Integer> countStack = new ArrayDeque<>();
     Deque<String> strStack = new ArrayDeque<>();
-    for (int i = 0; i < s.length(); i++) {
-      char ch = s.charAt(i);
+    for (char ch : s.toCharArray()) {
       if (ch == '[') {
         countStack.addLast(curCount);
         strStack.addLast(curStr.toString());

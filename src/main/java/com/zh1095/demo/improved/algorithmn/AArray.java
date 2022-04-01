@@ -524,7 +524,6 @@ class MMerge extends DefaultArray {
    * @param hi the hi
    */
   public void mergeSort(int[] nums, int start, int end) {
-    if (nums.length < 2) return;
     divide1(nums, new int[nums.length], 0, nums.length - 1);
   }
 
@@ -573,13 +572,12 @@ class MMerge extends DefaultArray {
    * @return int int
    */
   public int reversePairs(int[] nums) {
-    if (nums.length < 2) return 0;
     divide2(nums, new int[nums.length], 0, nums.length - 1);
     return count;
   }
 
   private void divide2(int[] nums, int[] tmp, int start, int end) {
-    if (start == end) return;
+    if (start >= end) return;
     int mid = start + (end - start) / 2;
     divide2(nums, tmp, start, mid);
     divide2(nums, tmp, mid + 1, end);
@@ -1194,14 +1192,15 @@ class Presum {
   public int findMaxLength(int[] nums) {
     int preSum = 0, maxLen = 0;
     // 总和及其首次出现的下标
-    Map<Integer, Integer> idxBySum = new HashMap<>();
+    Map<Integer, Integer> firstIdxBySum = new HashMap<>();
     // 可能存在前缀和刚好满足条件的情况
-    idxBySum.put(0, -1);
+    firstIdxBySum.put(0, -1);
     for (int i = 0; i < nums.length; i++) {
       preSum += nums[i] == 0 ? -1 : 1;
       // 因为求的是最长的长度，只记录前缀和第一次出现的下标
-      if (idxBySum.containsKey(preSum)) maxLen = Math.max(maxLen, i - idxBySum.get(preSum));
-      else idxBySum.put(preSum, i);
+      if (firstIdxBySum.containsKey(preSum))
+        maxLen = Math.max(maxLen, i - firstIdxBySum.get(preSum));
+      else firstIdxBySum.put(preSum, i);
     }
     return maxLen;
   }
@@ -1507,7 +1506,7 @@ class DDuplicate extends DefaultArray {
   public int firstMissingPositive(int[] nums) {
     for (int i = 0; i < nums.length; i++) {
       // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
-      while (nums[i] > 0 && nums[i] <= nums.length && nums[i] != nums[nums[i] - 1]) {
+      while (0 < nums[i] && nums[i] <= nums.length && nums[i] != nums[nums[i] - 1]) {
         swap(nums, nums[i] - 1, i);
       }
     }
