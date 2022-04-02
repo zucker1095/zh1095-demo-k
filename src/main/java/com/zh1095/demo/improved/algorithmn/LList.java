@@ -461,7 +461,10 @@ class ReorderList extends LList {
   }
 
   /**
-   * 排序链表，建议掌握递归 up-to-bottom 即可
+   * 排序链表，建议掌握递归 up-to-bottom 即可，找中点 & 分割 & 分别排序 & 合并
+   *
+   * <p>bottom-to-up 参考
+   * https://leetcode-cn.com/problems/sort-list/solution/148-pai-xu-lian-biao-bottom-to-up-o1-kong-jian-by-/
    *
    * <p>扩展1，去重，参下 annotate
    *
@@ -469,11 +472,6 @@ class ReorderList extends LList {
    * @return list node
    */
   public ListNode sortList(ListNode head) {
-    return sortList1(head);
-  }
-
-  // 找中点 & 分割 & 分别排序 & 合并
-  private ListNode sortList1(ListNode head) {
     if (head == null || head.next == null) return head;
     ListNode lo = head, hi = head.next;
     while (hi != null && hi.next != null) {
@@ -482,50 +480,8 @@ class ReorderList extends LList {
     }
     ListNode l2Head = lo.next;
     lo.next = null;
-    ListNode l1 = sortList1(head), l2 = sortList1(l2Head);
+    ListNode l1 = sortList(head), l2 = sortList(l2Head);
     return mergeTwoLists(l1, l2);
-  }
-
-  private ListNode sortList2(ListNode head) {
-    ListNode dummy = new ListNode();
-    dummy.next = head;
-    int len = 0;
-    ListNode node = dummy.next;
-    while (node != null) {
-      len += 1;
-      node = node.next;
-    }
-    // 循环开始切割和合并
-    for (int size = 1; size < len; size /= 2) {
-      ListNode cur = dummy.next, tail = dummy;
-      while (cur != null) {
-        // 链表切掉 size 剩下的返还给 right
-        ListNode left = cur, right = cut(cur, size);
-        // 链表切掉 size 剩下的返还给 cur
-        cur = cut(right, size);
-        tail.next = mergeTwoLists(left, right);
-        // 保持最尾端
-        while (tail.next != null) {
-          tail = tail.next;
-        }
-      }
-    }
-    return dummy.next;
-  }
-
-  // 将链表切掉前 n 个节点，并返回后半部分的链表头
-  private ListNode cut(ListNode head, int n) {
-    if (n <= 0) return head;
-    ListNode cur = head;
-    // 往前走 n-1 步
-    while (n > 1 && cur != null) {
-      cur = cur.next;
-      n -= 1;
-    }
-    if (cur == null) return null;
-    ListNode nxt = cur.next;
-    cur.next = null;
-    return nxt;
   }
 
   // 链表快排，时间复杂度炸裂

@@ -19,14 +19,14 @@ public class OOthers {
    */
   public int canCompleteCircuit(int[] gas, int[] cost) {
     // 将问题转化为找最大子串的起始位置
-    int startIdx = 0, sumOfGas = 0, leftGas = 0;
+    int startIdx = 0, sumGas = 0, leftGas = 0;
     for (int i = 0; i < gas.length; i++) {
       int curLeft = gas[i] - cost[i];
       leftGas += curLeft;
-      if (sumOfGas > 0) {
-        sumOfGas += curLeft;
+      if (sumGas > 0) {
+        sumGas += curLeft;
       } else {
-        sumOfGas = curLeft;
+        sumGas = curLeft;
         startIdx = i;
       }
     }

@@ -1131,19 +1131,32 @@ class Presum {
    *
    * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
    *
-   * <p>扩展1，要求返回子数组，则添加始末指针，每当 curSum<=0 时更新
+   * <p>参考
+   * https://leetcode-cn.com/problems/maximum-subarray/solution/53zui-da-zi-xu-he-tan-xin-de-qian-zhui-h-aov9/
    *
-   * <p>扩展2，返回最大和的子序列
+   * <p>线段树，参考 education in codeforces
+   *
+   * <p>扩展1，要求返回子数组，则添加始末指针，参下
    *
    * @param nums the nums
    * @return int int
    */
   public int maxSubArray(int[] nums) {
     if (nums.length < 1) return 0;
-    int curSum = 0, maxSum = nums[0];
-    for (int num : nums) {
-      curSum = curSum > 0 ? curSum + num : num;
-      maxSum = Math.max(maxSum, curSum);
+    int presum = 0, maxSum = nums[0];
+    int start = 0, end = 0;
+    for (int i = 0; i < nums.length; i++) {
+      int num = nums[i];
+      if (presum + num > num) {
+        presum += num;
+      } else {
+        presum = num;
+        start = i;
+      }
+      if (presum > maxSum) {
+        maxSum = presum;
+        end = i;
+      }
     }
     return maxSum;
   }
@@ -2013,117 +2026,6 @@ class DicOrder extends DefaultArray {
    * @return int [ ]
    */
   //  public int[] maxNumber(int[] nums1, int[] nums2, int k) {}
-}
-
-/** 单调栈，用于找「下一个更大」场景，其余栈相关参考 SString */
-class MonotonicStack {
-  /**
-   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
-   *
-   * @param temperatures the t
-   * @return int [ ]
-   */
-  public int[] dailyTemperatures(int[] temperatures) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int[] res = new int[temperatures.length];
-    for (int i = 0; i < temperatures.length; i++) {
-      // 更新 res[pre] 直到满足其数字超过 temperatures[i]
-      while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
-        int preIdx = stack.removeLast();
-        res[preIdx] = i - preIdx;
-      }
-      stack.addLast(i);
-    }
-    return res;
-  }
-
-  /**
-   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
-   *
-   * @param nums the nums
-   * @return int [ ]
-   */
-  public int[] nextGreaterElements(int[] nums) {
-    Deque<Integer> stack = new ArrayDeque<>();
-    int len = nums.length;
-    int[] res = new int[len];
-    Arrays.fill(res, -1);
-    for (int i = 0; i < 2 * len; i++) {
-      while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()]) {
-        res[stack.removeLast()] = nums[i % len];
-      }
-      stack.addLast(i % len);
-    }
-    return res;
-  }
-
-  /**
-   * 移掉k位数字，字典序，单调栈，原地栈
-   *
-   * <p>特判移完
-   *
-   * <p>入栈
-   *
-   * @param num the num
-   * @param k the k
-   * @return string string
-   */
-  public String removeKdigits(String num, int k) {
-    if (num.length() == k) {
-      return "0";
-    }
-    StringBuilder stack = new StringBuilder();
-    for (int i = 0; i < num.length(); i++) {
-      char ch = num.charAt(i);
-      while (k > 0 && stack.length() != 0 && stack.charAt(stack.length() - 1) > ch) {
-        stack.deleteCharAt(stack.length() - 1);
-        k -= 1;
-      }
-      if (ch == '0' && stack.length() == 0) {
-        continue;
-      }
-      stack.append(ch);
-    }
-    // 判断是否移足 k 位
-    String res = stack.substring(0, Math.max(stack.length() - k, 0));
-    return res.length() == 0 ? "0" : res;
-  }
-
-  /**
-   * 去除重复字母 / 不同字符的最小子序列，且要求之后的整体字典序最小
-   *
-   * <p>greedy - 结果中第一个字母的字典序靠前的优先级最高
-   *
-   * <p>单调栈 - 每次贪心要找到一个当前最靠前的字母
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String removeDuplicateLetters(String s) {
-    if (s.length() < 2) return s;
-    Deque<Character> stack = new ArrayDeque<>(s.length());
-    // 栈内尚存的字母
-    boolean[] visited = new boolean[26];
-    // 记录每个字符出现的最后一个位置
-    int[] lastIdxs = new int[26];
-    for (int i = 0; i < s.length(); i++) {
-      lastIdxs[s.charAt(i) - 'a'] = i;
-    }
-    for (int i = 0; i < s.length(); i++) {
-      char cur = s.charAt(i);
-      if (visited[cur - 'a']) continue;
-      while (!stack.isEmpty() && cur < stack.getLast() && lastIdxs[stack.getLast() - 'a'] > i) {
-        visited[stack.removeLast() - 'a'] = false;
-      }
-      stack.addLast(cur);
-      visited[cur - 'a'] = true;
-    }
-    StringBuilder res = new StringBuilder();
-    for (char ch : stack) {
-      res.append(ch);
-    }
-    return res.toString();
-  }
 }
 
 /** 提供一些数组的通用方法 */

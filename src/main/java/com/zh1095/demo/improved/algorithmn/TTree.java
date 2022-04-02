@@ -286,7 +286,7 @@ class DDFS {
   protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
   // 「二叉树中所有距离为k的结点」结果集
   private final List<Integer> res5 = new ArrayList<>();
-  // 「二叉树中所有距离为k的结点」，目标结点的父
+  // 「二叉树中所有距离为k的结点」目标结点的父
   private TreeNode parent;
 
   /**
@@ -370,18 +370,16 @@ class DDFS {
    * @return int int
    */
   public int longestIncreasingPath(int[][] matrix) {
-    if (matrix == null || matrix.length == 0 || matrix[0].length == 0) {
-      return 0;
-    }
+    if (matrix.length == 0 || matrix[0].length == 0) return 0;
     int rows = matrix.length, cols = matrix[0].length;
     int[][] memo = new int[rows][cols];
-    int res = 0;
+    int maxLen = 0;
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < cols; j++) {
-        res = Math.max(res, dfs3(matrix, i, j, memo));
+        maxLen = Math.max(maxLen, dfs3(matrix, i, j, memo));
       }
     }
-    return res;
+    return maxLen;
   }
 
   private int dfs3(int[][] matrix, int r, int c, int[][] memo) {
@@ -418,19 +416,19 @@ class DDFS {
   }
 
   // 分割结点
-  private Boolean dfs4(TreeNode pre, TreeNode cur, TreeNode target) {
-    if (cur == null) return false;
+  private Boolean dfs4(TreeNode from, TreeNode to, TreeNode target) {
+    if (to == null) return false;
     // 如果搜到了目标结点，那么它父就是新树的根
-    if (cur == target) {
-      parent = pre;
+    if (to == target) {
+      parent = from;
       return true;
     }
-    if (dfs4(cur, cur.left, target)) {
-      cur.left = pre;
+    if (dfs4(to, to.left, target)) {
+      to.left = from;
       return true;
     }
-    if (dfs4(cur, cur.right, target)) {
-      cur.right = pre;
+    if (dfs4(to, to.right, target)) {
+      to.right = from;
       return true;
     }
     return false;
@@ -1248,6 +1246,8 @@ class MultiTrees {
  * <p>入参顺序为 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
  *
  * <p>按照子组列的顺序，建议按照表格记忆
+ *
+ * <p>剪枝必须做在进入回溯之前，如排序，或回溯选择分支之内，如分支选择非法而 break
  */
 class BacktrackingCombinatorics {
   /**

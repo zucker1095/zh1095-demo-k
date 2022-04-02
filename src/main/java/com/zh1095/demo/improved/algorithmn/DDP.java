@@ -45,20 +45,20 @@ class OptimalSubArray {
    * @return int int
    */
   public int findLength(int[] nums1, int[] nums2) {
-    int res = 0;
+    int maxLen = 0;
     // int[][] dp = new int[nums1.length + 1][nums2.length + 1];
     int[] dp = new int[nums2.length + 1];
     for (int i = 1; i <= nums1.length; i++) {
       for (int j = nums2.length; j >= 1; j--) {
         dp[j] = nums1[i - 1] == nums2[j - 1] ? dp[j - 1] + 1 : 0;
-        res = Math.max(res, dp[j]);
+        maxLen = Math.max(maxLen, dp[j]);
       }
       // for (int j = 1; j <= nums2.length; j++) {
       //   dp[i][j] = (nums1[i - 1] == nums2[j - 1]) ? dp[i - 1][j - 1] + 1 : 0;
       //   res = Math.max(res, dp[i][j]);
       //  }
     }
-    return res;
+    return maxLen;
   }
 
   /**
@@ -81,22 +81,22 @@ class OptimalSubArray {
    */
   public int findTargetSumWays(int[] nums, int target) {
     int sum = 0;
-    for (int i = 0; i < nums.length; i++) {
-      sum += nums[i];
+    for (int num : nums) {
+      sum += num;
     }
     if ((target + sum) % 2 != 0) return 0;
 
-    int capacity = (target + sum) / 2;
-    capacity = capacity < 0 ? -capacity : capacity;
+    int maxCapacity = (target + sum) / 2;
+    if (maxCapacity < 0) maxCapacity *= -1;
 
-    int[] dp = new int[capacity + 1];
+    int[] dp = new int[maxCapacity + 1];
     dp[0] = 1;
-    for (int i = 0; i < nums.length; i++) {
-      for (int j = capacity; j >= nums[i]; j--) {
-        dp[j] += dp[j - nums[i]];
+    for (int volume : nums) {
+      for (int capacity = maxCapacity; capacity >= volume; capacity--) {
+        dp[capacity] += dp[capacity - volume];
       }
     }
-    return dp[capacity];
+    return dp[maxCapacity];
   }
 
   /**
@@ -708,7 +708,7 @@ class OptimalElse {
    * @return the int
    */
   public int candy(int[] ratings) {
-    int res = 0;
+    int minCount = 0;
     int[] left = new int[ratings.length];
     for (int i = 0; i < ratings.length; i++) {
       //      if (i == 0 && ratings[0] > ratings[ratings.length - 1]) {
@@ -724,9 +724,9 @@ class OptimalElse {
       //        continue;
       //      }
       right = (i < ratings.length - 1 && ratings[i] > ratings[i + 1]) ? right + 1 : 1;
-      res += Math.max(left[i], right);
+      minCount += Math.max(left[i], right);
     }
-    return res;
+    return minCount;
   }
 
   /**
@@ -777,7 +777,10 @@ class CCount {
    *
    * <p>扩展1，不能爬到 7 倍数的楼层，参下 annotate
    *
-   * <p>扩展2，记录爬楼梯的路径，选用 dfs
+   * <p>扩展2，记录爬楼梯的路径，参下回溯
+   *
+   * <p>扩展3，爬 1 or 3 级，参考
+   * https://www.nowcoder.com/questionTerminal/1e6ac1a96c3149348aa9009709a36a6f?f=discussion
    *
    * @param n the n
    * @return int int
@@ -795,9 +798,18 @@ class CCount {
     return step2;
   }
 
-  private int dfs(int n, int[] memo) {
-    if (n == 0 || n == 1) return 1;
-    return memo[n] == 0 ? dfs(n - 1, memo) + dfs(n - 2, memo) : memo[n];
+  private void backtracking14(int floor, StringBuilder path, List<String> res) {
+    if (floor == 0) {
+      res.add(path.toString());
+      return;
+    }
+    for (int step = 1; step <= 2; step++) {
+      int nxtFloor = floor - step;
+      if (nxtFloor < 0) break;
+      path.append(nxtFloor);
+      backtracking14(nxtFloor, path, res);
+      path.deleteCharAt(path.length() - 1);
+    }
   }
 
   /**
