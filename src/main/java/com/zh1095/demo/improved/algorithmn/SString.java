@@ -158,7 +158,7 @@ class WWindow {
   public int lengthOfLongestSubstring(String s) {
     // ASCII 表总长 128
     int[] window = new int[128];
-    int res = 1;
+    int maxLen = 1;
     int lo = 0, hi = 0;
     while (hi < s.length()) {
       char add = s.charAt(hi);
@@ -168,10 +168,10 @@ class WWindow {
         window[out] -= 1;
         lo += 1;
       }
-      res = Math.max(res, hi - lo + 1);
+      maxLen = Math.max(maxLen, hi - lo + 1);
       hi += 1;
     }
-    return s.length() < 1 ? 0 : res;
+    return s.length() < 1 ? 0 : maxLen;
   }
 
   /**
@@ -264,9 +264,12 @@ class WWindow {
   }
 
   /**
-   * 至少有k个重复字符的最长子串，要求次数非种类，即每个字符均需要 k 次
+   * 至少有k个重复字符的最长子串，要求该子串中的每一字符出现次数都不少于 k，返回所有结果中最长的长度
    *
    * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
    *
    * @param s
    * @param k
@@ -275,18 +278,19 @@ class WWindow {
   public int longestSubstring(String s, int k) {
     // 特判
     if (s.length() < k) return 0;
-    int[] counter = new int[128];
-    for (int i = 0; i < s.length(); i++) {
-      counter[s.charAt(i)] += 1;
+    int[] counter = new int[26];
+    char[] chs = s.toCharArray();
+    for (char ch : chs) {
+      counter[ch - 'a'] += 1;
     }
-    for (int ch : counter) {
-      if (counter[ch] >= k) continue;
-      // 找到次数少于 k 的字符串，则切分为多个小段分治
-      int count = 0;
+    for (char ch : chs) {
+      if (counter[ch - 'a'] >= k) continue;
+      // 找到首个次数少于 k 的字符，则切分为多个小段分治
+      int maxLen = 0;
       for (String seg : s.split(String.valueOf(ch))) {
-        count = Math.max(count, longestSubstring(seg, k));
+        maxLen = Math.max(maxLen, longestSubstring(seg, k));
       }
-      return count;
+      return maxLen;
     }
     // 原字符串没有小于 k 的字符串
     return s.length();
@@ -1021,45 +1025,41 @@ class WWord extends DefaultSString {
   /**
    * 翻转字符串里的单词，Java 无法实现 O(1) space，因此要求 s 原地即可
    *
-   * <p>去空格 & 整串翻转 & 逐个翻转
+   * <p>扩展1，类似翻转 url，如 www.abc.com -> com.abc.www
    *
    * @param s the s
    * @return string string
    */
   public String reverseWords(String s) {
-    StringBuilder str = trimSpaces(s);
-    reverse(str, 0, str.length() - 1);
-    int lo = 0, hi = 0;
-    // 循环至单词的末尾 & 翻转单词 & 步进
-    while (lo < str.length()) {
-      while (hi < str.length() && str.charAt(hi) != ' ') {
-        hi += 1;
-      }
-      reverse(str, lo, hi - 1);
-      lo = hi + 1;
-      hi += 1;
-    }
-    return str.toString();
-  }
-
-  // 去除字符首尾空格，并只保留单词间一个空格
-  private StringBuilder trimSpaces(String s) {
-    int lo = 0, hi = s.length() - 1;
-    while (lo <= hi && s.charAt(lo) == ' ') {
+    char[] chs = s.toCharArray();
+    StringBuilder str = new StringBuilder();
+    int lo = 0, hi = chs.length - 1;
+    // 去除首尾空格
+    while (chs[lo] == ' ') {
       lo += 1;
     }
-    while (lo <= hi && s.charAt(hi) == ' ') {
+    while (chs[hi] == ' ') {
       hi -= 1;
     }
-    StringBuilder str = new StringBuilder();
+    // 开始循环
     while (lo <= hi) {
-      char ch = s.charAt(lo);
-      if (ch != ' ' || str.charAt(str.length() - 1) != ' ') {
-        str.append(ch);
+      // 从最右边开始
+      int start = hi;
+      // 遍历该单词
+      while (start >= lo && chs[start] != ' ') {
+        start -= 1;
       }
-      lo += 1;
+      str.append(Arrays.copyOfRange(chs, start + 1, hi + 1));
+      // 单词间插空
+      if (start > lo) str.append(' ');
+      // 跳过空格
+      while (start >= lo && chs[start] == ' ') {
+        start -= 1;
+      }
+      // 指针指向下一轮
+      hi = start;
     }
-    return str;
+    return str.toString();
   }
 
   /**
@@ -1075,13 +1075,15 @@ class WWord extends DefaultSString {
    */
   public boolean wordBreak(String s, List<String> wordDict) {
     boolean[] dp = new boolean[s.length() + 1];
-    Map<String, Boolean> hash = new HashMap<>(wordDict.size());
-    for (String word : wordDict) hash.put(word, true);
     dp[0] = true;
+    Map<String, Boolean> mark = new HashMap<>(wordDict.size());
+    for (String word : wordDict) {
+      mark.put(word, true);
+    }
     for (int i = 1; i <= s.length(); i++) {
       // [0<-i] O(n^2)
       for (int j = i - 1; j >= 0; j--) {
-        dp[i] = dp[j] && hash.getOrDefault(s.substring(j, i), false);
+        dp[i] = dp[j] && mark.getOrDefault(s.substring(j, i), false);
         if (dp[i]) break;
       }
     }
@@ -1218,24 +1220,19 @@ class MonotonicStack {
    * @return string string
    */
   public String removeKdigits(String num, int k) {
-    if (num.length() == k) {
-      return "0";
-    }
+    if (num.length() == k) return "0";
     StringBuilder stack = new StringBuilder();
-    for (int i = 0; i < num.length(); i++) {
-      char ch = num.charAt(i);
-      while (k > 0 && stack.length() != 0 && stack.charAt(stack.length() - 1) > ch) {
+    for (char ch : num.toCharArray()) {
+      while (stack.length() > 0 && k > 0 && stack.charAt(stack.length() - 1) > ch) {
         stack.deleteCharAt(stack.length() - 1);
         k -= 1;
       }
-      if (ch == '0' && stack.length() == 0) {
-        continue;
-      }
+      if (ch == '0' && stack.length() == 0) continue;
       stack.append(ch);
     }
-    // 判断是否移足 k 位
-    String res = stack.substring(0, Math.max(stack.length() - k, 0));
-    return res.length() == 0 ? "0" : res;
+    // 是否移足 k 位
+    String str = stack.substring(0, Math.max(stack.length() - k, 0));
+    return str.length() == 0 ? "0" : str;
   }
 
   /**

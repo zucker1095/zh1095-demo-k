@@ -134,21 +134,21 @@ public class LList {
    * @return
    */
   public int[] nextLargerNodes(ListNode head) {
-    List<Integer> res = new ArrayList<>();
+    List<Integer> nodes = new ArrayList<>();
     Deque<Integer> monotonousStack = new ArrayDeque<>();
     ListNode cur = head;
     while (cur != null) {
-      while (!monotonousStack.isEmpty() && cur.val > res.get(monotonousStack.peekLast())) {
-        res.set(monotonousStack.pollLast(), cur.val);
+      while (!monotonousStack.isEmpty() && cur.val > nodes.get(monotonousStack.peekLast())) {
+        nodes.set(monotonousStack.pollLast(), cur.val);
       }
-      monotonousStack.offerLast(res.size());
-      res.add(cur.val);
+      monotonousStack.offerLast(nodes.size());
+      nodes.add(cur.val);
       cur = cur.next;
     }
     for (int i : monotonousStack) {
-      res.set(i, 0);
+      nodes.set(i, 0);
     }
-    return res.stream().mapToInt(i -> i).toArray();
+    return nodes.stream().mapToInt(i -> i).toArray();
   }
 
   private class Node {
@@ -166,6 +166,16 @@ public class LList {
 
 /** 收集反转相关 */
 class ReverseList extends LList {
+  /**
+   * 两两交换链表中的节点，复用 reverseKGroup 即可
+   *
+   * @param head the head
+   * @return list node
+   */
+  public ListNode swapPairs(ListNode head) {
+    return reverseKGroup(head, 2);
+  }
+
   /**
    * k个一组反转链表，tail [first ... cur] nxt
    *
@@ -290,16 +300,6 @@ class ReverseList extends LList {
     cur.next = null;
     return newHead;
   }
-
-  /**
-   * 两两交换链表中的节点，复用 reverseKGroup 即可
-   *
-   * @param head the head
-   * @return list node
-   */
-  public ListNode swapPairs(ListNode head) {
-    return reverseKGroup(head, 2);
-  }
 }
 
 /** 收集合并相关 */
@@ -382,7 +382,6 @@ class MergeList extends LList {
               return n1.val - n2.val;
             });
     for (ListNode head : lists) {
-      if (head == null) continue;
       pq.offer(head);
     }
     ListNode dummy = new ListNode(), cur = dummy;
@@ -413,9 +412,7 @@ class ReorderList extends LList {
    * @return list node
    */
   public ListNode oddEvenList(ListNode head) {
-    if (head == null) {
-      return null;
-    }
+    if (head == null) return null;
     ListNode odd = head, even = head.next;
     ListNode evenHead = head.next;
     while (even != null && even.next != null) {
@@ -443,11 +440,9 @@ class ReorderList extends LList {
     return mergeTwoLists(oddHead, evenHead);
   }
 
-  // 代码与上方「奇偶链表」一致，但返回偶头
+  // 代码与「奇偶链表」一致，但返回偶头
   private ListNode _oddEvenList(ListNode head) {
-    if (head == null) {
-      return null;
-    }
+    if (head == null) return null;
     ListNode odd = head, even = head.next;
     ListNode evenHead = head.next;
     while (even != null && even.next != null) {

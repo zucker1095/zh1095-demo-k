@@ -1014,39 +1014,34 @@ class SSum extends DefaultArray {
    * @return list list
    */
   public List<List<Integer>> threeSum(int[] nums) {
-    final int target = 0, limit = 3;
-    List<List<Integer>> res = new ArrayList<>();
+    List<List<Integer>> sums = new ArrayList();
+    int target = 0;
     Arrays.sort(nums);
-    for (int i = 0; i < nums.length - (limit - 1); i++) {
-      int num = nums[i];
-      if (num > target) break;
-      for (List<Integer> cur : twoSum(nums, i, target - num)) {
-        cur.add(num);
-        res.add(cur);
+    for (int i = 0; i < nums.length; i++) {
+      int pivot = nums[i];
+      if (pivot > target) break;
+      if (i > 0 && pivot == nums[i - 1]) continue;
+      int lo = i + 1, hi = nums.length - 1;
+      while (lo < hi) {
+        int sum = pivot + nums[lo] + nums[hi];
+        if (sum < target) {
+          lo += 1;
+        } else if (sum == target) {
+          sums.add(Arrays.asList(pivot, nums[lo], nums[hi]));
+          while (lo < hi && nums[lo] == nums[lo + 1]) {
+            lo += 1;
+          }
+          while (lo < hi && nums[hi] == nums[hi - 1]) {
+            hi -= 1;
+          }
+          lo += 1;
+          hi -= 1;
+        } else if (sum > target) {
+          hi -= 1;
+        }
       }
     }
-    return res;
-  }
-
-  /**
-   * 两数之和
-   *
-   * @param nums the nums
-   * @param start the start
-   * @param target the target
-   * @return the list
-   */
-  public List<List<Integer>> twoSum(int[] nums, int start, int target) {
-    List<List<Integer>> res = new ArrayList<>();
-    int lo = start, hi = nums.length - 1;
-    while (lo < hi) {
-      int sum = nums[lo] + nums[hi];
-      if (sum < target) lo += 1;
-      else if (sum == target) res.add(Arrays.asList(nums[lo], nums[hi]));
-      else hi -= 1;
-      lo += 1;
-    }
-    return res;
+    return sums;
   }
 
   /**
@@ -1059,19 +1054,20 @@ class SSum extends DefaultArray {
   public int threeSumClosest(int[] nums, int target) {
     Arrays.sort(nums);
     // 题设至少三位
-    int res = nums[0] + nums[1] + nums[2];
+    int closestSum = nums[0] + nums[1] + nums[2];
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
+      if (pivot > target) break;
       int lo = i + 1, hi = nums.length - 1;
       while (lo < hi) {
         int sum = pivot + nums[lo] + nums[hi];
-        res = Math.abs(target - sum) < Math.abs(target - res) ? sum : res;
+        if (Math.abs(target - sum) < Math.abs(target - closestSum)) closestSum = sum;
         if (sum < target) lo += 1;
-        else if (sum == target) return res;
+        else if (sum == target) return closestSum;
         else hi -= 1;
       }
     }
-    return res;
+    return closestSum;
   }
 
   /**
@@ -1125,7 +1121,7 @@ class SSum extends DefaultArray {
 /** 以下均为前缀和，适合区间和满足 target，严格相等搭配哈希，否则搭配滑窗 */
 class Presum {
   /**
-   * 最大子数组和 / 最大子序和 / 连续子数组的最大和，基于贪心，通过前缀和
+   * 最大子数组和 / 最大子序和 / 最大子串和 / 连续子数组的最大和，基于贪心，通过前缀和
    *
    * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
    *
@@ -1151,11 +1147,11 @@ class Presum {
         presum += num;
       } else {
         presum = num;
-        start = i;
+        //        start = i;
       }
       if (presum > maxSum) {
         maxSum = presum;
-        end = i;
+        //        end = i;
       }
     }
     return maxSum;
@@ -1927,7 +1923,7 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 最大数，把数组排成最大的数，排序，即贪心
+   * 最大数，把数组排成最大的数，排序，即贪心，类似参考「拼接最大数」
    *
    * <p>对 nums 按照 ab>ba 为 b>a，前导零
    *
@@ -1952,11 +1948,13 @@ class DicOrder extends DefaultArray {
     for (String str : strs) {
       res.append(str);
     }
-    int start = 0;
-    while (start < nums.length - 1 && res.charAt(start) == '0') {
-      start += 1;
-    }
-    return res.substring(start);
+    return res.toString();
+    // 最小数需要去除前导零，因为可能有 02>20
+    //    int start = 0;
+    //    while (start < nums.length - 1 && res.charAt(start) == '0') {
+    //      start += 1;
+    //    }
+    //    return res.substring(start);
   }
 
   /**

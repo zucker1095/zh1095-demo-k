@@ -7,7 +7,7 @@ import java.util.*;
  *
  * <p>以下均为右闭期间
  *
- * <p>状态压缩尽量用具体含义，如 buy & sell 而非 dp1 & dp2
+ * <p>状态压缩基于滚动数组，尽量用具体含义，如 buy & sell 而非 dp1 & dp2
  *
  * <p>区分「以 nums[i] 结尾」&「在 [0,i-1] 区间」的 dp 定义差异
  *
@@ -329,7 +329,7 @@ class OptimalSubSequence extends DichotomyClassic {
   }
 
   /**
-   * 正则表达式匹配，以下均基于 p 判定
+   * 正则表达式匹配，以下均基于 p 判定，类似「通配符匹配」
    *
    * <p>TODO dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
    *
@@ -566,20 +566,20 @@ class OptimalElse {
    */
   public int trap(int[] height) {
     int lo = 0, hi = height.length - 1;
-    int res = 0, lm = height[lo], rm = height[hi];
+    int volume = 0, lm = height[lo], rm = height[hi];
     while (lo < hi) {
       int left = height[lo], right = height[hi];
       lm = Math.max(lm, left);
       rm = Math.max(rm, right);
       if (left <= right) {
-        res += lm - left;
+        volume += lm - left;
         lo += 1;
       } else {
-        res += rm - right;
+        volume += rm - right;
         hi -= 1;
       }
     }
-    return res;
+    return volume;
   }
 
   /**
@@ -589,18 +589,18 @@ class OptimalElse {
    * @return int int
    */
   public int maxArea(int[] height) {
-    int res = 0;
+    int maxVolume = 0;
     for (int lo = 0, hi = height.length - 1; lo < hi; ) {
       int left = height[lo], right = height[hi];
       if (left <= right) {
-        res = Math.max(res, left * (hi - lo));
+        maxVolume = Math.max(maxVolume, left * (hi - lo));
         lo += 1;
       } else {
-        res = Math.max(res, right * (hi - lo));
+        maxVolume = Math.max(maxVolume, right * (hi - lo));
         hi -= 1;
       }
     }
-    return res;
+    return maxVolume;
   }
 
   /**
@@ -761,6 +761,32 @@ class OptimalElse {
       }
     }
     return Math.min(keep, swap);
+  }
+
+  /**
+   * 鸡蛋掉落
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/super-egg-drop/solution/ji-ben-dong-tai-gui-hua-jie-fa-by-labuladong/
+   *
+   * @param K
+   * @param N
+   * @return
+   */
+  public int superEggDrop(int K, int N) {
+    // m 最多不会超过 N 次（线性扫描）
+    int[][] dp = new int[K + 1][N + 1];
+    // base case
+    // dp[0][..] = 0
+    // dp[..][0] = 0
+    int celling = 0;
+    while (dp[K][celling] < N) {
+      celling += 1;
+      for (int k = 1; k <= K; k++) {
+        dp[k][celling] = dp[k][celling - 1] + dp[k - 1][celling - 1] + 1;
+      }
+    }
+    return celling;
   }
 }
 
@@ -968,30 +994,29 @@ class OptimalRectangle {
    *
    * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
    *
+   * <p>只需关注当前格子的周边，故可二维降一维优化，参考
+   * https://leetcode-cn.com/problems/maximal-square/solution/li-jie-san-zhe-qu-zui-xiao-1-by-lzhlyle/
+   *
    * @param matrix the matrix
    * @return int int
    */
   public int maximalSquare(char[][] matrix) {
-    // 特判
-    if (matrix == null || matrix.length < 1 || matrix[0].length < 1) {
-      return 0;
-    }
     int maxSide = 0;
-    // 相当于已经预处理新增第一行、第一列均为0
+    // 相当于已经预处理新增第一行、第一列均 0
     int[] dp = new int[matrix[0].length + 1];
-    int northwest = 0;
-    for (char[] chs : matrix) {
-      northwest = 0; // 遍历每行时，还原回辅助的原值0
-      for (int col = 0; col < matrix[0].length; col++) {
-        int nextNorthwest = dp[col + 1];
-        if (chs[col] == '1') {
-          dp[col + 1] = Math.min(Math.min(dp[col], dp[col + 1]), northwest) + 1;
+    for (char[] row : matrix) {
+      // 左上角
+      int topLeft = 0;
+      for (int col = 0; col < row.length; col++) {
+        int nxtTopLeft = dp[col + 1];
+        if (row[col] == '1') {
+          dp[col + 1] = 1 + Math.min(Math.min(dp[col], dp[col + 1]), topLeft);
           // maxSide = max(maxSide, dp[row+1][col+1]);
           maxSide = Math.max(maxSide, dp[col + 1]);
         } else {
           dp[col + 1] = 0;
         }
-        northwest = nextNorthwest;
+        topLeft = nxtTopLeft;
       }
     }
     return maxSide * maxSide;

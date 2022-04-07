@@ -633,7 +633,7 @@ class BBSTInorder {
 
 /** 二叉搜索树，深搜为主 */
 class BBSTDFS {
-  // 「二叉搜索树与双向链表」当前和上次遍历结点，按照中序遍历，后者即前者的左侧
+  // 「二叉搜索树与双向链表」上次与当前遍历结点，按照中序遍历，前者即后者的左子树
   private TreeNode pre, cur;
 
   /**
@@ -693,7 +693,29 @@ class BBSTDFS {
   }
 
   /**
-   * 将有序数组转换为二叉搜索树，前序，类似双路快排，以升序数组的中间元素作 root
+   * 有序链表转换二叉搜索树
+   *
+   * @param head
+   * @return
+   */
+  public TreeNode sortedListToBST(ListNode head) {
+    if (head == null) return null;
+    if (head.next == null) return new TreeNode(head.val);
+    ListNode pre = null, lo = head, hi = head;
+    while (hi != null && hi.next != null) {
+      pre = lo;
+      lo = lo.next;
+      hi = hi.next.next;
+    }
+    pre.next = null;
+    TreeNode root = new TreeNode(lo.val);
+    root.left = sortedListToBST(head);
+    root.right = sortedListToBST(lo.next);
+    return root;
+  }
+
+  /**
+   * 将有序数组转换为二叉搜索树 / 最小高度树，前序，类似双路快排，以升序数组的中间元素作 root
    *
    * @param nums the nums
    * @return tree node
@@ -729,14 +751,14 @@ class BBSTDFS {
   }
 
   // 每次只处理左侧，即前驱
-  private void dfs7(TreeNode head) {
-    if (head == null) return;
-    dfs7(head.left);
-    if (pre == null) cur = head;
-    else pre.right = head;
-    head.left = pre;
-    pre = head;
-    dfs7(head.right);
+  private void dfs7(TreeNode root) {
+    if (root == null) return;
+    dfs7(root.left);
+    if (pre != null) pre.right = root; // 尾插
+    else cur = root; // 最左叶
+    root.left = pre; // 补充前驱
+    pre = root;
+    dfs7(root.right);
   }
 }
 
@@ -1079,7 +1101,7 @@ class BBFS {
   }
 
   /**
-   * 翻转二叉树，迭代 bfs，逐一交换遍历的结点的左右子树即可
+   * 翻转二叉树 / 二叉树的镜像，前序 / 逐一交换遍历的结点的左右子树
    *
    * @param root the root
    * @return tree node
@@ -1089,10 +1111,10 @@ class BBFS {
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
-      TreeNode tmp = root.left;
-      root.left = root.right;
-      root.right = tmp;
       TreeNode cur = queue.poll();
+      TreeNode tmp = cur.left;
+      cur.left = cur.right;
+      cur.right = tmp;
       if (cur.left != null) queue.offer(cur.left);
       if (cur.right != null) queue.offer(cur.right);
     }
