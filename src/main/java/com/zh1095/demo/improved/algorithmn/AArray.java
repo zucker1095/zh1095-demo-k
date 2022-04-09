@@ -1132,25 +1132,23 @@ class Presum {
    *
    * <p>线段树，参考 education in codeforces
    *
-   * <p>扩展1，要求返回子数组，则添加始末指针，参下
+   * <p>扩展1，返回左右边界，或该子数组，则添加始末指针，参下
    *
    * @param nums the nums
    * @return int int
    */
   public int maxSubArray(int[] nums) {
-    if (nums.length < 1) return 0;
-    int presum = 0, maxSum = nums[0];
+    int preSum = 0, maxSum = Integer.MIN_VALUE;
     int start = 0, end = 0;
-    for (int i = 0; i < nums.length; i++) {
-      int num = nums[i];
-      if (presum + num > num) {
-        presum += num;
+    for (int num : nums) {
+      if (preSum + num > num) {
+        preSum += num;
       } else {
-        presum = num;
+        preSum = num;
         //        start = i;
       }
-      if (presum > maxSum) {
-        maxSum = presum;
+      if (preSum > maxSum) {
+        maxSum = preSum;
         //        end = i;
       }
     }
@@ -1158,7 +1156,7 @@ class Presum {
   }
 
   /**
-   * 和为k的子数组，严格相等，返回满足的子数组数量
+   * 和为k的子数组，返回满足的子数组数量，严格相等
    *
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
@@ -1170,15 +1168,15 @@ class Presum {
    * @return int int
    */
   public int subarraySum(int[] nums, int k) {
-    int preSum = 0, count = 0;
+    int count = 0, preSum = 0;
     // 需要预存前缀和为 0，否则会漏掉前几位就满足的情况
     // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
     // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
     HashMap<Integer, Integer> countBySum = new HashMap<>();
     countBySum.put(0, 1);
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i];
-      // 当前前缀和已知，判断是否含有 presum-k 的前缀和，那么我们就知道某一区间的和为 k
+    for (int num : nums) {
+      preSum += num;
+      // 判断是否含有 presum-k 的前缀和，则知道某一区间的和为 k
       count += countBySum.getOrDefault(preSum - k, 0);
       countBySum.put(preSum, countBySum.getOrDefault(preSum, 0) + 1);
     }

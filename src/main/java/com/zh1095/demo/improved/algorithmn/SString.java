@@ -462,12 +462,12 @@ class SStack {
   public String simplifyPath(String path) {
     Deque<String> stack = new ArrayDeque<>();
     for (String seg : path.split("/")) {
-      if (seg.equals("..") && !stack.isEmpty()) stack.pollLast();
+      if (seg.equals("..")) stack.pollLast();
       else if (!" ..".contains(seg)) stack.offerLast(seg);
     }
     StringBuilder res = new StringBuilder();
     for (String str : stack) {
-      res.append("/");
+      res.append('/');
       res.append(str);
     }
     return res.length() == 0 ? "/" : res.toString();
@@ -603,7 +603,7 @@ class SStack {
   }
 
   /**
-   * 验证栈序列，贪心，原地模拟
+   * 验证栈序列，无重复，贪心，原地模拟
    *
    * <p>将 pushed 队列中的每个数都 push 到栈中，同时检查这个数是不是 popped 序列中下一个要 pop 的值，如果是就把它 pop 出来。
    *
@@ -616,14 +616,14 @@ class SStack {
    * @return
    */
   public boolean validateStackSequences(int[] pushed, int[] popped) {
-    int stackTop = 0, outIdx = 0;
+    int stackTop = 0, popIdx = 0;
     //    for (int add = 0; i < N; i++) {
     for (int add : pushed) {
       pushed[stackTop] = add;
       stackTop += 1;
-      while (stackTop != 0 && pushed[stackTop - 1] == popped[outIdx]) {
+      while (stackTop != 0 && pushed[stackTop - 1] == popped[popIdx]) {
         stackTop -= 1;
-        outIdx += 1;
+        popIdx += 1;
       }
     }
     return stackTop == 0;
@@ -632,7 +632,7 @@ class SStack {
   /**
    * 移除无效的括号
    *
-   * <p>当遇到左括号时，确认栈中左括号数量 +1 <= 栈中右括号数量 + 尚未遍历的右括号数量
+   * <p>当遇到左括号时，确认栈中左括号数量 <= 栈中右括号数量 + 尚未遍历的右括号数量
    *
    * <p>当遇到右括号时，确认栈中左括号数量 大于 栈中右括号数量
    *
@@ -649,7 +649,7 @@ class SStack {
     int write = 0, curLeft = 0, curRight = 0;
     for (char ch : chs) {
       if (ch == '(') {
-        if (curLeft + 1 > curRight + unusedRight) continue;
+        if (curLeft >= curRight + unusedRight) continue;
         curLeft += 1;
       } else if (ch == ')') {
         unusedRight -= 1;
@@ -695,8 +695,9 @@ class SSubString {
   public String longestPalindrome(String s) {
     int lo = 0, hi = 0;
     for (int i = 0; i < s.length(); i++) {
-      int odd = findLongestPalindrome(s, i, i), even = findLongestPalindrome(s, i, i + 1);
-      int len = Math.max(odd, even);
+      int odd = findLongestPalindrome(s, i, i),
+          even = findLongestPalindrome(s, i, i + 1),
+          len = Math.max(odd, even);
       if (len > hi - lo) {
         lo = i - (len - 1) / 2;
         hi = i + len / 2;
@@ -715,27 +716,27 @@ class SSubString {
   }
 
   /**
-   * 验证回文串，忽略空格与大小写
+   * 验证回文串，忽略空格与大小写，两侧聚拢
    *
    * @param s the s
    * @return boolean boolean
    */
   public boolean isPalindrome(String s) {
+    char[] chs = s.toCharArray();
     int lo = 0, hi = s.length() - 1;
     while (lo < hi) {
-      while (lo < hi && !Character.isLetterOrDigit(s.charAt(lo))) {
+      while (lo < hi && !Character.isLetterOrDigit(chs[lo])) {
         lo += 1;
       }
-      while (lo < hi && !Character.isLetterOrDigit(s.charAt(hi))) {
+      while (lo < hi && !Character.isLetterOrDigit(chs[hi])) {
         hi -= 1;
       }
-      if (lo < hi) {
-        if (Character.toLowerCase(s.charAt(lo)) != Character.toLowerCase(s.charAt(hi))) {
-          return false;
-        }
-        lo += 1;
-        hi -= 1;
+      if (lo >= hi) break;
+      if (Character.toLowerCase(chs[lo]) != Character.toLowerCase(chs[hi])) {
+        return false;
       }
+      lo += 1;
+      hi -= 1;
     }
     return true;
   }
@@ -751,36 +752,16 @@ class SSubString {
    * @return
    */
   public int strStr(String haystack, String needle) {
-    if (needle.isEmpty()) return 0;
-    // 分别读取原串和匹配串的长度
-    int lenH = haystack.length(), lenN = needle.length();
-    // 原串和匹配串前面都加空格，使其下标从 1 开始
-    haystack = " " + haystack;
-    needle = " " + needle;
-    char[] hayChs = haystack.toCharArray(), needChs = needle.toCharArray();
-    // 构建 next 数组，和匹配串相关
-    int[] next = new int[lenN + 1];
-    // 构造过程 i=2 j=0 开始，i 小于等于匹配串长度
-    for (int i = 2, j = 0; i <= lenN; i++) {
-      // 匹配不成功的话，j = next(j)
-      while (j > 0 && needChs[i] != needChs[j + 1]) {
-        j = next[j];
+    char[] chs = haystack.toCharArray(), chsNeedle = needle.toCharArray();
+    int lenChs = chs.length, lenNeedle = chsNeedle.length;
+    // 枚举原串的发起点
+    for (int i = 0; i <= lenChs - lenNeedle; i++) {
+      int pS = i, pNeedle = 0;
+      while (pNeedle < lenNeedle && chs[pS] == chsNeedle[pNeedle]) {
+        pS += 1;
+        pNeedle += 1;
       }
-      // 匹配成功的话，先让 j++
-      if (needChs[i] == needChs[j + 1]) j += 1;
-      // 更新 next[i]，结束本次循环，i++
-      next[i] = j;
-    }
-    // 匹配过程，i=1 j=0 开始，i 小于等于原串长度
-    for (int i = 1, j = 0; i <= lenH; i++) {
-      // 匹配不成功 j = next(j)
-      while (j > 0 && hayChs[i] != needChs[j + 1]) {
-        j = next[j];
-      }
-      // 匹配成功的话，先让 j++，结束本次循环后 i++
-      if (hayChs[i] == needChs[j + 1]) j += 1;
-      // 整一段匹配成功，直接返回下标
-      if (j == lenN) return i - lenN;
+      if (pNeedle == lenNeedle) return i;
     }
     return -1;
   }
@@ -800,9 +781,10 @@ class SSubString {
   }
 
   private boolean isSubsequence1(String s, String t) {
+    char[] chs = s.toCharArray(), chsNeedle = t.toCharArray();
     int p1 = 0, p2 = 0;
-    while (p1 < s.length() && p2 < t.length()) {
-      if (s.charAt(p1) == t.charAt(p2)) p1 += 1;
+    while (p1 < chs.length && p2 < chsNeedle.length) {
+      if (chs[p1] == chsNeedle[p2]) p1 += 1;
       p2 += 1;
     }
     return p1 == s.length();
@@ -1041,23 +1023,20 @@ class WWord extends DefaultSString {
     while (chs[hi] == ' ') {
       hi -= 1;
     }
-    // 开始循环
+    // 翻转，因此需要自右向左
     while (lo <= hi) {
-      // 从最右边开始
-      int start = hi;
+      int cur = hi;
       // 遍历该单词
-      while (start >= lo && chs[start] != ' ') {
-        start -= 1;
+      while (cur >= lo && chs[cur] != ' ') {
+        cur -= 1;
       }
-      str.append(Arrays.copyOfRange(chs, start + 1, hi + 1));
+      str.append(Arrays.copyOfRange(chs, cur + 1, hi + 1));
       // 单词间插空
-      if (start > lo) str.append(' ');
-      // 跳过空格
-      while (start >= lo && chs[start] == ' ') {
-        start -= 1;
+      if (cur > lo) str.append(' ');
+      while (cur >= lo && chs[cur] == ' ') {
+        cur -= 1;
       }
-      // 指针指向下一轮
-      hi = start;
+      hi = cur;
     }
     return str.toString();
   }

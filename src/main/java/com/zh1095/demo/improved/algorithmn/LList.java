@@ -513,20 +513,18 @@ class ReorderList extends LList {
    * @param head the head
    */
   public void reorderList(ListNode head) {
-    // 至少需要有两个点
-    if (head == null || head.next == null || head.next.next == null) {
-      return;
-    }
-    ListNode p1 = head, p1Tail = middleNode(head), p2 = p1Tail.next, p2Nxt;
-    p1Tail.next = null;
-    p2 = reverseList(p2);
-    // 合并两个链表即可
-    while (p2 != null) {
-      p2Nxt = p2.next;
-      p2.next = p1.next;
-      p1.next = p2;
-      p1 = p2.next;
-      p2 = p2Nxt;
+    // middle
+    ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
+    mid.next = null;
+    // reverse
+    l2 = reverseList(l2);
+    // merge
+    while (l1 != null && l2 != null) {
+      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
+      l1.next = l2;
+      l1 = l1Nxt;
+      l2.next = l1;
+      l2 = l2Nxt;
     }
   }
 
@@ -680,9 +678,8 @@ class DeleteList extends LList {
    * @return list node
    */
   private ListNode deleteDuplicatesI(ListNode head) {
-    ListNode dummy = new ListNode();
+    ListNode dummy = new ListNode(), cur = head;
     dummy.next = head;
-    ListNode cur = dummy.next;
     while (cur != null && cur.next != null) {
       if (cur.val == cur.next.val) cur.next = cur.next.next;
       else cur = cur.next;
@@ -697,20 +694,17 @@ class DeleteList extends LList {
    * @return list node
    */
   private ListNode deleteDuplicatesII(ListNode head) {
-    ListNode dummy = new ListNode();
+    ListNode dummy = new ListNode(), cur = dummy;
     dummy.next = head;
-    ListNode pre = dummy, cur = dummy.next;
-    while (cur != null && cur.next != null) {
-      if (pre.next.val == cur.next.val) {
-        int target = pre.next.val;
-        while (cur.next != null && target == cur.next.val) {
-          cur = cur.next;
+    while (cur.next != null && cur.next.next != null) {
+      if (cur.next.val == cur.next.next.val) {
+        int pivot = cur.next.val;
+        while (cur.next != null && cur.next.val == pivot) {
+          cur.next = cur.next.next;
         }
-        pre.next = cur.next;
       } else {
-        pre = cur;
+        cur = cur.next;
       }
-      cur = cur.next;
     }
     return dummy.next;
   }

@@ -13,9 +13,9 @@ public class OOthers {
   /**
    * 加油站，解法类似「最大子序和」，本题环 & 求该子序和的起始位
    *
-   * @param gas
-   * @param cost
-   * @return
+   * @param gas the gas
+   * @param cost the cost
+   * @return int
    */
   public int canCompleteCircuit(int[] gas, int[] cost) {
     // 将问题转化为找最大子串的起始位置
@@ -37,7 +37,7 @@ public class OOthers {
    * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
    *
    * @param nums the nums
-   * @return boolean boolean
+   * @return boolean
    */
   public boolean canJump(int[] nums) {
     // 前 n-1 个元素能够跳到的最远距离
@@ -87,10 +87,10 @@ public class OOthers {
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/range-addition-ii/solution/gong-shui-san-xie-jian-dan-mo-ni-ti-by-a-006h/
    *
-   * @param m
-   * @param n
-   * @param ops
-   * @return
+   * @param m the m
+   * @param n the n
+   * @param ops the ops
+   * @return int
    */
   public int maxCount(int m, int n, int[][] ops) {
     int minX = m, minY = n;
@@ -117,7 +117,7 @@ public class OOthers {
    * <p>TODO
    *
    * @param stack the stack
-   * @return deque
+   * @return deque deque
    */
   public Deque<Integer> stackSort(Deque<Integer> stack) {
     Deque<Integer> tmp = new ArrayDeque<>();
@@ -247,8 +247,8 @@ class MMath {
   /**
    * 平方数之和
    *
-   * @param c
-   * @return
+   * @param c the c
+   * @return boolean
    */
   public boolean judgeSquareSum(int c) {
     long n1 = 0, n2 = (long) Math.sqrt(c);
@@ -310,8 +310,8 @@ class MMath {
    * <p>参考
    * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
    *
-   * @param n
-   * @return
+   * @param n the n
+   * @return int
    */
   public int trailingZeroes(int n) {
     int count = 0;
@@ -584,6 +584,7 @@ class DData {
     private static final int BASE = 769;
     private LinkedList[] data;
 
+    /** Instantiates a new My hash map. */
     MyHashMap() {
       data = new LinkedList[BASE];
       for (int i = 0; i < BASE; i++) {
@@ -595,6 +596,12 @@ class DData {
       return key % BASE;
     }
 
+    /**
+     * Put.
+     *
+     * @param key the key
+     * @param value the value
+     */
     public void put(int key, int value) {
       int h = hash(key);
       Iterator<Pair> iterator = data[h].iterator();
@@ -608,6 +615,12 @@ class DData {
       data[h].offerLast(new Pair(key, value));
     }
 
+    /**
+     * Get int.
+     *
+     * @param key the key
+     * @return the int
+     */
     public int get(int key) {
       int h = hash(key);
       Iterator<Pair> iterator = data[h].iterator();
@@ -620,6 +633,11 @@ class DData {
       return -1;
     }
 
+    /**
+     * Remove.
+     *
+     * @param key the key
+     */
     public void remove(int key) {
       int h = hash(key);
       Iterator<Pair> iterator = data[h].iterator();
@@ -633,9 +651,18 @@ class DData {
     }
 
     private class Pair {
+      /** The Key. */
       final int key;
+
+      /** The Value. */
       int value;
 
+      /**
+       * Instantiates a new Pair.
+       *
+       * @param key the key
+       * @param value the value
+       */
       Pair(int key, int value) {
         this.key = key;
         this.value = value;
@@ -755,17 +782,17 @@ class Digit {
    * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
    *
    * @param x the x
-   * @return boolean boolean
+   * @return boolean
    */
   public boolean isPalindrome(int x) {
     if (x < 0 || (x % 10 == 0 && x != 0)) return false;
     // 高低位
-    int high = x, low = 0;
-    while (high > low) {
-      low = low * 10 + high % 10;
-      high /= 10;
+    int lo = 0, hi = x;
+    while (lo < hi) {
+      lo = lo * 10 + hi % 10;
+      hi /= 10;
     }
-    return high == low || high == low / 10;
+    return hi == lo || hi == lo / 10;
   }
 }
 
@@ -816,7 +843,7 @@ class GGraph {
    *
    * @param numCourses the num courses
    * @param prerequisites the prerequisites
-   * @return boolean boolean
+   * @return boolean
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
     // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
@@ -895,10 +922,10 @@ class GGraph {
    * <p>参考
    * https://leetcode-cn.com/problems/network-delay-time/solution/gong-shui-san-xie-yi-ti-wu-jie-wu-chong-oghpz/
    *
-   * @param times
-   * @param n
-   * @param k
-   * @return
+   * @param times the times
+   * @param n the n
+   * @param k the k
+   * @return int
    */
   public int networkDelayTime(int[][] times, int n, int k) {
     int[][] matrix = new int[n][n];
