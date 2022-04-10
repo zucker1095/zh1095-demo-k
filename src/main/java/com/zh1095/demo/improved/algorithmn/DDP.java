@@ -496,8 +496,8 @@ class OptimalPath {
   private int[] dfs11(TreeNode root) {
     if (root == null) return new int[2];
     int[] left = dfs11(root.left), right = dfs11(root.right);
-    int cur = left[0] + right[0] + root.val;
-    int nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
+    int cur = left[0] + right[0] + root.val,
+        nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
     return new int[] {nxt, cur};
   }
 }
