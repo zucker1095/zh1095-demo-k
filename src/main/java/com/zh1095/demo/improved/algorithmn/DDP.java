@@ -400,18 +400,18 @@ class OptimalPath {
         dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
       }
     }
-    //    List<Integer> res = new ArrayList<>();
+    //    List<Integer> paths = new ArrayList<>();
     //    int i = grid.length - 1, j = grid[0].length - 1;
-    //    res.add(grid[i][j]);
+    //    paths.add(grid[i][j]);
     //    int sum = dp[i][j];
     //    while (i > 0 || j > 0) {
     //      sum -= grid[i][j];
     //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
-    //        res.add(grid[i][j - 1]);
-    //        j -=1;
+    //        paths.add(grid[i][j - 1]);
+    //        j -= 1;
     //      } else {
-    //        res.add(grid[i - 1][j]);
-    //        i -=1;
+    //        paths.add(grid[i - 1][j]);
+    //        i -= 1;
     //      }
     //    }
     //    return res;

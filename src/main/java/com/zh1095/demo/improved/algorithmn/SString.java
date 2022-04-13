@@ -791,7 +791,7 @@ class SSubString {
 
 /** 进制转换，编码相关 */
 class CConvert {
-  private final String HEX_CHAR = "0123456789abcdef";
+  private final String CHARS = "0123456789ABCDEF";
 
   /**
    * 字符串转换整数，如 " -26" to 26
@@ -869,7 +869,7 @@ class CConvert {
     StringBuilder res = new StringBuilder();
     long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
     while (cur > 0) {
-      res.append(HEX_CHAR.charAt((int) (cur % 16)));
+      res.append(CHARS.charAt((int) (cur % 16)));
       cur /= 16;
     }
     return res.reverse().toString();
@@ -905,7 +905,9 @@ class CConvert {
    * @return string string
    */
   public String intToRoman(int num) {
-    // 如果是哈希，保证 key 的遍历有序即可
+    // num -> str
+    // str -> num
+    // 保证遍历有序
     final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
     final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
     StringBuilder roman = new StringBuilder();
@@ -976,6 +978,31 @@ class CConvert {
       else num += cur;
     }
     return num;
+  }
+
+  /**
+   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
+   *
+   * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   *
+   * @param num the num
+   * @param radix the radix
+   * @return string string
+   */
+  public String baseConvert(int num, int radix) {
+    if (num == 0) return "0";
+    StringBuilder res = new StringBuilder();
+    boolean f = false;
+    if (num < 0) {
+      f = true;
+      num = -num;
+    }
+    while (num != 0) {
+      res.append(CHARS.charAt(num % radix));
+      num /= radix;
+    }
+    if (f) res.append("-");
+    return res.reverse().toString();
   }
 }
 

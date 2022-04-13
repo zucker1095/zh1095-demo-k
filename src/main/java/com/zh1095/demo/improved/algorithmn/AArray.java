@@ -1159,7 +1159,7 @@ class Presum {
   }
 
   /**
-   * 和为k的子数组，返回满足的子数组数量，严格相等
+   * 和为k的子数组，返回子数组数量，严格相等
    *
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/

@@ -15,7 +15,7 @@ public class OOthers {
    *
    * @param gas the gas
    * @param cost the cost
-   * @return int
+   * @return int int
    */
   public int canCompleteCircuit(int[] gas, int[] cost) {
     // 将问题转化为找最大子串的起始位置
@@ -37,7 +37,7 @@ public class OOthers {
    * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
    *
    * @param nums the nums
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean canJump(int[] nums) {
     // 前 n-1 个元素能够跳到的最远距离
@@ -90,7 +90,7 @@ public class OOthers {
    * @param m the m
    * @param n the n
    * @param ops the ops
-   * @return int
+   * @return int int
    */
   public int maxCount(int m, int n, int[][] ops) {
     int minX = m, minY = n;
@@ -248,7 +248,7 @@ class MMath {
    * 平方数之和
    *
    * @param c the c
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean judgeSquareSum(int c) {
     long n1 = 0, n2 = (long) Math.sqrt(c);
@@ -311,7 +311,7 @@ class MMath {
    * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
    *
    * @param n the n
-   * @return int
+   * @return int int
    */
   public int trailingZeroes(int n) {
     int count = 0;
@@ -581,19 +581,19 @@ class DData {
    * <p>扩展1，要求布隆过滤器
    */
   public class MyHashMap {
-    private static final int BASE = 769;
-    private LinkedList[] data;
+    private static final int CAPACITY = 769;
+    private final List[] buckets;
 
     /** Instantiates a new My hash map. */
-    MyHashMap() {
-      data = new LinkedList[BASE];
-      for (int i = 0; i < BASE; i++) {
-        data[i] = new LinkedList<Pair>();
+    public MyHashMap() {
+      buckets = new LinkedList[CAPACITY];
+      for (int i = 0; i < CAPACITY; i++) {
+        buckets[i] = new LinkedList<BucketNode>();
       }
     }
 
     private int hash(int key) {
-      return key % BASE;
+      return key % CAPACITY;
     }
 
     /**
@@ -604,15 +604,15 @@ class DData {
      */
     public void put(int key, int value) {
       int h = hash(key);
-      Iterator<Pair> iterator = data[h].iterator();
+      Iterator<BucketNode> iterator = buckets[h].iterator();
       while (iterator.hasNext()) {
-        Pair pair = iterator.next();
+        BucketNode pair = iterator.next();
         if (pair.key == key) {
           pair.value = value;
           return;
         }
       }
-      data[h].offerLast(new Pair(key, value));
+      buckets[h].add(new BucketNode(key, value));
     }
 
     /**
@@ -623,9 +623,9 @@ class DData {
      */
     public int get(int key) {
       int h = hash(key);
-      Iterator<Pair> iterator = data[h].iterator();
+      Iterator<BucketNode> iterator = buckets[h].iterator();
       while (iterator.hasNext()) {
-        Pair pair = iterator.next();
+        BucketNode pair = iterator.next();
         if (pair.key == key) {
           return pair.value;
         }
@@ -640,17 +640,17 @@ class DData {
      */
     public void remove(int key) {
       int h = hash(key);
-      Iterator<Pair> iterator = data[h].iterator();
+      Iterator<BucketNode> iterator = buckets[h].iterator();
       while (iterator.hasNext()) {
-        Pair pair = iterator.next();
+        BucketNode pair = iterator.next();
         if (pair.key == key) {
-          data[h].remove(pair);
+          buckets[h].remove(pair);
           return;
         }
       }
     }
 
-    private class Pair {
+    private class BucketNode {
       /** The Key. */
       final int key;
 
@@ -663,7 +663,7 @@ class DData {
        * @param key the key
        * @param value the value
        */
-      Pair(int key, int value) {
+      public BucketNode(int key, int value) {
         this.key = key;
         this.value = value;
       }
@@ -725,8 +725,14 @@ class DData {
   public class Trie {
     private final TireNode root = new TireNode();
 
+    /** Instantiates a new Trie. */
     public Trie() {}
 
+    /**
+     * Insert.
+     *
+     * @param word the word
+     */
     public void insert(String word) {
       TireNode node = root;
       for (char ch : word.toCharArray()) {
@@ -736,6 +742,12 @@ class DData {
       node.isEnd = true;
     }
 
+    /**
+     * Search boolean.
+     *
+     * @param word the word
+     * @return the boolean
+     */
     public boolean search(String word) {
       TireNode node = root;
       for (char ch : word.toCharArray()) {
@@ -745,6 +757,12 @@ class DData {
       return node.isEnd;
     }
 
+    /**
+     * Starts with boolean.
+     *
+     * @param prefix the prefix
+     * @return the boolean
+     */
     public boolean startsWith(String prefix) {
       TireNode node = root;
       for (char ch : prefix.toCharArray()) {
@@ -763,37 +781,6 @@ class DData {
 
 /** 单个数字 */
 class Digit {
-  private final String CHARS = "0123456789ABCDEF";
-
-  /**
-   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
-   *
-   * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
-   *
-   * @param num the num
-   * @param radix the radix
-   * @return string string
-   */
-  public String baseConvert(int num, int radix) {
-    if (num == 0) {
-      return "0";
-    }
-    StringBuilder res = new StringBuilder();
-    boolean f = false;
-    if (num < 0) {
-      f = true;
-      num = -num;
-    }
-    while (num != 0) {
-      res.append(CHARS.charAt(num % radix));
-      num /= radix;
-    }
-    if (f) {
-      res.append("-");
-    }
-    return res.reverse().toString();
-  }
-
   /**
    * 第N位数字，k 位数共有 9*10^(k-1) 个数字
    *
@@ -824,7 +811,7 @@ class Digit {
    * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
    *
    * @param x the x
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean isPalindrome(int x) {
     if (x < 0 || (x % 10 == 0 && x != 0)) return false;
@@ -885,7 +872,7 @@ class GGraph {
    *
    * @param numCourses the num courses
    * @param prerequisites the prerequisites
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
     // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
@@ -967,7 +954,7 @@ class GGraph {
    * @param times the times
    * @param n the n
    * @param k the k
-   * @return int
+   * @return int int
    */
   public int networkDelayTime(int[][] times, int n, int k) {
     int[][] matrix = new int[n][n];
