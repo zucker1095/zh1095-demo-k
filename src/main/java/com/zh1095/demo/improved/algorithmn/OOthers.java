@@ -441,7 +441,7 @@ class DData {
   }
 
   /**
-   * 设计循环队列
+   * 设计循环队列，三种实现方式，冗余一个元素 / 边界标记 / 计数器，此处选用前者
    *
    * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
    *
@@ -1098,6 +1098,28 @@ class BBit {
       n >>>= 1;
     }
     return count;
+  }
+
+  /**
+   * 格雷编码
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/gray-code/solution/gray-code-jing-xiang-fan-she-fa-by-jyd/
+   *
+   * @param n
+   * @return
+   */
+  public List<Integer> grayCode(int n) {
+    List<Integer> res = new ArrayList<Integer>() {};
+    res.add(0);
+    int head = 1;
+    for (int i = 0; i < n; i++) {
+      for (int j = res.size() - 1; j >= 0; j--) {
+        res.add(head + res.get(j));
+      }
+      head <<= 1;
+    }
+    return res;
   }
 }
 

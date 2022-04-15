@@ -3,7 +3,7 @@ package com.zh1095.demo.improved.algorithmn;
 import java.util.*;
 
 /**
- * 收集字符串相关，个人遵从如下原则，如果部分查找不到，则至 DDP
+ * 收集字符串相关
  *
  * <p>拼接需求，只增不减则 String，否则选非线程安全的 StringBuilder 即可
  *
@@ -261,39 +261,6 @@ class WWindow {
       }
     }
     return segmentMax;
-  }
-
-  /**
-   * 至少有k个重复字符的最长子串，要求该子串中的每一字符出现次数都不少于 k，返回所有结果中最长的长度
-   *
-   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
-   *
-   * @param s
-   * @param k
-   * @return
-   */
-  public int longestSubstring(String s, int k) {
-    // 特判
-    if (s.length() < k) return 0;
-    int[] counter = new int[26];
-    char[] chs = s.toCharArray();
-    for (char ch : chs) {
-      counter[ch - 'a'] += 1;
-    }
-    for (char ch : chs) {
-      if (counter[ch - 'a'] >= k) continue;
-      // 找到首个次数少于 k 的字符，则切分为多个小段分治
-      int maxLen = 0;
-      for (String seg : s.split(String.valueOf(ch))) {
-        maxLen = Math.max(maxLen, longestSubstring(seg, k));
-      }
-      return maxLen;
-    }
-    // 原字符串没有小于 k 的字符串
-    return s.length();
   }
 
   private static class MonotonicQueue {
@@ -742,6 +709,39 @@ class SSubString {
   }
 
   /**
+   * 至少有k个重复字符的最长子串，要求该子串中的每一字符出现次数都不少于 k，返回所有结果中最长的长度
+   *
+   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
+   *
+   * @param s
+   * @param k
+   * @return
+   */
+  public int longestSubstring(String s, int k) {
+    // 特判
+    if (s.length() < k) return 0;
+    int[] counter = new int[26];
+    char[] chs = s.toCharArray();
+    for (char ch : chs) {
+      counter[ch - 'a'] += 1;
+    }
+    for (char ch : chs) {
+      if (counter[ch - 'a'] >= k) continue;
+      // 找到首个次数少于 k 的字符，则切分为多个小段分治
+      int maxLen = 0;
+      for (String seg : s.split(String.valueOf(ch))) {
+        maxLen = Math.max(maxLen, longestSubstring(seg, k));
+      }
+      return maxLen;
+    }
+    // 原字符串没有小于 k 的字符串
+    return s.length();
+  }
+
+  /**
    * 实现strStr()，返回 haystack 中匹配 needle 的首个子串的首个字符的索引
    *
    * <p>TODO 参考
@@ -981,6 +981,23 @@ class CConvert {
   }
 
   /**
+   * IP转32位无符号整数
+   *
+   * <p>TODO 参考 https://mp.weixin.qq.com/s/UWCuEtNS2kuAuDY-eIbghg
+   *
+   * @param IP
+   * @return
+   */
+  public long ipToInteger(String IP) {
+    String[] arr = IP.split(".");
+    long n = Long.parseLong(arr[0]);
+    for (int i = 1; i < arr.length; i++) {
+      n = n << 8 + Long.parseLong(arr[i]);
+    }
+    return n;
+  }
+
+  /**
    * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
    *
    * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
@@ -1027,7 +1044,7 @@ class WWord extends DefaultSString {
     while (chs[hi] == ' ') {
       hi -= 1;
     }
-    // 翻转，因此需要自右向左
+    // 翻转，因此需要自右向左aa
     while (lo <= hi) {
       int cur = hi;
       // 遍历该单词

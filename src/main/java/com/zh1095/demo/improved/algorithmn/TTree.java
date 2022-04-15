@@ -219,11 +219,11 @@ public class TTree {
       }
       return cur;
     }
-    // 否则，找第一个当前结点是父结点左孩子的结点
+    // 否则，找首个当前结点是父结点左孩子的结点
     _TreeNode cur = node;
     while (cur.next != null) {
-      if (cur.next.left.equals(cur)) return cur.next;
-      cur = cur.next;
+      if (!cur.next.left.equals(cur)) cur = cur.next;
+      return cur.next;
     }
     // 退到根结点仍没找到
     return null;
@@ -737,7 +737,7 @@ class BBSTDFS {
    */
   public TreeNode sortedListToBST(ListNode head) {
     if (head == null) return null;
-    if (head.next == null) return new TreeNode(head.val);
+    else if (head.next == null) return new TreeNode(head.val);
     ListNode pre = null, lo = head, hi = head;
     while (hi != null && hi.next != null) {
       pre = lo;
@@ -774,7 +774,7 @@ class BBSTDFS {
     dfs7(root.left);
     if (pre != null) pre.right = root; // 尾插
     else cur = root; // 最左叶
-    root.left = pre; // 补充前驱
+    root.left = pre; // 补充前驱，头插
     pre = root;
     dfs7(root.right);
   }
@@ -1231,9 +1231,7 @@ class MultiTrees {
     queue.offer(root);
     while (!queue.isEmpty()) {
       TreeNode node = queue.poll();
-      if (node.val == subRoot.val && isSameTree(node, subRoot)) {
-        return true;
-      }
+      if (node.val == subRoot.val && isSameTree(node, subRoot)) return true;
       if (node.left != null) queue.offer(node.left);
       if (node.right != null) queue.offer(node.right);
     }

@@ -1122,7 +1122,7 @@ class SSum extends DefaultArray {
 }
 
 /** 以下均为前缀和，适合区间和满足 target，严格相等搭配哈希，否则搭配滑窗 */
-class Presum {
+class PreSum {
   /**
    * 最大子数组和 / 最大子序和 / 最大子串和 / 连续子数组的最大和，基于贪心，通过前缀和
    *
@@ -1281,9 +1281,8 @@ class Presum {
     //    long count = 0;
     //    Map<Long, Integer> map = new HashMap<>();
     //    map.put(0L, 1);
-    //    for (int num : nums) {
-    //      preSum += num;
-    //      long u = preSum % k;
+    //    for (int i = 1; i <= nums.length; i++) {
+    //      long u = nums[i] % target;
     //      if (map.containsKey(u)) count += map.get(u);
     //      map.put(u, map.getOrDefault(u, 0) + 1);
     //    }
@@ -1377,7 +1376,7 @@ class Presum {
    */
   public int[] getMaxMatrix(int[][] matrix) {
     // 保存最大子矩阵的左上角和右下角的行列坐标
-    int[] res = new int[4];
+    int[] coordinates = new int[4];
     int N = matrix.length, M = matrix[0].length;
     int[] preSum = new int[M]; // 记录当前 i~j 行组成大矩阵的每一列的和，将二维转化为一维
     // 相当于dp[i],dp_i 与最大值
@@ -1387,7 +1386,8 @@ class Presum {
       for (int t = 0; t < M; t++) {
         preSum[t] = 0; // 每次更换子矩形上边，就要清空b，重新计算每列的和
       }
-      for (int j = i; j < N; j++) { // 子矩阵的下边，从i到N-1，不断增加子矩阵的高
+      for (int j = i; j < N; j++) {
+        // 子矩阵的下边，从i到N-1，不断增加子矩阵的高
         // 一下就相当于求一次最大子序列和
         sum = 0; // 从头开始求dp
         for (int k = 0; k < M; k++) {
@@ -1403,24 +1403,24 @@ class Presum {
           }
           if (sum > maxSum) {
             maxSum = sum;
-            res = new int[] {bestr1, bestc1, j, k};
+            coordinates = new int[] {bestr1, bestc1, j, k};
           }
         }
       }
     }
-    return res;
+    return coordinates;
   }
 }
 
 /** 重复，哈希有关 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，无序找首个，快慢指针，与「环形链表II」一致
+   * 寻找重复数，无序找首个，快慢指针，与「环形链表II」一致，类似参考「第一个只出现一次的字符」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
    *
-   * <p>TODO 扩展1，重复数字有多个，要求找出所有重复数字，复杂度为 n & 1，nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当
+   * <p>TODO 扩展1，重复数字有多个，找出所有，要求复杂度 n & 1，nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当
    * nums[idx]>2*n 时就能表示 nums[i]，即 idx+1 出现过两次
    *
    * @param nums the nums
@@ -1538,11 +1538,11 @@ class Delete extends DefaultArray {
    * @return
    */
   public int[] exchange(int[] nums) {
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
-      if ((nums[hi] & 1) == 0) continue;
-      swap(nums, lo, hi);
-      lo += 1;
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
+      if ((nums[read] & 1) == 0) continue;
+      swap(nums, write, read);
+      write += 1;
     }
     return nums;
   }
@@ -1558,12 +1558,12 @@ class Delete extends DefaultArray {
    */
   public void moveZeroes(int[] nums) {
     final int target = 0, k = 0; // diff 1
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
       //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3)
-      if (lo >= k && target == nums[hi]) continue;
-      swap(nums, lo, hi); // diff 2
-      lo += 1;
+      if (write >= k && target == nums[read]) continue;
+      swap(nums, write, read); // diff 2
+      write += 1;
     }
   }
 
@@ -1576,13 +1576,13 @@ class Delete extends DefaultArray {
    */
   public String moveChars(String str, char target) {
     char[] chs = str.toCharArray();
-    int lo = 0;
-    for (int hi = 0; hi < chs.length; hi++) {
-      if (target == chs[hi]) continue;
-      swap(chs, lo, hi);
-      lo += 1;
+    int write = 0;
+    for (int read = 0; read < chs.length; read++) {
+      if (target == chs[read]) continue;
+      swap(chs, write, read);
+      write += 1;
     }
-    return String.valueOf(Arrays.copyOfRange(chs, 0, lo));
+    return String.valueOf(Arrays.copyOfRange(chs, 0, write));
   }
 
   /**
@@ -1596,19 +1596,16 @@ class Delete extends DefaultArray {
    * @return the int
    */
   public int removeDuplicates(int[] nums) {
-    return removeDuplicates(nums, 1);
-  }
-
-  private int removeDuplicates(int[] nums, int k) {
+    final int k = 0;
     // final int target = nums[last - k];
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
-      int num = nums[hi];
-      if (lo >= k && nums[lo - k] == num) continue;
-      nums[lo] = num;
-      lo += 1;
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
+      int num = nums[read];
+      if (write >= k && nums[write - k] == num) continue;
+      nums[write] = num;
+      write += 1;
     }
-    return lo;
+    return write;
   }
 
   /**
@@ -1642,7 +1639,7 @@ class Delete extends DefaultArray {
 /** 遍历相关 */
 class Traversal extends DefaultArray {
   /**
-   * 旋转数组，反转三次，all & [0,k-1] & [k,end]
+   * 轮转数组，反转三次，all & [0,k-1] & [k,end]
    *
    * @param nums the nums
    * @param k the k
@@ -2005,7 +2002,7 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 字典序排数
+   * 字典序排数，N 叉树遍历
    *
    * <p>TODO
    *

@@ -677,26 +677,23 @@ class OptimalElse {
   }
 
   /**
-   * 森林中的兔子
+   * 整数拆分，设 n=a+b+...+c 求 a*b*...*c 乘积最大化的方案
    *
-   * <p>TODO
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/integer-break/solution/bao-li-sou-suo-ji-yi-hua-sou-suo-dong-tai-gui-hua-/
    *
-   * <p>先对所有出现过的数字进行统计，然后再对数值按颜色分配
-   *
-   * @param cs
+   * @param n
    * @return
    */
-  public int numRabbits(int[] answers) {
-    Map<Integer, Integer> counter = new HashMap<Integer, Integer>();
-    for (int answer : answers) {
-      counter.put(answer, counter.getOrDefault(answer, 0) + 1);
+  public int integerBreak(int n) {
+    if (n < 4) return n - 1;
+    int[] dp = new int[n + 1];
+    dp[2] = 1;
+    for (int i = 3; i <= n; i++) {
+      // max(2*(i−2), 2*dp[i−2], 3*(i−3), 3*dp[i−3])
+      dp[i] = Math.max(Math.max(2 * (i - 2), 2 * dp[i - 2]), Math.max(3 * (i - 3), 3 * dp[i - 3]));
     }
-    int count = 0;
-    for (Map.Entry<Integer, Integer> entry : counter.entrySet()) {
-      int y = entry.getKey(), x = entry.getValue();
-      count += (x + y) / (y + 1) * (y + 1);
-    }
-    return count;
+    return dp[n];
   }
 
   /**
@@ -761,6 +758,29 @@ class OptimalElse {
       }
     }
     return Math.min(keep, swap);
+  }
+
+  /**
+   * 森林中的兔子
+   *
+   * <p>TODO
+   *
+   * <p>先对所有出现过的数字进行统计，然后再对数值按颜色分配
+   *
+   * @param cs
+   * @return
+   */
+  public int numRabbits(int[] answers) {
+    Map<Integer, Integer> counter = new HashMap<Integer, Integer>();
+    for (int answer : answers) {
+      counter.put(answer, counter.getOrDefault(answer, 0) + 1);
+    }
+    int count = 0;
+    for (Map.Entry<Integer, Integer> entry : counter.entrySet()) {
+      int y = entry.getKey(), x = entry.getValue();
+      count += (x + y) / (y + 1) * (y + 1);
+    }
+    return count;
   }
 
   /**
@@ -893,11 +913,8 @@ class CCount {
     dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
     for (int[] rows : obstacleGrid) {
       for (int i = 0; i < len; i++) {
-        if (rows[i] == 1) {
-          dp[i] = 0;
-        } else if (rows[i] == 0 && i >= 1) {
-          dp[i] = dp[i] + dp[i - 1];
-        }
+        if (rows[i] == 1) dp[i] = 0;
+        else if (rows[i] == 0 && i >= 1) dp[i] = dp[i] + dp[i - 1];
       }
     }
     return dp[len - 1];
@@ -1006,17 +1023,17 @@ class OptimalRectangle {
     int[] dp = new int[matrix[0].length + 1];
     for (char[] row : matrix) {
       // 左上角
-      int topLeft = 0;
+      int leftTop = 0;
       for (int col = 0; col < row.length; col++) {
         int nxtTopLeft = dp[col + 1];
         if (row[col] == '1') {
-          dp[col + 1] = 1 + Math.min(Math.min(dp[col], dp[col + 1]), topLeft);
+          dp[col + 1] = 1 + Math.min(Math.min(dp[col], dp[col + 1]), leftTop);
           // maxSide = max(maxSide, dp[row+1][col+1]);
           maxSide = Math.max(maxSide, dp[col + 1]);
         } else {
           dp[col + 1] = 0;
         }
-        topLeft = nxtTopLeft;
+        leftTop = nxtTopLeft;
       }
     }
     return maxSide * maxSide;
