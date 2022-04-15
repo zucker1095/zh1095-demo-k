@@ -274,16 +274,14 @@ class ReverseList extends LList {
   }
 
   /**
-   * 旋转链表，特判三空 & 获取链尾与总长 & 闭环 & 断开
+   * 旋转链表，获取链尾与总长 & 闭环 & 断开
    *
    * @param head the head
    * @param k the k
    * @return list node
    */
   public ListNode rotateRight(ListNode head, int k) {
-    if (head == null || head.next == null || k == 0) {
-      return head;
-    }
+    if (head == null || head.next == null || k == 0) return head;
     int len = 1;
     ListNode cur = head;
     while (cur.next != null) {

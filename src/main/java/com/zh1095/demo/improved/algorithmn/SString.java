@@ -3,7 +3,7 @@ package com.zh1095.demo.improved.algorithmn;
 import java.util.*;
 
 /**
- * 收集字符串相关，个人遵从如下原则，如果部分查找不到，则至 DDP
+ * 收集字符串相关
  *
  * <p>拼接需求，只增不减则 String，否则选非线程安全的 StringBuilder 即可
  *
@@ -261,39 +261,6 @@ class WWindow {
       }
     }
     return segmentMax;
-  }
-
-  /**
-   * 至少有k个重复字符的最长子串，要求该子串中的每一字符出现次数都不少于 k，返回所有结果中最长的长度
-   *
-   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
-   *
-   * @param s
-   * @param k
-   * @return
-   */
-  public int longestSubstring(String s, int k) {
-    // 特判
-    if (s.length() < k) return 0;
-    int[] counter = new int[26];
-    char[] chs = s.toCharArray();
-    for (char ch : chs) {
-      counter[ch - 'a'] += 1;
-    }
-    for (char ch : chs) {
-      if (counter[ch - 'a'] >= k) continue;
-      // 找到首个次数少于 k 的字符，则切分为多个小段分治
-      int maxLen = 0;
-      for (String seg : s.split(String.valueOf(ch))) {
-        maxLen = Math.max(maxLen, longestSubstring(seg, k));
-      }
-      return maxLen;
-    }
-    // 原字符串没有小于 k 的字符串
-    return s.length();
   }
 
   private static class MonotonicQueue {
@@ -742,6 +709,39 @@ class SSubString {
   }
 
   /**
+   * 至少有k个重复字符的最长子串，要求该子串中的每一字符出现次数都不少于 k，返回所有结果中最长的长度
+   *
+   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
+   *
+   * @param s
+   * @param k
+   * @return
+   */
+  public int longestSubstring(String s, int k) {
+    // 特判
+    if (s.length() < k) return 0;
+    int[] counter = new int[26];
+    char[] chs = s.toCharArray();
+    for (char ch : chs) {
+      counter[ch - 'a'] += 1;
+    }
+    for (char ch : chs) {
+      if (counter[ch - 'a'] >= k) continue;
+      // 找到首个次数少于 k 的字符，则切分为多个小段分治
+      int maxLen = 0;
+      for (String seg : s.split(String.valueOf(ch))) {
+        maxLen = Math.max(maxLen, longestSubstring(seg, k));
+      }
+      return maxLen;
+    }
+    // 原字符串没有小于 k 的字符串
+    return s.length();
+  }
+
+  /**
    * 实现strStr()，返回 haystack 中匹配 needle 的首个子串的首个字符的索引
    *
    * <p>TODO 参考
@@ -756,12 +756,12 @@ class SSubString {
     int lenChs = chs.length, lenNeedle = chsNeedle.length;
     // 枚举原串的发起点
     for (int i = 0; i <= lenChs - lenNeedle; i++) {
-      int pS = i, pNeedle = 0;
-      while (pNeedle < lenNeedle && chs[pS] == chsNeedle[pNeedle]) {
-        pS += 1;
-        pNeedle += 1;
+      int p1 = i, p2 = 0;
+      while (p2 < lenNeedle && chs[p1] == chsNeedle[p2]) {
+        p1 += 1;
+        p2 += 1;
       }
-      if (pNeedle == lenNeedle) return i;
+      if (p2 == lenNeedle) return i;
     }
     return -1;
   }
@@ -769,7 +769,9 @@ class SSubString {
   /**
    * 判断子序列，顺序满足，因此双指针正序遍历即可
    *
-   * <p>扩展1，依次检查海量 s 是否均为 t 的子序列，参下
+   * <p>扩展1，依次检查海量 s 是否均为 t 的子序列，假如长字符串的长度为 n，建立一个 n*26 大小的矩阵，表示每个位置上 26 个字符下一次出现的位置
+   *
+   * <p>参下
    * https://leetcode-cn.com/problems/is-subsequence/solution/dui-hou-xu-tiao-zhan-de-yi-xie-si-kao-ru-he-kuai-s/
    *
    * @param s pattern
@@ -777,10 +779,6 @@ class SSubString {
    * @return boolean boolean
    */
   public boolean isSubsequence(String s, String t) {
-    return isSubsequence1(s, t);
-  }
-
-  private boolean isSubsequence1(String s, String t) {
     char[] chs = s.toCharArray(), chsNeedle = t.toCharArray();
     int p1 = 0, p2 = 0;
     while (p1 < chs.length && p2 < chsNeedle.length) {
@@ -789,34 +787,11 @@ class SSubString {
     }
     return p1 == s.length();
   }
-
-  // TODO KMP 思想，类似于用伪链表把相同的字符给链接起来
-  // dp[i][p] 表示 patternStr[i+1:end] 区间内 p 的首个索引
-  // 在 dp 的定义下，如对于 "abac" 无法找到首个 a，因此需要前缀一个空格
-  // 该解法中对 patternStr 的处理与 mainStr 无关，且预处理完成后，可以利用预处理数组的信息，线性地算出任意一个字符串 mainStr 是否为 patternStr 的子串
-  private boolean isSubsequence2(String mainStr, String patternStr) {
-    patternStr = " " + patternStr;
-    int[][] dp = new int[patternStr.length()][26];
-    for (int ch = 0; ch < 26; ch++) {
-      int nxt = -1;
-      for (int i = patternStr.length() - 1; i >= 0; i--) {
-        dp[i][ch] = nxt;
-        if (patternStr.charAt(i) == ch + 'a') nxt = i;
-      }
-    }
-    // 起始位置空串
-    int idx = 0;
-    for (char ch : mainStr.toCharArray()) {
-      idx = dp[idx][ch - 'a'];
-      if (idx == -1) return false;
-    }
-    return true;
-  }
 }
 
 /** 进制转换，编码相关 */
 class CConvert {
-  private final String HEX_CHAR = "0123456789abcdef";
+  private final String CHARS = "0123456789ABCDEF";
 
   /**
    * 字符串转换整数，如 " -26" to 26
@@ -827,25 +802,27 @@ class CConvert {
    * @return the int
    */
   public int myAtoi(String s) {
-    int idx = 0, res = 0;
+    int idx = 0;
     boolean isNegative = false;
+    char[] chs = s.toCharArray();
 
-    while (idx < s.length() && s.charAt(idx) == ' ') {
+    while (idx < s.length() && chs[idx] == ' ') {
       idx += 1;
     }
     if (idx == s.length()) return 0;
 
-    if (s.charAt(idx) == '-') isNegative = true;
-    if (s.charAt(idx) == '-' || s.charAt(idx) == '+') idx += 1;
+    if (chs[idx] == '-') isNegative = true;
+    if (chs[idx] == '-' || chs[idx] == '+') idx += 1;
 
+    int num = 0;
     for (int i = idx; i < s.length(); i++) {
-      char ch = s.charAt(i);
+      char ch = chs[i];
       if (ch < '0' || ch > '9') break;
-      int pre = res;
-      res = res * 10 + (ch - '0');
-      if (pre != res / 10) return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      int pre = num;
+      num = num * 10 + (ch - '0');
+      if (pre != num / 10) return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
     }
-    return res * (isNegative ? -1 : 1);
+    return num * (isNegative ? -1 : 1);
   }
 
   /**
@@ -891,11 +868,71 @@ class CConvert {
     if (num == 0) return "0";
     StringBuilder res = new StringBuilder();
     long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
-    while (cur != 0) {
-      res.append(HEX_CHAR.charAt((int) (cur % 16)));
+    while (cur > 0) {
+      res.append(CHARS.charAt((int) (cur % 16)));
       cur /= 16;
     }
     return res.reverse().toString();
+  }
+
+  /**
+   * Excel表列名称，十进制转 26
+   *
+   * <p>一般进制转换无须进行额外操作，是因为我们是在「每一位数值范围在 [0,x)」的前提下进行「逢 x 进一」。
+   *
+   * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
+   *
+   * @param cn
+   * @return
+   */
+  public String convertToTitle(int cn) {
+    StringBuilder res = new StringBuilder();
+    int cur = cn - 1;
+    while (cur > 0) {
+      res.append((char) (cur % 26 + 'A'));
+      cur /= 26;
+      cur -= 1;
+    }
+    return res.reverse().toString();
+  }
+
+  /**
+   * 整数转罗马数字，greedy 尽可能先选出大的数字进行转换
+   *
+   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
+   *
+   * @param num the num
+   * @return string string
+   */
+  public String intToRoman(int num) {
+    // num -> str
+    // str -> num
+    // 保证遍历有序
+    final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+    final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+    StringBuilder roman = new StringBuilder();
+    int cur = num;
+    for (int i = 0; i < NUMs.length; i++) {
+      while (cur >= NUMs[i]) {
+        roman.append(ROMANs[i]);
+        cur -= NUMs[i];
+      }
+    }
+    return roman.toString();
+  }
+
+  /**
+   * Excel表列序号，26 转十进制，类似罗马数字转整数
+   *
+   * @param columnTitle the column title
+   * @return int int
+   */
+  public int titleToNumber(String ct) {
+    int res = 0;
+    for (char ch : ct.toCharArray()) {
+      res = res * 26 + (ch - 'A' + 1);
+    }
+    return res;
   }
 
   /**
@@ -944,61 +981,45 @@ class CConvert {
   }
 
   /**
-   * 整数转罗马数字，greedy 尽可能先选出大的数字进行转换
+   * IP转32位无符号整数
    *
-   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
+   * <p>TODO 参考 https://mp.weixin.qq.com/s/UWCuEtNS2kuAuDY-eIbghg
    *
-   * @param num the num
-   * @return string string
-   */
-  public String intToRoman(int num) {
-    // 如果是哈希，保证 key 的遍历有序即可
-    final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
-    final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
-    StringBuilder roman = new StringBuilder();
-    int cur = num;
-    for (int i = 0; i < NUMs.length; i++) {
-      while (cur >= NUMs[i]) {
-        roman.append(ROMANs[i]);
-        cur -= NUMs[i];
-      }
-    }
-    return roman.toString();
-  }
-
-  /**
-   * Excel表列序号，26 转十进制，类似罗马数字转整数
-   *
-   * @param columnTitle the column title
-   * @return int int
-   */
-  public int titleToNumber(String ct) {
-    int res = 0;
-    for (char ch : ct.toCharArray()) {
-      res = res * 26 + (ch - 'A' + 1);
-    }
-    return res;
-  }
-
-  /**
-   * Excel表列名称，十进制转 26
-   *
-   * <p>一般进制转换无须进行额外操作，是因为我们是在「每一位数值范围在 [0,x)」的前提下进行「逢 x 进一」。
-   *
-   * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
-   *
-   * @param cn
+   * @param IP
    * @return
    */
-  public String convertToTitle(int cn) {
-    StringBuilder res = new StringBuilder();
-    while (cn > 0) {
-      cn -= 1;
-      res.append((char) (cn % 26 + 'A'));
-      cn /= 26;
+  public long ipToInteger(String IP) {
+    String[] arr = IP.split(".");
+    long n = Long.parseLong(arr[0]);
+    for (int i = 1; i < arr.length; i++) {
+      n = n << 8 + Long.parseLong(arr[i]);
     }
-    res.reverse();
-    return res.toString();
+    return n;
+  }
+
+  /**
+   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
+   *
+   * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
+   *
+   * @param num the num
+   * @param radix the radix
+   * @return string string
+   */
+  public String baseConvert(int num, int radix) {
+    if (num == 0) return "0";
+    StringBuilder res = new StringBuilder();
+    boolean f = false;
+    if (num < 0) {
+      f = true;
+      num = -num;
+    }
+    while (num != 0) {
+      res.append(CHARS.charAt(num % radix));
+      num /= radix;
+    }
+    if (f) res.append("-");
+    return res.reverse().toString();
   }
 }
 
@@ -1023,7 +1044,7 @@ class WWord extends DefaultSString {
     while (chs[hi] == ' ') {
       hi -= 1;
     }
-    // 翻转，因此需要自右向左
+    // 翻转，因此需要自右向左aa
     while (lo <= hi) {
       int cur = hi;
       // 遍历该单词

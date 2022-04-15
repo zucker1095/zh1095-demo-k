@@ -15,7 +15,7 @@ public class OOthers {
    *
    * @param gas the gas
    * @param cost the cost
-   * @return int
+   * @return int int
    */
   public int canCompleteCircuit(int[] gas, int[] cost) {
     // 将问题转化为找最大子串的起始位置
@@ -37,7 +37,7 @@ public class OOthers {
    * 跳跃游戏，判断能否到达最后一个格，每格的数值表示可选的上界
    *
    * @param nums the nums
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean canJump(int[] nums) {
     // 前 n-1 个元素能够跳到的最远距离
@@ -90,7 +90,7 @@ public class OOthers {
    * @param m the m
    * @param n the n
    * @param ops the ops
-   * @return int
+   * @return int int
    */
   public int maxCount(int m, int n, int[][] ops) {
     int minX = m, minY = n;
@@ -248,7 +248,7 @@ class MMath {
    * 平方数之和
    *
    * @param c the c
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean judgeSquareSum(int c) {
     long n1 = 0, n2 = (long) Math.sqrt(c);
@@ -311,7 +311,7 @@ class MMath {
    * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
    *
    * @param n the n
-   * @return int
+   * @return int int
    */
   public int trailingZeroes(int n) {
     int count = 0;
@@ -441,7 +441,7 @@ class DData {
   }
 
   /**
-   * 设计循环队列
+   * 设计循环队列，三种实现方式，冗余一个元素 / 边界标记 / 计数器，此处选用前者
    *
    * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
    *
@@ -581,19 +581,19 @@ class DData {
    * <p>扩展1，要求布隆过滤器
    */
   public class MyHashMap {
-    private static final int BASE = 769;
-    private LinkedList[] data;
+    private static final int CAPACITY = 769;
+    private final List[] buckets;
 
     /** Instantiates a new My hash map. */
-    MyHashMap() {
-      data = new LinkedList[BASE];
-      for (int i = 0; i < BASE; i++) {
-        data[i] = new LinkedList<Pair>();
+    public MyHashMap() {
+      buckets = new LinkedList[CAPACITY];
+      for (int i = 0; i < CAPACITY; i++) {
+        buckets[i] = new LinkedList<BucketNode>();
       }
     }
 
     private int hash(int key) {
-      return key % BASE;
+      return key % CAPACITY;
     }
 
     /**
@@ -604,15 +604,15 @@ class DData {
      */
     public void put(int key, int value) {
       int h = hash(key);
-      Iterator<Pair> iterator = data[h].iterator();
+      Iterator<BucketNode> iterator = buckets[h].iterator();
       while (iterator.hasNext()) {
-        Pair pair = iterator.next();
+        BucketNode pair = iterator.next();
         if (pair.key == key) {
           pair.value = value;
           return;
         }
       }
-      data[h].offerLast(new Pair(key, value));
+      buckets[h].add(new BucketNode(key, value));
     }
 
     /**
@@ -623,9 +623,9 @@ class DData {
      */
     public int get(int key) {
       int h = hash(key);
-      Iterator<Pair> iterator = data[h].iterator();
+      Iterator<BucketNode> iterator = buckets[h].iterator();
       while (iterator.hasNext()) {
-        Pair pair = iterator.next();
+        BucketNode pair = iterator.next();
         if (pair.key == key) {
           return pair.value;
         }
@@ -640,17 +640,17 @@ class DData {
      */
     public void remove(int key) {
       int h = hash(key);
-      Iterator<Pair> iterator = data[h].iterator();
+      Iterator<BucketNode> iterator = buckets[h].iterator();
       while (iterator.hasNext()) {
-        Pair pair = iterator.next();
+        BucketNode pair = iterator.next();
         if (pair.key == key) {
-          data[h].remove(pair);
+          buckets[h].remove(pair);
           return;
         }
       }
     }
 
-    private class Pair {
+    private class BucketNode {
       /** The Key. */
       final int key;
 
@@ -663,7 +663,7 @@ class DData {
        * @param key the key
        * @param value the value
        */
-      Pair(int key, int value) {
+      public BucketNode(int key, int value) {
         this.key = key;
         this.value = value;
       }
@@ -715,61 +715,90 @@ class DData {
       return out.isEmpty() && in.isEmpty();
     }
   }
+
+  /**
+   * 实现Trie
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/implement-trie-prefix-tree/solution/trie-tree-de-shi-xian-gua-he-chu-xue-zhe-by-huwt/
+   */
+  public class Trie {
+    private final TireNode root = new TireNode();
+
+    /** Instantiates a new Trie. */
+    public Trie() {}
+
+    /**
+     * Insert.
+     *
+     * @param word the word
+     */
+    public void insert(String word) {
+      TireNode node = root;
+      for (char ch : word.toCharArray()) {
+        if (node.next[ch - 'a'] == null) node.next[ch - 'a'] = new TireNode();
+        node = node.next[ch - 'a'];
+      }
+      node.isEnd = true;
+    }
+
+    /**
+     * Search boolean.
+     *
+     * @param word the word
+     * @return the boolean
+     */
+    public boolean search(String word) {
+      TireNode node = root;
+      for (char ch : word.toCharArray()) {
+        node = node.next[ch - 'a'];
+        if (node == null) return false;
+      }
+      return node.isEnd;
+    }
+
+    /**
+     * Starts with boolean.
+     *
+     * @param prefix the prefix
+     * @return the boolean
+     */
+    public boolean startsWith(String prefix) {
+      TireNode node = root;
+      for (char ch : prefix.toCharArray()) {
+        node = node.next[ch - 'a'];
+        if (node == null) return false;
+      }
+      return true;
+    }
+
+    private class TireNode {
+      private final TireNode[] next = new TireNode[26];
+      private boolean isEnd = false;
+    }
+  }
 }
 
 /** 单个数字 */
 class Digit {
-  private final String CHARS = "0123456789ABCDEF";
-
   /**
-   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
+   * 第N位数字，k 位数共有 9*10^(k-1) 个数字
    *
-   * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
-   *
-   * @param num the num
-   * @param radix the radix
-   * @return string string
-   */
-  public String baseConvert(int num, int radix) {
-    if (num == 0) {
-      return "0";
-    }
-    StringBuilder res = new StringBuilder();
-    boolean f = false;
-    if (num < 0) {
-      f = true;
-      num = -num;
-    }
-    while (num != 0) {
-      res.append(CHARS.charAt(num % radix));
-      num /= radix;
-    }
-    if (f) {
-      res.append("-");
-    }
-    return res.reverse().toString();
-  }
-
-  /**
-   * 第n位数字
-   *
-   * <p>一位数 9 个 -> 1 * 9，二位数 90 个 -> 2 * 90，其余同理
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/nth-digit/solution/gong-shui-san-xie-jian-dan-mo-ni-ti-by-a-w5wl/
    *
    * @param n the n
    * @return int int
    */
   public int findNthDigit(int n) {
-    int cur = 1, base = 9, k = n;
-    while (k > cur * base) {
-      k -= cur * base;
-      cur += 1;
-      base *= 10;
-      if (cur > Integer.MAX_VALUE / base) break;
+    int len = 1, cur = n;
+    while (len * 9 * Math.pow(10, len - 1) < cur) {
+      cur -= len * 9 * Math.pow(10, len - 1);
+      len += 1;
     }
-    k -= 1;
-    int num = (int) Math.pow(10, cur - 1) + k / cur;
-    int idx = k % cur;
-    return num / (int) Math.pow(10, cur - 1 - idx) % 10;
+    int start = (int) (Math.pow(10, len - 1) + cur / len - 1);
+    cur -= len * (cur / len);
+    return cur == 0 ? start % 10 : (int) ((start + 1) / Math.pow(10, len - cur) % 10);
   }
 
   /**
@@ -782,7 +811,7 @@ class Digit {
    * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
    *
    * @param x the x
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean isPalindrome(int x) {
     if (x < 0 || (x % 10 == 0 && x != 0)) return false;
@@ -843,7 +872,7 @@ class GGraph {
    *
    * @param numCourses the num courses
    * @param prerequisites the prerequisites
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
     // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
@@ -925,7 +954,7 @@ class GGraph {
    * @param times the times
    * @param n the n
    * @param k the k
-   * @return int
+   * @return int int
    */
   public int networkDelayTime(int[][] times, int n, int k) {
     int[][] matrix = new int[n][n];
@@ -1069,6 +1098,28 @@ class BBit {
       n >>>= 1;
     }
     return count;
+  }
+
+  /**
+   * 格雷编码
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/gray-code/solution/gray-code-jing-xiang-fan-she-fa-by-jyd/
+   *
+   * @param n
+   * @return
+   */
+  public List<Integer> grayCode(int n) {
+    List<Integer> res = new ArrayList<Integer>() {};
+    res.add(0);
+    int head = 1;
+    for (int i = 0; i < n; i++) {
+      for (int j = res.size() - 1; j >= 0; j--) {
+        res.add(head + res.get(j));
+      }
+      head <<= 1;
+    }
+    return res;
   }
 }
 

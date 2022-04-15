@@ -297,7 +297,7 @@ class HHeap extends DefaultArray {
     }
   }
 
-  // 小根堆 v1 是否优先度高于 v2
+  // v1 的优先级是否高于 v2 此处小根堆
   private boolean priorityThan(int v1, int v2) {
     return v1 < v2;
   }
@@ -345,7 +345,7 @@ class HHeap extends DefaultArray {
    * @return
    */
   public int[][] kClosest(int[][] points, int K) {
-    int[][] res = new int[K][2];
+    int[][] nodes = new int[K][2];
     PriorityQueue<int[]> pq =
         new PriorityQueue<>(
             K, (p1, p2) -> p2[0] * p2[0] + p2[1] * p2[1] - p1[0] * p1[0] - p1[1] * p1[1]);
@@ -361,9 +361,9 @@ class HHeap extends DefaultArray {
       }
     }
     for (int i = 0; i < K; i++) {
-      res[i] = pq.poll();
+      nodes[i] = pq.poll();
     }
-    return res;
+    return nodes;
   }
 
   /**
@@ -440,13 +440,17 @@ class HHeap extends DefaultArray {
 }
 
 /**
- * 基于比较的排序的时间复杂度下界均是 nlogn
+ * 基于比较的排序的平均时间复杂度均是 nlogn，快排的推导参考 https://nathanli.tech/2022/03/03/QuickSort/
  *
  * <p>数组全排列共有 n! 种情况，而二分每次最多能排除一半的情况，根据斯特林级数，算法的渐进复杂度为 O(log(n!)) = O(nlogn)
  *
- * <p>链表快排参考「排序链表」
+ * <p>最坏时间复杂度出现在每次划分均为 n-1 & 0，为 n^2
  *
- * <p>TODO 快排最优 & 平均 & 最坏的复杂度分别如何计算
+ * <p>最好时间复杂度出现在每次划分均为 n/2 & n/2-1，为 nlogn
+ *
+ * <p>平均时间复杂度出现在上述二者的分布为均分时，为 nlogn
+ *
+ * <p>链表快排参考「排序链表」
  */
 class QQuick extends DefaultArray {
   private final Random random = new Random();
@@ -491,10 +495,9 @@ class QQuick extends DefaultArray {
    * @param nums the nums
    */
   public void sortColors(int[] nums) {
-    if (nums.length < 2) return;
     int pivot = 1;
-    int lt = -1, gt = nums.length; // 虚拟头尾，保证界外
-    int cur = 0;
+    // 虚拟头尾，保证界外
+    int lt = -1, cur = 0, gt = nums.length;
     while (cur < gt) {
       if (nums[cur] < pivot) {
         lt += 1;
@@ -1119,7 +1122,7 @@ class SSum extends DefaultArray {
 }
 
 /** 以下均为前缀和，适合区间和满足 target，严格相等搭配哈希，否则搭配滑窗 */
-class Presum {
+class PreSum {
   /**
    * 最大子数组和 / 最大子序和 / 最大子串和 / 连续子数组的最大和，基于贪心，通过前缀和
    *
@@ -1156,7 +1159,7 @@ class Presum {
   }
 
   /**
-   * 和为k的子数组，返回满足的子数组数量，严格相等
+   * 和为k的子数组，返回子数组数量，严格相等
    *
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
@@ -1278,9 +1281,8 @@ class Presum {
     //    long count = 0;
     //    Map<Long, Integer> map = new HashMap<>();
     //    map.put(0L, 1);
-    //    for (int num : nums) {
-    //      preSum += num;
-    //      long u = preSum % k;
+    //    for (int i = 1; i <= nums.length; i++) {
+    //      long u = nums[i] % target;
     //      if (map.containsKey(u)) count += map.get(u);
     //      map.put(u, map.getOrDefault(u, 0) + 1);
     //    }
@@ -1374,17 +1376,18 @@ class Presum {
    */
   public int[] getMaxMatrix(int[][] matrix) {
     // 保存最大子矩阵的左上角和右下角的行列坐标
-    int[] res = new int[4];
+    int[] coordinates = new int[4];
     int N = matrix.length, M = matrix[0].length;
-    int[] preSum = new int[M]; // 记录当前i~j行组成大矩阵的每一列的和，将二维转化为一维
+    int[] preSum = new int[M]; // 记录当前 i~j 行组成大矩阵的每一列的和，将二维转化为一维
     // 相当于dp[i],dp_i 与最大值
     int sum = 0, maxSum = Integer.MIN_VALUE;
-    int bestr1 = 0, bestc1 = 0; // 暂时记录左上角，相当于begin
+    int bestr1 = 0, bestc1 = 0; // 暂时记录左上角，相当于 start
     for (int i = 0; i < N; i++) { // 以i为上边，从上而下扫描
       for (int t = 0; t < M; t++) {
         preSum[t] = 0; // 每次更换子矩形上边，就要清空b，重新计算每列的和
       }
-      for (int j = i; j < N; j++) { // 子矩阵的下边，从i到N-1，不断增加子矩阵的高
+      for (int j = i; j < N; j++) {
+        // 子矩阵的下边，从i到N-1，不断增加子矩阵的高
         // 一下就相当于求一次最大子序列和
         sum = 0; // 从头开始求dp
         for (int k = 0; k < M; k++) {
@@ -1400,24 +1403,24 @@ class Presum {
           }
           if (sum > maxSum) {
             maxSum = sum;
-            res = new int[] {bestr1, bestc1, j, k};
+            coordinates = new int[] {bestr1, bestc1, j, k};
           }
         }
       }
     }
-    return res;
+    return coordinates;
   }
 }
 
 /** 重复，哈希有关 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，无序找首个，快慢指针，与「环形链表II」一致
+   * 寻找重复数，无序找首个，快慢指针，与「环形链表II」一致，类似参考「第一个只出现一次的字符」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
    *
-   * <p>TODO 扩展1，重复数字有多个，要求找出所有重复数字，复杂度为 n & 1，nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当
+   * <p>TODO 扩展1，重复数字有多个，找出所有，要求复杂度 n & 1，nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当
    * nums[idx]>2*n 时就能表示 nums[i]，即 idx+1 出现过两次
    *
    * @param nums the nums
@@ -1477,9 +1480,9 @@ class DDuplicate extends DefaultArray {
   public List<Integer> findDuplicates(int[] nums) {
     List<Integer> duplicates = new ArrayList<>();
     for (int num : nums) {
-      num *= num < 0 ? -1 : 1;
-      if (nums[num - 1] < 0) duplicates.add(num);
-      else nums[num - 1] *= -1;
+      int idx = (num < 0 ? -num : num) - 1;
+      if (nums[idx] < 0) duplicates.add(idx + 1);
+      else nums[idx] *= -1;
     }
     return duplicates;
   }
@@ -1535,11 +1538,11 @@ class Delete extends DefaultArray {
    * @return
    */
   public int[] exchange(int[] nums) {
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
-      if ((nums[hi] & 1) == 0) continue;
-      swap(nums, lo, hi);
-      lo += 1;
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
+      if ((nums[read] & 1) == 0) continue;
+      swap(nums, write, read);
+      write += 1;
     }
     return nums;
   }
@@ -1555,12 +1558,12 @@ class Delete extends DefaultArray {
    */
   public void moveZeroes(int[] nums) {
     final int target = 0, k = 0; // diff 1
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
       //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3)
-      if (lo >= k && target == nums[hi]) continue;
-      swap(nums, lo, hi); // diff 2
-      lo += 1;
+      if (write >= k && target == nums[read]) continue;
+      swap(nums, write, read); // diff 2
+      write += 1;
     }
   }
 
@@ -1573,13 +1576,13 @@ class Delete extends DefaultArray {
    */
   public String moveChars(String str, char target) {
     char[] chs = str.toCharArray();
-    int lo = 0;
-    for (int hi = 0; hi < chs.length; hi++) {
-      if (target == chs[hi]) continue;
-      swap(chs, lo, hi);
-      lo += 1;
+    int write = 0;
+    for (int read = 0; read < chs.length; read++) {
+      if (target == chs[read]) continue;
+      swap(chs, write, read);
+      write += 1;
     }
-    return String.valueOf(Arrays.copyOfRange(chs, 0, lo));
+    return String.valueOf(Arrays.copyOfRange(chs, 0, write));
   }
 
   /**
@@ -1593,19 +1596,16 @@ class Delete extends DefaultArray {
    * @return the int
    */
   public int removeDuplicates(int[] nums) {
-    return removeDuplicates(nums, 1);
-  }
-
-  private int removeDuplicates(int[] nums, int k) {
+    final int k = 0;
     // final int target = nums[last - k];
-    int lo = 0;
-    for (int hi = 0; hi < nums.length; hi++) {
-      int num = nums[hi];
-      if (lo >= k && nums[lo - k] == num) continue;
-      nums[lo] = num;
-      lo += 1;
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
+      int num = nums[read];
+      if (write >= k && nums[write - k] == num) continue;
+      nums[write] = num;
+      write += 1;
     }
-    return lo;
+    return write;
   }
 
   /**
@@ -1639,7 +1639,7 @@ class Delete extends DefaultArray {
 /** 遍历相关 */
 class Traversal extends DefaultArray {
   /**
-   * 旋转数组，反转三次，all & [0,k-1] & [k,end]
+   * 轮转数组，反转三次，all & [0,k-1] & [k,end]
    *
    * @param nums the nums
    * @param k the k
@@ -1937,16 +1937,16 @@ class DicOrder extends DefaultArray {
    * @return
    */
   public String largestNumber(int[] nums) {
-    StringBuilder res = new StringBuilder();
+    StringBuilder maxNum = new StringBuilder();
     List<String> strs = new ArrayList<>(nums.length);
     for (int num : nums) {
       strs.add(String.valueOf(num));
     }
     strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
     for (String str : strs) {
-      res.append(str);
+      maxNum.append(str);
     }
-    return res.toString();
+    return maxNum.toString();
     // 最小数需要去除前导零，因为可能有 02>20
     //    int start = 0;
     //    while (start < nums.length - 1 && res.charAt(start) == '0') {
@@ -1989,20 +1989,20 @@ class DicOrder extends DefaultArray {
   // 1 为前缀的子节点增加 100 个，十叉树又增加了一层，变成三层
   private int count(int n, int prefix) {
     // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出, 所以用 long
-    long cur = prefix, next = cur + 1;
+    long cur = prefix, nxt = cur + 1;
     int count = 0;
     while (cur <= n) {
       // 下一峰头减去此峰头
-      count += Math.min(n + 1, next) - cur;
+      count += Math.min(n + 1, nxt) - cur;
       cur *= 10;
       // 步进至下层
-      next *= 10;
+      nxt *= 10;
     }
     return count;
   }
 
   /**
-   * 字典序排数
+   * 字典序排数，N 叉树遍历
    *
    * <p>TODO
    *
