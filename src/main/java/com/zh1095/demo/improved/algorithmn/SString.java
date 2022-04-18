@@ -301,7 +301,7 @@ class WWindow {
 }
 
 /**
- * 收集栈相关
+ * 收集栈相关，对于括号，左入右出
  *
  * <p>关于 Java 模拟 stack 的选型
  * https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
@@ -331,14 +331,12 @@ class SStack {
     Deque<Character> stack = new ArrayDeque<>();
     // int level = 0;
     for (char ch : s.toCharArray()) {
-      // 左括号入栈
+      // if ((priorities.indexOf(ch) + 1) % 3 > level) return false;
       if (!pairs.containsKey(ch)) {
-        // if ((priorities.indexOf(ch) + 1) % 3 > level) return false;
         stack.addLast(ch);
         // level = Math.max((priorities.indexOf(ch) + 1) % 3, level);
         continue;
       }
-      // 右括号出栈并判断
       // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
       if (stack.isEmpty() || stack.getLast() != pairs.get(ch)) return false;
       stack.removeLast();
@@ -429,8 +427,9 @@ class SStack {
   public String simplifyPath(String path) {
     Deque<String> stack = new ArrayDeque<>();
     for (String seg : path.split("/")) {
-      if (seg.equals("..")) stack.pollLast();
-      else if (!" ..".contains(seg)) stack.offerLast(seg);
+      if (seg.equals("") || seg.equals(".")) continue;
+      else if (seg.equals("..")) stack.pollLast();
+      else stack.offerLast(seg);
     }
     StringBuilder res = new StringBuilder();
     for (String str : stack) {
@@ -709,7 +708,7 @@ class SSubString {
   }
 
   /**
-   * 至少有k个重复字符的最长子串，要求该子串中的每一字符出现次数都不少于 k，返回所有结果中最长的长度
+   * 至少有k个重复字符的最长子串，其中包含的每个字符都至少有k个
    *
    * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
    *
@@ -1034,32 +1033,35 @@ class WWord extends DefaultSString {
    * @return string string
    */
   public String reverseWords(String s) {
-    char[] chs = s.toCharArray();
-    StringBuilder str = new StringBuilder();
-    int lo = 0, hi = chs.length - 1;
-    // 去除首尾空格
-    while (chs[lo] == ' ') {
-      lo += 1;
+    int start = 0, end = 0;
+    // 1.去首尾空格并翻转整个
+    StringBuilder str = new StringBuilder(s.trim()).reverse();
+    for (int i = 0; i < str.length(); i++) {
+      // 2.单词间保留一个空格
+      if (str.charAt(i) != ' ') continue;
+      int write = i + 1;
+      while (str.charAt(write) == ' ') {
+        write += 1;
+      }
+      str.delete(i + 1, write);
+      // 3.翻转单个单词
+      end = i - 1;
+      revSingleWord(str, start, end);
+      start = i + 1;
     }
-    while (chs[hi] == ' ') {
+    // 4.翻转整个单词
+    revSingleWord(str, start, str.length() - 1);
+    return str.toString();
+  }
+
+  private void revSingleWord(StringBuilder sentence, int lo, int hi) {
+    while (lo < hi) {
+      char temp = sentence.charAt(lo);
+      sentence.setCharAt(lo, sentence.charAt(hi));
+      sentence.setCharAt(hi, temp);
+      lo += 1;
       hi -= 1;
     }
-    // 翻转，因此需要自右向左aa
-    while (lo <= hi) {
-      int cur = hi;
-      // 遍历该单词
-      while (cur >= lo && chs[cur] != ' ') {
-        cur -= 1;
-      }
-      str.append(Arrays.copyOfRange(chs, cur + 1, hi + 1));
-      // 单词间插空
-      if (cur > lo) str.append(' ');
-      while (cur >= lo && chs[cur] == ' ') {
-        cur -= 1;
-      }
-      hi = cur;
-    }
-    return str.toString();
   }
 
   /**

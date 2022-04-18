@@ -141,7 +141,7 @@ class OptimalSubSequence extends DichotomyClassic {
    * 与
    * https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
    *
-   * <p>扩展1，输出路径，参考
+   * <p>扩展1，打印路径，参考
    * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
    *
    * @param nums the nums
@@ -367,6 +367,8 @@ class OptimalSubSequence extends DichotomyClassic {
 /**
  * 路径相关，其余如海岛类 & 最长递增路径，参考 TTree
  *
+ * <p>所有需要打印路径的题型，基本都涉及回溯
+ *
  * @author cenghui
  */
 class OptimalPath {
@@ -380,7 +382,7 @@ class OptimalPath {
    *
    * <p>每次只依赖左侧和上侧的状态，因此可以压缩一维，由于不会回头，因此可以原地建立 dp
    *
-   * <p>扩展1，记录路径，则需要自底向上，即从右下角，终点开始遍历，参下 annotate
+   * <p>扩展1，打印路径，则需要自底向上，即从右下角，终点开始遍历，参下 annotate
    *
    * <p>扩展2，存在负值点
    *
@@ -444,7 +446,7 @@ class OptimalPath {
    *
    * <p>dp[i] = Math.max(dp[i-1], nums[i-1] + dp[i-2]);
    *
-   * <p>扩展1，记录路径，参下 annotate
+   * <p>扩展1，打印路径，参下 annotate
    *
    * @param nums the nums
    * @return int int
@@ -677,21 +679,24 @@ class OptimalElse {
   }
 
   /**
-   * 整数拆分，设 n=a+b+...+c 求 a*b*...*c 乘积最大化的方案
+   * 整数拆分，设 n=a+b+...+c 求 a*b*...*c 最大乘积的方案
    *
-   * <p>TODO 参考
+   * <p>dp[i] 表示 i 拆分的整数集的最大积
+   *
+   * <p>参考
    * https://leetcode-cn.com/problems/integer-break/solution/bao-li-sou-suo-ji-yi-hua-sou-suo-dong-tai-gui-hua-/
    *
    * @param n
    * @return
    */
   public int integerBreak(int n) {
-    if (n < 4) return n - 1;
     int[] dp = new int[n + 1];
-    dp[2] = 1;
-    for (int i = 3; i <= n; i++) {
-      // max(2*(i−2), 2*dp[i−2], 3*(i−3), 3*dp[i−3])
-      dp[i] = Math.max(Math.max(2 * (i - 2), 2 * dp[i - 2]), Math.max(3 * (i - 3), 3 * dp[i - 3]));
+    dp[1] = 1;
+    for (int i = 2; i <= n; i++) {
+      for (int j = 1; j <= i - 1; j++) {
+        // max(dp[i], j*(i-j), j*dp[i-j])  后二者分别对应不拆与拆
+        dp[i] = Math.max(dp[i], Math.max(j * (i - j), j * dp[i - j]));
+      }
     }
     return dp[n];
   }
@@ -823,7 +828,7 @@ class CCount {
    *
    * <p>扩展1，不能爬到 7 倍数的楼层，参下 annotate
    *
-   * <p>扩展2，记录爬楼梯的路径，参下回溯
+   * <p>扩展2，打印路径，参下回溯
    *
    * <p>扩展3，爬 1 or 3 级，参考
    * https://www.nowcoder.com/questionTerminal/1e6ac1a96c3149348aa9009709a36a6f?f=discussion
@@ -844,7 +849,7 @@ class CCount {
     return step2;
   }
 
-  private void backtracking14(int floor, StringBuilder path, List<String> res) {
+  private void backtracking9(int floor, StringBuilder path, List<String> res) {
     if (floor == 0) {
       res.add(path.toString());
       return;
@@ -853,7 +858,7 @@ class CCount {
       int nxtFloor = floor - step;
       if (nxtFloor < 0) break;
       path.append(nxtFloor);
-      backtracking14(nxtFloor, path, res);
+      backtracking9(nxtFloor, path, res);
       path.deleteCharAt(path.length() - 1);
     }
   }
@@ -903,6 +908,8 @@ class CCount {
    *
    * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数
    *
+   * <p>TODO 扩展1，打印路径
+   *
    * @param obstacleGrid the obstacle grid
    * @return int int
    */
@@ -918,6 +925,22 @@ class CCount {
       }
     }
     return dp[len - 1];
+    //    int i = obstacleGrid.length - 1, j = obstacleGrid[0].length - 1;
+    //    int[][] dp = new int[i + 1][j + 1];
+    //
+    //    List<Integer> paths = new ArrayList<>();
+    //    paths.add(obstacleGrid[i][j]);
+    //    int sum = dp[i][j];
+    //    while (i > 0 || j > 0) {
+    //      sum -= obstacleGrid[i][j];
+    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
+    //        paths.add(obstacleGrid[i][j - 1]);
+    //        j -= 1;
+    //      } else {
+    //        paths.add(obstacleGrid[i - 1][j]);
+    //        i -= 1;
+    //      }
+    //    }
   }
 
   /**

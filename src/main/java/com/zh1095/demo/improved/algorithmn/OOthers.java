@@ -530,28 +530,41 @@ class DData {
    *
    * <p>全局保存最小值，入栈存差并更新，出栈与取顶均需判负
    *
+   * <p>参考 https://yeqown.xyz/2018/03/01/Stack%E5%AE%9E%E7%8E%B0O1%E7%9A%84Min%E5%92%8CMax/
+   *
+   * <p>https://www.cnblogs.com/Acx7/p/14617661.html
+   *
+   * <p>TODO 扩展1，O(1) 同时返回最大与最小
+   *
    * @author cenghui
    */
   public class MinStack {
     private final Deque<Integer> stack = new ArrayDeque<>();
-    private int min;
+    private int min, max;
 
     /**
-     * Push.
+     * 存差 & 更新
      *
      * @param x the x
      */
     public void push(int x) {
       if (stack.isEmpty()) min = x;
-      stack.push(x - min); // 存差
-      if (x < min) min = x; // 更新
+      //      if (stack.isEmpty()) max = x;
+      stack.push(x - min);
+      if (x < min) min = x;
+      //      if (x > max) max = x;
     }
 
-    /** Pop. */
+    /**
+     * top < 0 ? min-=top
+     *
+     * <p>top > 0 ? max-=top
+     */
     public void pop() {
       if (stack.isEmpty()) return;
       int pop = stack.pop();
       if (pop < 0) min -= pop;
+      //      if (pop > 0) max -= pop;
     }
 
     /**
@@ -563,6 +576,7 @@ class DData {
       int top = stack.peek();
       // 负数的话，出栈的值保存在 min 中，出栈元素加上最小值即可
       return top < 0 ? min : top + min;
+      //      return top > 0 ? max : max + top;
     }
 
     /**
@@ -572,6 +586,15 @@ class DData {
      */
     public int getMin() {
       return min;
+    }
+
+    /**
+     * Gets max.
+     *
+     * @return the max
+     */
+    public int getMax() {
+      return max;
     }
   }
 
@@ -784,6 +807,8 @@ class Digit {
   /**
    * 第N位数字，k 位数共有 9*10^(k-1) 个数字
    *
+   * <p>基于规律 [100, 999] 有 3*90*100 个数字 即 3*9*10^2
+   *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/nth-digit/solution/gong-shui-san-xie-jian-dan-mo-ni-ti-by-a-w5wl/
    *
@@ -837,6 +862,9 @@ class Digit {
  * <p>求两点之间的权值最小的路径
  */
 class GGraph {
+  // 「N叉树的直径」结果
+  private int diameter = 0;
+
   // 分为存图与算法两步
   // 存图分为两种
   private void learn() {
@@ -853,6 +881,56 @@ class GGraph {
     //        e = new int[edges], // e 由于访问某一条边指向的节点
     //        ne = new int[edges], // ne 由于是以链表的形式进行存边，该数组就是用于找到下一条边
     //        w = new int[edges]; // w 记录某边的权重
+  }
+
+  /**
+   * N叉树的直径
+   *
+   * <p>TODO 参考 https://www.nowcoder.com/questionTerminal/a77b4f3d84bf4a7891519ffee9376df3
+   *
+   * @param n the n
+   * @param Tree_edge the tree edge
+   * @param Edge_value the edge value
+   * @return int
+   */
+  public int diameterOfTree(int n, Interval[] Tree_edge, int[] Edge_value) {
+    // 使用数组保存所有的节点
+    List<Edge>[] graph = new List[n];
+    for (int i = 0; i < n; i++) {
+      graph[i] = new ArrayList<>();
+    }
+    // 建图
+    for (int i = 0; i < Tree_edge.length; i++) {
+      Interval interval = Tree_edge[i];
+      int value = Edge_value[i];
+      // 由于是无向图，所有每条边都是双向的
+      graph[interval.start].add(new Edge(interval.end, value));
+      graph[interval.end].add(new Edge(interval.start, value));
+    }
+    // 随机从一个节点开始 dfs，这里选择 0
+    dfs13(graph, -1, 0);
+    return diameter;
+  }
+
+  // dfs返回值为从node节点开始的最长深度
+  private int dfs13(List<Edge>[] graph, int from, int to) {
+    // 从节点开始的最大与第二深度
+    int maxDepth = 0, secondMaxDepth = 0;
+    for (Edge edge : graph[to]) {
+      int neighbor = edge.end;
+      if (neighbor == from) continue; // 防止返回访问父节点
+
+      int depth = edge.weight + dfs13(graph, to, neighbor);
+      if (depth > maxDepth) {
+        secondMaxDepth = maxDepth;
+        maxDepth = depth;
+      } else if (depth > secondMaxDepth) {
+        secondMaxDepth = depth;
+      }
+    }
+    // maxDepth+secondMaxDepth 为以此节点为中心的直径
+    diameter = Math.max(diameter, maxDepth + secondMaxDepth);
+    return maxDepth;
   }
 
   /**
@@ -987,6 +1065,31 @@ class GGraph {
     return res >= Integer.MAX_VALUE / 2 ? -1 : res;
   }
 
+  private class Edge {
+    /** The End. */
+    int end,
+        /** The Weight. */
+        weight;
+
+    /**
+     * Instantiates a new Edge.
+     *
+     * @param end the end
+     * @param w the w
+     */
+    Edge(int end, int w) {
+      this.end = end;
+      this.weight = w;
+    }
+  }
+
+  private class Interval {
+    /** The Start. */
+    int start,
+        /** The End. */
+        end;
+  }
+
   /**
    * 访问所有节点的最短路径
    *
@@ -1106,8 +1209,8 @@ class BBit {
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/gray-code/solution/gray-code-jing-xiang-fan-she-fa-by-jyd/
    *
-   * @param n
-   * @return
+   * @param n the n
+   * @return list
    */
   public List<Integer> grayCode(int n) {
     List<Integer> res = new ArrayList<Integer>() {};

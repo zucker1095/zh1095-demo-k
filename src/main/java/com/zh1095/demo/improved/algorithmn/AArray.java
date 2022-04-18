@@ -2002,14 +2002,32 @@ class DicOrder extends DefaultArray {
   }
 
   /**
-   * 字典序排数，N 叉树遍历
+   * 字典序排数，按字典序返回 [1,n] 所有整数，N 叉树遍历
    *
-   * <p>TODO
+   * <p>参考
+   * https://leetcode-cn.com/problems/lexicographical-numbers/solution/386-zi-dian-xu-pai-shu-o1-kong-jian-fu-z-aea2/
    *
    * @param n the n
    * @return list list
    */
-  //  public List<Integer> lexicalOrder(int n) { }
+  public List<Integer> lexicalOrder(int n) {
+    List<Integer> res = new ArrayList<>();
+    int num = 1;
+    while (res.size() < n) {
+      // 1.单分支向下遍历
+      while (num <= n) {
+        res.add(num);
+        num *= 10;
+      }
+      // 2.回溯，当前层子节点遍历完，或不存在节点(因为已经大于 n)，则返回上一层
+      while (num % 10 == 9 || num > n) {
+        num /= 10;
+      }
+      // 3.下一个子节点
+      num += 1;
+    }
+    return res;
+  }
 
   /**
    * 拼接最大数，两个无序正整数数组，共取 k 个拼接为数字，求该数最大的方案
