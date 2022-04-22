@@ -1220,7 +1220,7 @@ class PreSum {
    *
    * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
    *
-   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」
+   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」或「表现良好的最长时间段」
    *
    * @param target the target
    * @param nums the nums
@@ -1257,7 +1257,9 @@ class PreSum {
   }
 
   /**
-   * 连续的子数组和，严格相等，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素
+   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素，严格相等
+   *
+   * <p>只需要枚举右端点 j，然后在枚举右端点 j 时检查之前是否出现过左端点 i，使得 sum[j] & sum[i - 1] 对 k 取余相同
    *
    * <p>扩展1，方案数参考
    * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
@@ -1267,26 +1269,25 @@ class PreSum {
    * @return boolean
    */
   public boolean checkSubarraySum(int[] nums, int target) {
-    int preSum = 0;
-    HashMap<Integer, Integer> idxByMod = new HashMap<>();
-    idxByMod.put(0, -1);
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i];
-      // 因为我们需要保存最小索引，当已经存在时则不用再次存入，不然会更新索引值
-      int mod = target == 0 ? preSum : preSum % target, minIdx = idxByMod.getOrDefault(mod, -1);
-      if (minIdx == -1) idxByMod.put(mod, i);
-      else if (i - minIdx > 1) return true;
+    int len = nums.length;
+    int[] preSum = new int[len + 1]; // 哑元素，因此下方始于 2
+    for (int i = 1; i <= len; i++) {
+      preSum[i] = preSum[i - 1] + nums[i - 1];
     }
-    // 方案数
-    //    long count = 0;
-    //    Map<Long, Integer> map = new HashMap<>();
-    //    map.put(0L, 1);
-    //    for (int i = 1; i <= nums.length; i++) {
-    //      long u = nums[i] % target;
-    //      if (map.containsKey(u)) count += map.get(u);
-    //      map.put(u, map.getOrDefault(u, 0) + 1);
-    //    }
+    Map<Integer, Integer> mapping = new HashMap<>();
+    for (int i = 2; i <= len; i++) {
+      mapping.put(preSum[i - 2] % target, 0);
+      if (mapping.containsKey(preSum[i] % target)) return true;
+    }
     return false;
+    // 方案数
+    //    int count = 0;
+    //    mapping.put(0, 1);
+    //    for (int i = 1; i <= nums.length; i++) {
+    //      int mod = preSum[i] % target;
+    //      mapping.put(mod, mapping.getOrDefault(mod, 0) + 1);
+    //      if (mapping.containsKey(mod)) count += mapping.get(mod);
+    //    }
   }
 
   /**
@@ -1318,6 +1319,8 @@ class PreSum {
    * 和至少为k的最短子数组，和至少，单调队列 & 前缀和
    *
    * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   *
+   * <p>扩展1，最长，参考「表现良好的最长时间段」，将 <8 视作 -1 否则视作 1，找和为正数的最长子数组
    *
    * @param nums the nums
    * @param k the k
@@ -1815,7 +1818,8 @@ class Traversal extends DefaultArray {
   /**
    * 分割数组的最大值
    *
-   * <p>TODO
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/split-array-largest-sum/solution/er-fen-cha-zhao-by-liweiwei1419-4/
    *
    * @param nums
    * @param m
@@ -1831,16 +1835,10 @@ class Traversal extends DefaultArray {
     // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
     int lo = max, hi = sum;
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      int splits = split(nums, mid);
-      if (splits > m) {
-        // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要将「子数组各自的和的最大值」调大
-        // 下一轮搜索的区间是 [mid + 1, right]
-        lo = mid + 1;
-      } else {
-        // 下一轮搜索的区间是上一轮的反面区间 [left, mid]
-        hi = mid;
-      }
+      int mid = lo + (hi - lo) / 2, splits = split(nums, mid);
+      // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要将「子数组各自的和的最大值」调大
+      if (splits > m) lo = mid + 1; // 下一轮搜索的区间是 [mid + 1, right]
+      else hi = mid;
     }
     return lo;
   }

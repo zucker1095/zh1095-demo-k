@@ -384,7 +384,7 @@ class OptimalPath {
    *
    * <p>扩展1，打印路径，则需要自底向上，即从右下角，终点开始遍历，参下 annotate
    *
-   * <p>扩展2，存在负值点
+   * <p>扩展2，存在负值点，Ford 算法
    *
    * @param grid the grid
    * @return int int
@@ -402,21 +402,20 @@ class OptimalPath {
         dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
       }
     }
-    //    List<Integer> paths = new ArrayList<>();
+    //    List<Integer> path = new ArrayList<>();
     //    int i = grid.length - 1, j = grid[0].length - 1;
-    //    paths.add(grid[i][j]);
+    //    path.add(grid[i][j]);
     //    int sum = dp[i][j];
     //    while (i > 0 || j > 0) {
     //      sum -= grid[i][j];
     //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
-    //        paths.add(grid[i][j - 1]);
+    //        path.add(grid[i][j - 1]);
     //        j -= 1;
     //      } else {
-    //        paths.add(grid[i - 1][j]);
+    //        path.add(grid[i - 1][j]);
     //        i -= 1;
     //      }
     //    }
-    //    return res;
     return dp[len - 1];
   }
 

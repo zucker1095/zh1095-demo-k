@@ -213,7 +213,7 @@ class WWindow {
    *
    * @param s the s
    * @param k the k
-   * @return int
+   * @return int int
    */
   public int lengthOfLongestSubstringKDistinct(String s, int k) {
     int lo = 0, hi = 0;
@@ -421,8 +421,8 @@ class SStack {
   /**
    * 简化路径
    *
-   * @param path
-   * @return
+   * @param path the path
+   * @return string
    */
   public String simplifyPath(String path) {
     Deque<String> stack = new ArrayDeque<>();
@@ -447,7 +447,9 @@ class SStack {
    * <p>参考
    * https://leetcode-cn.com/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-wo-yao-chu-qu-luan-nae94/
    *
-   * @return
+   * @param s1 the s 1
+   * @param s2 the s 2
+   * @return boolean
    */
   public boolean isSame(String s1, String s2) {
     int[] counter1 = countLetter(s1), counter2 = countLetter(s2);
@@ -577,9 +579,9 @@ class SStack {
    *
    * <p>扩展1，入序列为 [1,n]，参下 annotate
    *
-   * @param pushed
-   * @param popped
-   * @return
+   * @param pushed the pushed
+   * @param popped the popped
+   * @return boolean
    */
   public boolean validateStackSequences(int[] pushed, int[] popped) {
     int stackTop = 0, popIdx = 0;
@@ -602,8 +604,8 @@ class SStack {
    *
    * <p>当遇到右括号时，确认栈中左括号数量 大于 栈中右括号数量
    *
-   * @param s
-   * @return
+   * @param s the s
+   * @return string
    */
   public String minRemoveToMakeValid(String s) {
     int unusedRight = 0;
@@ -715,9 +717,9 @@ class SSubString {
    * <p>参考
    * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
    *
-   * @param s
-   * @param k
-   * @return
+   * @param s the s
+   * @param k the k
+   * @return int
    */
   public int longestSubstring(String s, int k) {
     // 特判
@@ -746,9 +748,9 @@ class SSubString {
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/implement-strstr/solution/shua-chuan-lc-shuang-bai-po-su-jie-fa-km-tb86/
    *
-   * @param haystack
-   * @param needle
-   * @return
+   * @param haystack the haystack
+   * @param needle the needle
+   * @return int
    */
   public int strStr(String haystack, String needle) {
     char[] chs = haystack.toCharArray(), chsNeedle = needle.toCharArray();
@@ -791,6 +793,37 @@ class SSubString {
 /** 进制转换，编码相关 */
 class CConvert {
   private final String CHARS = "0123456789ABCDEF";
+  // 「整数转换英文表示」
+  private final String[] num2str_small = {
+    "Zero",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen"
+  };
+  // 「整数转换英文表示」
+  private final String[] num2str_medium = {
+    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+  };
+  // 「整数转换英文表示」
+  private final String[] num2str_large = {
+    "Billion", "Million", "Thousand", "",
+  };
 
   /**
    * 字符串转换整数，如 " -26" to 26
@@ -868,9 +901,24 @@ class CConvert {
     StringBuilder res = new StringBuilder();
     long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
     while (cur > 0) {
-      res.append(CHARS.charAt((int) (cur % 16)));
-      cur /= 16;
+      res.append(CHARS.charAt((int) (cur % 16))); // 取余
+      cur /= 16; // 除以
     }
+
+    // 10->16
+    //    while (n > 0) {
+    //      res += CHARS[n % 16];
+    //      n /= 16;
+    //    }
+
+    // 16->10
+    //    for (int i = 0; i < len; i++) {
+    // 尽量匹配大的
+    //      if (s[i] - 'a' >= 0 && s[i] - 'a' <= 5)
+    //        sum += (long) (s[i] - 'a' + 10) * (long) pow(16.0, len - i - 1);
+    //      else sum += (s[i] - '0') * (int) pow(16.0, len - i - 1);
+    //    }
+
     return res.reverse().toString();
   }
 
@@ -881,8 +929,8 @@ class CConvert {
    *
    * <p>但本题需要我们将从 1 开始，因此在执行「进制转换」操作前，我们需要先对 cn 减一，从而实现整体偏移
    *
-   * @param cn
-   * @return
+   * @param cn the cn
+   * @return string
    */
   public String convertToTitle(int cn) {
     StringBuilder res = new StringBuilder();
@@ -923,7 +971,7 @@ class CConvert {
   /**
    * Excel表列序号，26 转十进制，类似罗马数字转整数
    *
-   * @param columnTitle the column title
+   * @param ct the ct
    * @return int int
    */
   public int titleToNumber(String ct) {
@@ -984,8 +1032,8 @@ class CConvert {
    *
    * <p>TODO 参考 https://mp.weixin.qq.com/s/UWCuEtNS2kuAuDY-eIbghg
    *
-   * @param IP
-   * @return
+   * @param IP the ip
+   * @return long
    */
   public long ipToInteger(String IP) {
     String[] arr = IP.split(".");
@@ -1019,6 +1067,43 @@ class CConvert {
     }
     if (f) res.append("-");
     return res.reverse().toString();
+  }
+
+  /**
+   * 整数转换英文表示
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/integer-to-english-words/solution/gong-shui-san-xie-zi-fu-chuan-da-mo-ni-b-0my6/
+   *
+   * @param num the num
+   * @return string
+   */
+  public String numberToWords(int num) {
+    if (num == 0) return num2str_small[0];
+    StringBuilder str = new StringBuilder();
+    for (int i = (int) 1e9, j = 0; i >= 1; i /= 1000, j++) {
+      if (num < i) continue;
+      str.append(num2Str(num / i) + num2str_large[j] + " ");
+      num %= i;
+    }
+    while (str.charAt(str.length() - 1) == ' ') {
+      str.deleteCharAt(str.length() - 1);
+    }
+    return str.toString();
+  }
+
+  private String num2Str(int x) {
+    StringBuilder str = new StringBuilder();
+    if (x >= 100) {
+      str.append(num2str_small[x / 100] + " Hundred ");
+      x %= 100;
+    }
+    if (x >= 20) {
+      str.append(num2str_medium[x / 10] + " ");
+      x %= 10;
+    }
+    if (x != 0) str.append(num2str_small[x] + " ");
+    return str.toString();
   }
 }
 
@@ -1098,10 +1183,10 @@ class WWord extends DefaultSString {
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/word-ladder/solution/yan-du-you-xian-bian-li-shuang-xiang-yan-du-you-2/
    *
-   * @param beginWord
-   * @param endWord
-   * @param wordList
-   * @return
+   * @param beginWord the begin word
+   * @param endWord the end word
+   * @param wordList the word list
+   * @return int
    */
   public int ladderLength(String beginWord, String endWord, List<String> wordList) {
     // 第 1 步：先将 wordList 放到哈希表里，便于判断某个单词是否在 wordList 里

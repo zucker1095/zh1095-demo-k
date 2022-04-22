@@ -81,7 +81,7 @@ public class TTree {
   /**
    * 构造二叉树，题设元素唯一，否则，存在多棵树
    *
-   * <p>扩展1，根据前序和中序，输出后序，不能构造树，参下 annotate
+   * <p>TODO 扩展1，根据前序和中序，输出后序，不能构造树，参考 https://blog.csdn.net/u011068702/article/details/51914220
    *
    * <p>扩展2，给一个随机数组，生成相应的二叉搜索树，先排序，参下「将有序数组转换为二叉搜索树」
    *
@@ -450,7 +450,7 @@ class DDFS {
   /**
    * 二叉树中所有距离为k的结点，掌握 DFS 分割即可
    *
-   * <p>TODO 参考
+   * <p>参考
    * https://leetcode-cn.com/problems/all-nodes-distance-k-in-binary-tree/solution/gai-bian-shu-de-xing-zhuang-c-si-lu-dai-ma-by-lhrs/
    *
    * @param root the root
@@ -1592,6 +1592,33 @@ class BacktrackingSearch extends DDFS {
     String cur = path + root.val + "->";
     backtracking12(root.left, cur, res);
     backtracking12(root.right, cur, res);
+  }
+
+  /**
+   * 所有可能的路径
+   *
+   * @param graph
+   * @return
+   */
+  public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
+    List<List<Integer>> res = new ArrayList<>();
+    Deque<Integer> path = new ArrayDeque<>();
+    path.offerLast(0);
+    backtracking14(graph, 0, path, res);
+    return res;
+  }
+
+  private void backtracking14(
+      int[][] graph, int start, Deque<Integer> path, List<List<Integer>> res) {
+    if (start == graph.length - 1) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int nxt : graph[start]) {
+      path.offerLast(nxt);
+      backtracking14(graph, nxt, path, res);
+      path.pollLast();
+    }
   }
 }
 

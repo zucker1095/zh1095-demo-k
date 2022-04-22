@@ -126,203 +126,6 @@ public class OOthers {
   }
 }
 
-/** 计算 */
-class MMath {
-  /**
-   * rand7生成rand10 即[1,10]，等同进制转换的思路
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/implement-rand10-using-rand7/solution/cong-pao-ying-bi-kai-shi-xun-xu-jian-jin-ba-zhe-da/
-   * https://www.cnblogs.com/ymjyqsx/p/9561443.html
-   *
-   * <p>数学推论，记住即可 (randX-1)*Y+randY() -> 等概率[1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
-   *
-   * <p>扩展1，比如 randX to randY，有如下情况，本质均是找平方与倍数
-   *
-   * <p>rand2 to rand3 取平方再拒绝采样，即本题
-   *
-   * <p>rand2 to rand5 先通过 rand2 to rand3，再 rand3 to rand5，取平方再拒绝采样，即第一种情况
-   *
-   * <p>rand5 to rand3 自旋，直接取，这种拒绝概率不大
-   *
-   * <p>rand5 to rand2 判断是否为 2 的倍数，类似本题 rand49 to rand10
-   *
-   * <p>扩展2，一个两面不均匀的硬币，正面概率 p，反面概率 1-p，怎么保证通过抛硬币的结果来实现 0 1 的均匀分布
-   *
-   * @return the int
-   */
-  public int rand10() {
-    while (true) {
-      // 等概率生成 [1,49] 范围的随机数
-      int num = (rand7() - 1) * 7 + rand7();
-      // 拒绝采样，并返回 [1,10] 范围的随机数
-      if (num <= 40) {
-        return num % 10 + 1;
-      }
-    }
-  }
-
-  private int rand7() {
-    return 0;
-  }
-
-  /**
-   * 1~n整数中1出现的次数 / 数字1的个数，如 1～12 这些整数中包含 1 的数字有 1、10、11、12 共 5 个
-   *
-   * <p>因此，将 1~n 的个位、十位、百位...1 出现次数相加，即为所求
-   *
-   * <p>将 x 位数的 n 分为 nx...ni...n1，则记 nx...ni+1 为 high，ni 为 cur，剩余为 low，10^i 为 digit
-   *
-   * <p>cur 分三种情况讨论，1 由高低一起决定，0 & else 则出现次数由高位决定
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int countDigitOne(int n) {
-    int count = 0;
-    int high = n / 10, cur = n % 10, low = 0, digit = 1;
-    while (high != 0 || cur != 0) {
-      // 状态
-      if (cur == 0) count += high * digit;
-      else if (cur == 1) count += high * digit + low + 1;
-      else count += (high + 1) * digit;
-      // 递推
-      low += cur * digit;
-      cur = high % 10;
-      high /= 10;
-      digit *= 10;
-    }
-    return count;
-  }
-
-  /**
-   * x的平方根，二分只能精确至后二位，建议采用牛顿迭代
-   *
-   * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid-1] 与 [mid..right]
-   *
-   * <p>如果 mid 下取整，在区间只有 22 个数的时候有 mid 的值等于 left，一旦进入分支 [mid..right] 区间不会再缩小，出现死循环
-   *
-   * <p>扩展1，精确至 k 位，只能使用牛顿迭代法，参考
-   * https://leetcode-cn.com/problems/sqrtx/solution/niu-dun-die-dai-fa-by-loafer/
-   *
-   * <p>扩展2，误差小于 1*10^(-k)，即精确至 k+1 位，同上
-   *
-   * @param x the x
-   * @return int int
-   */
-  public int mySqrt(int x) {
-    if (x == 0) return 0;
-    double pre = x, cur = 0;
-    while (true) {
-      // 2*cur = pre+x/pre
-      cur = (pre + x / pre) * 0.5;
-      // 后 n 位此处定制
-      if (Math.abs(pre - cur) < 1e-7) break;
-      pre = cur;
-    }
-    return (int) pre;
-  }
-
-  /**
-   * Pow(x,n)，快速幂
-   *
-   * @param x the x
-   * @param n the n
-   * @return double double
-   */
-  public double myPow(double x, int n) {
-    return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
-  }
-
-  // 特判零次幂 & 递归二分 & 判断剩余幂
-  private double quickMulti(double x, int n) {
-    if (n == 0) return 1;
-    double y = quickMulti(x, n / 2);
-    return y * y * (((n & 1) == 0) ? 1 : x);
-  }
-
-  /**
-   * 平方数之和
-   *
-   * @param c the c
-   * @return boolean boolean
-   */
-  public boolean judgeSquareSum(int c) {
-    long n1 = 0, n2 = (long) Math.sqrt(c);
-    while (n1 <= n2) {
-      long cur = n1 * n1 + n2 * n2;
-      if (cur < c) n1 += 1;
-      else if (cur == c) return true;
-      else if (c < cur) n2 -= 1;
-    }
-    return false;
-  }
-
-  /**
-   * 多数元素，摩尔投票，类比 Raft
-   *
-   * <p>尽管不通用，但对于本题方便理解和记忆
-   *
-   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int majorityElement(int[] nums) {
-    // 当前遍历的元素即 candidate 及其个数即 votes
-    int num = nums[0], count = 1;
-    for (int i = 1; i < nums.length; ++i) {
-      if (count == 0) {
-        num = nums[i];
-        count = 1;
-      } else if (nums[i] == num) {
-        count += 1;
-      } else {
-        count -= 1;
-      }
-    }
-    return num;
-  }
-
-  /**
-   * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
-   *
-   * <p>记住公式即可 res=(res+m)%i
-   *
-   * @param n the n
-   * @param m the m
-   * @return the int
-   */
-  public int lastRemaining(int n, int m) {
-    int leftIdx = 0;
-    for (int i = 2; i <= n; i++) {
-      leftIdx = (leftIdx + m) % i;
-    }
-    return leftIdx;
-  }
-
-  /**
-   * 阶乘后的零，求出一个数的阶乘末尾零的个数，如 5!=120 即 1
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int trailingZeroes(int n) {
-    int count = 0;
-    while (n > 0) {
-      n /= 5;
-      count += n;
-    }
-    return count;
-  }
-}
-
 /** 构建新数据结构 */
 class DData {
   /**
@@ -340,8 +143,7 @@ class DData {
    */
   public class LRUCache {
     private final Map<Integer, DLinkedNode> cache = new HashMap<>();
-    // dummy
-    private final DLinkedNode head = new DLinkedNode(), tail = new DLinkedNode();
+    private final DLinkedNode head = new DLinkedNode(), tail = new DLinkedNode(); // dummy
     private final int capacity;
     /**
      * Instantiates a new Lru cache.
@@ -368,9 +170,9 @@ class DData {
     }
 
     /**
-     * 1.有则 set & moveToHead，否则 put & addToHead
+     * 有则 set & moveToHead，否则 put & addToHead
      *
-     * <p>2.溢出则 removeTail
+     * <p>溢出则 removeTail
      *
      * @param key the key
      * @param value the value
@@ -620,6 +422,24 @@ class DData {
     }
 
     /**
+     * Get int.
+     *
+     * @param key the key
+     * @return the int
+     */
+    public int get(int key) {
+      int h = hash(key);
+      Iterator<BucketNode> iterator = buckets[h].iterator();
+      while (iterator.hasNext()) {
+        BucketNode pair = iterator.next();
+        if (pair.key == key) {
+          return pair.value;
+        }
+      }
+      return -1;
+    }
+
+    /**
      * Put.
      *
      * @param key the key
@@ -636,24 +456,6 @@ class DData {
         }
       }
       buckets[h].add(new BucketNode(key, value));
-    }
-
-    /**
-     * Get int.
-     *
-     * @param key the key
-     * @return the int
-     */
-    public int get(int key) {
-      int h = hash(key);
-      Iterator<BucketNode> iterator = buckets[h].iterator();
-      while (iterator.hasNext()) {
-        BucketNode pair = iterator.next();
-        if (pair.key == key) {
-          return pair.value;
-        }
-      }
-      return -1;
     }
 
     /**
@@ -746,7 +548,7 @@ class DData {
    * https://leetcode-cn.com/problems/implement-trie-prefix-tree/solution/trie-tree-de-shi-xian-gua-he-chu-xue-zhe-by-huwt/
    */
   public class Trie {
-    private final TireNode root = new TireNode();
+    private final TireNode root = new TireNode(); // 哑结点
 
     /** Instantiates a new Trie. */
     public Trie() {}
@@ -757,12 +559,12 @@ class DData {
      * @param word the word
      */
     public void insert(String word) {
-      TireNode node = root;
+      TireNode cur = root;
       for (char ch : word.toCharArray()) {
-        if (node.next[ch - 'a'] == null) node.next[ch - 'a'] = new TireNode();
-        node = node.next[ch - 'a'];
+        if (cur.next[ch - 'a'] == null) cur.next[ch - 'a'] = new TireNode();
+        cur = cur.next[ch - 'a'];
       }
-      node.isEnd = true;
+      cur.isEnd = true;
     }
 
     /**
@@ -772,12 +574,12 @@ class DData {
      * @return the boolean
      */
     public boolean search(String word) {
-      TireNode node = root;
+      TireNode cur = root;
       for (char ch : word.toCharArray()) {
-        node = node.next[ch - 'a'];
-        if (node == null) return false;
+        cur = cur.next[ch - 'a'];
+        if (cur == null) return false;
       }
-      return node.isEnd;
+      return cur.isEnd;
     }
 
     /**
@@ -787,10 +589,10 @@ class DData {
      * @return the boolean
      */
     public boolean startsWith(String prefix) {
-      TireNode node = root;
+      TireNode cur = root;
       for (char ch : prefix.toCharArray()) {
-        node = node.next[ch - 'a'];
-        if (node == null) return false;
+        cur = cur.next[ch - 'a'];
+        if (cur == null) return false;
       }
       return true;
     }
@@ -802,8 +604,124 @@ class DData {
   }
 }
 
-/** 单个数字 */
-class Digit {
+/** 计算 */
+class MMath {
+  /**
+   * rand7生成rand10 即[1,10]，等同进制转换的思路
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/implement-rand10-using-rand7/solution/cong-pao-ying-bi-kai-shi-xun-xu-jian-jin-ba-zhe-da/
+   * https://www.cnblogs.com/ymjyqsx/p/9561443.html
+   *
+   * <p>数学推论，记住即可 (randX-1)*Y+randY() -> 等概率[1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
+   *
+   * <p>扩展1，比如 randX to randY，有如下情况，本质均是找平方与倍数
+   *
+   * <p>rand2 to rand3 取平方再拒绝采样，即本题
+   *
+   * <p>rand2 to rand5 先通过 rand2 to rand3，再 rand3 to rand5，取平方再拒绝采样，即第一种情况
+   *
+   * <p>rand5 to rand3 自旋，直接取，这种拒绝概率不大
+   *
+   * <p>rand5 to rand2 判断是否为 2 的倍数，类似本题 rand49 to rand10
+   *
+   * <p>扩展2，一个两面不均匀的硬币，正面概率 p，反面概率 1-p，怎么保证通过抛硬币的结果来实现 0 1 的均匀分布
+   *
+   * @return the int
+   */
+  public int rand10() {
+    while (true) {
+      // 等概率生成 [1,49] 范围的随机数
+      int num = (rand7() - 1) * 7 + rand7();
+      // 拒绝采样，并返回 [1,10] 范围的随机数
+      if (num <= 40) {
+        return num % 10 + 1;
+      }
+    }
+  }
+
+  private int rand7() {
+    return 0;
+  }
+
+  /**
+   * 1~n整数中1出现的次数 / 数字1的个数，如 1～12 这些整数中包含 1 的数字有 1、10、11、12 共 5 个
+   *
+   * <p>因此，将 1~n 的个位、十位、百位...1 出现次数相加，即为所求
+   *
+   * <p>将 x 位数的 n 分为 nx...ni...n1，则记 nx...ni+1 为 high，ni 为 cur，剩余为 low，10^i 为 digit
+   *
+   * <p>cur 分三种情况讨论，1 由高低一起决定，0 & else 则出现次数由高位决定
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int countDigitOne(int n) {
+    int count = 0;
+    int high = n / 10, cur = n % 10, low = 0, digit = 1;
+    while (high != 0 || cur != 0) {
+      // 状态
+      if (cur == 0) count += high * digit;
+      else if (cur == 1) count += high * digit + low + 1;
+      else count += (high + 1) * digit;
+      // 递推
+      low += cur * digit;
+      cur = high % 10;
+      high /= 10;
+      digit *= 10;
+    }
+    return count;
+  }
+
+  /**
+   * x的平方根，二分只能精确至后二位，建议采用牛顿迭代
+   *
+   * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid-1] 与 [mid..right]
+   *
+   * <p>如果 mid 下取整，在区间只有 22 个数的时候有 mid 的值等于 left，一旦进入分支 [mid..right] 区间不会再缩小，出现死循环
+   *
+   * <p>扩展1，精确至 k 位，只能使用牛顿迭代法，参考
+   * https://leetcode-cn.com/problems/sqrtx/solution/niu-dun-die-dai-fa-by-loafer/
+   *
+   * <p>扩展2，误差小于 1*10^(-k)，即精确至 k+1 位，同上
+   *
+   * @param x the x
+   * @return int int
+   */
+  public int mySqrt(int x) {
+    if (x == 0) return 0;
+    double pre = x, cur = 0;
+    while (true) {
+      // 2*cur = pre+x/pre
+      cur = (pre + x / pre) * 0.5;
+      // 后 n 位此处定制
+      if (Math.abs(pre - cur) < 1e-7) break;
+      pre = cur;
+    }
+    return (int) pre;
+  }
+
+  /**
+   * Pow(x,n)，快速幂
+   *
+   * @param x the x
+   * @param n the n
+   * @return double double
+   */
+  public double myPow(double x, int n) {
+    return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
+  }
+
+  // 特判零次幂 & 递归二分 & 判断剩余幂
+  private double quickMulti(double x, int n) {
+    if (n == 0) return 1;
+    double y = quickMulti(x, n / 2);
+    return y * y * (((n & 1) == 0) ? 1 : x);
+  }
+
   /**
    * 第N位数字，k 位数共有 9*10^(k-1) 个数字
    *
@@ -848,6 +766,84 @@ class Digit {
     }
     return hi == lo || hi == lo / 10;
   }
+
+  /**
+   * 平方数之和
+   *
+   * @param c the c
+   * @return boolean boolean
+   */
+  public boolean judgeSquareSum(int c) {
+    long n1 = 0, n2 = (long) Math.sqrt(c);
+    while (n1 <= n2) {
+      long cur = n1 * n1 + n2 * n2;
+      if (cur < c) n1 += 1;
+      else if (cur == c) return true;
+      else if (c < cur) n2 -= 1;
+    }
+    return false;
+  }
+
+  /**
+   * 多数元素，摩尔投票，类比 Raft
+   *
+   * <p>尽管不通用，但对于本题方便理解和记忆
+   *
+   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int majorityElement(int[] nums) {
+    // 当前遍历的元素即 candidate 及其个数即 votes
+    int num = nums[0], count = 1;
+    for (int i = 1; i < nums.length; ++i) {
+      if (count == 0) {
+        num = nums[i];
+        count = 1;
+      } else if (nums[i] == num) {
+        count += 1;
+      } else {
+        count -= 1;
+      }
+    }
+    return num;
+  }
+
+  /**
+   * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
+   *
+   * <p>记住公式即可 res=(res+m)%i
+   *
+   * @param n the n
+   * @param m the m
+   * @return the int
+   */
+  public int lastRemaining(int n, int m) {
+    int leftIdx = 0;
+    for (int i = 2; i <= n; i++) {
+      leftIdx = (leftIdx + m) % i;
+    }
+    return leftIdx;
+  }
+
+  /**
+   * 阶乘后的零，求出一个数的阶乘末尾零的个数，如 5!=120 即 1
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int trailingZeroes(int n) {
+    int count = 0;
+    while (n > 0) {
+      n /= 5;
+      count += n;
+    }
+    return count;
+  }
 }
 
 /**
@@ -889,20 +885,20 @@ class GGraph {
    * <p>TODO 参考 https://www.nowcoder.com/questionTerminal/a77b4f3d84bf4a7891519ffee9376df3
    *
    * @param n the n
-   * @param Tree_edge the tree edge
-   * @param Edge_value the edge value
+   * @param Edges the tree edge
+   * @param EdgeValues the edge value
    * @return int
    */
-  public int diameterOfTree(int n, Interval[] Tree_edge, int[] Edge_value) {
+  public int diameterOfTree(int n, Interval[] Edges, int[] EdgeValues) {
     // 使用数组保存所有的节点
     List<Edge>[] graph = new List[n];
     for (int i = 0; i < n; i++) {
       graph[i] = new ArrayList<>();
     }
     // 建图
-    for (int i = 0; i < Tree_edge.length; i++) {
-      Interval interval = Tree_edge[i];
-      int value = Edge_value[i];
+    for (int i = 0; i < Edges.length; i++) {
+      Interval interval = Edges[i];
+      int value = EdgeValues[i];
       // 由于是无向图，所有每条边都是双向的
       graph[interval.start].add(new Edge(interval.end, value));
       graph[interval.end].add(new Edge(interval.start, value));
@@ -912,14 +908,13 @@ class GGraph {
     return diameter;
   }
 
-  // dfs返回值为从node节点开始的最长深度
+  // 返回值为从 node 节点开始的最长深度
   private int dfs13(List<Edge>[] graph, int from, int to) {
     // 从节点开始的最大与第二深度
     int maxDepth = 0, secondMaxDepth = 0;
     for (Edge edge : graph[to]) {
       int neighbor = edge.end;
       if (neighbor == from) continue; // 防止返回访问父节点
-
       int depth = edge.weight + dfs13(graph, to, neighbor);
       if (depth > maxDepth) {
         secondMaxDepth = maxDepth;
@@ -1065,6 +1060,65 @@ class GGraph {
     return res >= Integer.MAX_VALUE / 2 ? -1 : res;
   }
 
+  /**
+   * 访问所有节点的最短路径
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/shortest-path-visiting-all-nodes/solution/gong-shui-san-xie-yi-ti-shuang-jie-bfs-z-6p2k/
+   *
+   * @param graph
+   * @return
+   */
+  public int shortestPathLength(int[][] graph) {
+    int n = graph.length, mask = 1 << n, INF = Integer.MAX_VALUE;
+    // Floyd 求两点的最短路径
+    int[][] dist = new int[n][n];
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        dist[i][j] = INF;
+      }
+    }
+    for (int i = 0; i < n; i++) {
+      for (int j : graph[i]) {
+        dist[i][j] = 1;
+      }
+    }
+    for (int k = 0; k < n; k++) {
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+          dist[i][j] = Math.min(dist[i][j], dist[i][k] + dist[k][j]);
+        }
+      }
+    }
+
+    // DP 过程，如果从 i 能够到 j 的话，使用 i 到 j 的最短距离（步长）来转移
+    int[][] f = new int[mask][n];
+    // 起始时，让所有状态的最短距离（步长）为正无穷
+    for (int i = 0; i < mask; i++) {
+      Arrays.fill(f[i], INF);
+    }
+    // 由于可以将任意点作为起点出发，可以将这些起点的最短距离（步长）设置为 0
+    for (int i = 0; i < n; i++) f[1 << i][i] = 0;
+
+    // 枚举所有的 state
+    for (int state = 0; state < mask; state++) {
+      // 枚举 state 中已经被访问过的点
+      for (int i = 0; i < n; i++) {
+        if (((state >> i) & 1) == 0) continue;
+        // 枚举 state 中尚未被访问过的点
+        for (int j = 0; j < n; j++) {
+          if (((state >> j) & 1) == 1) continue;
+          f[state | (1 << j)][j] = Math.min(f[state | (1 << j)][j], f[state][i] + dist[i][j]);
+        }
+      }
+    }
+    int ans = INF;
+    for (int i = 0; i < n; i++) {
+      ans = Math.min(ans, f[mask - 1][i]);
+    }
+    return ans;
+  }
+
   private class Edge {
     /** The End. */
     int end,
@@ -1089,14 +1143,6 @@ class GGraph {
         /** The End. */
         end;
   }
-
-  /**
-   * 访问所有节点的最短路径
-   *
-   * @param graph
-   * @return
-   */
-  //  public int shortestPathLength(int[][] graph) {}
 }
 
 /** 二进制，位运算相关，掌握常见的运算符即可，现场推，毕竟命中率超低 */

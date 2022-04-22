@@ -414,8 +414,7 @@ class ReorderList extends LList {
    */
   public ListNode oddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode odd = head, even = head.next;
-    ListNode evenHead = head.next;
+    ListNode odd = head, even = head.next, evenHead = even;
     while (even != null && even.next != null) {
       odd.next = even.next;
       odd = odd.next;
@@ -428,7 +427,9 @@ class ReorderList extends LList {
   }
 
   /**
-   * 重排奇偶链表，分别取出奇偶链表，奇数位链表需断尾 & 反转偶数位链表 & 合并
+   * 重排奇偶链表，奇数位置升序，偶数位置反之，升序排列整个链表
+   *
+   * <p>分别取出奇偶链表，奇数位链表需断尾 & 反转偶数位链表 & 合并
    *
    * <p>参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
    *
@@ -444,8 +445,7 @@ class ReorderList extends LList {
   // 代码与「奇偶链表」一致，但返回偶头
   private ListNode _oddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode odd = head, even = head.next;
-    ListNode evenHead = head.next;
+    ListNode odd = head, even = head.next, evenHead = even;
     while (even != null && even.next != null) {
       odd.next = even.next;
       odd = odd.next;
