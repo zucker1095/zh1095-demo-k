@@ -52,8 +52,7 @@ public class LList {
    * @return the list node
    */
   public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
-    ListNode dummy = new ListNode(0);
-    ListNode cur = dummy, l1 = list1, l2 = list2;
+    ListNode dummy = new ListNode(), cur = dummy, l1 = list1, l2 = list2;
     while (l1 != null && l2 != null) {
       if (l1.val < l2.val) {
         cur.next = l1;
@@ -262,6 +261,7 @@ class ReverseList extends LList {
       cur.next = tail.next;
       tail.next = cur;
     }
+
     // 长度为奇数应跳过中点，否则下方比对 lo 会多一位
     if (hi != null) lo = lo.next;
     ListNode l1 = tail.next, l2 = lo;
@@ -270,6 +270,7 @@ class ReverseList extends LList {
       l1 = l1.next;
       l2 = l2.next;
     }
+
     return true;
   }
 
@@ -288,12 +289,14 @@ class ReverseList extends LList {
       cur = cur.next;
       len += 1;
     }
+
     int count = len - k % len;
     if (count == len) return head;
     cur.next = head;
     for (int i = count; i > 0; i--) {
       cur = cur.next;
     }
+
     ListNode newHead = cur.next;
     cur.next = null;
     return newHead;
@@ -411,8 +414,7 @@ class ReorderList extends LList {
    */
   public ListNode oddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode odd = head, even = head.next;
-    ListNode evenHead = head.next;
+    ListNode odd = head, even = head.next, evenHead = even;
     while (even != null && even.next != null) {
       odd.next = even.next;
       odd = odd.next;
@@ -425,7 +427,9 @@ class ReorderList extends LList {
   }
 
   /**
-   * 重排奇偶链表，分别取出奇偶链表，奇数位链表需断尾 & 反转偶数位链表 & 合并
+   * 重排奇偶链表，奇数位置升序，偶数位置反之，升序排列整个链表
+   *
+   * <p>分别取出奇偶链表，奇数位链表需断尾 & 反转偶数位链表 & 合并
    *
    * <p>参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
    *
@@ -441,8 +445,7 @@ class ReorderList extends LList {
   // 代码与「奇偶链表」一致，但返回偶头
   private ListNode _oddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode odd = head, even = head.next;
-    ListNode evenHead = head.next;
+    ListNode odd = head, even = head.next, evenHead = even;
     while (even != null && even.next != null) {
       odd.next = even.next;
       odd = odd.next;
@@ -529,30 +532,32 @@ class ReorderList extends LList {
   /**
    * 分隔链表，使得所有小于 x 的结点都出现在大于或等于 x 的结点之前
    *
-   * <p>三链表，类似双路快排，尾插
+   * <p>两条链表，类似双路快排，尾插
    *
    * @param head the head
    * @param x the x
    * @return list node
    */
   public ListNode partition(ListNode head, int x) {
-    // head
-    ListNode ltDummy = new ListNode(), gteDummy = new ListNode();
-    // tail
-    ListNode ltCur = ltDummy, gteCur = gteDummy, cur = head;
+    ListNode ltDummy = new ListNode(),
+        ltHead = ltDummy,
+        gteDummy = new ListNode(),
+        gteHead = gteDummy,
+        cur = head;
     while (cur != null) {
       // 如果当前节点的值小于x，则把当前节点挂到小链表的后面
       if (cur.val < x) {
-        ltCur.next = cur;
-        ltCur = ltCur.next;
+        ltHead.next = cur;
+        ltHead = ltHead.next;
       } else {
-        gteCur.next = cur;
-        gteCur = gteCur.next;
+        gteHead.next = cur;
+        gteHead = gteHead.next;
       }
       cur = cur.next;
     }
-    ltCur.next = gteDummy.next;
-    gteCur.next = null;
+    // 合并
+    ltHead.next = gteDummy.next;
+    gteHead.next = null;
     return ltDummy.next;
   }
 }

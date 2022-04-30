@@ -3,7 +3,7 @@ package com.zh1095.demo.improved.algorithmn;
 import java.util.*;
 
 /**
- * 收集树相关，BFS 参下，其余包括
+ * 收集树相关，扩展大部分与打印路径相关
  *
  * <p>关于 Java 模拟 stack 的选型
  * https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
@@ -13,8 +13,6 @@ import java.util.*;
  * <p>中序，基本即是 BST
  *
  * <p>后序，统计相关 & 递归，参下
- *
- * <p>扩展大部分与记录路径相关
  *
  * @author cenghui
  */
@@ -53,6 +51,8 @@ public class TTree {
   /**
    * 二叉树的后序遍历
    *
+   * <p>扩展1，N 叉树，参下 annotate
+   *
    * @param root the root
    * @return list list
    */
@@ -61,6 +61,11 @@ public class TTree {
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
     while (cur != null || !stack.isEmpty()) {
+      //      cur = stack.pollLast();
+      //      res.add(cur.val);
+      //      for (TreeNode node : cur.chlidren){
+      //        stack.offerLast(node);
+      //      }
       while (cur != null) {
         res.add(cur.val);
         stack.offerLast(cur);
@@ -76,7 +81,7 @@ public class TTree {
   /**
    * 构造二叉树，题设元素唯一，否则，存在多棵树
    *
-   * <p>扩展1，根据前序和中序，输出后序，不能构造树，参下 annotate
+   * <p>TODO 扩展1，根据前序和中序，输出后序，不能构造树，参考 https://blog.csdn.net/u011068702/article/details/51914220
    *
    * <p>扩展2，给一个随机数组，生成相应的二叉搜索树，先排序，参下「将有序数组转换为二叉搜索树」
    *
@@ -122,7 +127,7 @@ public class TTree {
   /**
    * 路径总和，从根出发要求达到叶，BFS / 前序，前者模板与下方「求根节点到叶节点数字之和」一致
    *
-   * <p>记录路径则参下「路径总和II」回溯
+   * <p>打印路径则参下「路径总和II」回溯
    *
    * @param root the root
    * @param targetSum the target sum
@@ -236,7 +241,7 @@ public class TTree {
   /**
    * 二叉树的序列化与反序列化，前序
    *
-   * <p>扩展1，多叉树，记录子树个数，参考 https://zhuanlan.zhihu.com/p/109521420
+   * <p>扩展1，N 叉树，记录子树个数，参考 https://zhuanlan.zhihu.com/p/109521420
    */
   public class Codec {
     private int idx;
@@ -277,8 +282,9 @@ public class TTree {
 
     private TreeNode traversal(String[] vals) {
       if (idx >= vals.length) return null;
-      String val = vals[idx], count = vals[idx + 1];
-      idx += 2;
+      String val = vals[idx];
+      idx += 1;
+      //      String count = vals[idx++];
       if ("null".equals(val)) return null;
       TreeNode root = new TreeNode(Integer.parseInt(val));
       //      root.children = new TreeNode[count];
@@ -308,6 +314,33 @@ class DDFS {
   private final List<Integer> res5 = new ArrayList<>();
   // 「二叉树中所有距离为k的结点」目标结点的父
   private TreeNode parent;
+
+  /**
+   * 路径总和III，返回路径总数，但从任意点出发，前缀和，题设结点值唯一
+   *
+   * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
+   *
+   * <p>TODO 扩展1，打印路径
+   *
+   * @param root the root
+   * @param targetSum the target sum
+   * @return int int
+   */
+  public int pathSumIII(TreeNode root, int targetSum) {
+    Map<Long, Integer> preSum = new HashMap<>();
+    preSum.put(0L, 1); // base case
+    return dfs14(root, preSum, 0, targetSum);
+  }
+
+  private int dfs14(TreeNode root, Map<Long, Integer> preSum, long cur, int targetSum) {
+    if (root == null) return 0;
+    cur += root.val;
+    int path = preSum.getOrDefault(cur - targetSum, 0);
+    preSum.put(cur, preSum.getOrDefault(cur, 0) + 1);
+    path += dfs14(root.left, preSum, cur, targetSum) + dfs14(root.right, preSum, cur, targetSum);
+    preSum.put(cur, preSum.getOrDefault(cur, 0) - 1);
+    return path;
+  }
 
   /**
    * 坐标界内
@@ -417,7 +450,7 @@ class DDFS {
   /**
    * 二叉树中所有距离为k的结点，掌握 DFS 分割即可
    *
-   * <p>TODO 参考
+   * <p>参考
    * https://leetcode-cn.com/problems/all-nodes-distance-k-in-binary-tree/solution/gai-bian-shu-de-xing-zhuang-c-si-lu-dai-ma-by-lhrs/
    *
    * @param root the root
@@ -782,12 +815,12 @@ class BBSTDFS {
 
 /** 后序相关，常见为统计，自顶向下的递归相当于前序遍历，自底向上的递归相当于后序遍历 */
 class Postorder {
-  // 「二叉树的最大路径和」
+  // 「二叉树中的最大路径和」
   private int maxSum = Integer.MIN_VALUE;
-  // 「二叉树中的最大路径和」follow up 需要输出的路径
+  // 「二叉树中的最大路径和」follow up 打印路径
   private String maxPath;
   // 「二叉树的直径」
-  private int curDiameter = 0;
+  private int diameter = 0;
 
   /**
    * 平衡二叉树，前序递归
@@ -828,11 +861,11 @@ class Postorder {
   }
 
   /**
-   * 二叉树中的最大路径和，从任意结点出发，后序遍历，模板与「二叉树但直径」近乎一致
+   * 二叉树中的最大路径和，从任意结点出发，后序遍历，模板与「二叉树的直径」近乎一致
    *
    * <p>三步曲，先取单侧 & 更新双侧结果 & 返回单侧更大者
    *
-   * <p>扩展1，输出路径，参考 https://blog.csdn.net/Ackerman2/article/details/119060128
+   * <p>扩展1，打印路径，参考 https://blog.csdn.net/Ackerman2/article/details/119060128
    *
    * @param root the root
    * @return int int
@@ -885,18 +918,20 @@ class Postorder {
   /**
    * 二叉树的直径，后序遍历，模板与「二叉树的最大路径和」近乎一致
    *
+   * <p>扩展1，N 叉树，即无向图求最长路径，参考「N叉树的直径」
+   *
    * @param root the root
    * @return int int
    */
   public int diameterOfBinaryTree(TreeNode root) {
     singleSide2(root);
-    return curDiameter - 1;
+    return diameter - 1;
   }
 
   private int singleSide2(TreeNode root) {
     if (root == null) return 0;
     int left = Math.max(0, singleSide2(root.left)), right = Math.max(0, singleSide2(root.right));
-    curDiameter = Math.max(curDiameter, left + right + 1);
+    diameter = Math.max(diameter, left + right + 1);
     return Math.max(left, right) + 1;
   }
 
@@ -949,6 +984,8 @@ class BBFS {
   /**
    * 二叉树的层序遍历，递归实现，前序，记录 level 即可
    *
+   * <p>扩展1，N 叉树
+   *
    * @param root the root
    * @return list
    */
@@ -973,9 +1010,9 @@ class BBFS {
    * @return
    */
   public List<List<Integer>> levelOrderBottom(TreeNode root) {
-    List<List<Integer>> res = new LinkedList<List<Integer>>();
+    List<List<Integer>> res = new LinkedList<>();
     if (root == null) return res;
-    Queue<TreeNode> queue = new LinkedList<TreeNode>();
+    Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
       List<Integer> curLevel = new ArrayList<Integer>();
@@ -1114,6 +1151,9 @@ class BBFS {
     while (!queue.isEmpty()) {
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
+        //        for (TreeNode node : cur.children) {
+        //          queue.offer(node);
+        //        }
         if (cur.left != null) queue.offer(cur.left);
         if (cur.right != null) queue.offer(cur.right);
       }
@@ -1432,7 +1472,7 @@ class BacktrackingCombinatorics {
 
 class BacktrackingSearch extends DDFS {
   /**
-   * 路径总和II，从根出发要求达到叶，需要记录路径
+   * 路径总和II，从根出发要求达到叶，打印路径
    *
    * @param root the root
    * @param targetSum the target sum
@@ -1459,33 +1499,6 @@ class BacktrackingSearch extends DDFS {
     backtracking0(root.right, path, res, targetSum - root.val);
     // 递归完成以后，必须重置变量
     path.pollLast();
-  }
-
-  /**
-   * 路径总和III，返回路径总数，但从任意点出发，回溯 & 前缀和，题设结点值唯一
-   *
-   * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
-   *
-   * @param root the root
-   * @param targetSum the target sum
-   * @return int int
-   */
-  public int pathSumIII(TreeNode root, int targetSum) {
-    Map<Long, Integer> presum = new HashMap<>() {};
-    presum.put(0L, 1); // base case
-    return backtracking9(root, presum, 0, targetSum);
-  }
-
-  private int backtracking9(TreeNode root, Map<Long, Integer> presum, long cur, int targetSum) {
-    if (root == null) return 0;
-    cur += root.val;
-    int path = presum.getOrDefault(cur - targetSum, 0);
-    presum.put(cur, presum.getOrDefault(cur, 0) + 1);
-    path +=
-        backtracking9(root.left, presum, cur, targetSum)
-            + backtracking9(root.right, presum, cur, targetSum);
-    presum.put(cur, presum.getOrDefault(cur, 0) - 1);
-    return path;
   }
 
   /**
@@ -1580,6 +1593,33 @@ class BacktrackingSearch extends DDFS {
     backtracking12(root.left, cur, res);
     backtracking12(root.right, cur, res);
   }
+
+  /**
+   * 所有可能的路径
+   *
+   * @param graph
+   * @return
+   */
+  public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
+    List<List<Integer>> res = new ArrayList<>();
+    Deque<Integer> path = new ArrayDeque<>();
+    path.offerLast(0);
+    backtracking14(graph, 0, path, res);
+    return res;
+  }
+
+  private void backtracking14(
+      int[][] graph, int start, Deque<Integer> path, List<List<Integer>> res) {
+    if (start == graph.length - 1) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int nxt : graph[start]) {
+      path.offerLast(nxt);
+      backtracking14(graph, nxt, path, res);
+      path.pollLast();
+    }
+  }
 }
 
 class BacktrackingElse extends DDFS {
@@ -1588,16 +1628,15 @@ class BacktrackingElse extends DDFS {
   };
 
   /**
-   * 将数字串拆分为多个不超过 k 的子串，输出所有可能路径
+   * 将数字串拆分为多个不超过 k 的子串，打印路径
    *
    * @param s
    * @return
    */
   public List<List<Integer>> splitNumbers(String s, int K) {
-    List<List<Integer>> res = new ArrayList<>();
-    //    if (K > Integer.MAX_VALUE) return res;
-    backtracking15(s, 0, new ArrayDeque<>(), res, K);
-    return res;
+    List<List<Integer>> paths = new ArrayList<>();
+    backtracking15(s, 0, new ArrayDeque<>(), paths, K);
+    return paths;
   }
 
   private void backtracking15(
