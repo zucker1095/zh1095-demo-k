@@ -257,16 +257,15 @@ class HHeap extends DefaultArray {
     heapify(nums, nums.length);
     // 循环不变量，区间 [0, idx] 堆有序
     while (idx >= 1) {
-      // 把堆顶元素（当前最大）交换到数组末尾
+      // 把堆顶元素交换到数组末尾
       swap(nums, 0, idx);
-      // 逐步减少堆有序的部分
       idx -= 1;
       // 下标 0 位置下沉操作，使得区间 [0, i] 堆有序
       sink(nums, 0, idx);
     }
   }
 
-  // 从 (len-1)/2 即首个叶结点开始逐层下沉
+  // 从首个叶结点开始逐层下沉，即堆化
   private void heapify(int[] nums, int capcacity) {
     for (int i = capcacity / 2; i >= 0; i--) {
       sink(nums, i, capcacity - 1);
@@ -367,7 +366,7 @@ class HHeap extends DefaultArray {
   }
 
   /**
-   * 数据流的中位数，分别使用两个堆，保证大根堆元素始终多一个
+   * 数据流的中位数 / 多个无序数组的中位数，分别使用两个堆，保证大根堆元素始终多一个
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
@@ -412,13 +411,12 @@ class HHeap extends DefaultArray {
    * <p>小根堆
    */
   public class KthLargest {
-    // 创建一个小根堆
-    private final int[] heap;
+    private final int[] minheap;
     private final int ranking;
     int size = 0;
 
     public KthLargest(int k, int[] nums) {
-      heap = new int[k];
+      minheap = new int[k];
       ranking = k;
       for (int i = 0; i < nums.length; i++) {
         add(nums[i]);
@@ -427,14 +425,14 @@ class HHeap extends DefaultArray {
 
     public int add(int val) {
       if (size < ranking) {
-        heap[size] = val;
-        swim(heap, size);
+        minheap[size] = val;
+        swim(minheap, size);
         size += 1;
-      } else if (heap[0] < val) {
-        heap[0] = val;
-        sink(heap, 0, ranking - 1);
+      } else if (minheap[0] < val) {
+        minheap[0] = val;
+        sink(minheap, 0, ranking - 1);
       }
-      return heap[0];
+      return minheap[0];
     }
   }
 }
@@ -467,9 +465,9 @@ class QQuick extends DefaultArray {
   public void quickSort(int[] nums, int lo, int hi) {
     if (lo >= hi) return;
     int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
-    // 下方需要确保虚拟头也满足 <pivot，因此从 lt+1 开始遍历
+    // 下方需要确保虚拟头 <pivot，因此从 lt+1 开始遍历
     swap(nums, pivotIdx, lo);
-    // 虚拟头尾，保证界外
+    // 虚拟头尾，保证界外，因此下方需要先步进，再 swap
     int lt = lo, cur = lt + 1, gt = hi + 1;
     while (cur < gt) {
       if (nums[cur] < pivot) {
@@ -546,8 +544,7 @@ class MMerge extends DefaultArray {
   // 四种情况，其一遍历结束 & 比较
   // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
   private void merge1(int[] nums, int[] tmp, int start, int mid, int end) {
-    // 前后指针未逾界，且数组至少有两个元素
-    if (end - start >= 1) {
+    if (end > start) {
       System.arraycopy(nums, start, tmp, start, end + 1 - start);
     }
     int p1 = start, p2 = mid + 1;
@@ -589,11 +586,10 @@ class MMerge extends DefaultArray {
   }
 
   private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
-    int count = 0;
-    if (end - start + 1 >= 0) {
+    if (end > start) {
       System.arraycopy(nums, start, tmp, start, end - start + 1);
     }
-    int p1 = start, p2 = mid + 1;
+    int count = 0, p1 = start, p2 = mid + 1;
     for (int i = start; i <= end; i++) {
       if (p1 == mid + 1) {
         nums[i] = tmp[p2];
@@ -643,23 +639,23 @@ class MMerge extends DefaultArray {
  */
 class DichotomyClassic extends DefaultArray {
   /**
-   * 寻找两个有序数组的中位数，单数组已去重，相互之间可能有重，联合对两个数组二分求 topk 则复杂度为 log(m+n)
+   * 寻找两个有序数组的中位数，单个数组无重，根据排位二分
    *
    * <p>对于两个有序数组，逆序则顺序遍历求第 k 大，正序则顺序遍历求第 k 小，反之，二者均需要逆序遍历
    *
    * <p>对于 123 & 334 的中位数和 top3 分别是 3 & 2
    *
-   * <p>扩展1，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均，海量数据参考「数据流的中位数」
+   * <p>扩展1，求两个逆序数组 topK，单个数组不包含重复则复用即可
    *
-   * <p>扩展2，单纯求两个逆序数组 topk，则双指针从尾开始遍历即可，且需要对值，而本题求中位数本质是对排位进行二分，前提是单个数组无重复
+   * <p>扩展2，无序数组找中位数，建小根堆 len/2+1 奇数则堆顶，否则出队一次 & 堆顶取平均，海量数据参考「数据流的中位数」
    *
    * @param nums1 the nums 1
    * @param nums2 the nums 2
    * @return double double
    */
   public double findMedianSortedArrays(int[] nums1, int[] nums2) {
-    int n = nums1.length, m = nums2.length;
-    int ranking = (n + m + 1) / 2, rankingMore = (n + m + 2) / 2;
+    int l1 = nums1.length, l2 = nums2.length;
+    int ranking = (l1 + l2 + 1) / 2, rankingMore = (l1 + l2 + 2) / 2;
     // 将偶数和奇数的情况合并，奇数则求两次同样的 k
     //    return (getkSmallElement2(nums1, 0, n - 1, nums2, 0, m - 1, ranking)
     //            + getkSmallElement2(nums1, 0, n - 1, nums2, 0, m - 1, rankingMore))
@@ -677,7 +673,6 @@ class DichotomyClassic extends DefaultArray {
           newP1 = Math.min(p1 + half, l1) - 1,
           newP2 = Math.min(p2 + half, l2) - 1;
       int n1 = nums1[newP1], n2 = nums2[newP2];
-      // 去重
       if (n1 <= n2) {
         ranking -= (newP1 - p1 + 1);
         p1 = newP1 + 1;
@@ -686,14 +681,12 @@ class DichotomyClassic extends DefaultArray {
         p2 = newP2 + 1;
       }
     }
-    // 去重
     if (p1 == l1) return nums2[p2 + ranking - 1];
     if (p2 == l2) return nums1[p1 + ranking - 1];
     return Math.min(nums1[p1], nums2[p2]);
   }
 
-  // 尾递归
-  // 特判 k=1 & 其一为空
+  // 尾递归，特判 k=1 & 其一为空
   private int getkSmallElement2(
       int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
     if (k == 1) return Math.min(nums1[lo1], nums2[lo2]);
@@ -1560,12 +1553,12 @@ class Delete extends DefaultArray {
    * @param nums the nums
    */
   public void moveZeroes(int[] nums) {
-    final int target = 0, k = 0; // diff 1
+    final int target = 0, k = 0;
     int write = 0;
     for (int read = 0; read < nums.length; read++) {
       //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3)
       if (write >= k && target == nums[read]) continue;
-      swap(nums, write, read); // diff 2
+      swap(nums, write, read);
       write += 1;
     }
   }
@@ -1642,7 +1635,7 @@ class Delete extends DefaultArray {
 /** 遍历相关 */
 class Traversal extends DefaultArray {
   /**
-   * 轮转数组，反转三次，all & [0,k-1] & [k,end]
+   * 轮转数组 / 旋转数组，反转三次，all & [0,k-1] & [k,end]
    *
    * @param nums the nums
    * @param k the k
@@ -1667,18 +1660,14 @@ class Traversal extends DefaultArray {
     int len = matrix.length;
     for (int y = 0; y < len; y++) {
       for (int x = 0; x < y; x++) {
+        // swap (y,x) and (x,y)
         int tmp = matrix[y][x];
         matrix[y][x] = matrix[x][y];
         matrix[x][y] = tmp;
       }
     }
     for (int i = 0; i < len; i++) {
-      int lo = 0, hi = len - 1;
-      while (lo < hi) {
-        swap(matrix[i], lo, hi);
-        lo += 1;
-        hi -= 1;
-      }
+      reverse(matrix[i], 0, len - 1);
     }
   }
 
@@ -1930,6 +1919,8 @@ class DicOrder extends DefaultArray {
    *
    * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba 为 a>b 即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
+   *
+   * <p>扩展2，给定一个数 与一组数，求由 A 中元素组成的小于 n 的最大数，如 {2,4,9} 小于 23121 的最大数为 22999
    *
    * @param nums
    * @return

@@ -11,8 +11,10 @@ public class Design {}
 
 /** 设计 C 内存分配与释放 */
 class MMemory {
+  /** Malloc. */
   public void malloc() {}
 
+  /** Free. */
   public void free() {}
 }
 
@@ -70,69 +72,59 @@ class Compress {
   }
 
   /**
-   * 位图
+   * 位图，参考 https://codeantenna.com/a/GEgm1ulWBm
    *
    * @author cenghui
    */
   public class BitMap {
-    private final byte[] bits;
+    private final byte[] BITs; // 通过 byte 表示一个 bits 区间
+    private final int CountBit = 0x07, OffsetBit = 3;
+
     /**
-     * Instantiates a new Bit map.
+     * 满足 bit 位的 byte 数量，向上取整
      *
-     * <p>1bit can store 8 data, so how many bits are needed for capacity data, so capacity/8+1
-     * right shifting 3 bits is equivalent to dividing by 8.
-     *
-     * @param capacity the capacity
+     * @param capacity the n
      */
     public BitMap(int capacity) {
-      bits = new byte[(capacity >> 3) + 1];
+      BITs = new byte[getSegIdx(capacity) + 1];
+    }
+
+    // num/8 获取 bits 区间的索引，即表示的 byte
+    private int getSegIdx(int num) {
+      return num >>> OffsetBit;
+    }
+
+    // num%8 获取该区间内的偏移量，即该 byte 具体的 bit 位
+    private int getOffset(int num) {
+      return num & CountBit;
     }
 
     /**
-     * Add.
-     *
-     * <p>After moving 1 to the left offset, that offset is naturally 1, and then do | with the
-     * previous data, so that offset is replaced with 1.
+     * 将指定索引的二进制位置 1
      *
      * @param num the num
      */
     public void add(int num) {
-      bits[getIndex(num)] |= getOffsetBit(num);
+      BITs[getSegIdx(num)] |= (1 << getOffset(num));
     }
 
     /**
-     * Clear.
-     *
-     * <p>After moving 1 to the left offset, that offset is naturally 1, and then reverse it, and do
-     * & with the current value to clear the current offset.
+     * 将指定索引的二进制位置 0
      *
      * @param num the num
      */
     public void clear(int num) {
-      bits[getIndex(num)] &= ~getOffsetBit(num);
+      BITs[getSegIdx(num)] &= ~(1 << getOffset(num));
     }
 
     /**
-     * Contain boolean.
-     *
-     * <p>After shifting 1 to the left offset, that offset is naturally 1, and then do & with the
-     * previous data to determine whether it is 0
+     * 对指定索引的二进制位判 1
      *
      * @param num the num
      * @return the boolean
      */
     public boolean contain(int num) {
-      return (bits[getIndex(num)] & getOffsetBit(num)) != 0;
-    }
-
-    // num/8 gets the index of byte[]
-    private int getIndex(int num) {
-      return num >> 3;
-    }
-
-    // num%8 gets the position of byte[index]
-    private int getOffsetBit(int num) {
-      return 1 << (num & 0x07);
+      return ((BITs[getSegIdx(num)] & 1) << getOffset(num)) != 0;
     }
   }
 

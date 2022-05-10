@@ -675,7 +675,7 @@ class DeleteList extends LList {
   }
 
   /**
-   * 删除排序链表中的重复元素I，保留一个，即去重
+   * 删除排序链表中的重复元素I，保留一个，即链表去重
    *
    * @param head the head
    * @return list node
@@ -684,29 +684,32 @@ class DeleteList extends LList {
     ListNode dummy = new ListNode(), cur = head;
     dummy.next = head;
     while (cur != null && cur.next != null) {
-      if (cur.val == cur.next.val) cur.next = cur.next.next;
-      else cur = cur.next;
+      if (cur.val != cur.next.val) {
+        cur = cur.next;
+        continue;
+      }
+      cur.next = cur.next.next;
     }
     return dummy.next;
   }
 
   /**
-   * 删除排序链表中的重复元素II，毫无保留
+   * 删除排序链表中的重复元素II，毫无保留，因此需要保留前一个结点的指针
    *
    * @param head the head
    * @return list node
    */
   private ListNode deleteDuplicatesII(ListNode head) {
-    ListNode dummy = new ListNode(), cur = dummy;
+    ListNode dummy = new ListNode(), pre = dummy;
     dummy.next = head;
-    while (cur.next != null && cur.next.next != null) {
-      if (cur.next.val == cur.next.next.val) {
-        int pivot = cur.next.val;
-        while (cur.next != null && cur.next.val == pivot) {
-          cur.next = cur.next.next;
-        }
-      } else {
-        cur = cur.next;
+    while (pre.next != null && pre.next.next != null) {
+      if (pre.next.val != pre.next.next.val) {
+        pre = pre.next;
+        continue;
+      }
+      int pivot = pre.next.val;
+      while (pre.next != null && pre.next.val == pivot) {
+        pre.next = pre.next.next;
       }
     }
     return dummy.next;

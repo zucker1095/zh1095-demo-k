@@ -19,6 +19,8 @@ import java.util.*;
 public class TTree {
   // 「求根节点到叶节点数字之和」
   private int res3 = 0;
+  // 「输出后序」
+  private int preIdx = 0;
 
   /**
    * 中序遍历，迭代，注意区分遍历 & 处理两个 step
@@ -81,7 +83,7 @@ public class TTree {
   /**
    * 构造二叉树，题设元素唯一，否则，存在多棵树
    *
-   * <p>TODO 扩展1，根据前序和中序，输出后序，不能构造树，参考 https://blog.csdn.net/u011068702/article/details/51914220
+   * <p>扩展1，根据前序和中序，输出后序，不能构造树，参考 https://blog.csdn.net/u011068702/article/details/51914220
    *
    * <p>扩展2，给一个随机数组，生成相应的二叉搜索树，先排序，参下「将有序数组转换为二叉搜索树」
    *
@@ -90,38 +92,54 @@ public class TTree {
    * @return the tree node
    */
   public TreeNode buildTree(int[] preorder, int[] inorder) {
-    Map<Integer, Integer> idxByValInorder = new HashMap<>();
+    Map<Integer, Integer> hm = new HashMap<>();
     for (int i = 0; i < preorder.length; i++) {
-      idxByValInorder.put(inorder[i], i);
+      hm.put(inorder[i], i);
     }
-    return buildTree1(preorder, 0, preorder.length - 1, idxByValInorder, 0);
+    return buildTree1(preorder, 0, preorder.length - 1, hm, 0);
   }
 
   // 从前序与中序遍历序列构造二叉树
   private TreeNode buildTree1(
-      int[] preorder, int preLo, int preHi, Map<Integer, Integer> idxByValInorder, int inLo) {
-    //    if (preLo == preHi) {
-    //      postorder.add(preorder[preLo]);
-    //      return;
-    //    }
+      int[] preorder, int preLo, int preHi, Map<Integer, Integer> hm, int inLo) {
     if (preLo > preHi) return null;
     TreeNode root = new TreeNode(preorder[preLo]);
-    int idx = idxByValInorder.get(preorder[preLo]), countLeft = idx - inLo;
-    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, idxByValInorder, inLo);
-    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, idxByValInorder, idx + 1);
-    //    postorder.add(preorder[preLo]);
+    int idx = hm.get(preorder[preLo]), countLeft = idx - inLo;
+    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, hm, inLo);
+    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, hm, idx + 1);
     return root;
   }
 
   // 从中序与后序遍历序列构造二叉树
   private TreeNode buildTree2(
-      int[] postrorder, int postLo, int postHi, Map<Integer, Integer> idxByValInorder, int inLo) {
+      int[] postrorder, int postLo, int postHi, Map<Integer, Integer> hm, int inLo) {
     if (postLo > postHi) return null;
     TreeNode root = new TreeNode(postrorder[postHi]);
-    int idx = idxByValInorder.get(postrorder[postHi]), countLeft = idx - inLo;
-    root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, idxByValInorder, inLo);
-    root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, idxByValInorder, idx + 1);
+    int idx = hm.get(postrorder[postHi]), countLeft = idx - inLo;
+    root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, hm, inLo);
+    root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, hm, idx + 1);
     return root;
+  }
+
+  /**
+   * 根据前序和中序，输出后序
+   *
+   * <p>扩展1，反转后的后序，则调换子树递归的顺序即可。
+   *
+   * @param pre the pre
+   * @param inLo the in lo
+   * @param inHi the in hi
+   * @param hm the hm
+   * @param postorder the postorder
+   */
+  public void getPostorder(
+      int[] preorder, int preLo, int preHi, Map<Integer, Integer> hm, int inLo, int[] postorder) {
+    if (preLo > preHi) return;
+    int root = preorder[preLo];
+    int idx = hm.get(root), countLeft = idx - inLo;
+    getPostorder(preorder, preLo + 1, preLo + countLeft, hm, inLo, postorder);
+    getPostorder(preorder, preLo + countLeft + 1, preHi, hm, idx + 1, postorder);
+    postorder[preorder.length - 1 - preLo] = root;
   }
 
   /**
@@ -130,7 +148,7 @@ public class TTree {
    * <p>打印路径则参下「路径总和II」回溯
    *
    * @param root the root
-   * @param targetSum the target sum
+   * @param sum the sum
    * @return boolean boolean
    */
   public boolean hasPathSum(TreeNode root, int sum) {
@@ -213,7 +231,7 @@ public class TTree {
    * <p>参考 https://mp.weixin.qq.com/s/yewlHvHSilMsrUMFIO8WAA
    *
    * @param node the node
-   * @return next
+   * @return next next
    */
   public _TreeNode getNext(_TreeNode node) {
     // 如果有右子树，则找右子树的最左结点
@@ -533,8 +551,8 @@ class BBSTInorder {
   /**
    * 验证二叉搜索树，模板参上「中序遍历」
    *
-   * @param root
-   * @return
+   * @param root the root
+   * @return boolean
    */
   public boolean isValidBST(TreeNode root) {
     Deque<TreeNode> stack = new ArrayDeque<>();
@@ -765,8 +783,8 @@ class BBSTDFS {
   /**
    * 有序链表转换二叉搜索树
    *
-   * @param head
-   * @return
+   * @param head the head
+   * @return tree node
    */
   public TreeNode sortedListToBST(ListNode head) {
     if (head == null) return null;
@@ -826,7 +844,7 @@ class Postorder {
    * 平衡二叉树，前序递归
    *
    * @param root the root
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean isBalanced(TreeNode root) {
     return getHeight(root) != -1;
@@ -944,7 +962,7 @@ class Postorder {
    * https://leetcode-cn.com/problems/unique-binary-search-trees-ii/solution/cong-gou-jian-dan-ke-shu-dao-gou-jian-suo-you-shu-/
    *
    * @param n the n
-   * @return list
+   * @return list list
    */
   public List<TreeNode> generateTrees(int n) {
     return n < 1 ? new ArrayList<>() : dfs10(1, n);
@@ -987,7 +1005,7 @@ class BBFS {
    * <p>扩展1，N 叉树
    *
    * @param root the root
-   * @return list
+   * @return list list
    */
   public List<List<Integer>> levelOrder(TreeNode root) {
     List<List<Integer>> res = new ArrayList<>();
@@ -1006,8 +1024,8 @@ class BBFS {
   /**
    * 二叉树的层序遍历II，选用链表
    *
-   * @param root
-   * @return
+   * @param root the root
+   * @return list
    */
   public List<List<Integer>> levelOrderBottom(TreeNode root) {
     List<List<Integer>> res = new LinkedList<>();
@@ -1283,7 +1301,7 @@ class MultiTrees {
    *
    * @param root1 the root 1
    * @param root2 the root 2
-   * @return boolean
+   * @return boolean boolean
    */
   public boolean flipEquiv(TreeNode root1, TreeNode root2) {
     // 1.相等
@@ -1358,7 +1376,9 @@ class BacktrackingCombinatorics {
   }
 
   /**
-   * 组合总和I
+   * 组合总和I，可选重复
+   *
+   * <p>扩展1，不能重复，组合总和II，参下 annotate
    *
    * @param candidates the candidates
    * @param target the target
@@ -1379,39 +1399,16 @@ class BacktrackingCombinatorics {
       if (candidates[i] > target) break;
       path.offerLast(candidates[i]);
       backtracking2(candidates, path, res, i, target - candidates[i]);
+      // if (i > start && candidates[i - 1] == candidates[i]) continue;
+      // backtracking2(candidates, path, res, i + 1, target - candidates[i]);
       path.pollLast();
     }
   }
 
   /**
-   * 组合总和II
+   * 全排列I，无重复
    *
-   * @param candidates the candidates
-   * @param target the target
-   * @return the list
-   */
-  public List<List<Integer>> combinationSum2(int[] candidates, int target) {
-    List<List<Integer>> res = new ArrayList<>();
-    if (candidates.length == 0) return res;
-    Arrays.sort(candidates);
-    backtracking3(candidates, new ArrayDeque<>(), res, 0, target);
-    return res;
-  }
-
-  private void backtracking3(
-      int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
-    if (target == 0) res.add(new ArrayList<>(path));
-    for (int i = start; i < candidates.length; i++) {
-      if (candidates[i] > target) break;
-      if (i > start && candidates[i - 1] == candidates[i]) continue;
-      path.offerLast(candidates[i]);
-      backtracking3(candidates, path, res, i + 1, target - candidates[i]);
-      path.pollLast();
-    }
-  }
-
-  /**
-   * 全排列I
+   * <p>扩展1，有重复，全排列II，参下 annotate
    *
    * @param nums the nums
    * @return the list
@@ -1419,6 +1416,7 @@ class BacktrackingCombinatorics {
   public List<List<Integer>> permute(int[] nums) {
     List<List<Integer>> res = new ArrayList<>();
     if (nums.length == 0) return res;
+    // Arrays.sort(nums);
     backtracking4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
     return res;
   }
@@ -1431,6 +1429,7 @@ class BacktrackingCombinatorics {
     }
     for (int i = 0; i < nums.length; i++) {
       if (visited[i]) continue;
+      // if (visited[i] || (i > 0 && nums[i] == nums[i - 1] && !visited[i-1])) continue;
       visited[i] = true;
       path.offerLast(nums[i]);
       backtracking4(nums, path, res, visited);
@@ -1438,38 +1437,9 @@ class BacktrackingCombinatorics {
       visited[i] = false;
     }
   }
-
-  /**
-   * 全排列II
-   *
-   * @param nums the nums
-   * @return the list
-   */
-  public List<List<Integer>> permuteUnique(int[] nums) {
-    List<List<Integer>> res = new ArrayList<>();
-    if (nums.length == 0) return res;
-    Arrays.sort(nums);
-    backtracking5(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
-    return res;
-  }
-
-  private void backtracking5(
-      int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] visited) {
-    if (path.size() == nums.length) {
-      res.add(new ArrayList<>(path));
-      return;
-    }
-    for (int i = 0; i < nums.length; i++) {
-      if (visited[i] || (i > 0 && nums[i] == nums[i - 1] && !visited[i])) continue;
-      visited[i] = true;
-      path.offerLast(nums[i]);
-      backtracking5(nums, path, res, visited);
-      path.pollLast();
-      visited[i] = false;
-    }
-  }
 }
 
+/** The type Backtracking search. */
 class BacktrackingSearch extends DDFS {
   /**
    * 路径总和II，从根出发要求达到叶，打印路径
@@ -1575,7 +1545,7 @@ class BacktrackingSearch extends DDFS {
    * <p>BFS 解法参考「求根结点到叶子结点数字之和」分别维护一个结点与路径的队列
    *
    * @param root the root
-   * @return list
+   * @return list list
    */
   public List<String> binaryTreePaths(TreeNode root) {
     List<String> res = new ArrayList<>();
@@ -1597,18 +1567,18 @@ class BacktrackingSearch extends DDFS {
   /**
    * 所有可能的路径
    *
-   * @param graph
-   * @return
+   * @param graph the graph
+   * @return list
    */
   public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
     List<List<Integer>> res = new ArrayList<>();
     Deque<Integer> path = new ArrayDeque<>();
     path.offerLast(0);
-    backtracking14(graph, 0, path, res);
+    backtracking3(graph, 0, path, res);
     return res;
   }
 
-  private void backtracking14(
+  private void backtracking3(
       int[][] graph, int start, Deque<Integer> path, List<List<Integer>> res) {
     if (start == graph.length - 1) {
       res.add(new ArrayList<>(path));
@@ -1616,13 +1586,15 @@ class BacktrackingSearch extends DDFS {
     }
     for (int nxt : graph[start]) {
       path.offerLast(nxt);
-      backtracking14(graph, nxt, path, res);
+      backtracking3(graph, nxt, path, res);
       path.pollLast();
     }
   }
 }
 
+/** The type Backtracking else. */
 class BacktrackingElse extends DDFS {
+  // 「电话号码的字母组合」
   private final String[] LetterMap = {
     " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
   };
@@ -1630,16 +1602,17 @@ class BacktrackingElse extends DDFS {
   /**
    * 将数字串拆分为多个不超过 k 的子串，打印路径
    *
-   * @param s
-   * @return
+   * @param s the s
+   * @param K the k
+   * @return list
    */
   public List<List<Integer>> splitNumbers(String s, int K) {
     List<List<Integer>> paths = new ArrayList<>();
-    backtracking15(s, 0, new ArrayDeque<>(), paths, K);
+    backtracking5(s, 0, new ArrayDeque<>(), paths, K);
     return paths;
   }
 
-  private void backtracking15(
+  private void backtracking5(
       String s, int start, Deque<Integer> path, List<List<Integer>> res, int K) {
     if (start == s.length()) {
       res.add(new ArrayList<>(path));
@@ -1651,7 +1624,7 @@ class BacktrackingElse extends DDFS {
       num = num * 10 + (s.charAt(i) - '0');
       if (num > K) break;
       path.offerLast(num);
-      backtracking15(s, i + 1, path, res, K);
+      backtracking5(s, i + 1, path, res, K);
       path.pollLast();
     }
   }
@@ -1700,9 +1673,9 @@ class BacktrackingElse extends DDFS {
   }
 
   /**
-   * 分割回文串
+   * 分割回文串，将字符串分割为多个回文子串，返回所有结果
    *
-   * <p>1.预处理所有子串的回文情况
+   * <p>1.对整个串做回文判断，dp[i][j] 表示 s[i][j] 是否回文
    *
    * <p>2.暴力回溯
    *
@@ -1710,23 +1683,23 @@ class BacktrackingElse extends DDFS {
    * https://leetcode-cn.com/problems/palindrome-partitioning/solution/hui-su-you-hua-jia-liao-dong-tai-gui-hua-by-liweiw/
    *
    * @param s the s
-   * @return list
+   * @return list list
    */
   public List<List<String>> partition(String s) {
-    List<List<String>> res = new ArrayList<>();
+    List<List<String>> paths = new ArrayList<>();
     int len = s.length();
     boolean[][] dp = new boolean[len][len];
     for (int i = 0; i < len; i++) {
       collect(s, i, i, dp);
       collect(s, i, i + 1, dp);
     }
-    backtracking11(s, new ArrayDeque<>(), res, 0, dp);
-    return res;
+    backtracking11(s, new ArrayDeque<>(), paths, 0, dp);
+    return paths;
   }
 
   // 中心扩展，记录所有回文子串的始末点
   private void collect(String s, int lo, int hi, boolean[][] dp) {
-    while (lo >= 0 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
+    while (lo > -1 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
       dp[lo][hi] = true;
       lo -= 1;
       hi += 1;
@@ -1740,6 +1713,7 @@ class BacktrackingElse extends DDFS {
       return;
     }
     for (int i = start; i < s.length(); i++) {
+      // 非回文则剪枝
       if (!dp[start][i]) continue;
       path.offerLast(s.substring(start, i + 1));
       backtracking11(s, path, res, i + 1, dp);
@@ -1750,8 +1724,8 @@ class BacktrackingElse extends DDFS {
   /**
    * 电话号码的字母组合
    *
-   * @param digits
-   * @return
+   * @param digits the digits
+   * @return list
    */
   public List<String> letterCombinations(String digits) {
     if (digits == null || digits.length() == 0) return new ArrayList<>();

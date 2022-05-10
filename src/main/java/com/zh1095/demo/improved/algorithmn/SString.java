@@ -23,7 +23,7 @@ public class SString extends DefaultSString {
    *
    * <p>扩展1，36 进制则先转 10 再转 36
    *
-   * <p>扩展2，相减，同理维护一个高位，负责减，注意前导零
+   * <p>扩展2，相减，同理维护一个高位，负责减，注意前导零，参下 reduceStrings
    *
    * <p>扩展3，其一为负，则提前判断首位再移除
    *
@@ -32,19 +32,62 @@ public class SString extends DefaultSString {
    * @return the string
    */
   public String addStrings(String num1, String num2) {
-    final int base = 10; // 36 进制
+    final int BASE = 10; // 36 进制
     StringBuilder res = new StringBuilder();
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
     int carry = 0;
     while (p1 >= 0 || p2 >= 0 || carry != 0) {
       int n1 = p1 < 0 ? 0 : getInt(num1.charAt(p1)), n2 = p2 < 0 ? 0 : getInt(num1.charAt(p2));
       int tmp = n1 + n2 + carry;
-      carry = tmp / base;
-      res.append(getChar(tmp % base));
+      carry = tmp / BASE;
+      res.append(getChar(tmp % BASE));
       p1 -= 1;
       p2 -= 1;
     }
     return res.reverse().toString();
+  }
+
+  private boolean integerLess(String num1, String num2) {
+    return num1.length() == num2.length()
+        ? Integer.parseInt(num1) < Integer.parseInt(num2)
+        : num1.length() < num2.length();
+  }
+
+  /**
+   * 大数相减
+   *
+   * @param num1
+   * @param num2
+   * @return
+   */
+  public String reduceStrings(String num1, String num2) {
+    StringBuilder res = new StringBuilder();
+    // 预处理
+    if (integerLess(num1, num2)) {
+      String tmp = num1;
+      num1 = num2;
+      num2 = num1;
+      res.append('-');
+    }
+    // 逐位
+    int p1 = num1.length() - 1, p2 = num2.length() - 1;
+    int carry = 0;
+    while (p1 >= 0 || p2 >= 0) {
+      int n1 = p1 >= 0 ? num1.charAt(p1) - '0' : 0, n2 = p2 >= 0 ? num2.charAt(p2) - '0' : 0;
+      int tmp = (n1 - n2 - carry + 10) % 10;
+      res.append(tmp);
+      carry = n1 - carry - n2 < 0 ? 1 : 0;
+      p1 -= 1;
+      p2 -= 1;
+    }
+    // 前导零
+    String str = res.reverse().toString();
+    int pos = 0;
+    for (char ch : str.toCharArray()) {
+      if (ch != '0') break;
+      ch += 1;
+    }
+    return str.substring(0, pos);
   }
 
   private char getChar(int num) {
@@ -156,10 +199,9 @@ class WWindow {
    * @return the int
    */
   public int lengthOfLongestSubstring(String s) {
-    // ASCII 表总长 128
+    // ASCII 表总长
     int[] window = new int[128];
-    int maxLen = 1;
-    int lo = 0, hi = 0;
+    int maxLen = 1, lo = 0, hi = 0;
     while (hi < s.length()) {
       char add = s.charAt(hi);
       window[add] += 1;
@@ -243,24 +285,21 @@ class WWindow {
    * @return int [ ]
    */
   public int[] maxSlidingWindow(int[] nums, int k) {
-    int[] segmentMax = new int[nums.length - k + 1];
-    Deque<Integer> monotonicQueue = new LinkedList<>();
+    int[] segMax = new int[nums.length - k + 1];
+    Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < nums.length; i++) {
-      // offer
-      while (monotonicQueue.size() > 0 && monotonicQueue.peekLast() < nums[i]) {
-        monotonicQueue.pollLast();
+      while (mq.size() > 0 && mq.peekLast() < nums[i]) {
+        mq.pollLast();
       }
-      monotonicQueue.offerLast(nums[i]);
+      mq.offerLast(nums[i]);
       if (i < k - 1) continue;
-      int outIdx = i - k + 1;
-      //      res[outIdx] = mq.max();
-      segmentMax[outIdx] = monotonicQueue.peekFirst();
-      //      mq.poll(nums[outIdx]);
-      if (monotonicQueue.size() > 0 && monotonicQueue.peekFirst() == nums[outIdx]) {
-        monotonicQueue.pollFirst();
+      int outIdx = i - k + 1; // 窗口的左侧索引
+      segMax[outIdx] = mq.peekFirst(); // segMax[outIdx] = mq.max();
+      if (mq.size() > 0 && mq.peekFirst() == nums[outIdx]) {
+        mq.pollFirst(); // mq.poll(nums[outIdx]);
       }
     }
-    return segmentMax;
+    return segMax;
   }
 
   private static class MonotonicQueue {
@@ -710,9 +749,9 @@ class SSubString {
   }
 
   /**
-   * 至少有k个重复字符的最长子串，其中包含的每个字符都至少有k个
+   * 至少有k个重复字符的最长子串，每一字符出现次数都不少于
    *
-   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 切割为更小的子串进行处理
+   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 分割再判断其中是否包含重复
    *
    * <p>参考
    * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
@@ -731,9 +770,11 @@ class SSubString {
     }
     for (char ch : chs) {
       if (counter[ch - 'a'] >= k) continue;
-      // 找到首个次数少于 k 的字符，则切分为多个小段分治
+      // 找到首个次数少于 k 的字符
       int maxLen = 0;
-      for (String seg : s.split(String.valueOf(ch))) {
+      // 则切分为多个小段分治
+      String[] strs = s.split(String.valueOf(ch));
+      for (String seg : strs) {
         maxLen = Math.max(maxLen, longestSubstring(seg, k));
       }
       return maxLen;
@@ -830,54 +871,64 @@ class CConvert {
    *
    * <p>去空格 & 判正负 & 逐位加 & 判溢出
    *
+   * <p>扩展1，包含浮点，参下 annotate
+   *
    * @param s the s
    * @return the int
    */
   public int myAtoi(String s) {
-    int idx = 0;
+    int idx = 0, len = s.length();
     boolean isNegative = false;
     char[] chs = s.toCharArray();
 
-    while (idx < s.length() && chs[idx] == ' ') {
+    while (idx < len && chs[idx] == ' ') {
       idx += 1;
     }
-    if (idx == s.length()) return 0;
+    if (idx == len) return 0;
 
     if (chs[idx] == '-') isNegative = true;
     if (chs[idx] == '-' || chs[idx] == '+') idx += 1;
 
     int num = 0;
-    for (int i = idx; i < s.length(); i++) {
+    for (int i = idx; i < len; i++) {
       char ch = chs[i];
+      //      if (ch == '.') {
+      //        int decimal = myAtoi(s.substring(i, len));
+      //        return (num + decimal * Math.pow(0.1, len - i + 1)) * (isNegative ? -1 : 1);
+      //      }
+      // 非数字
       if (ch < '0' || ch > '9') break;
+      // 判溢出
       int pre = num;
       num = num * 10 + (ch - '0');
       if (pre != num / 10) return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
     }
+
     return num * (isNegative ? -1 : 1);
   }
 
   /**
    * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
    *
-   * <p>框架类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
+   * <p>类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
    *
    * @param chars the chars
    * @return int int
    */
   public int compress(char[] chars) {
     // write & read
-    int lo = 0, hi = 0;
-    while (hi < chars.length) {
+    int lo = 0, hi = 0, len = chars.length;
+    while (hi < len) {
       int cur = hi;
-      while (cur < chars.length && chars[hi] == chars[cur]) {
+      while (cur < len && chars[cur] == chars[hi]) {
         cur += 1;
       }
       chars[lo] = chars[hi];
       lo += 1;
-      // 多位数字逐位写入
       if (cur - hi > 1) {
-        for (char digit : Integer.toString(cur - hi).toCharArray()) {
+        // 逐位写入
+        char[] num = Integer.toString(cur - hi).toCharArray();
+        for (char digit : num) {
           chars[lo] = digit;
           lo += 1;
         }

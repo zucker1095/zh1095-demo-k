@@ -102,14 +102,33 @@ public class OOthers {
   }
 
   /**
-   * 划分字母区间
+   * 多边形周长等分
    *
-   * <p>TODO
+   * <p>TODO 参考 https://codeantenna.com/a/nyBNVsVmD5
    *
-   * @param s the s
-   * @return list
+   * @param points the points
+   * @param k the k
+   * @return point [ ]
    */
-  //  public List<Integer> partitionLabels(String s) {}
+  public Point[] splitPerimeter(Point[] points, int k) {
+    Point[] splitPoints = new Point[k];
+
+    return splitPoints;
+  }
+
+  // 计算两点间的距离
+  private double getDist(Point p1, Point p2) {
+    return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+  }
+
+  // 获取等分点
+  private Point getSplitPoint(Point p1, Point p2, double dist, double len) {
+    Point splitPoint = new Point();
+    // 利用长度比例计算点的坐标
+    splitPoint.x = len / dist * (p1.x - p2.x) + p2.x;
+    splitPoint.y = len / dist * (p1.y - p2.y) + p2.y;
+    return splitPoint;
+  }
 
   /**
    * 栈排序
@@ -123,6 +142,35 @@ public class OOthers {
     Deque<Integer> tmp = new ArrayDeque<>();
     while (!stack.isEmpty()) {}
     return tmp;
+  }
+
+  /**
+   * 划分字母区间
+   *
+   * <p>TODO
+   */
+
+  //  public List<Integer> partitionLabels(String s) {}
+
+  // 「多边形周长等分」
+  private class Point {
+    /** The X. */
+    double x,
+        /** The Y. */
+        y;
+
+    /**
+     * Instantiates a new Point.
+     *
+     * @param x the x
+     * @param y the y
+     */
+    public Point(double x, double y) {
+      this.x = x;
+      this.y = y;
+    }
+
+    public Point() {}
   }
 }
 
@@ -677,27 +725,26 @@ class MMath {
   }
 
   /**
-   * x的平方根，二分只能精确至后二位，建议采用牛顿迭代
+   * x的平方根，建议采用牛顿迭代，二分只能精确至后二位
+   *
+   * <p>记忆即可，new=(old+num/old)*0.5
    *
    * <p>此处必须 /2 而非 >>1 比如，在区间只有 22 个数的时候，本题 if、else 的逻辑区间的划分方式是：[left..mid-1] 与 [mid..right]
    *
    * <p>如果 mid 下取整，在区间只有 22 个数的时候有 mid 的值等于 left，一旦进入分支 [mid..right] 区间不会再缩小，出现死循环
    *
-   * <p>扩展1，精确至 k 位，只能使用牛顿迭代法，参考
+   * <p>扩展1，精确至 k 位或误差小于 1*10^(-k)，只能使用牛顿迭代法，参考
    * https://leetcode-cn.com/problems/sqrtx/solution/niu-dun-die-dai-fa-by-loafer/
-   *
-   * <p>扩展2，误差小于 1*10^(-k)，即精确至 k+1 位，同上
    *
    * @param x the x
    * @return int int
    */
   public int mySqrt(int x) {
     if (x == 0) return 0;
-    double pre = x, cur = 0;
+    double pre = x, cur;
     while (true) {
-      // 2*cur = pre+x/pre
       cur = (pre + x / pre) * 0.5;
-      // 后 n 位此处定制
+      // 后 n 位 1e-n
       if (Math.abs(pre - cur) < 1e-7) break;
       pre = cur;
     }
@@ -725,23 +772,32 @@ class MMath {
   /**
    * 第N位数字，k 位数共有 9*10^(k-1) 个数字
    *
+   * <p>迭代试减 n 以确定 k 所在的整个数字
+   *
    * <p>基于规律 [100, 999] 有 3*90*100 个数字 即 3*9*10^2
    *
-   * <p>TODO 参考
+   * <p>参考
    * https://leetcode-cn.com/problems/nth-digit/solution/gong-shui-san-xie-jian-dan-mo-ni-ti-by-a-w5wl/
    *
    * @param n the n
    * @return int int
    */
   public int findNthDigit(int n) {
-    int len = 1, cur = n;
-    while (len * 9 * Math.pow(10, len - 1) < cur) {
-      cur -= len * 9 * Math.pow(10, len - 1);
+    // 分别表示当前的位数 & 还剩下要找的位数。
+    int len = 1, left = n;
+    // len 位数共有 9*len*10^(len-1) 个完整的数字。
+    while (9 * len * Math.pow(10, len - 1) < left) {
+      left -= 9 * len * Math.pow(10, len - 1);
       len += 1;
     }
-    int start = (int) (Math.pow(10, len - 1) + cur / len - 1);
-    cur -= len * (cur / len);
-    return cur == 0 ? start % 10 : (int) ((start + 1) / Math.pow(10, len - cur) % 10);
+    // 此时 left 所在完整的数字的值区间是 [10^(len-1),10^len-1]
+    // 简单推算出目标所在的数字 (target−min+1)*len >= left
+    double minNum = Math.pow(10, len - 1);
+    int targetNum = (int) (minNum + left / len - 1);
+    // 相较于 min 需要取的完整的数字
+    int count = left - len * (left / len);
+    // cur==0 表示答案为目标数字的最后一位，否则是其从左到右的第 left 位。
+    return count == 0 ? targetNum % 10 : (int) ((targetNum + 1) / Math.pow(10, len - count) % 10);
   }
 
   /**
@@ -887,7 +943,7 @@ class GGraph {
    * @param n the n
    * @param Edges the tree edge
    * @param EdgeValues the edge value
-   * @return int
+   * @return int int
    */
   public int diameterOfTree(int n, Interval[] Edges, int[] EdgeValues) {
     // 使用数组保存所有的节点
@@ -1066,8 +1122,8 @@ class GGraph {
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/shortest-path-visiting-all-nodes/solution/gong-shui-san-xie-yi-ti-shuang-jie-bfs-z-6p2k/
    *
-   * @param graph
-   * @return
+   * @param graph the graph
+   * @return int
    */
   public int shortestPathLength(int[][] graph) {
     int n = graph.length, mask = 1 << n, INF = Integer.MAX_VALUE;
@@ -1169,7 +1225,7 @@ class BBit {
   }
 
   /**
-   * 颠倒二进制位，反转整数的二进制位，题设 32 位下，对于 Java need treat n as an unsigned value
+   * 颠倒二进制位，反转整数的二进制位，Java 则作为 unsigned 对待
    *
    * <p>分治，两位互换 -> 4 -> 8 -> 16
    *
@@ -1181,13 +1237,13 @@ class BBit {
   public int reverseBits(int n) {
     // 低 16 位与高 16 位交换
     n = (n >> 16) | (n << 16);
-    // 每16位中低8位和高8位交换，1111 是 f
+    // 每 16 位低 8 位和高 8 位交换，1111 是 f
     n = ((n & 0xff00ff00) >> 8) | ((n & 0x00ff00ff) << 8);
-    // 每8位中低4位和高4位交换
+    // 每 8 位低 4 位和高 4 位交换
     n = ((n & 0xf0f0f0f0) >> 4) | ((n & 0x0f0f0f0f) << 4);
-    // 每4位中低2位和高2位交换，1100 是 c,0011 是 3
+    // 每 4 位低 2 位和高 2 位交换，1100 是 c,0011 是 3
     n = ((n & 0xcccccccc) >> 2) | ((n & 0x33333333) << 2);
-    // 每2位中低1位和高1位交换，1010 是 a，0101 是 5
+    // 每 2 位低 1 位和高 1 位交换，1010 是 a，0101 是 5
     n = ((n & 0xaaaaaaaa) >> 1) | ((n & 0x55555555) << 1);
     return n;
   }
@@ -1195,12 +1251,11 @@ class BBit {
   /**
    * 只出现一次的数字II，其余均出现三次
    *
-   * <p>利用 int 固定为 32 bit，使用一个长度为 32 的数组 cnt[] 记录下所有数值的每一位共出现了多少次 1，再对 cnt[] 数组的每一位进行 mod 3
-   * 操作，重新拼凑出只出现一次的数
+   * <p>使用一个 32 长的数组记录所有数值的每一位出现 1 的次数，再对数组的每一位进行 mod，重新拼凑出只出现一次的数
    *
-   * <p>如果一个数字出现三次,那么它的二进制表示的每一位(0或者1)也出现三次。如果把所有出现三次的数字的二进制表示的每一位都分别加起来,那么每一位的和都能被3整除
+   * <p>如果一个数字出现三次，那么它的二进制表示的每一位也出现三次。如果把所有出现三次的数字的二进制表示的每一位都分别加起来，那么每一位的和都能被 3 整除
    *
-   * <p>如果某一位的和能被3整除,那么那个只出现一次的数字二进制表示中对应的那一位是0;否则就是1
+   * <p>如果某一位的和能被 3 整除,那么那个只出现一次的数字二进制表示中对应的那一位是 0 否则 1
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/shu-zu-zhong-shu-zi-chu-xian-de-ci-shu-ii-lcof/solution/javashi-xian-jian-zhi-si-lu-wei-yun-suan-zhu-wei-t/F
@@ -1256,7 +1311,7 @@ class BBit {
    * https://leetcode-cn.com/problems/gray-code/solution/gray-code-jing-xiang-fan-she-fa-by-jyd/
    *
    * @param n the n
-   * @return list
+   * @return list list
    */
   public List<Integer> grayCode(int n) {
     List<Integer> res = new ArrayList<Integer>() {};
