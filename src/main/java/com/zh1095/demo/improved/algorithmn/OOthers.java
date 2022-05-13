@@ -102,6 +102,35 @@ public class OOthers {
   }
 
   /**
+   * 排名百分比，根据成绩获取，要求 O(n) for time
+   *
+   * <p>counts 类似 bitmap，对 score 排序。
+   *
+   * <p>参考 https://leetcode.cn/circle/discuss/4ZX013/
+   *
+   * @param scores
+   * @return
+   */
+  public double[] countScore(int[] scores) {
+    final int MaxScore = 100;
+    // 以分数维度，前后两个循环分别对应 equal count & lte count
+    int[] counts = new int[MaxScore + 1];
+    for (int s : scores) {
+      counts[s] += 1;
+    }
+    for (int s = 1; s < MaxScore; s++) {
+      counts[s] += counts[s - 1];
+    }
+    // 以学生维度
+    int count = scores.length;
+    double[] pct = new double[count];
+    for (int i = 0; i < count; i++) {
+      pct[i] = 100.0 * counts[scores[i]] / count;
+    }
+    return pct;
+  }
+
+  /**
    * 多边形周长等分
    *
    * <p>TODO 参考 https://codeantenna.com/a/nyBNVsVmD5
@@ -112,11 +141,43 @@ public class OOthers {
    */
   public Point[] splitPerimeter(Point[] points, int k) {
     Point[] splitPoints = new Point[k];
-
+    int i = 0, n = points.length;
+    double l = 0;
+    double[] edges = new double[n];
+    // 计算周长
+    while (i < n - 1) {
+      edges[i] = getDist(points[i], points[i + 1]);
+      l += edges[i];
+      i += 1;
+    }
+    edges[i] = getDist(points[i], points[0]);
+    l += edges[i];
+    // 平均距离
+    double avg = l / k, sum = edges[0];
+    int y = 0;
+    for (int x = 0; x < k; x++) {
+      while (y < n) {
+        // 跨点
+        if (avg > sum) {
+          y += 1;
+          sum += edges[y];
+          continue;
+        }
+        // 找到对应的边
+        double tmp = sum - avg;
+        // 最后一个点
+        splitPoints[i] =
+            y + 1 == n
+                ? getSplitPoint(points[y], points[0], edges[y], tmp)
+                : getSplitPoint(points[y], points[y + 1], edges[y], tmp);
+        sum = tmp;
+        break;
+      }
+    }
     return splitPoints;
   }
 
-  // 计算两点间的距离
+  // 返回两点的欧氏距离
   private double getDist(Point p1, Point p2) {
     return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
   }
@@ -762,6 +823,49 @@ class MMath {
     return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
   }
 
+  /**
+   * 分数到小数，高精度除法
+   *
+   * <p>每一位小数通过 *10 再除余计算，而循环小数可以通过判断被除数如 1/7 有没有出现过 & 出现的位置在哪儿来判断。
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/fraction-to-recurring-decimal/solution/pythonjavajavascript-gao-jing-du-chu-fa-44td5/
+   *
+   * @param numerator 分子
+   * @param denominator 分母
+   * @return
+   */
+  public String fractionToDecimal(int numerator, int denominator) {
+    final int PRECISSION = 10000;
+    // 1.判断正负
+    int flag = (numerator > 0 && denominator > 0) || (numerator < 0 && denominator < 0) ? 1 : -1;
+    long a = Math.abs((long) numerator), b = Math.abs((long) denominator);
+    // 2.取出余数
+    long quotient = a / b, remainder = a % b;
+    if (remainder == 0) return String.valueOf(quotient * flag);
+    StringBuilder num = new StringBuilder(String.valueOf(quotient));
+    num.append('.');
+    int len = num.length(); // 正数部分的长度
+    // 3.保存某个被除数与 denominator 的结果。
+    Map<Long, Integer> repeats = new HashMap<>();
+    for (int i = 0; i < PRECISSION; i++) {
+      a = remainder * 10;
+      quotient = a / b;
+      remainder = a % b;
+      // 4.已经计算过，结束
+      if (repeats.containsKey(a)) {
+        num.insert(repeats.get(a).intValue(), '(');
+        num.append(')');
+        break;
+      }
+      num.append(quotient);
+      repeats.put(a, i + len);
+      if (remainder == 0) break; // 入迭代前非整除
+    }
+    if (flag == -1) num.insert(0, '-');
+    return num.toString();
+  }
+
   // 特判零次幂 & 递归二分 & 判断剩余幂
   private double quickMulti(double x, int n) {
     if (n == 0) return 1;
@@ -1204,7 +1308,7 @@ class GGraph {
 /** 二进制，位运算相关，掌握常见的运算符即可，现场推，毕竟命中率超低 */
 class BBit {
   /**
-   * 整数反转，32 位
+   * 整数反转，反转十进制位。
    *
    * @param x the x
    * @return int int
@@ -1225,31 +1329,31 @@ class BBit {
   }
 
   /**
-   * 颠倒二进制位，反转整数的二进制位，Java 则作为 unsigned 对待
+   * 颠倒二进制位，反转二进制位，Java 则作为 unsigned 对待。
    *
    * <p>分治，两位互换 -> 4 -> 8 -> 16
    *
-   * <p>记住 ff00ff00，f0f0f0f0 镜像与 c & 3，a & 5 即可
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/reverse-bits/solution/dian-dao-er-jin-zhi-wei-by-leetcode-solu-yhxz/
    *
    * @param n the n
    * @return int int
    */
   public int reverseBits(int n) {
-    // 低 16 位与高 16 位交换
-    n = (n >> 16) | (n << 16);
-    // 每 16 位低 8 位和高 8 位交换，1111 是 f
-    n = ((n & 0xff00ff00) >> 8) | ((n & 0x00ff00ff) << 8);
-    // 每 8 位低 4 位和高 4 位交换
-    n = ((n & 0xf0f0f0f0) >> 4) | ((n & 0x0f0f0f0f) << 4);
-    // 每 4 位低 2 位和高 2 位交换，1100 是 c,0011 是 3
-    n = ((n & 0xcccccccc) >> 2) | ((n & 0x33333333) << 2);
     // 每 2 位低 1 位和高 1 位交换，1010 是 a，0101 是 5
-    n = ((n & 0xaaaaaaaa) >> 1) | ((n & 0x55555555) << 1);
-    return n;
+    n = n >>> 1 & 0x55555555 | (n & 0x55555555) << 1;
+    // 每 4 位低 2 位和高 2 位交换，1100 是 c,0011 是 3
+    n = n >>> 2 & 0x33333333 | (n & 0x33333333) << 2;
+    // 每 8 位低 4 位和高 4 位交换
+    n = n >>> 4 & 0x0f0f0f0f | (n & 0x0f0f0f0f) << 4;
+    // 每 16 位低 8 位和高 8 位交换，1111 是 f
+    n = n >>> 8 & 0x00ff00ff | (n & 0x00ff00ff) << 8;
+    // 低 16 位与高 16 位交换
+    return n >>> 16 | n << 16;
   }
 
   /**
-   * 只出现一次的数字II，其余均出现三次
+   * 只出现一次的数字，II 参下，此 III，一个一次，其余三次。
    *
    * <p>使用一个 32 长的数组记录所有数值的每一位出现 1 的次数，再对数组的每一位进行 mod，重新拼凑出只出现一次的数
    *
@@ -1285,6 +1389,27 @@ class BBit {
       target <<= 1;
     }
     return target;
+  }
+
+  // 只出现一次的数字III，两个一次，其余两次。
+  // TODO 参考
+  // https://leetcode.cn/problems/single-number-iii/solution/cai-yong-fen-zhi-de-si-xiang-jiang-wen-ti-jiang-we/
+  private int[] singleN2(int[] nums) {
+    int xor = 0;
+    for (int n : nums) {
+      xor ^= n;
+    }
+    // 取异或值最后一个二进制位为 1 的数字作为 mask，如果是 1 则表示两个数字在这一位上不同。
+    int mask = xor & (-xor);
+    int[] res = new int[2];
+    // 通过与这个 mask 进行与操作，如果为 0 的分为一个数组，为 1 的分为另一个数组。
+    // 这样就把问题降低成：有一个数组每个数字都出现两次，有一个数字只出现了一次，求出该数字。
+    // 对这两个子问题分别进行全异或就可以得到两个解。
+    for (int n : nums) {
+      if ((n & mask) == 0) res[0] ^= n;
+      else res[1] ^= n;
+    }
+    return res;
   }
 
   /**

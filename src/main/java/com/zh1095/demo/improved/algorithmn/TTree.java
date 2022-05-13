@@ -334,11 +334,11 @@ class DDFS {
   private TreeNode parent;
 
   /**
-   * 路径总和III，返回路径总数，但从任意点出发，前缀和，题设结点值唯一
+   * 路径总和III，返回路径总数，但从任意点出发，题设值不重复，前缀和
    *
    * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
    *
-   * <p>TODO 扩展1，打印路径
+   * <p>TODO 扩展1，打印路径，参考「二叉树中的最大路径和」follow-up
    *
    * @param root the root
    * @param targetSum the target sum
@@ -350,9 +350,16 @@ class DDFS {
     return dfs14(root, preSum, 0, targetSum);
   }
 
+  // cur 表示自根的值，该路径唯一
   private int dfs14(TreeNode root, Map<Long, Integer> preSum, long cur, int targetSum) {
     if (root == null) return 0;
     cur += root.val;
+    //    path.add(root.val);
+    //    if (cur == targetSum) {
+    //      res.add(new ArrayList(path));
+    //      path.pollLast();
+    //      return;
+    //    }
     int path = preSum.getOrDefault(cur - targetSum, 0);
     preSum.put(cur, preSum.getOrDefault(cur, 0) + 1);
     path += dfs14(root.left, preSum, cur, targetSum) + dfs14(root.right, preSum, cur, targetSum);
@@ -543,6 +550,23 @@ class DDFS {
     for (int[] dir : DIRECTIONS) {
       dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
     }
+  }
+
+  /**
+   * 最长相同值路径，找到任意起点的一条路径，所有结点值一致
+   *
+   * @param root
+   * @return
+   */
+  public int longestUnivaluePath(TreeNode root) {
+    if (root == null) return 0;
+    int sub = Math.max(longestUnivaluePath(root.left), longestUnivaluePath(root.right));
+    return Math.max(sub, dfs15(root.left, root.val) + dfs15(root.right, root.val));
+  }
+
+  private int dfs15(TreeNode root, int from) {
+    if (root == null || root.val != from) return 0;
+    return 1 + Math.max(dfs15(root.left, root.val), dfs15(root.right, root.val));
   }
 }
 
@@ -1459,15 +1483,12 @@ class BacktrackingSearch extends DDFS {
     if (root == null) return;
     path.offerLast(root.val);
     if (targetSum - root.val == 0 && root.left == null && root.right == null) {
-      // path 全局唯一，须做拷贝
       res.add(new ArrayList<>(path));
-      // return 前须重置
       path.pollLast();
       return;
     }
     backtracking0(root.left, path, res, targetSum - root.val);
     backtracking0(root.right, path, res, targetSum - root.val);
-    // 递归完成以后，必须重置变量
     path.pollLast();
   }
 

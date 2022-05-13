@@ -630,6 +630,29 @@ class MMerge extends DefaultArray {
     }
     return Arrays.copyOf(res, idx + 1);
   }
+
+  /**
+   * 螺丝螺母匹配，快速排序 & 分治
+   *
+   * <p>TODO 参考
+   *
+   * <p>设 Si->Nj
+   *
+   * @param screws
+   * @param nuts
+   * @return
+   */
+  public int[][] aggrateScrew2Nut(int[] screws, int[] nuts) {
+    int len = screws.length;
+    int[][] screw2Nut = new int[len][len]; // 可能存在不成对。
+
+    for (int screw : screws) {}
+
+    return screw2Nut;
+  }
+
+  // 可调用函数
+  //  private int match(int screw, int nut) {}
 }
 
 /**

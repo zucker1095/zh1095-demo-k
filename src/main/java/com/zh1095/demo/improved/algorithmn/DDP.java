@@ -149,33 +149,33 @@ class OptimalSubSequence extends DichotomyClassic {
    */
   public int lengthOfLIS(int[] nums) {
     // tail 最后一个已经赋值的元素的索引
-    int len = nums.length, end = 0;
-    // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
-    int[] tail = new int[len], dp = new int[len];
-    tail[0] = nums[0];
+    int len = nums.length, hi = 0;
+    // dp[i] 表示以 i 结尾的 LIS 的最大长度。
+    // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4。
+    int[] tails = new int[len], dp = new int[len];
+    tails[0] = nums[0];
     // dp[0] = 1;
     for (int i = 1; i < len; i++) {
-      // 插入或替换
-      if (nums[i] <= tail[end]) {
-        int lo = lowerBound(Arrays.copyOfRange(tail, 0, end + 1), nums[i]);
-        tail[lo] = nums[i];
-        // dp[i] = lo + 1;
-      } else {
-        end += 1;
-        tail[end] = nums[i];
+      int n = nums[i];
+      if (n > tails[hi]) {
+        hi += 1;
+        tails[hi] = n;
         // dp[i] = end + 1;
+      } else {
+        int lo = lowerBound(Arrays.copyOfRange(tails, 0, hi + 1), n);
+        tails[lo] = n;
+        // dp[i] = lo + 1;
       }
     }
-    // findPath(nums,dp,end+1);
-    // 题目要求返回的是长度，因此 +1 后返回
-    return end + 1;
+    // getPath(nums,dp,end+1);
+    return hi + 1; // 求长度
   }
 
   // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
   // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
   // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
   // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
-  private int[] findPath(int[] nums, int[] dp, int len) {
+  private int[] getPath(int[] nums, int[] dp, int len) {
     int[] path = new int[len];
     int count = len;
     for (int i = nums.length - 1; i >= 0 && count >= 0; i--) {
@@ -260,47 +260,28 @@ class OptimalSubSequence extends DichotomyClassic {
     return editDistance(word1, word2);
   }
 
-  // 编辑距离，画图即可，三个方向分别代表三种操作
+  // 编辑距离，画图即可，遍历的方向分别代表操作
   // dp[i][j] 表示由 A[0:i] 转移为 B[0:j] 的最少步数
   // 递推 1+min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
-  // 扩展1，三个操作权重不同，求最少的总权重
+  // 扩展1，操作带权重，参考 https://www.nowcoder.com/questionTerminal/05fed41805ae4394ab6607d0d745c8e4
   private int editDistance(String word1, String word2) {
-    int n1 = word1.length(), n2 = word2.length();
-    int[][] dp = new int[n1 + 1][n2 + 1];
-    for (int i = 0; i <= n1; i++) {
+    int l1 = word1.length(), l2 = word2.length();
+    int[][] dp = new int[l1 + 1][l2 + 1];
+    for (int i = 0; i <= l1; i++) {
       dp[i][0] = i;
     }
-    for (int j = 0; j <= n2; j++) {
+    for (int j = 0; j <= l2; j++) {
       dp[0][j] = j;
     }
-    for (int i = 1; i <= n1; i++) {
-      for (int j = 1; j <= n2; j++) {
+    for (int i = 1; i <= l1; i++) {
+      for (int j = 1; j <= l2; j++) {
         dp[i][j] =
             word1.charAt(i - 1) == word2.charAt(j - 1)
                 ? dp[i - 1][j - 1]
                 : 1 + Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]);
       }
     }
-    return dp[n1][n2];
-    //    int ic, rc, dc;
-    //    int[] dp2 = new int[n2 + 1];
-    //    // 初始化第一行
-    //    for (int i = 1; i <= n2; i++) {
-    //      dp2[i] = i * ic;
-    //    }
-    //    for (int i = 1; i <= n1; i++) {
-    //      int pre = dp2[0];
-    //      dp2[0] = i * dc;
-    //      for (int j = 1; j <= n2; ++j) {
-    //        int tmp = dp2[j]; // 上一轮 dp[i-1][j]
-    //        if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
-    //          dp2[j] = pre;
-    //        } else {
-    //          dp2[j] = Math.min(pre + rc, Math.min(dp2[j - 1] + ic, tmp + dc));
-    //        }
-    //        pre = tmp; // 更新 dp[i-1][j-1]
-    //      }
-    //    }
+    return dp[l1][l2];
   }
 
   // 两个字符串的删除操作
@@ -542,19 +523,23 @@ class OptimalElse {
   }
 
   // 限定两次，综合上方二者
+  // 限定 n 次，参下 annotate
   private int maxProfitIII(int[] prices) {
     // 因为只能交易 2 次，所以定义 2 组 buy & sell
     int buy1 = Integer.MIN_VALUE, sell1 = 0;
     int buy2 = Integer.MIN_VALUE, sell2 = 0;
+    //    int[][] buySells = new int[n][2];
     for (int price : prices) {
-      // 第一次买 -p
-      buy1 = Math.max(buy1, -price);
-      // 第一次卖 buy1+p
-      sell1 = Math.max(sell1, buy1 + price);
-      // 第一次卖了后现在买 sell1-p
-      buy2 = Math.max(buy2, sell1 - price);
-      // 第二次买了后现在卖 buy2+p
-      sell2 = Math.max(sell2, buy2 + price);
+      buy1 = Math.max(buy1, -price); // 第一次买
+      sell1 = Math.max(sell1, buy1 + price); // 第一次卖
+      buy2 = Math.max(buy2, sell1 - price); // 第一次卖了后现在买
+      sell2 = Math.max(sell2, buy2 + price); // 第二次买了后现在卖
+      //      buySells[0][0] = Math.max(buySells[0][0], -price);
+      //      buySells[0][1] = Math.max(buySells[0][1], buySells[0][0] + price);
+      //      for (int i = 1; i < buySells.length; i++) {
+      //        int buy = buySells[i][0], sell = buySells[i][1];
+      //        // ...
+      //      }
     }
     return sell2;
   }

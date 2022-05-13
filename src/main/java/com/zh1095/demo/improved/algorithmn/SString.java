@@ -1079,20 +1079,34 @@ class CConvert {
   }
 
   /**
-   * IP转32位无符号整数
+   * convert between IP & unsigned int
    *
-   * <p>TODO 参考 https://mp.weixin.qq.com/s/UWCuEtNS2kuAuDY-eIbghg
+   * <p>参考 https://mp.weixin.qq.com/s/UWCuEtNS2kuAuDY-eIbghg
    *
    * @param IP the ip
    * @return long
    */
-  public long ipToInteger(String IP) {
-    String[] arr = IP.split(".");
-    long n = Long.parseLong(arr[0]);
-    for (int i = 1; i < arr.length; i++) {
-      n = n << 8 + Long.parseLong(arr[i]);
+  public String convertIPInteger(String str) {
+    final int N = 4;
+    // ipv4 -> int
+    if (str.contains(".")) {
+      String[] fields = str.split("\\.");
+      long integer = 0;
+      for (int i = 0; i < N; i++) {
+        integer = integer << 8 + Integer.parseInt(fields[i]);
+      }
+      return "" + integer;
     }
-    return n;
+    // int -> ipv4
+    else {
+      long ipv4 = Long.parseLong(str);
+      String res = "";
+      for (int i = 0; i < N; i++) {
+        res = ipv4 % 256 + "." + res;
+        ipv4 /= 256;
+      }
+      return res.substring(0, res.length() - 1);
+    }
   }
 
   /**
