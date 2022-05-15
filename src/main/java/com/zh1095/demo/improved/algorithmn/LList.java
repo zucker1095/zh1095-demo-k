@@ -310,7 +310,7 @@ class MergeList extends LList {
    *
    * <p>模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
-   * <p>I 逆序存储，而 II 正序，因此需要逆序访问
+   * <p>I 逆序 II 正序
    *
    * @param l1 the l 1
    * @param l2 the l 2
@@ -338,7 +338,7 @@ class MergeList extends LList {
   }
 
   // 123 & 45 -> 168
-  // 分别反转两个链表 & 正序计算 & 反转整个链表
+  // 并发反转两个链表 & 正序计算 & 反转整个链表
   // 允许空间，则分别遍历建栈，注意需要逆序尾插，即 cur->head
   private ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
     //    ListNode p1 = reverseList(l1), p2 = reverseList(l2);
@@ -437,13 +437,12 @@ class ReorderList extends LList {
    * @return
    */
   public ListNode sortOddEvenList(ListNode head) {
-    ListNode oddHead = head, evenHead = _oddEvenList(head);
-    evenHead = reverseList(evenHead);
-    return mergeTwoLists(oddHead, evenHead);
+    ListNode evenHead = separateOddEvenList(head);
+    return mergeTwoLists(head, reverseList(evenHead));
   }
 
-  // 代码与「奇偶链表」一致，但返回偶头
-  private ListNode _oddEvenList(ListNode head) {
+  // 代码与「奇偶链表」一致，但分离且返回偶头
+  private ListNode separateOddEvenList(ListNode head) {
     if (head == null) return null;
     ListNode odd = head, even = head.next, evenHead = even;
     while (even != null && even.next != null) {

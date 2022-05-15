@@ -99,7 +99,7 @@ public class TTree {
     return buildTree1(preorder, 0, preorder.length - 1, hm, 0);
   }
 
-  // 从前序与中序遍历序列构造二叉树
+  // 从前序与中序遍历序列构造二叉树 / 重建二叉树
   private TreeNode buildTree1(
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> hm, int inLo) {
     if (preLo > preHi) return null;
@@ -1696,9 +1696,7 @@ class BacktrackingElse extends DDFS {
   /**
    * 分割回文串，将字符串分割为多个回文子串，返回所有结果
    *
-   * <p>1.对整个串做回文判断，dp[i][j] 表示 s[i][j] 是否回文
-   *
-   * <p>2.暴力回溯
+   * <p>对整个串做回文判断 & 暴力回溯
    *
    * <p>参考
    * https://leetcode-cn.com/problems/palindrome-partitioning/solution/hui-su-you-hua-jia-liao-dong-tai-gui-hua-by-liweiw/
@@ -1709,6 +1707,7 @@ class BacktrackingElse extends DDFS {
   public List<List<String>> partition(String s) {
     List<List<String>> paths = new ArrayList<>();
     int len = s.length();
+    // dp[i][j] 表示 s[i][j] 是否回文
     boolean[][] dp = new boolean[len][len];
     for (int i = 0; i < len; i++) {
       collect(s, i, i, dp);
@@ -1734,8 +1733,7 @@ class BacktrackingElse extends DDFS {
       return;
     }
     for (int i = start; i < s.length(); i++) {
-      // 非回文则剪枝
-      if (!dp[start][i]) continue;
+      if (!dp[start][i]) continue; // 非回文则剪枝
       path.offerLast(s.substring(start, i + 1));
       backtracking11(s, path, res, i + 1, dp);
       path.pollLast();

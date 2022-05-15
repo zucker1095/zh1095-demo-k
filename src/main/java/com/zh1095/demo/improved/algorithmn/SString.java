@@ -340,7 +340,7 @@ class WWindow {
 }
 
 /**
- * 收集栈相关，对于括号，左入右出
+ * 收集栈相关，括号左入右出，入则清空，出则赋值
  *
  * <p>关于 Java 模拟 stack 的选型
  * https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
@@ -427,8 +427,6 @@ class SStack {
    * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
    *
    * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
-   *
-   * <p>Integer.parseInt(c + "") 改为 c - '0'
    *
    * @param s the s
    * @return string string
@@ -809,7 +807,7 @@ class SSubString {
   }
 
   /**
-   * 判断子序列，顺序满足，因此双指针正序遍历即可
+   * 判断子序列，顺序满足即可。
    *
    * <p>扩展1，依次检查海量 s 是否均为 t 的子序列，假如长字符串的长度为 n，建立一个 n*26 大小的矩阵，表示每个位置上 26 个字符下一次出现的位置
    *

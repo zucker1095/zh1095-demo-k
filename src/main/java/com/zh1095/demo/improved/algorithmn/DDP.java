@@ -136,13 +136,7 @@ class OptimalSubSequence extends DichotomyClassic {
    *
    * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
    *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
-   * 与
-   * https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
-   *
-   * <p>扩展1，打印路径，参考
-   * https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
+   * <p>扩展1，打印路径，参下 getPath
    *
    * @param nums the nums
    * @return int int
@@ -150,8 +144,8 @@ class OptimalSubSequence extends DichotomyClassic {
   public int lengthOfLIS(int[] nums) {
     // tail 最后一个已经赋值的元素的索引
     int len = nums.length, hi = 0;
-    // dp[i] 表示以 i 结尾的 LIS 的最大长度。
-    // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4。
+    // dp[i] 表示以 i 结尾的 LIS 的最大长度
+    // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
     int[] tails = new int[len], dp = new int[len];
     tails[0] = nums[0];
     // dp[0] = 1;
@@ -167,14 +161,17 @@ class OptimalSubSequence extends DichotomyClassic {
         // dp[i] = lo + 1;
       }
     }
-    // getPath(nums,dp,end+1);
-    return hi + 1; // 求长度
+    //    getPath(nums, dp, hi + 1);
+    return hi + 1; // 返回长度
   }
 
   // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
   // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
-  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
+  // https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
   // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
   private int[] getPath(int[] nums, int[] dp, int len) {
     int[] path = new int[len];
     int count = len;

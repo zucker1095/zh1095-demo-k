@@ -913,7 +913,7 @@ class DichotomyClassic extends DefaultArray {
 
 class DichotomyElse extends DefaultArray {
   /**
-   * 搜索二维矩阵，建议模拟 BST 以右上角作根开始遍历，复杂度 m+n
+   * 搜索二维矩阵，模拟 BST 以右上角作根开始遍历，复杂度 m+n
    *
    * <p>I & II 通用，或二分，复杂度为 mlogn
    *
@@ -1124,6 +1124,32 @@ class SSum extends DefaultArray {
       }
     }
     return false;
+  }
+
+  /**
+   * 有效三角形的个数
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/valid-triangle-number/solution/ming-que-tiao-jian-jin-xing-qiu-jie-by-jerring/
+   *
+   * @param nums
+   * @return
+   */
+  public int triangleNumber(int[] nums) {
+    Arrays.sort(nums);
+    int len = nums.length, count = 0;
+    for (int i = len - 1; i >= 2; i--) {
+      int edge = nums[i], lo = 0, hi = i - 1;
+      while (lo < hi) {
+        if (nums[lo] + nums[hi] > edge) {
+          count += hi - lo;
+          hi -= 1;
+        } else {
+          lo += 1;
+        }
+      }
+    }
+    return count;
   }
 
   /**
@@ -1628,30 +1654,32 @@ class Delete extends DefaultArray {
   }
 
   /**
-   * 删除字符串中的所有相邻重复项，毫无保留，原地建栈或模拟栈
+   * 删除字符串中的所有相邻重复项，毫无保留，原地模拟栈
    *
-   * <p>类似有效的括号，即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
+   * <p>类似「有效的括号」即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
    *
    * <p>匹配指当前字符与栈顶不同，即入栈，否则出栈，且 skip 当前 char
    *
    * <p>最终栈内即为最终结果
    *
+   * <p>参考
+   * https://leetcode.cn/problems/remove-all-adjacent-duplicates-in-string/solution/tu-jie-guan-fang-tui-jian-ti-jie-shan-ch-x8iz/
+   *
    * @param s the s
    * @return string string
    */
   public String removeDuplicates(String s) {
-    StringBuilder stack = new StringBuilder();
-    int stackTop = -1;
-    for (char ch : s.toCharArray()) {
-      if (0 <= stackTop && stack.charAt(stackTop) == ch) {
-        stack.deleteCharAt(stackTop);
-        stackTop -= 1;
+    char[] chs = s.toCharArray();
+    int top = -1;
+    for (char ch : chs) {
+      if (top > -1 && chs[top] == ch) {
+        top -= 1;
       } else {
-        stack.append(ch);
-        stackTop += 1;
+        top += 1;
+        chs[top] = ch;
       }
     }
-    return stack.toString();
+    return String.valueOf(chs, 0, top + 1);
   }
 }
 
@@ -1943,7 +1971,7 @@ class DicOrder extends DefaultArray {
    * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba 为 a>b 即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
    *
-   * <p>扩展2，给定一个数 与一组数，求由 A 中元素组成的小于 n 的最大数，如 {2,4,9} 小于 23121 的最大数为 22999
+   * <p>扩展2，参下 maxLessNumber
    *
    * @param nums
    * @return
@@ -1965,6 +1993,53 @@ class DicOrder extends DefaultArray {
     //      start += 1;
     //    }
     //    return res.substring(start);
+  }
+
+  /**
+   * TODO 给定一个与一组正数，求由 A 中元素组成的小于 n 的最大数，如 {2,4,9} 小于 23121 的最大数为 22999
+   *
+   * <p>从最高位向最低位构造目标数，用 A 中尽量大的元素（但要小于等于 n 的相应位数字）。
+   *
+   * <p>一旦目标数中有一位数字小于 n 相应位的数字，剩余低位可用 A 中最大元素填充。
+   *
+   * <p>可能构造出等于 n 的数，需判断后重新构造。
+   *
+   * <p>若 A 中没有小于等于 n 最高位数字的元素，则可直接用 A 中最大元素填充低
+   *
+   * @param target
+   * @param nums
+   * @return
+   */
+  public int maxLessNumber(int target, int[] nums) {
+    char[] digits = String.valueOf(target).toCharArray();
+    Arrays.sort(nums);
+    int[] resNums = new int[digits.length];
+    int write = 0;
+    for (char d : digits) {
+      // 找到刚好小于 d 的数
+      int lessNum = -1;
+      int lo = 0, hi = nums.length - 1;
+      while (lo < hi) {
+        int mid = lo + (hi - lo) / 2, cur = nums[mid];
+        if (mid > 0 && nums[mid - 1] < d && cur >= d) {
+          lessNum = cur;
+          break;
+        }
+        if (cur < d) lo = mid + 1;
+        else hi = mid;
+      }
+      if (lessNum > -1) {
+        resNums[write] = lessNum;
+        resNums[write + 1] = nums[nums.length - 1];
+      }
+      write += 1;
+    }
+    // 比如 2 & {2} 无解，需要统计，且去除前导零。
+    int num = 0;
+    for (int n : resNums) {
+      num += num * 10 + n;
+    }
+    return num;
   }
 
   /**

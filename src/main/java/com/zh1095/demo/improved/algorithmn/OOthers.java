@@ -140,37 +140,23 @@ public class OOthers {
    * @return point [ ]
    */
   public Point[] splitPerimeter(Point[] points, int k) {
-    Point[] splitPoints = new Point[k];
-    int i = 0, n = points.length;
-    double l = 0;
-    double[] edges = new double[n];
+    int len = points.length;
+    double perimeter = 0;
+    double[] edges = new double[len];
     // 计算周长
-    while (i < n - 1) {
-      edges[i] = getDist(points[i], points[i + 1]);
-      l += edges[i];
-      i += 1;
+    for (int i = 0; i < len; i++) {
+      edges[i] = getDist(points[i], points[(i + 1) % len]);
+      perimeter += edges[i];
     }
-    edges[i] = getDist(points[i], points[0]);
-    l += edges[i];
-    // 平均距离
-    double avg = l / k, sum = edges[0];
-    int y = 0;
-    for (int x = 0; x < k; x++) {
-      while (y < n) {
-        // 跨点
-        if (avg > sum) {
-          y += 1;
-          sum += edges[y];
-          continue;
-        }
-        // 找到对应的边
-        double tmp = sum - avg;
-        // 最后一个点
-        splitPoints[i] =
-            y + 1 == n
-                ? getSplitPoint(points[y], points[0], edges[y], tmp)
-                : getSplitPoint(points[y], points[y + 1], edges[y], tmp);
-        sum = tmp;
+    Point[] splitPoints = new Point[k];
+    double avgLen = perimeter / k, curLen = 0; // 平均距离 & 某条边截取剩余的距离
+    for (int v = 0; v < k; v++) { // 从第一条边开始找齐 k 个点
+      for (int e = 0; e < len; e++) {
+        curLen += edges[e];
+        if (curLen < avgLen) continue;
+        double needLen = curLen - avgLen; // 当前边需要截取的距离
+        splitPoints[v] = getSplitPoint(points[e], points[(e + 1) % len], edges[e], needLen);
+        curLen = needLen;
         break;
       }
     }
@@ -182,13 +168,13 @@ public class OOthers {
     return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
   }
 
-  // 获取等分点
+  // 获取等分点的坐标
   private Point getSplitPoint(Point p1, Point p2, double dist, double len) {
-    Point splitPoint = new Point();
+    Point p = new Point();
     // 利用长度比例计算点的坐标
-    splitPoint.x = len / dist * (p1.x - p2.x) + p2.x;
-    splitPoint.y = len / dist * (p1.y - p2.y) + p2.y;
-    return splitPoint;
+    p.x = len / dist * (p1.x - p2.x) + p2.x;
+    p.y = len / dist * (p1.y - p2.y) + p2.y;
+    return p;
   }
 
   /**
@@ -208,10 +194,27 @@ public class OOthers {
   /**
    * 划分字母区间
    *
-   * <p>TODO
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
    */
+  public List<Integer> partitionLabels(String s) {
+    int[] lastIdxes = new int[26]; // 记录每个字符最后的位置
+    char[] chs = s.toCharArray();
+    for (int i = 0; i < chs.length; i++) {
+      lastIdxes[chs[i] - 'a'] = i; // 题设均 lower case
+    }
+    List<Integer> partitions = new ArrayList<>();
+    int lo = 0, hi = 0; // 当前片段开始位置和结束位置
+    for (int i = 0; i < chs.length; i++) {
+      hi = Math.max(lastIdxes[chs[i] - 'a'], hi);
+      if (i == hi) {
+        partitions.add(hi - lo + 1);
+        lo = hi + 1;
+      }
+    }
 
-  //  public List<Integer> partitionLabels(String s) {}
+    return partitions;
+  }
 
   // 「多边形周长等分」
   private class Point {
@@ -651,7 +654,7 @@ class DData {
   }
 
   /**
-   * 实现Trie
+   * 实现Trie（前缀树）
    *
    * <p>参考
    * https://leetcode-cn.com/problems/implement-trie-prefix-tree/solution/trie-tree-de-shi-xian-gua-he-chu-xue-zhe-by-huwt/
@@ -711,6 +714,43 @@ class DData {
       private boolean isEnd = false;
     }
   }
+
+  /**
+   * O(1) 时间插入、删除和获取随机元素
+   *
+   * <p>以 val 为键，数组下标 loc 为值
+   *
+   * <p>为确保常数时间，不能「使用拒绝采样」&「在数组非结尾位置添增删元素」，因此需要申请一个足够大的数组
+   *
+   * <p>参考 https://leetcode.cn/problems/insert-delete-getrandom-o1/solution/by-ac_oier-tpex/
+   */
+  public class RandomizedSet {
+    private final Random random = new Random();
+    private final int[] nums = new int[200010];
+    private final Map<Integer, Integer> map = new HashMap<>();
+    private int idx = -1;
+
+    public boolean insert(int val) {
+      if (map.containsKey(val)) return false;
+      idx += 1;
+      nums[idx] = val;
+      map.put(val, idx);
+      return true;
+    }
+
+    public boolean remove(int val) {
+      if (!map.containsKey(val)) return false;
+      int loc = map.remove(val);
+      if (loc != idx) map.put(nums[idx], loc);
+      nums[loc] = nums[idx];
+      idx -= 1;
+      return true;
+    }
+
+    public int getRandom() {
+      return nums[random.nextInt(idx + 1)];
+    }
+  }
 }
 
 /** 计算 */
@@ -743,9 +783,7 @@ class MMath {
       // 等概率生成 [1,49] 范围的随机数
       int num = (rand7() - 1) * 7 + rand7();
       // 拒绝采样，并返回 [1,10] 范围的随机数
-      if (num <= 40) {
-        return num % 10 + 1;
-      }
+      if (num <= 40) return num % 10 + 1;
     }
   }
 
@@ -823,6 +861,13 @@ class MMath {
     return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
   }
 
+  // 特判零次幂 & 递归二分 & 判断剩余幂
+  private double quickMulti(double x, int n) {
+    if (n == 0) return 1;
+    double y = quickMulti(x, n / 2);
+    return y * y * (((n & 1) == 0) ? 1 : x);
+  }
+
   /**
    * 分数到小数，高精度除法
    *
@@ -836,47 +881,44 @@ class MMath {
    * @return
    */
   public String fractionToDecimal(int numerator, int denominator) {
-    final int PRECISSION = 10000;
     // 1.判断正负
     int flag = (numerator > 0 && denominator > 0) || (numerator < 0 && denominator < 0) ? 1 : -1;
     long a = Math.abs((long) numerator), b = Math.abs((long) denominator);
+
     // 2.取出余数
     long quotient = a / b, remainder = a % b;
     if (remainder == 0) return String.valueOf(quotient * flag);
     StringBuilder num = new StringBuilder(String.valueOf(quotient));
     num.append('.');
-    int len = num.length(); // 正数部分的长度
-    // 3.保存某个被除数与 denominator 的结果。
-    Map<Long, Integer> repeats = new HashMap<>();
+    int len = num.length(); // 小数之外的长度
+
+    // 3.保存某个被除数与 denominator 的结果
+    final int PRECISSION = 10000; // 精度可控
+    Map<Long, Integer> quotients = new HashMap<>();
     for (int i = 0; i < PRECISSION; i++) {
       a = remainder * 10;
       quotient = a / b;
       remainder = a % b;
-      // 4.已经计算过，结束
-      if (repeats.containsKey(a)) {
-        num.insert(repeats.get(a).intValue(), '(');
+
+      // 4.该被除数已出现过
+      if (quotients.containsKey(a)) {
+        num.insert(quotients.get(a).intValue(), '(');
         num.append(')');
         break;
       }
+
       num.append(quotient);
-      repeats.put(a, i + len);
+      quotients.put(a, i + len);
       if (remainder == 0) break; // 入迭代前非整除
     }
     if (flag == -1) num.insert(0, '-');
     return num.toString();
   }
 
-  // 特判零次幂 & 递归二分 & 判断剩余幂
-  private double quickMulti(double x, int n) {
-    if (n == 0) return 1;
-    double y = quickMulti(x, n / 2);
-    return y * y * (((n & 1) == 0) ? 1 : x);
-  }
-
   /**
-   * 第N位数字，k 位数共有 9*10^(k-1) 个数字
+   * 第N位数字 / 第n个数字
    *
-   * <p>迭代试减 n 以确定 k 所在的整个数字
+   * <p>k 位数共有 9*10^(k-1) 个数字，迭代试减 n 以确定 k 所在的整个数字
    *
    * <p>基于规律 [100, 999] 有 3*90*100 个数字 即 3*9*10^2
    *
@@ -889,19 +931,18 @@ class MMath {
   public int findNthDigit(int n) {
     // 分别表示当前的位数 & 还剩下要找的位数。
     int len = 1, left = n;
-    // len 位数共有 9*len*10^(len-1) 个完整的数字。
+    // 找到 n 所在的位数区间，len 位数共有 9*len*10^(len-1) 个完整的数字。
     while (9 * len * Math.pow(10, len - 1) < left) {
       left -= 9 * len * Math.pow(10, len - 1);
       len += 1;
     }
-    // 此时 left 所在完整的数字的值区间是 [10^(len-1),10^len-1]
-    // 简单推算出目标所在的数字 (target−min+1)*len >= left
-    double minNum = Math.pow(10, len - 1);
-    int targetNum = (int) (minNum + left / len - 1);
+    // 此时 left 所在完整的数字的值上下界是 [10^(len-1),10^len-1]
+    // 可推出目标所在的数字 (target−min+1)*len >= left
+    double minNum = Math.pow(10, len - 1), targetNum = (minNum + left / len - 1);
     // 相较于 min 需要取的完整的数字
     int count = left - len * (left / len);
     // cur==0 表示答案为目标数字的最后一位，否则是其从左到右的第 left 位。
-    return count == 0 ? targetNum % 10 : (int) ((targetNum + 1) / Math.pow(10, len - count) % 10);
+    return (int) (count == 0 ? targetNum % 10 : (targetNum + 1) / Math.pow(10, len - count) % 10);
   }
 
   /**
