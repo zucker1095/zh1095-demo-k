@@ -275,7 +275,7 @@ class ReverseList extends LList {
   }
 
   /**
-   * 旋转链表，获取链尾与总长 & 闭环 & 断开
+   * 旋转链表，闭环后断开
    *
    * @param head the head
    * @param k the k

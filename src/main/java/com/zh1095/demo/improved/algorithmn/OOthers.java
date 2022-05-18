@@ -1150,7 +1150,7 @@ class GGraph {
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
     // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
-    int[] indegrees = new int[numCourses];
+z    int[] indegrees = new int[numCourses];
     List<List<Integer>> graph = new ArrayList<>(numCourses);
     for (int i = 0; i < numCourses; i++) {
       graph.add(new ArrayList<>());
@@ -1165,13 +1165,11 @@ class GGraph {
     for (int i = 0; i < numCourses; i++) {
       if (indegrees[i] == 0) queue.add(i);
     }
-    // BFS TopSort.
+    // BFS TopSort
     while (!queue.isEmpty()) {
       int pre = queue.poll();
-      // handle it
-      numCourses -= 1;
-      // traverse its adjacency
-      for (int cur : graph.get(pre)) {
+      numCourses -= 1; // handle it
+      for (int cur : graph.get(pre)) { // traverse its adjacency
         indegrees[cur] -= 1;
         if (indegrees[cur] == 0) queue.add(cur);
       }

@@ -112,20 +112,20 @@ class OptimalSubArray {
    * @return int int
    */
   public int maxProduct(int[] nums) {
-    int res = Integer.MIN_VALUE;
-    int multiMax = 1, multiMin = 1;
-    for (int num : nums) {
+    int maxPro = Integer.MIN_VALUE;
+    int proMax = 1, proMin = 1;
+    for (int n : nums) {
       // 以该点结尾的乘积大小调换
-      if (num < 0) {
-        int tmp = multiMax;
-        multiMax = multiMin;
-        multiMin = tmp;
+      if (n < 0) {
+        int tmp = proMax;
+        proMax = proMin;
+        proMin = tmp;
       }
-      multiMax = Math.max(multiMax * num, num);
-      multiMin = Math.min(multiMin * num, num);
-      res = Math.max(res, multiMax);
+      proMax = Math.max(proMax * n, n);
+      proMin = Math.min(proMin * n, n);
+      maxPro = Math.max(maxPro, proMax);
     }
-    return res;
+    return maxPro;
   }
 }
 
@@ -137,6 +137,8 @@ class OptimalSubSequence extends DichotomyClassic {
    * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
    *
    * <p>扩展1，打印路径，参下 getPath
+   *
+   * <p>扩展2，求个数
    *
    * @param nums the nums
    * @return int int
@@ -154,9 +156,9 @@ class OptimalSubSequence extends DichotomyClassic {
       if (n > tails[hi]) {
         hi += 1;
         tails[hi] = n;
-        // dp[i] = end + 1;
+        // dp[i] = hi + 1;
       } else {
-        int lo = lowerBound(Arrays.copyOfRange(tails, 0, hi + 1), n);
+        int lo = lowerBound(Arrays.copyOfRange(tails, 0, hi), n);
         tails[lo] = n;
         // dp[i] = lo + 1;
       }
@@ -184,30 +186,61 @@ class OptimalSubSequence extends DichotomyClassic {
   }
 
   /**
-   * 最长连续序列
+   * 最长递增子序列的个数
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
+   *
+   * @param nums
+   * @return
+   */
+  public int findNumberOfLIS(int[] nums) {
+    int len = nums.length, maxLen = 1;
+    int[] dp = new int[len], counts = new int[len];
+    for (int i = 0; i < len; i++) {
+      dp[i] = counts[i] = 1;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] >= nums[i]) continue;
+        if (dp[i] < dp[j] + 1) {
+          dp[i] = dp[j] + 1;
+          counts[i] = counts[j];
+        } else if (dp[i] == dp[j] + 1) {
+          counts[i] += counts[j];
+        }
+      }
+      maxLen = Math.max(maxLen, dp[i]);
+    }
+    int count = 0;
+    for (int i = 0; i < len; i++) {
+      if (dp[i] == maxLen) count += counts[i];
+    }
+    return count;
+  }
+
+  /**
+   * 最长连续序列，逐个数字递增查找
+   *
+   * <p>仅当该数是连续序列的首个数，才会进入内循环匹配连续序列中的数，因此数组中的每个数只会进入内层循环一次，即线性时间复杂度
    *
    * <p>参考
-   * https://leetcode-cn.com/problems/longest-consecutive-sequence/solution/xiao-bai-lang-ha-xi-ji-he-ha-xi-biao-don-j5a2/
+   * https://leetcode.cn/problems/longest-consecutive-sequence/solution/ha-xi-zui-qing-xi-yi-dong-de-jiang-jie-c-xpnr/
    *
    * @param nums the nums
    * @return int int
    */
   public int longestConsecutive(int[] nums) {
+    Set<Integer> set = new HashSet<>();
+    for (int n : nums) {
+      set.add(n);
+    }
     int maxLen = 0;
-    // 所在连续区间的长度
-    Map<Integer, Integer> lens = new HashMap<>(nums.length);
-    for (int num : nums) {
-      if (lens.containsKey(num)) continue;
-      // 左右连续区间，与当前数字所在连续区间的长度
-      int left = lens.getOrDefault(num - 1, 0),
-          right = lens.getOrDefault(num + 1, 0),
-          cur = 1 + left + right;
-      // 表示已经遍历过该值
-      lens.put(num, -1);
-      // 分别更新当前连续区间左右边界对应的区间长度
-      lens.put(num - left, cur);
-      lens.put(num + right, cur);
-      maxLen = Math.max(maxLen, cur);
+    for (int n : set) {
+      if (set.contains(n - 1)) continue;
+      int hi = n;
+      while (set.contains(hi + 1)) {
+        hi += 1;
+      }
+      maxLen = Math.max(maxLen, hi - n + 1);
     }
     return maxLen;
   }
@@ -307,9 +340,9 @@ class OptimalSubSequence extends DichotomyClassic {
   }
 
   /**
-   * 正则表达式匹配，以下均基于 p 判定，类似「通配符匹配」
+   * 正则表达式匹配 / 通配符匹配，以下均基于 p 判定，类似「通配符匹配」
    *
-   * <p>TODO dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
+   * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
    *
    * <p>dp[i-1][j] 多个字符匹配的情况，dp[i][j-1] 单个字符匹配的情况，dp[i][j-2] 没有匹配的情况
    *
@@ -318,27 +351,35 @@ class OptimalSubSequence extends DichotomyClassic {
    * @return boolean boolean
    */
   public boolean isMatch(String s, String p) {
-    boolean[][] dp = new boolean[s.length() + 1][p.length() + 1];
+    return regularMatching(s.toCharArray(), p.toCharArray());
+  }
+
+  private boolean regularMatching(char[] sChs, char[] pChs) {
+    int l1 = sChs.length, l2 = pChs.length;
+    boolean[][] dp = new boolean[l1 + 1][l2 + 1];
     dp[0][0] = true;
-    for (int i = 0; i < p.length(); i++) {
-      dp[0][i + 1] = (p.charAt(i) == '*' && dp[0][i - 1]);
+    for (int i = 0; i < l2; i++) {
+      dp[0][i + 1] = (pChs[i] == '*' && dp[0][i - 1]);
     }
-    for (int i = 0; i < s.length(); i++) {
-      for (int j = 0; j < p.length(); j++) {
+    // 以下均基于 p 判定
+    for (int i = 0; i < l1; i++) {
+      for (int j = 0; j < l2; j++) {
         // 如果是任意元素 or 是对于元素匹配
-        if (p.charAt(j) == s.charAt(i) || p.charAt(j) == '.') {
-          dp[i + 1][j + 1] = dp[i][j];
-        }
-        // 如果前一个元素不匹配且不为任意元素
-        if (p.charAt(j) == '*') {
-          dp[i + 1][j + 1] =
-              (p.charAt(j - 1) == s.charAt(i) || p.charAt(j - 1) == '.')
-                  ? dp[i + 1][j] || dp[i][j + 1] || dp[i + 1][j - 1]
-                  : dp[i + 1][j - 1];
-        }
+        if (pChs[j] == '.' || pChs[j] == sChs[i]) dp[i + 1][j + 1] = dp[i][j];
+        if (pChs[j] != '*') continue;
+        /*
+        如果前一个元素不匹配且不为任意元素
+        dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
+        or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
+        or dp[i][j] = dp[i][j-2] // 没有匹配的情况
+         */
+        dp[i + 1][j + 1] =
+            (pChs[j - 1] == sChs[i] || pChs[j - 1] == '.')
+                ? dp[i + 1][j] || dp[i][j + 1] || dp[i + 1][j - 1]
+                : dp[i + 1][j - 1];
       }
     }
-    return dp[s.length()][p.length()];
+    return dp[l1][l2];
   }
 }
 
@@ -685,28 +726,30 @@ class OptimalElse {
   /**
    * 分发糖果，求满足权重规则的最少所需糖果量
    *
-   * <p>扩展1，成环
+   * <p>扩展1，成环，参下 annotate
+   *
+   * <p>TODO 扩展2，二维，即站成矩阵与周围 8 个比较
    *
    * @param ratings the ratings
    * @return the int
    */
   public int candy(int[] ratings) {
-    int minCount = 0;
-    int[] left = new int[ratings.length];
-    for (int i = 0; i < ratings.length; i++) {
-      //      if (i == 0 && ratings[0] > ratings[ratings.length - 1]) {
-      //        left[i] = left[ratings.length - 1] + 1;
+    int len = ratings.length, minCount = 0;
+    int[] left = new int[len];
+    for (int i = 0; i < len; i++) {
+      //      if (i == 0 && ratings[0] > ratings[len - 1]) {
+      //        left[i] = left[len - 1] + 1;
       //        continue;
       //      }
-      left[i] = (i > 0 && ratings[i] > ratings[i - 1]) ? left[i - 1] + 1 : 1;
+      left[i] = i > 0 && ratings[i] > ratings[i - 1] ? left[i - 1] + 1 : 1;
     }
     int right = 0;
-    for (int i = ratings.length - 1; i >= 0; i--) {
-      //      if (i == ratings.length - 1 && ratings[0] < ratings[i]) {
+    for (int i = len - 1; i > -1; i--) {
+      //      if (i == len - 1 && ratings[0] < ratings[i]) {
       //        right += 1;
       //        continue;
       //      }
-      right = (i < ratings.length - 1 && ratings[i] > ratings[i + 1]) ? right + 1 : 1;
+      right = i < len - 1 && ratings[i] > ratings[i + 1] ? right + 1 : 1;
       minCount += Math.max(left[i], right);
     }
     return minCount;
@@ -865,7 +908,7 @@ class CCount {
   }
 
   /**
-   * 不同路径I
+   * 不同路径I，求总数
    *
    * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
    *
@@ -885,11 +928,11 @@ class CCount {
   }
 
   /**
-   * 不同路径II
+   * 不同路径II with obstacles
    *
    * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数
    *
-   * <p>TODO 扩展1，打印路径
+   * <p>TODO 扩展1，打印路径，DFS
    *
    * @param obstacleGrid the obstacle grid
    * @return int int
@@ -906,22 +949,6 @@ class CCount {
       }
     }
     return dp[len - 1];
-    //    int i = obstacleGrid.length - 1, j = obstacleGrid[0].length - 1;
-    //    int[][] dp = new int[i + 1][j + 1];
-    //
-    //    List<Integer> paths = new ArrayList<>();
-    //    paths.add(obstacleGrid[i][j]);
-    //    int sum = dp[i][j];
-    //    while (i > 0 || j > 0) {
-    //      sum -= obstacleGrid[i][j];
-    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
-    //        paths.add(obstacleGrid[i][j - 1]);
-    //        j -= 1;
-    //      } else {
-    //        paths.add(obstacleGrid[i - 1][j]);
-    //        i -= 1;
-    //      }
-    //    }
   }
 
   /**

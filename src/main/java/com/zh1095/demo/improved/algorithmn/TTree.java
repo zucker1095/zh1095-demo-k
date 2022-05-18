@@ -442,19 +442,18 @@ class DDFS {
   }
 
   /**
-   * 矩阵中的最长递增路径
+   * 矩阵中的最长递增路径，记忆化搜索
    *
    * @param matrix the matrix
    * @return int int
    */
   public int longestIncreasingPath(int[][] matrix) {
-    if (matrix.length == 0 || matrix[0].length == 0) return 0;
     int rows = matrix.length, cols = matrix[0].length;
     int[][] memo = new int[rows][cols];
     int maxLen = 0;
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        maxLen = Math.max(maxLen, dfs3(matrix, i, j, memo));
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        maxLen = Math.max(maxLen, dfs3(matrix, r, c, memo));
       }
     }
     return maxLen;
@@ -464,10 +463,9 @@ class DDFS {
     if (memo[r][c] != 0) return memo[r][c];
     memo[r][c] += 1;
     for (int[] dir : DIRECTIONS) {
-      int newR = r + dir[0], newC = c + dir[1];
-      if (inArea(matrix, newR, newC) && matrix[newR][newC] <= matrix[r][c]) {
-        memo[r][c] = Math.max(memo[r][c], dfs3(matrix, newR, newC, memo) + 1);
-      }
+      int nr = r + dir[0], nc = c + dir[1];
+      if (inArea(matrix, nr, nc) && matrix[nr][nc] > matrix[r][c])
+        memo[r][c] = Math.max(memo[r][c], dfs3(matrix, nr, nc, memo) + 1);
     }
     return memo[r][c];
   }
@@ -600,6 +598,8 @@ class BBSTInorder {
    * 二叉搜索树中的第k大的元素，右中左，对 k 做减法
    *
    * <p>扩展1，二叉搜索树中的第k小的元素，左中右，参下 annotate
+   *
+   * <p>扩展2，常数空间，Morris
    *
    * @param root the root
    * @param k the k
@@ -843,12 +843,12 @@ class BBSTDFS {
     return cur;
   }
 
-  // 每次只处理左侧，即前驱
+  // 每次只处理前驱即左子树，因此尾插
   private void dfs7(TreeNode root) {
     if (root == null) return;
     dfs7(root.left);
     if (pre != null) pre.right = root; // 尾插
-    else cur = root; // 最左叶
+    else cur = root; // 最左，因为是中序首个被遍历的
     root.left = pre; // 补充前驱，头插
     pre = root;
     dfs7(root.right);
@@ -895,11 +895,11 @@ class Postorder {
     TreeNode oldRight = root.right;
     root.right = root.left;
     root.left = null;
-    TreeNode tailRight = root;
-    while (tailRight.right != null) {
-      tailRight = tailRight.right;
+    TreeNode tail = root; // 旧左子展开后的尾
+    while (tail.right != null) {
+      tail = tail.right;
     }
-    tailRight.right = oldRight;
+    tail.right = oldRight;
   }
 
   /**
@@ -1294,7 +1294,7 @@ class MultiTrees {
   }
 
   /**
-   * 另一棵树的子树 / 树的子结构
+   * 另一棵树的子树 / 树的子结构 isSubStructure
    *
    * <p>特判匹配树 & 主树为空两种情况，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
    *
@@ -1532,27 +1532,27 @@ class BacktrackingSearch extends DDFS {
    * @return boolean boolean
    */
   public boolean exist(char[][] board, String word) {
-    int rows = board.length, cols = board[0].length;
-    boolean[][] visited = new boolean[rows][cols];
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < cols; j++) {
-        if (backtracking8(board, i, j, word, 0, visited)) return true;
+    int row = board.length, col = board[0].length;
+    boolean[][] visited = new boolean[row][col];
+    for (int r = 0; r < row; r++) {
+      for (int c = 0; c < col; c++) {
+        if (backtracking8(board, r, c, word.toCharArray(), 0, visited)) return true;
       }
     }
     return false;
   }
 
   private boolean backtracking8(
-      char[][] board, int r, int c, String word, int start, boolean[][] visited) {
-    if (start == word.length() - 1) return board[r][c] == word.charAt(start);
-    if (board[r][c] != word.charAt(start)) return false;
+      char[][] board, int r, int c, char[] word, int start, boolean[][] visited) {
+    if (start == word.length - 1) return board[r][c] == word[start];
+    if (board[r][c] != word[start]) return false;
 
     visited[r][c] = true;
     for (int[] dir : DIRECTIONS) {
-      int newX = r + dir[0], newY = c + dir[1];
-      if (!visited[newX][newY]
-          && inArea(board, newX, newY)
-          && backtracking8(board, newX, newY, word, start + 1, visited)) {
+      int nX = r + dir[0], nY = c + dir[1];
+      if (!visited[nX][nY]
+          && inArea(board, nX, nY)
+          && backtracking8(board, nX, nY, word, start + 1, visited)) {
         return true;
       }
     }

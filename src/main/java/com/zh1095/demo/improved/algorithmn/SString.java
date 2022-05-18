@@ -109,30 +109,31 @@ public class SString extends DefaultSString {
    * @return string string
    */
   public String multiply(String num1, String num2) {
-    final int base = 10;
+    final int BASE = 10, l1 = num1.length(), l2 = num2.length();
     // 特判
-    if (num1.equals("0") || num2.equals("0")) {
-      return "0";
-    }
+    if (num1.equals("0") || num2.equals("0")) return "0";
+    char[] nums1 = num1.toCharArray(), nums2 = num2.toCharArray();
     // 乘法比加法多出高位的概率更大，因此额外冗余一位暂存计算结果即可，取缔 carry
-    int[] res = new int[num1.length() + num2.length()];
-    for (int i = num1.length() - 1; i >= 0; i--) {
-      int n1 = num1.charAt(i) - '0';
-      for (int j = num2.length() - 1; j >= 0; j--) {
-        int n2 = num2.charAt(j) - '0';
-        int sum = res[i + j + 1] + n1 * n2;
-        res[i + j + 1] = sum % base;
-        res[i + j] += sum / base;
+    char[] product = new char[l1 + l2];
+    for (int p1 = l1 - 1; p1 > -1; p1--) {
+      int n1 = nums1[p1] - '0';
+      for (int p2 = l2 - 1; p2 > -1; p2--) {
+        int n2 = nums2[p2] - '0';
+        int sum = product[p1 + p2 + 1] + n1 * n2;
+        product[p1 + p2] += sum / BASE;
+        product[p1 + p2 + 1] = (char) (sum % BASE - '0');
       }
     }
     // 跳过前导零
-    int idx = res[0] == 0 ? 1 : 0;
-    StringBuilder ans = new StringBuilder();
-    while (idx < res.length) {
-      ans.append(res[idx]);
+    int idx = product[0] == 0 ? 1 : 0;
+    StringBuilder res = new StringBuilder();
+    while (idx < product.length) {
+      res.append(product[idx]);
       idx += 1;
     }
-    return ans.toString();
+    return res.toString();
+    //    int offset = product[0] == 0 ? 1 : 0;
+    //    return String.valueOf(product, offset, l1 + l2 - offset + 1);
   }
 
   /**
@@ -293,11 +294,10 @@ class WWindow {
       }
       mq.offerLast(nums[i]);
       if (i < k - 1) continue;
-      int outIdx = i - k + 1; // 窗口的左侧索引
-      segMax[outIdx] = mq.peekFirst(); // segMax[outIdx] = mq.max();
-      if (mq.size() > 0 && mq.peekFirst() == nums[outIdx]) {
-        mq.pollFirst(); // mq.poll(nums[outIdx]);
-      }
+      int outIdx = i - k + 1, curMax = mq.peekFirst(); // 左边界
+      segMax[outIdx] = curMax; // segMax[outIdx] = mq.max();
+      // mq.poll(nums[outIdx]);
+      if (mq.size() > 0 && nums[outIdx] == curMax) mq.pollFirst();
     }
     return segMax;
   }
@@ -1316,7 +1316,7 @@ class WWord extends DefaultSString {
   }
 }
 
-/** 单调栈，用于找「下一个更大」场景 */
+/** 单调栈，递增利用波谷剔除栈中的波峰，留下波谷，反之，波峰 */
 class MonotonicStack {
   /**
    * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
@@ -1359,11 +1359,16 @@ class MonotonicStack {
   }
 
   /**
-   * 移掉k位数字，字典序，单调栈，原地栈
+   * 移掉k位数字，结果数值最小，单调栈
    *
-   * <p>特判移完
+   * <p>123531 这样「高位递增」的数，应尽量删低位。
    *
-   * <p>入栈
+   * <p>432135 这样「高位递减」的数，应尽量删高位，即让高位变小。
+   *
+   * <p>因此，如果当前遍历的数比栈顶大，符合递增，让它入栈。
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
    *
    * @param num the num
    * @param k the k
@@ -1371,17 +1376,17 @@ class MonotonicStack {
    */
   public String removeKdigits(String num, int k) {
     if (num.length() == k) return "0";
-    StringBuilder stack = new StringBuilder();
+    StringBuilder ms = new StringBuilder();
     for (char ch : num.toCharArray()) {
-      while (stack.length() > 0 && k > 0 && stack.charAt(stack.length() - 1) > ch) {
-        stack.deleteCharAt(stack.length() - 1);
+      while (k > 0 && ms.length() > 0 && ms.charAt(ms.length() - 1) > ch) {
+        ms.deleteCharAt(ms.length() - 1);
         k -= 1;
       }
-      if (ch == '0' && stack.length() == 0) continue;
-      stack.append(ch);
+      if (ch == '0' && ms.length() == 0) continue; // 避免前导零
+      ms.append(ch);
     }
-    // 是否移足 k 位
-    String str = stack.substring(0, Math.max(stack.length() - k, 0));
+    // 没有删除足够 k
+    String str = ms.substring(0, Math.max(ms.length() - k, 0));
     return str.length() == 0 ? "0" : str;
   }
 
