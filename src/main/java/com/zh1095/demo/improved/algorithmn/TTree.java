@@ -323,7 +323,9 @@ public class TTree {
  *
  * <p>回溯 & dfs 框架基本一致，但前者适用 tree 这类不同分支互不连通的结构，而后者更适合 graph 这类各个分支都可能连通的
  *
- * <p>因此后者为避免环路，不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复
+ * <p>因此后者为避免 loop 不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复
+ *
+ * <p>DFS 可联想至 Goosip Protocol 即扩散，因此不存在遗漏的点
  */
 class DDFS {
   /** The Directions. */
@@ -421,24 +423,24 @@ class DDFS {
    * @return int int
    */
   public int maxAreaOfIsland(int[][] grid) {
-    int res = 0;
-    for (int i = 0; i < grid.length; i++) {
-      for (int j = 0; j < grid[i].length; j++) {
-        if (grid[i][j] != 1) continue;
-        res = Math.max(res, dfs2(grid, i, j));
+    int maxArea = 0;
+    for (int r = 0; r < grid.length; r++) {
+      for (int c = 0; c < grid[r].length; c++) {
+        if (grid[r][c] != 1) continue;
+        maxArea = Math.max(maxArea, dfs2(grid, r, c));
       }
     }
-    return res;
+    return maxArea;
   }
 
   private int dfs2(int[][] grid, int r, int c) {
     if (!inArea(grid, r, c) || grid[r][c] == 0) return 0;
-    grid[r][c] = 0;
-    int res = 1;
+    grid[r][c] = 0; // marking to avoid loop
+    int maxArea = 1;
     for (int[] dir : DIRECTIONS) {
-      res += dfs2(grid, r + dir[0], c + dir[1]);
+      maxArea += dfs2(grid, r + dir[0], c + dir[1]);
     }
-    return res;
+    return maxArea;
   }
 
   /**

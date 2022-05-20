@@ -29,10 +29,8 @@ public class LList {
     // 迭代
     ListNode pre = null, cur = head, nxt;
     while (cur != null) {
-      // 1.暂存
-      nxt = cur.next;
-      // 2.变向
-      cur.next = pre;
+      nxt = cur.next; // 1.暂存
+      cur.next = pre; // 2.变向
       // 3.步进
       pre = cur;
       cur = nxt;
@@ -85,12 +83,6 @@ public class LList {
   /**
    * 复制带随机指针的链表，三次遍历
    *
-   * <p>1.在每个原节点后面创建一个新节点
-   *
-   * <p>2.逐一设置新节点的随机节点
-   *
-   * <p>3.分离两个链表
-   *
    * <p>参考
    * https://leetcode-cn.com/problems/copy-list-with-random-pointer/solution/liang-chong-shi-xian-tu-jie-138-fu-zhi-dai-sui-ji-/
    *
@@ -100,6 +92,7 @@ public class LList {
   public Node copyRandomList(Node head) {
     Node cur = head;
     while (cur != null) {
+      // 1.在每个原节点后面创建一个新节点
       Node newNode = new Node(cur.val);
       newNode.next = cur.next;
       cur.next = newNode;
@@ -110,11 +103,12 @@ public class LList {
     while (cur != null) {
       // 保证 DAG
       if (cur.random != null) cur.next.random = cur.random.next;
+      // 2.逐一设置新节点的随机节点
       cur = cur.next.next;
     }
 
     Node dummy = new Node(-1), lo = dummy, hi = head;
-    while (hi != null) {
+    while (hi != null) { // 分离
       lo.next = hi.next;
       lo = lo.next;
       hi.next = lo.next;

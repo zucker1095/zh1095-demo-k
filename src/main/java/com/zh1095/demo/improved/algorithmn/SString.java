@@ -262,13 +262,14 @@ class WWindow {
     int lo = 0, hi = 0;
     int maxLen = 0, counter = k;
     int[] window = new int[128];
-    while (hi < s.length()) {
-      char add = s.charAt(hi);
+    char[] chs = s.toCharArray();
+    while (hi < chs.length) {
+      char add = chs[hi];
       if (window[add] == 0) counter -= 1;
       window[add] += 1;
       hi += 1;
-      while (counter < 0) {
-        char out = s.charAt(lo);
+      while (counter < 0) { // just contain one more different char
+        char out = chs[lo];
         if (window[out] == 1) counter += 1;
         window[out] -= 1;
         lo += 1;
@@ -289,10 +290,11 @@ class WWindow {
     int[] segMax = new int[nums.length - k + 1];
     Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < nums.length; i++) {
-      while (mq.size() > 0 && mq.peekLast() < nums[i]) {
+      int n = nums[i];
+      while (mq.size() > 0 && mq.peekLast() < n) {
         mq.pollLast();
       }
-      mq.offerLast(nums[i]);
+      mq.offerLast(n);
       if (i < k - 1) continue;
       int outIdx = i - k + 1, curMax = mq.peekFirst(); // 左边界
       segMax[outIdx] = curMax; // segMax[outIdx] = mq.max();
@@ -300,6 +302,33 @@ class WWindow {
       if (mq.size() > 0 && nums[outIdx] == curMax) mq.pollFirst();
     }
     return segMax;
+  }
+
+  /**
+   * 最大连续1的个数III，返回最长子数组，最多可转换 k 个 0
+   *
+   * <p>统计窗口内 0 的个数，窗口内容忍 k 个 0 即假设其全 1
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/max-consecutive-ones-iii/solution/fen-xiang-hua-dong-chuang-kou-mo-ban-mia-f76z/
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public int longestOnes(int[] nums, int k) {
+    int maxLen = 0, zeroNum = 0;
+    int lo = 0, hi = 0;
+    while (hi < nums.length) {
+      if (nums[hi] == 0) zeroNum += 1;
+      while (zeroNum > k) {
+        if (nums[lo] == 0) zeroNum -= 1;
+        lo += 1;
+      }
+      maxLen = Math.max(maxLen, hi - lo + 1);
+      hi += 1;
+    }
+    return maxLen;
   }
 
   private static class MonotonicQueue {
@@ -1155,6 +1184,28 @@ class CConvert {
     return str.toString();
   }
 
+  /**
+   * 把数字翻译成字符串，返回方案数
+   *
+   * <p>以 xyzcba 为例，先取最后两位 即 ba，如果ba>=26，必然不能分解成 f(xyzcb)+f(xyzc)，此时只能分解成 f(xyzcb)
+   *
+   * <p>但还有一种情况 ba<=9 即也就是该数十位上为 0，也不能分解
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/ba-shu-zi-fan-yi-cheng-zi-fu-chuan-lcof/solution/di-gui-qiu-jie-shuang-bai-by-xiang-shang-de-gua-ni/
+   *
+   * @param num
+   * @return
+   */
+  public int translateNum(int num) {
+    if (num <= 9) return 1;
+    // xyzcba
+    int ba = num % 100;
+    return ba <= 9 || ba >= 26
+        ? translateNum(num / 10)
+        : translateNum(num / 10) + translateNum(num / 100);
+  }
+
   private String num2Str(int x) {
     StringBuilder str = new StringBuilder();
     if (x >= 100) {
@@ -1213,31 +1264,39 @@ class WWord extends DefaultSString {
   }
 
   /**
-   * 单词拆分，s 能否被 wordDict 组合而成
+   * 单词拆分，wordDict 是否可组合为 s，可重复使用
    *
-   * <p>dp[i] 表示 s 的前 i 位是否可以用 wordDict 中的单词表示，比如 wordDict=["apple", "pen", "code"]
+   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 其一匹配，比如 wordDict=["apple", "pen", "code"]
    *
-   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
+   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+checkIf("pen")
+   *
+   * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
    *
    * @param s the s
    * @param wordDict the word dict
    * @return boolean boolean
    */
   public boolean wordBreak(String s, List<String> wordDict) {
-    boolean[] dp = new boolean[s.length() + 1];
-    dp[0] = true;
-    Map<String, Boolean> mark = new HashMap<>(wordDict.size());
-    for (String word : wordDict) {
-      mark.put(word, true);
+    int len = s.length(), maxLen = 0;
+    Set<String> wordSet = new HashSet(); // 仅用于 O(1) 匹配
+    for (String w : wordDict) {
+      wordSet.add(w);
+      // dp[i] 探索至最长的单词即可
+      maxLen = Math.max(maxLen, w.length());
     }
-    for (int i = 1; i <= s.length(); i++) {
-      // [0<-i] O(n^2)
-      for (int j = i - 1; j >= 0; j--) {
-        dp[i] = dp[j] && mark.getOrDefault(s.substring(j, i), false);
-        if (dp[i]) break;
+
+    boolean[] dp = new boolean[len + 1];
+    dp[0] = true;
+    for (int i = 1; i < len + 1; i++) {
+      for (int j = i; j > -1; j--) {
+        if (j < i - maxLen) break; // curing
+        if (dp[j] && wordSet.contains(s.substring(j, i))) {
+          dp[i] = true;
+          break;
+        }
       }
     }
-    return dp[s.length()];
+    return dp[len];
   }
 
   /**

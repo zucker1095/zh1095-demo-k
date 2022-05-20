@@ -192,28 +192,28 @@ public class OOthers {
   }
 
   /**
-   * 划分字母区间
+   * 划分字母区间，类似「跳跃游戏」
    *
    * <p>TODO 参考
    * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
    */
   public List<Integer> partitionLabels(String s) {
-    int[] lastIdxes = new int[26]; // 记录每个字符最后的位置
+    int[] lastIdxes = new int[26];
     char[] chs = s.toCharArray();
     for (int i = 0; i < chs.length; i++) {
-      lastIdxes[chs[i] - 'a'] = i; // 题设均 lower case
+      lastIdxes[chs[i] - 'a'] = i; // 题设均 lowercase
     }
-    List<Integer> partitions = new ArrayList<>();
-    int lo = 0, hi = 0; // 当前片段开始位置和结束位置
+    List<Integer> lens = new ArrayList<>();
+    int lo = 0, hi = 0; // 当前片段的首尾
     for (int i = 0; i < chs.length; i++) {
       hi = Math.max(lastIdxes[chs[i] - 'a'], hi);
       if (i == hi) {
-        partitions.add(hi - lo + 1);
+        lens.add(hi - lo + 1);
         lo = hi + 1;
       }
     }
 
-    return partitions;
+    return lens;
   }
 
   // 「多边形周长等分」
@@ -718,9 +718,9 @@ class DData {
   /**
    * O(1) 时间插入、删除和获取随机元素
    *
-   * <p>以 val 为键，数组下标 loc 为值
+   * <p>不能「使用拒绝采样」&「在数组非结尾位置添增删元素」，因此需要申请一个足够大的数组
    *
-   * <p>为确保常数时间，不能「使用拒绝采样」&「在数组非结尾位置添增删元素」，因此需要申请一个足够大的数组
+   * <p>以 val 为键，数组下标 loc 为值
    *
    * <p>参考 https://leetcode.cn/problems/insert-delete-getrandom-o1/solution/by-ac_oier-tpex/
    */
@@ -740,9 +740,9 @@ class DData {
 
     public boolean remove(int val) {
       if (!map.containsKey(val)) return false;
-      int loc = map.remove(val);
-      if (loc != idx) map.put(nums[idx], loc);
-      nums[loc] = nums[idx];
+      int idxDeleted = map.remove(val);
+      if (idxDeleted != idx) map.put(nums[idx], idxDeleted);
+      nums[idxDeleted] = nums[idx];
       idx -= 1;
       return true;
     }
@@ -1130,13 +1130,11 @@ class GGraph {
   }
 
   /**
-   * 课程表，判断连通性，拓扑排序
+   * 课程表，check if DAG，拓扑排序
    *
-   * <p>相当于 BFS，思想是贪心，每一次都从图中删除没有前驱，即入度为 0 的点，最终图中还有点没有被移除，说明图无环
+   * <p>原理是对 DAG 的顶点进行排序，使得对每一条有向边 (u, v)，均有 u（在排序记录中）比 v 先出现。亦可理解为对某点 v 而言，只有当 v 的所有源点均出现了，v 才能出现
    *
-   * <p>并不需要真正删除，而设置一个入度数组，每一轮都输出入度为 0 的点，并移除它、修改它指向的结点的入度 -1 即可，依次得到的结点序列就是拓扑排序的结点序列
-   *
-   * <p>因此，至少需要入度数组 & 图 & 遍历队列三种数据结构，步骤如下
+   * <p>因此，需要入度数组 & 图 & 遍历队列三种数据结构，步骤如下
    *
    * <p>1.建图并记录入度
    *
@@ -1150,18 +1148,19 @@ class GGraph {
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
     // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
-z    int[] indegrees = new int[numCourses];
+    int[] indegrees = new int[numCourses];
     List<List<Integer>> graph = new ArrayList<>(numCourses);
     for (int i = 0; i < numCourses; i++) {
       graph.add(new ArrayList<>());
     }
     Queue<Integer> queue = new LinkedList<>();
-    // [1,0] 即 0->1
+    // [0, 1] is 0->1
     for (int[] cp : prerequisites) {
-      int fromID = cp[0], toID = cp[1];
-      indegrees[fromID] += 1;
-      graph.get(toID).add(fromID);
+      int toID = cp[0], fromID = cp[1];
+      indegrees[toID] += 1;
+      graph.get(fromID).add(toID);
     }
+    // courseID range 0 from numCourses-1 incrementally
     for (int i = 0; i < numCourses; i++) {
       if (indegrees[i] == 0) queue.add(i);
     }
@@ -1178,26 +1177,27 @@ z    int[] indegrees = new int[numCourses];
   }
 
   /**
-   * 课程表II，为上方新增 res 记录即可
+   * 课程表II，上方新增记录即可，检测循环依赖同理
    *
-   * <p>检测循环依赖同理，参考 https://mp.weixin.qq.com/s/pCRscwKqQdYYN7M1Sia7xA
+   * <p>若存在循环依赖则返回空，否则返回可行的编译顺序
+   *
+   * <p>参考 https://mp.weixin.qq.com/s/pCRscwKqQdYYN7M1Sia7xA
    *
    * @param numCourses the num courses
    * @param prerequisites the prerequisites
    * @return int [ ]
    */
   public int[] findOrder(int numCourses, int[][] prerequisites) {
-    int[] res = new int[numCourses];
-    int[] indegrees = new int[numCourses];
+    int[] paths = new int[numCourses], indegrees = new int[numCourses];
     List<List<Integer>> graph = new ArrayList<>(numCourses);
     for (int i = 0; i < numCourses; i++) {
       graph.add(new ArrayList<>());
     }
     Queue<Integer> queue = new LinkedList<>();
     for (int[] cp : prerequisites) {
-      int fromID = cp[0], toID = cp[1];
-      indegrees[fromID] += 1;
-      graph.get(toID).add(fromID);
+      int toID = cp[0], fromID = cp[1];
+      indegrees[toID] += 1;
+      graph.get(fromID).add(toID);
     }
     for (int i = 0; i < numCourses; i++) {
       if (indegrees[i] == 0) queue.add(i);
@@ -1206,15 +1206,15 @@ z    int[] indegrees = new int[numCourses];
     int count = 0;
     while (!queue.isEmpty()) {
       int pre = queue.poll();
-      res[count] = pre;
+      paths[count] = pre;
       count += 1;
-      for (int cur : graph.get(pre)) {
-        indegrees[cur] -= 1;
-        if (indegrees[cur] == 0) queue.add(cur);
+      for (int n : graph.get(pre)) {
+        indegrees[n] -= 1;
+        if (indegrees[n] == 0) queue.add(n);
       }
     }
     // 如果结果集中的数量不等于结点的数量，就不能完成课程任务，这一点是拓扑排序的结论
-    return count == numCourses ? res : new int[0];
+    return count == numCourses ? paths : new int[0];
   }
 
   /**
@@ -1318,6 +1318,28 @@ z    int[] indegrees = new int[numCourses];
     return ans;
   }
 
+  // 「克隆图」
+  private final Map<Node, Node> visited = new HashMap<>();
+
+  /**
+   * 克隆图，deep clone undirected connected graph，DFS
+   *
+   * @param node
+   * @return
+   */
+  public Node cloneGraph(Node node) {
+    if (node == null) return node;
+    if (visited.containsKey(node)) return visited.get(node);
+    // 为深拷贝我们不会克隆它的邻居的列表
+    Node cloneNode = new Node(node.val, new ArrayList());
+    visited.put(node, cloneNode);
+    // 遍历该节点的邻居并更新克隆节点的邻居列表
+    for (Node nbh : node.neighbors) {
+      cloneNode.neighbors.add(cloneGraph(nbh));
+    }
+    return cloneNode;
+  }
+
   private class Edge {
     /** The End. */
     int end,
@@ -1341,6 +1363,26 @@ z    int[] indegrees = new int[numCourses];
     int start,
         /** The End. */
         end;
+  }
+
+  private class Node {
+    public int val;
+    public final List<Node> neighbors;
+
+    public Node() {
+      val = 0;
+      neighbors = new ArrayList<Node>();
+    }
+
+    public Node(int _val) {
+      val = _val;
+      neighbors = new ArrayList<Node>();
+    }
+
+    public Node(int _val, ArrayList<Node> _neighbors) {
+      val = _val;
+      neighbors = _neighbors;
+    }
   }
 }
 

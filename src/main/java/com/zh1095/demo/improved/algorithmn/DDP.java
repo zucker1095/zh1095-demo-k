@@ -46,17 +46,12 @@ class OptimalSubArray {
    */
   public int findLength(int[] nums1, int[] nums2) {
     int maxLen = 0;
-    // int[][] dp = new int[nums1.length + 1][nums2.length + 1];
     int[] dp = new int[nums2.length + 1];
-    for (int i = 1; i <= nums1.length; i++) {
-      for (int j = nums2.length; j >= 1; j--) {
-        dp[j] = nums1[i - 1] == nums2[j - 1] ? dp[j - 1] + 1 : 0;
-        maxLen = Math.max(maxLen, dp[j]);
+    for (int p1 = 1; p1 <= nums1.length; p1++) {
+      for (int p2 = nums2.length; p2 >= 1; p2--) {
+        dp[p2] = nums1[p1 - 1] == nums2[p2 - 1] ? dp[p2 - 1] + 1 : 0;
+        maxLen = Math.max(maxLen, dp[p2]);
       }
-      // for (int j = 1; j <= nums2.length; j++) {
-      //   dp[i][j] = (nums1[i - 1] == nums2[j - 1]) ? dp[i - 1][j - 1] + 1 : 0;
-      //   res = Math.max(res, dp[i][j]);
-      //  }
     }
     return maxLen;
   }
@@ -681,7 +676,7 @@ class OptimalElse {
   }
 
   /**
-   * 完全平方数，完全背包，类似「零钱兑换」
+   * 完全平方数，返回多个平方数的和 =n 的最少个数，完全背包，类似「零钱兑换」
    *
    * <p>dp[i] 表示和为 i 的几个完全平方数的最少数量，如 13=4+9 则 dp[13] 为 2
    *
@@ -691,8 +686,7 @@ class OptimalElse {
   public int numSquares(int n) {
     int[] dp = new int[n + 1];
     for (int i = 1; i <= n; i++) {
-      // 至少全由 1 组成
-      dp[i] = i;
+      dp[i] = i; // 至少全由 1 组成，即 worst case
       for (int j = 1; j * j <= i; j++) {
         dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
       }
@@ -1080,18 +1074,18 @@ class OptimalRectangle {
    * @return
    */
   public int largestRectangleArea(int[] heights) {
-    int maxArea = 0;
-    Deque<Integer> stack = new ArrayDeque<>();
-    int[] newHeights = new int[heights.length + 2];
-    for (int i = 1; i < heights.length + 1; i++) {
+    int maxArea = 0, len = heights.length;
+    Deque<Integer> ms = new ArrayDeque<>();
+    int[] newHeights = new int[len + 2];
+    for (int i = 1; i < len + 1; i++) {
       newHeights[i] = heights[i - 1];
     }
     for (int i = 0; i < newHeights.length; i++) {
-      while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
-        int cur = stack.pollLast(), pre = stack.peekLast();
+      while (!ms.isEmpty() && newHeights[ms.peekLast()] > newHeights[i]) {
+        int cur = ms.pollLast(), pre = ms.peekLast();
         maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
       }
-      stack.offerLast(i);
+      ms.offerLast(i);
     }
     return maxArea;
   }
@@ -1109,16 +1103,14 @@ class OptimalRectangle {
     int maxArea = 0, row = matrix.length, col = matrix[0].length;
     int[] newHeights = new int[col + 2];
     for (int i = 0; i < row; i++) {
-      Deque<Integer> stack = new ArrayDeque<>();
+      Deque<Integer> ms = new ArrayDeque<>();
       for (int j = 0; j < col + 2; j++) {
-        if (j >= 1 && j <= col) {
-          newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
-        }
-        while (!stack.isEmpty() && newHeights[stack.peekLast()] > newHeights[i]) {
-          int cur = stack.pollLast(), pre = stack.peekLast();
+        if (j >= 1 && j <= col) newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
+        while (!ms.isEmpty() && newHeights[ms.peekLast()] > newHeights[i]) {
+          int cur = ms.pollLast(), pre = ms.peekLast();
           maxArea = Math.max(maxArea, (j - pre - 1) * newHeights[cur]);
         }
-        stack.offerLast(j);
+        ms.offerLast(j);
       }
     }
     return maxArea;

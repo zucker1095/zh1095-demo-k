@@ -88,6 +88,28 @@ public class AArray extends DefaultArray {
   }
 
   /**
+   * 有序数组的平方，入参已升序
+   *
+   * @param nums
+   * @return
+   */
+  public int[] sortedSquares(int[] nums) {
+    int len = nums.length, lo = 0, hi = len - 1;
+    int[] res = new int[len];
+    for (int i = len - 1; i > -1; i--) {
+      int a = nums[lo] * nums[lo], b = nums[hi] * nums[hi];
+      if (a > b) {
+        res[i] = a;
+        lo += 1;
+      } else {
+        res[i] = b;
+        hi -= 1;
+      }
+    }
+    return res;
+  }
+
+  /**
    * 两个数组的交集，重复 & 顺序
    *
    * <p>扩展1，有序则双指针 & 二分，否则对较小的数组建立映射再遍历较大者
@@ -363,6 +385,30 @@ class HHeap extends DefaultArray {
       nodes[i] = pq.poll();
     }
     return nodes;
+  }
+
+  /**
+   * 会议室II，返回最少重叠数，抽象成「上下车」问题。
+   *
+   * <p>满足最繁忙的时间点即可，因此区间有交集则暂存，否则移除末端最小的，因此使用小根堆。
+   *
+   * <p>参考 https://wyh317.github.io/2021/02/17/252.%E4%BC%9A%E8%AE%AE%E5%AE%A4/
+   *
+   * @param meetings
+   * @return
+   */
+  public int minMeetingRooms(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> (v1[0] - v2[0]));
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+    int count = 0;
+    for (int[] itv : intervals) {
+      while (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) {
+        minHeap.poll();
+      }
+      minHeap.add(itv[1]);
+      count = Math.max(count, minHeap.size());
+    }
+    return count;
   }
 
   /**
@@ -653,6 +699,22 @@ class MMerge extends DefaultArray {
 
   // 可调用函数
   //  private int match(int screw, int nut) {}
+
+  /**
+   * 会议室，判断是否有交集即可，即某个会议开始时，上一个会议是否结束。
+   *
+   * <p>「会议室II」参上
+   *
+   * @param intervals
+   * @return
+   */
+  public boolean canAttendMeetings(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> (v1[0] - v2[0]));
+    for (int i = 1; i < intervals.length; i++) {
+      if (intervals[i][0] < intervals[i - 1][1]) return false;
+    }
+    return true;
+  }
 }
 
 /**
@@ -1137,8 +1199,8 @@ class SSum extends DefaultArray {
    */
   public int triangleNumber(int[] nums) {
     Arrays.sort(nums);
-    int len = nums.length, count = 0;
-    for (int i = len - 1; i >= 2; i--) {
+    int count = 0;
+    for (int i = nums.length - 1; i >= 2; i--) {
       int edge = nums[i], lo = 0, hi = i - 1;
       while (lo < hi) {
         if (nums[lo] + nums[hi] > edge) {
@@ -1287,21 +1349,19 @@ class PreSum {
         preSum -= nums[lo];
         lo += 1;
       }
-      // 替换上一段 while
-      //      if (sum == target) {
-      //        // 入结果集
-      //        hi += 1;
-      //        continue;
-      //      }
-      //      while (sum > target) {
-      //        sum -= nums[lo];
-      //        if (sum == target) {
-      //          // 入结果集
-      //        }
-      //        lo += 1;
-      //      }
       hi += 1;
     }
+    //    for (int hi = 0; hi < nums.length; i++) {
+    //      preSum += nums[hi];
+    //      if (preSum == target) {
+    //        // 入结果集
+    //        continue;
+    //      }
+    //      while (preSum > target) {
+    //        preSum -= nums[lo];
+    //        lo += 1;
+    //      }
+    //    }
     return minLen == nums.length + 1 ? 0 : minLen;
   }
 
@@ -1367,7 +1427,9 @@ class PreSum {
   }
 
   /**
-   * 和至少为k的最短子数组，和至少，单调队列 & 前缀和
+   * 和至少为k的最短子数组，返回长度，和至少，前缀和数组 & 单调队列
+   *
+   * <p>此处入队索引而「滑动窗口的最大值」则是值
    *
    * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
    *
@@ -1385,12 +1447,11 @@ class PreSum {
     }
     Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < preSum.length; i++) {
-      int n = preSum[i];
-      // want opt(y) = largest x with prefix[x]<=prefix[y]-K
-      while (!mq.isEmpty() && n <= preSum[mq.getLast()]) {
+      int sum = preSum[i];
+      while (!mq.isEmpty() && preSum[mq.getLast()] >= sum) {
         mq.removeLast();
       }
-      while (!mq.isEmpty() && n >= preSum[mq.getFirst()] + k) {
+      while (!mq.isEmpty() && preSum[mq.getFirst()] + k <= sum) {
         minLen = Math.min(minLen, i - mq.removeFirst());
       }
       mq.addLast(i);
@@ -1975,7 +2036,7 @@ class DicOrder extends DefaultArray {
    * <p>再证明传递性，即两两之间都要满足该性质，参考
    * https://leetcode-cn.com/problems/largest-number/solution/gong-shui-san-xie-noxiang-xin-ke-xue-xi-vn86e/
    *
-   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba 为 a>b 即可，参考
+   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba -> a>b 即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
    *
    * <p>扩展2，参下 maxLessNumber
@@ -1986,8 +2047,8 @@ class DicOrder extends DefaultArray {
   public String largestNumber(int[] nums) {
     StringBuilder maxNum = new StringBuilder();
     List<String> strs = new ArrayList<>(nums.length);
-    for (int num : nums) {
-      strs.add(String.valueOf(num));
+    for (int n : nums) {
+      strs.add(String.valueOf(n));
     }
     strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
     for (String str : strs) {
