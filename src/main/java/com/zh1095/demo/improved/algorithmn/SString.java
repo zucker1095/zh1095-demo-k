@@ -305,6 +305,45 @@ class WWindow {
   }
 
   /**
+   * 绝对差不超过限制的最长连续子数组
+   *
+   * <p>滑窗 & 双单调队列维护窗口内的最值 滑窗 R 右移的过程意味着新的值进窗口，维护更新单调队列
+   *
+   * <p>然后检查最值差值是否 <= k，如果 > 就 shrink L，同时也更新单调队列即可
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit/solution/gai-zhuang-ban-hua-dong-chuang-kou-liang-271k/
+   *
+   * @param nums
+   * @param limit
+   * @return
+   */
+  public int longestSubarray(int[] nums, int limit) {
+    int maxLen = 0;
+    Deque<Integer> maxMQ = new ArrayDeque<>(), minMQ = new ArrayDeque<>();
+    int lo = 0, hi = 0;
+    while (hi < nums.length) {
+      int add = nums[hi];
+      while (!maxMQ.isEmpty() && add >= nums[maxMQ.peekLast()]) {
+        maxMQ.pollLast();
+      }
+      maxMQ.addLast(hi);
+      while (!minMQ.isEmpty() && add <= nums[minMQ.peekLast()]) {
+        minMQ.pollLast();
+      }
+      minMQ.addLast(hi);
+      while (Math.abs(nums[maxMQ.peekFirst()] - nums[minMQ.peekFirst()]) > limit) {
+        lo += 1;
+        if (maxMQ.peekFirst() < lo) maxMQ.pollFirst();
+        if (minMQ.peekFirst() < lo) minMQ.pollFirst();
+      }
+      maxLen = Math.max(maxLen, hi - lo + 1);
+      hi++;
+    }
+    return maxLen;
+  }
+
+  /**
    * 最大连续1的个数III，返回最长子数组，最多可转换 k 个 0
    *
    * <p>统计窗口内 0 的个数，窗口内容忍 k 个 0 即假设其全 1
@@ -776,9 +815,9 @@ class SSubString {
   }
 
   /**
-   * 至少有k个重复字符的最长子串，每一字符出现次数都不少于
+   * 至少有k个重复字符的最长子串，每种字符的频率不少于。
    *
-   * <p>分治，用频率小于 k 的字符作为切割点, 将 s 分割再判断其中是否包含重复
+   * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
    *
    * <p>参考
    * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
@@ -788,26 +827,22 @@ class SSubString {
    * @return int
    */
   public int longestSubstring(String s, int k) {
-    // 特判
-    if (s.length() < k) return 0;
+    if (s.length() < k) return 0; // 特判
     int[] counter = new int[26];
     char[] chs = s.toCharArray();
     for (char ch : chs) {
       counter[ch - 'a'] += 1;
     }
     for (char ch : chs) {
+      // 找到首个次数少于 k 的字符，切分为多个小段分治
       if (counter[ch - 'a'] >= k) continue;
-      // 找到首个次数少于 k 的字符
       int maxLen = 0;
-      // 则切分为多个小段分治
-      String[] strs = s.split(String.valueOf(ch));
-      for (String seg : strs) {
+      for (String seg : s.split(String.valueOf(ch))) {
         maxLen = Math.max(maxLen, longestSubstring(seg, k));
       }
       return maxLen;
     }
-    // 原字符串没有小于 k 的字符串
-    return s.length();
+    return s.length(); // 原字符串没有小于 k 的字符串
   }
 
   /**

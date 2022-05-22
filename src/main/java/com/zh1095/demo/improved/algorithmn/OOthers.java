@@ -1091,7 +1091,6 @@ class GGraph {
    * @return int int
    */
   public int diameterOfTree(int n, Interval[] Edges, int[] EdgeValues) {
-    // 使用数组保存所有的节点
     List<Edge>[] graph = new List[n];
     for (int i = 0; i < n; i++) {
       graph[i] = new ArrayList<>();

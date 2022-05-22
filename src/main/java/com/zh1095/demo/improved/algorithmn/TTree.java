@@ -336,6 +336,22 @@ class DDFS {
   private TreeNode parent;
 
   /**
+   * 坐标界内
+   *
+   * @param board the board
+   * @param i the
+   * @param j the j
+   * @return the boolean
+   */
+  protected boolean inArea(char[][] board, int i, int j) {
+    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
+  }
+
+  private boolean inArea(int[][] board, int i, int j) {
+    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
+  }
+
+  /**
    * 路径总和III，返回路径总数，但从任意点出发，题设值不重复，前缀和
    *
    * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
@@ -367,22 +383,6 @@ class DDFS {
     path += dfs14(root.left, preSum, cur, targetSum) + dfs14(root.right, preSum, cur, targetSum);
     preSum.put(cur, preSum.getOrDefault(cur, 0) - 1);
     return path;
-  }
-
-  /**
-   * 坐标界内
-   *
-   * @param board the board
-   * @param i the
-   * @param j the j
-   * @return the boolean
-   */
-  protected boolean inArea(char[][] board, int i, int j) {
-    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
-  }
-
-  private boolean inArea(int[][] board, int i, int j) {
-    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
   }
 
   /**
@@ -473,10 +473,10 @@ class DDFS {
   }
 
   /**
-   * 二叉树中所有距离为k的结点，掌握 DFS 分割即可
+   * 二叉树中所有距离为k的结点
    *
    * <p>参考
-   * https://leetcode-cn.com/problems/all-nodes-distance-k-in-binary-tree/solution/gai-bian-shu-de-xing-zhuang-c-si-lu-dai-ma-by-lhrs/
+   * https://leetcode.cn/problems/all-nodes-distance-k-in-binary-tree/solution/er-cha-shu-zhong-suo-you-ju-chi-wei-k-de-qbla/
    *
    * @param root the root
    * @param target the target
@@ -484,43 +484,69 @@ class DDFS {
    * @return list list
    */
   public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    // 1.把树分为两棵，分别以目标结点及其父结点为根
-    dfs4(null, root, target);
-    // 2.以目标结点为根的中树深度为 k 的结点
-    collect(target, k);
-    // 3.以目标结点父为根的树，、深度为 k-1 的结点
-    collect(parent, k - 1);
-    return res5;
+    // 题设节点数有限，值互异，且 O(1) 查找采用 Map
+    Map<Integer, TreeNode> parents = new HashMap<Integer, TreeNode>(500);
+    List<Integer> nodes = new ArrayList<Integer>();
+    if (root == null) return nodes;
+    collect(root, parents);
+    // 为避免在深度优先搜索时重复访问结点，递归时额外传入来源，在递归前比较目标结点是否与来源结点相同
+    dfs17(target, null, k, parents, nodes);
+    return nodes;
   }
 
-  // 分割结点
-  private Boolean dfs4(TreeNode from, TreeNode to, TreeNode target) {
-    if (to == null) return false;
-    // 如果搜到了目标结点，那么它父就是新树的根
-    if (to == target) {
-      parent = from;
-      return true;
+  private void collect(TreeNode node, Map<Integer, TreeNode> parents) {
+    if (node.left != null) {
+      parents.put(node.left.val, node);
+      collect(node.left, parents);
     }
-    if (dfs4(to, to.left, target)) {
-      to.left = from;
-      return true;
+    if (node.right != null) {
+      parents.put(node.right.val, node);
+      collect(node.right, parents);
     }
-    if (dfs4(to, to.right, target)) {
-      to.right = from;
-      return true;
-    }
-    return false;
   }
 
-  // 搜索以 k 为根结点的树，其第 k 层所有结点
-  private void collect(TreeNode root, int k) {
-    if (root == null) return;
-    if (k == 0) {
-      res5.add(root.val);
+  private void dfs17(
+      TreeNode to, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> nodes) {
+    if (to == null) return;
+    if (dist == 0) {
+      nodes.add(to.val);
       return;
     }
-    collect(root.left, k - 1);
-    collect(root.right, k - 1);
+    if (to.left != from) dfs17(to.left, to, dist - 1, parents, nodes);
+    if (to.right != from) dfs17(to.right, to, dist - 1, parents, nodes);
+    if (parents.get(to.val) != from) dfs17(parents.get(to.val), to, dist - 1, parents, nodes);
+  }
+
+  /**
+   * 被围绕的区域，填充所有被 X 围绕的 O，因此标记和边界联通的 O 路径即可。
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/surrounded-regions/solution/bfsdi-gui-dfsfei-di-gui-dfsbing-cha-ji-by-ac_pipe/
+   *
+   * @param board
+   */
+  public void solve(char[][] board) {
+    int row = board.length, col = board[0].length;
+    for (int r = 0; r < row; r++) {
+      for (int c = 0; c < col; c++) {
+        if (r == 0 || c == 0 || r == row - 1 || c == col - 1 && board[r][c] == 'O')
+          dfs16(board, r, c);
+      }
+    }
+    for (int r = 0; r < row; r++) {
+      for (int c = 0; c < col; c++) {
+        if (board[r][c] == 'O') board[r][c] = 'X';
+        else if (board[r][c] == '#') board[r][c] = 'O';
+      }
+    }
+  }
+
+  public void dfs16(char[][] board, int r, int c) {
+    if (!inArea(board, r, c) || board[r][c] != 'O') return;
+    board[r][c] = '#';
+    for (int[] dir : DIRECTIONS) {
+      dfs16(board, r + dir[0], c + dir[1]);
+    }
   }
 
   /**
@@ -649,32 +675,33 @@ class BBSTInorder {
   }
 
   /**
-   * 恢复二叉搜索树，中序，框架保持「中序遍历」
+   * 恢复二叉搜索树，中序找逆序对，框架保持「中序遍历」
    *
-   * <p>中序依次找两个错误结点 & 交换值
+   * <p>中序依次找一对错误结点并交换，注意第二个点要最后一个。
    *
    * @param root the root
    */
   public void recoverTree(TreeNode root) {
-    TreeNode firstNode = null, secondNode = null, pre = new TreeNode(Integer.MIN_VALUE), cur = root;
+    TreeNode n1 = null, n2 = null, pre = new TreeNode(Integer.MIN_VALUE), cur = root;
     Deque<TreeNode> stack = new ArrayDeque<>();
     while (cur != null || !stack.isEmpty()) {
-      // 遍历
       while (cur != null) {
         stack.offerLast(cur);
         cur = cur.left;
       }
       cur = stack.pollLast();
-      // 处理当前结点
-      if (firstNode == null && pre.val > cur.val) firstNode = pre;
-      if (firstNode != null && pre.val > cur.val) secondNode = cur;
+      if (pre.val > cur.val && n1 == null) n1 = pre;
+      // stop recording util it's last wrong pair such as swaping 15 & 5 not 15 & 8
+      //    10
+      //  15   5
+      // 3 8 13 16
+      if (pre.val > cur.val && n1 != null) n2 = cur;
       pre = cur;
-      // 步进
       cur = cur.right;
     }
-    int tmp = firstNode.val;
-    firstNode.val = secondNode.val;
-    secondNode.val = tmp;
+    int tmp = n1.val;
+    n1.val = n2.val;
+    n2.val = tmp;
   }
 
   /**

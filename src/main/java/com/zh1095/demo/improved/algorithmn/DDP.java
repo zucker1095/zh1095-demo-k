@@ -515,6 +515,41 @@ class OptimalPath {
         nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
     return new int[] {nxt, cur};
   }
+
+  /**
+   * 交错字符串，每次只能向右或下，画图可知即滚动数组
+   *
+   * <p>dp[i][j] 代表 s1 前 i 个字符与 s2 前 j 个字符拼接成 s3 任意 i+j 字符，即存在目标路径能够到达 (i,j)
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/interleaving-string/solution/lei-si-lu-jing-wen-ti-zhao-zhun-zhuang-tai-fang-ch/
+   *
+   * @param s1
+   * @param s2
+   * @param s3
+   * @return
+   */
+  public boolean isInterleave(String s1, String s2, String s3) {
+    int l1 = s1.length(), l2 = s2.length(), l3 = s3.length();
+    if (l1 + l2 != l3) return false;
+    boolean[] dp = new boolean[l2 + 1];
+    dp[0] = true;
+    for (int j = 1; j <= l2; j++) { // dp[0][?]
+      if (!(s2.charAt(j - 1) == s3.charAt(j - 1))) break;
+      dp[j] = dp[j - 1];
+    }
+    //     dp[i][j] = (dp[i-1][j] && s3.charAt(i + j - 1) == s1.charAt(i - 1))
+    //                    || (dp[i][j - 1] && s3.charAt(i + j - 1) == s2.charAt(j - 1));
+    for (int i = 1; i <= l1; i++) {
+      dp[0] = dp[0] && s1.charAt(i - 1) == s3.charAt(i - 1);
+      for (int j = 1; j <= l2; j++) {
+        dp[j] =
+            (dp[j] && s1.charAt(i - 1) == s3.charAt(i + j - 1))
+                || (dp[j - 1] && s2.charAt(j - 1) == s3.charAt(i + j - 1));
+      }
+    }
+    return dp[l2];
+  }
 }
 
 /** 最优解，状态压缩 & 双指针 */
