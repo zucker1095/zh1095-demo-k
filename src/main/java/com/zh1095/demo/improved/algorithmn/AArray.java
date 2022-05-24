@@ -831,6 +831,16 @@ class DichotomyClassic extends DefaultArray {
     return nums[hi] == target ? hi : -1;
   }
 
+  // TODO 对有序数组找到重复数超过 k 的序列
+  // 二分找到某数出现的首个和最后的索引，再分隔两个数组分别递归求解。
+  public List<Integer> findDuplicatesK(int[] nums, int k) {
+    List<Integer> res = new ArrayList<>();
+    int[] pos = searchRange(nums, nums[nums.length / 2]);
+    List<Integer> p1 = findDuplicatesK(Arrays.copyOfRange(nums, 0, pos[0]), k),
+        p2 = findDuplicatesK(Arrays.copyOfRange(nums, pos[1], nums.length), k);
+    return res;
+  }
+
   /**
    * 搜索旋转排序数组，目标分别与中点，左右边界对比，有序的一边的边界值可能等于目标值
    *
@@ -1086,7 +1096,10 @@ class DichotomyElse extends DefaultArray {
   }
 }
 
-/** 区间和相关，包括组合数字之和与前缀和 */
+/**
+ * 区间和相关，主要运用前缀和，参考
+ * https://leetcode.cn/problems/corporate-flight-bookings/solution/gong-shui-san-xie-yi-ti-shuang-jie-chai-fm1ef/
+ */
 class SSum extends DefaultArray {
   /**
    * 三数之和
@@ -1525,6 +1538,29 @@ class PreSum {
     }
     return coordinates;
   }
+
+  /**
+   * 航班预订统计
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/corporate-flight-bookings/solution/5118_hang-ban-yu-ding-tong-ji-by-user9081a/
+   *
+   * @param bookings
+   * @param n
+   * @return
+   */
+  public int[] corpFlightBookings(int[][] bookings, int n) {
+    int[] counters = new int[n];
+    for (int[] booking : bookings) {
+      int first = booking[0], last = booking[1], seat = booking[2];
+      counters[first - 1] += seat;
+      if (last < n) counters[last] -= seat;
+    }
+    for (int i = 1; i < n; i++) {
+      counters[i] += counters[i - 1];
+    }
+    return counters;
+  }
 }
 
 /** 重复，哈希有关 */
@@ -1556,52 +1592,6 @@ class DDuplicate extends DefaultArray {
     return lo;
   }
 
-  // 对有序数组找到重复数超过 k 的序列，滑窗，双指针间距超过 k-1 即可
-  // 找到最接近 k 的下界索引 & 从此开始按照上述模板
-  //  private int[] findDuplicatesK(int[] nums, int k) {
-  //    List<Integer> res = new ArrayList<>();
-  //    int lo = 0, hi = nums.length - 1;
-  //    if (nums[hi] < k) return new int[] {};
-  //    while (lo < hi) {
-  //      int mid = lo + (hi - lo) / 2;
-  //      if (nums[mid] < k) {
-  //
-  //      } else if (nums[mid] == k) {
-  //
-  //      } else if (nums[mid] > k) {
-  //
-  //      }
-  //    }
-  //
-  //    int lo = 0;
-  //    for (int hi = 1; hi < nums.length; hi++) {
-  //      if (nums[hi] == nums[lo]) continue;
-  //      if (hi - lo >= k) {
-  //        res.add(nums[lo]);
-  //      }
-  //      lo = hi;
-  //    }
-  //    return res.stream().mapToInt(i -> i).toArray();
-  //  }
-
-  /**
-   * 数组中重复的数据，返回所有重复数，每个数字至多出现两次，区间 [1,n]
-   *
-   * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
-   *
-   * @param nums the nums
-   * @return list list
-   */
-  public List<Integer> findDuplicates(int[] nums) {
-    List<Integer> duplicates = new ArrayList<>();
-    for (int num : nums) {
-      int idx = (num < 0 ? -num : num) - 1;
-      if (nums[idx] < 0) duplicates.add(idx + 1);
-      else nums[idx] *= -1;
-    }
-    return duplicates;
-  }
-
   /**
    * 数组中重复的数字，返回任意一个重复的数字，区间 [0,nums.length-1]
    *
@@ -1621,6 +1611,24 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
+   * 数组中重复的数据，返回所有重复数，每个数字至多出现两次，区间 [1,n]
+   *
+   * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
+   *
+   * @param nums the nums
+   * @return list list
+   */
+  public List<Integer> findDuplicates(int[] nums) {
+    List<Integer> duplicates = new ArrayList<>();
+    for (int n : nums) {
+      int idx = (n < 0 ? -n : n) - 1;
+      if (nums[idx] < 0) duplicates.add(idx + 1); // visite num marked
+      else nums[idx] *= -1; // mark num
+    }
+    return duplicates;
+  }
+
+  /**
    * 缺失的第一个正数
    *
    * <p>原地哈希，缺失会命中错误索引，nums[nums[i]-1]!=nums[i]，类似数组中重复的数据
@@ -1629,16 +1637,17 @@ class DDuplicate extends DefaultArray {
    * @return int int
    */
   public int firstMissingPositive(int[] nums) {
-    for (int i = 0; i < nums.length; i++) {
+    int len = nums.length;
+    for (int i = 0; i < len; i++) {
       // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
-      while (0 < nums[i] && nums[i] <= nums.length && nums[i] != nums[nums[i] - 1]) {
+      while (nums[i] > 0 && nums[i] <= len && nums[i] != nums[nums[i] - 1]) {
         swap(nums, nums[i] - 1, i);
       }
     }
-    for (int i = 0; i < nums.length; i++) {
+    for (int i = 0; i < len; i++) {
       if (nums[i] != i + 1) return i + 1;
     }
-    return nums.length + 1;
+    return len + 1;
   }
 }
 
@@ -1975,27 +1984,25 @@ class DicOrder extends DefaultArray {
    *
    * <p>对比下方「最大交换」，后者是找到交换结果的最大
    *
-   * <p>找 & 排 & 找 & 换 & 排
-   *
    * <p>扩展1，上一个排列，从 n-2 开始找到首个峰 & 峰右边调为降序 & 从 n-1 开始找到首个比峰小的数，交换
    *
    * @param nums the nums
    */
   public void nextPermutation(int[] nums) {
-    int idx = nums.length - 1; // nums.length - 2
-    while (idx > 0) {
-      if (nums[idx] > nums[idx - 1]) {
-        Arrays.sort(nums, idx, nums.length);
+    int peak = nums.length - 1; // nums.length - 2
+    while (peak > 0) {
+      if (nums[peak] > nums[peak - 1]) { // find the first peak
+        Arrays.sort(nums, peak, nums.length); // sort from its idx to end
         break;
       }
-      idx -= 1;
+      peak -= 1;
     }
-    for (int j = idx; j < nums.length; j++) {
-      if (nums[j] <= nums[idx - 1]) continue;
-      swap(nums, idx - 1, j);
+    for (int j = peak; j < nums.length; j++) {
+      if (nums[j] <= nums[peak - 1]) continue; // find the second peak larger than IDX-1
+      swap(nums, peak - 1, j); // swap them
       return;
     }
-    Arrays.sort(nums);
+    Arrays.sort(nums); // monotonic without peaks
   }
 
   /**

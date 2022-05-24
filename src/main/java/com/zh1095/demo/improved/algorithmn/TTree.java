@@ -607,8 +607,7 @@ class BBSTInorder {
   public boolean isValidBST(TreeNode root) {
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
-    // Integer.MIN_VALUE 即可，此处仅为通过官方示例
-    double pre = -Double.MAX_VALUE;
+    double pre = -Double.MAX_VALUE; // Integer.MIN_VALUE 即可，此处仅为通过官方示例
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
@@ -948,42 +947,40 @@ class Postorder {
 
   private int singleSide1(TreeNode root) {
     if (root == null) return 0;
-    int left = Math.max(0, singleSide1(root.left)), right = Math.max(0, singleSide1(root.right));
-    // 更新双侧
-    maxSum = Math.max(maxSum, left + right + root.val);
-    // 返回单侧
-    return Math.max(left, right) + root.val;
+    int l = Math.max(0, singleSide1(root.left)), r = Math.max(0, singleSide1(root.right));
+    maxSum = Math.max(maxSum, l + r + root.val); // update both
+    return Math.max(l, r) + root.val; // return solo
   }
 
   private Res _singleSide1(TreeNode root) {
     if (root == null) return new Res();
-    Res cur = new Res(), left = _singleSide1(root.left), right = _singleSide1(root.right);
-    if (left.count <= 0) {
-      left.count = 0;
-      left.path = "";
+    Res solo = new Res(), l = _singleSide1(root.left), r = _singleSide1(root.right);
+    if (l.count <= 0) {
+      l.count = 0;
+      l.path = "";
     } else {
-      left.path = left.count + "->";
+      l.path = l.count + "->";
     }
-    if (right.count <= 0) {
-      right.count = 0;
-      left.path = "";
+    if (r.count <= 0) {
+      r.count = 0;
+      l.path = "";
     } else {
-      right.path = "->" + right.count;
+      r.path = "->" + r.count;
     }
-    // 更新双侧
-    if (root.val + left.count + right.count > maxSum) {
-      maxSum = left.count + root.val + right.count;
-      maxPath = left.path + root.val + right.path;
+    int lc = l.count, rc = r.count;
+    String lp = l.path, rp = r.path;
+    if (root.val + lc + rc > maxSum) { // update both
+      maxSum = lc + root.val + rc;
+      maxPath = lp + root.val + rp;
     }
-    // 返回单侧
-    if (left.count > right.count) {
-      cur.count = left.count + root.val;
-      cur.path = left.path + root.val;
+    if (lc > rc) { // return solo
+      solo.count = lc + root.val;
+      solo.path = lp + root.val;
     } else {
-      cur.count = root.val + right.count;
-      cur.path = root.val + right.path;
+      solo.count = root.val + rc;
+      solo.path = root.val + rp;
     }
-    return cur;
+    return solo;
   }
 
   /**
@@ -1157,19 +1154,19 @@ class BBFS {
    * @param root the root
    * @return boolean boolean
    */
-  private boolean isCompleteTree(TreeNode root) {
+  public boolean isCompleteTree(TreeNode root) {
     if (root == null) return true;
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
-    boolean isPreNull = false;
+    boolean preNull = false;
     while (!queue.isEmpty()) {
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
         if (cur == null) {
-          isPreNull = true;
+          preNull = true;
           continue;
         }
-        if (isPreNull) return false;
+        if (preNull) return false;
         queue.add(cur.left);
         queue.add(cur.right);
       }
@@ -1252,6 +1249,30 @@ class BBFS {
       if (cur.right != null) queue.offer(cur.right);
     }
     return root;
+  }
+
+  /**
+   * 对称二叉树
+   *
+   * @param root
+   * @return
+   */
+  public boolean isSymmetric(TreeNode root) {
+    if (root == null || (root.left == null && root.right == null)) return true;
+    LinkedList<TreeNode> queue = new LinkedList<>();
+    queue.add(root.left);
+    queue.add(root.right);
+    while (queue.size() > 0) {
+      TreeNode l = queue.removeFirst(), r = queue.removeFirst();
+      if (l == null && r == null) continue;
+      else if (l == null || r == null) return false;
+      else if (l.val != r.val) return false;
+      queue.add(l.left);
+      queue.add(r.right);
+      queue.add(l.right);
+      queue.add(r.left);
+    }
+    return true;
   }
 }
 

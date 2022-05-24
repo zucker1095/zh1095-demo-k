@@ -47,14 +47,10 @@ public class SString extends DefaultSString {
     return res.reverse().toString();
   }
 
-  private boolean integerLess(String num1, String num2) {
-    return num1.length() == num2.length()
-        ? Integer.parseInt(num1) < Integer.parseInt(num2)
-        : num1.length() < num2.length();
-  }
-
   /**
    * 大数相减
+   *
+   * <p>参考 https://leetcode.cn/circle/discuss/zVtfxd/
    *
    * @param num1
    * @param num2
@@ -62,8 +58,7 @@ public class SString extends DefaultSString {
    */
   public String reduceStrings(String num1, String num2) {
     StringBuilder res = new StringBuilder();
-    // 预处理
-    if (integerLess(num1, num2)) {
+    if (integerLess(num1, num2)) { // preprocessing
       String tmp = num1;
       num1 = num2;
       num2 = num1;
@@ -75,14 +70,13 @@ public class SString extends DefaultSString {
     while (p1 >= 0 || p2 >= 0) {
       int n1 = p1 >= 0 ? num1.charAt(p1) - '0' : 0, n2 = p2 >= 0 ? num2.charAt(p2) - '0' : 0;
       int tmp = (n1 - n2 - carry + 10) % 10;
-      res.append(tmp);
+      res.append(tmp); // res.insert(0,tmp);
       carry = n1 - carry - n2 < 0 ? 1 : 0;
       p1 -= 1;
       p2 -= 1;
     }
-    // 前导零
     String str = res.reverse().toString();
-    int pos = 0;
+    int pos = 0; // 前导零
     for (char ch : str.toCharArray()) {
       if (ch != '0') break;
       ch += 1;
@@ -90,6 +84,13 @@ public class SString extends DefaultSString {
     return str.substring(0, pos);
   }
 
+  private boolean integerLess(String num1, String num2) {
+    return num1.length() == num2.length()
+        ? Integer.parseInt(num1) < Integer.parseInt(num2)
+        : num1.length() < num2.length();
+  }
+
+  // ASCII coding
   private char getChar(int num) {
     return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
   }
@@ -144,8 +145,7 @@ public class SString extends DefaultSString {
    * @return int int
    */
   public int compareVersion(String version1, String version2) {
-    int l1 = version1.length(), l2 = version2.length();
-    int p1 = 0, p2 = 0;
+    int l1 = version1.length(), l2 = version2.length(), p1 = 0, p2 = 0;
     while (p1 < l1 || p2 < l2) {
       int n1 = 0, n2 = 0;
       while (p1 < l1 && version1.charAt(p1) != '.') {
@@ -893,40 +893,46 @@ class SSubString {
   }
 }
 
-/** 进制转换，编码相关 */
+/**
+ * 进制转换，编码相关
+ *
+ * <p>num to str: greedy
+ *
+ * <p>str to num: multiply by multiple which the char represtants starting from the low order
+ */
 class CConvert {
-  private final String CHARS = "0123456789ABCDEF";
+  private final char[] CHARS = "0123456789ABCDEF".toCharArray();
   // 「整数转换英文表示」
-  private final String[] num2str_small = {
-    "Zero",
-    "One",
-    "Two",
-    "Three",
-    "Four",
-    "Five",
-    "Six",
-    "Seven",
-    "Eight",
-    "Nine",
-    "Ten",
-    "Eleven",
-    "Twelve",
-    "Thirteen",
-    "Fourteen",
-    "Fifteen",
-    "Sixteen",
-    "Seventeen",
-    "Eighteen",
-    "Nineteen"
-  };
-  // 「整数转换英文表示」
-  private final String[] num2str_medium = {
-    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
-  };
-  // 「整数转换英文表示」
-  private final String[] num2str_large = {
-    "Billion", "Million", "Thousand", "",
-  };
+  private final String[]
+      num2str_small =
+          {
+            "Zero",
+            "One",
+            "Two",
+            "Three",
+            "Four",
+            "Five",
+            "Six",
+            "Seven",
+            "Eight",
+            "Nine",
+            "Ten",
+            "Eleven",
+            "Twelve",
+            "Thirteen",
+            "Fourteen",
+            "Fifteen",
+            "Sixteen",
+            "Seventeen",
+            "Eighteen",
+            "Nineteen"
+          },
+      num2str_medium =
+          {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"},
+      num2str_large =
+          {
+            "Billion", "Million", "Thousand", "",
+          };
 
   /**
    * 字符串转换整数，如 " -26" to 26
@@ -1014,7 +1020,7 @@ class CConvert {
     StringBuilder res = new StringBuilder();
     long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
     while (cur > 0) {
-      res.append(CHARS.charAt((int) (cur % 16))); // 取余
+      res.append(CHARS[(int) (cur % 16)]); // 取余
       cur /= 16; // 除以
     }
 
@@ -1065,8 +1071,6 @@ class CConvert {
    * @return string string
    */
   public String intToRoman(int num) {
-    // num -> str
-    // str -> num
     // 保证遍历有序
     final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
     final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
@@ -1088,11 +1092,11 @@ class CConvert {
    * @return int int
    */
   public int titleToNumber(String ct) {
-    int res = 0;
+    int n = 0;
     for (char ch : ct.toCharArray()) {
-      res = res * 26 + (ch - 'A' + 1);
+      n = n * 26 + (ch - 'A' + 1);
     }
-    return res;
+    return n;
   }
 
   /**
@@ -1106,7 +1110,7 @@ class CConvert {
    * @return int int
    */
   public int romanToInt(String s) {
-    Map<Character, Integer> mark =
+    Map<Character, Integer> mapping =
         new HashMap<>() {
           {
             //            put('一', 1);
@@ -1131,17 +1135,18 @@ class CConvert {
             put('M', 1000);
           }
         };
-    int num = 0;
+    int n = 0;
+    char[] chs = s.toCharArray();
     for (int i = 0; i < s.length(); i++) {
-      int cur = mark.get(s.charAt(i)), nxt = mark.get(s.charAt(i + 1));
-      if (i < s.length() - 1 && cur < nxt) num -= cur;
-      else num += cur;
+      int add = mapping.get(chs[i]), addNxt = mapping.get(chs[i + 1]);
+      if (i < s.length() - 1 && add < addNxt) n -= add;
+      else n += add;
     }
-    return num;
+    return n;
   }
 
   /**
-   * convert between IP & unsigned int
+   * IPv4 与无符号十进制互转
    *
    * <p>参考 https://mp.weixin.qq.com/s/UWCuEtNS2kuAuDY-eIbghg
    *
@@ -1150,29 +1155,26 @@ class CConvert {
    */
   public String convertIPInteger(String str) {
     final int N = 4;
-    // ipv4 -> int
-    if (str.contains(".")) {
+    if (str.contains(".")) { // ipv4 -> int
       String[] fields = str.split("\\.");
       long integer = 0;
       for (int i = 0; i < N; i++) {
         integer = integer << 8 + Integer.parseInt(fields[i]);
       }
-      return "" + integer;
-    }
-    // int -> ipv4
-    else {
+      return String.valueOf(integer);
+    } else { // int -> ipv4
       long ipv4 = Long.parseLong(str);
-      String res = "";
+      String num = "";
       for (int i = 0; i < N; i++) {
-        res = ipv4 % 256 + "." + res;
+        num = ipv4 % 256 + "." + num;
         ipv4 /= 256;
       }
-      return res.substring(0, res.length() - 1);
+      return num.substring(0, num.length() - 1);
     }
   }
 
   /**
-   * 进制转换，除 radix 取余 & 倒排 & 高位补零，参考大数相加
+   * 进制转换，十进制转任意进制
    *
    * <p>https://www.nowcoder.com/practice/2cc32b88fff94d7e8fd458b8c7b25ec1?tpId=196&tqId=37170&rp=1&ru=/exam/oj&qru=/exam/oj&sourceUrl=%2Fexam%2Foj%3Ftab%3D%25E7%25AE%2597%25E6%25B3%2595%25E7%25AF%2587%26topicId%3D196%26page%3D1&difficulty=undefined&judgeStatus=undefined&tags=&title=
    *
@@ -1183,21 +1185,21 @@ class CConvert {
   public String baseConvert(int num, int radix) {
     if (num == 0) return "0";
     StringBuilder res = new StringBuilder();
-    boolean f = false;
+    boolean negative = false;
     if (num < 0) {
-      f = true;
-      num = -num;
+      negative = true;
+      num *= -1;
     }
     while (num != 0) {
-      res.append(CHARS.charAt(num % radix));
+      res.append(CHARS[num % radix]);
       num /= radix;
     }
-    if (f) res.append("-");
+    if (negative) res.append("-");
     return res.reverse().toString();
   }
 
   /**
-   * 整数转换英文表示
+   * 整数转换英文表示，iteratively
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/integer-to-english-words/solution/gong-shui-san-xie-zi-fu-chuan-da-mo-ni-b-0my6/
@@ -1219,40 +1221,18 @@ class CConvert {
     return str.toString();
   }
 
-  /**
-   * 把数字翻译成字符串，返回方案数
-   *
-   * <p>以 xyzcba 为例，先取最后两位 即 ba，如果ba>=26，必然不能分解成 f(xyzcb)+f(xyzc)，此时只能分解成 f(xyzcb)
-   *
-   * <p>但还有一种情况 ba<=9 即也就是该数十位上为 0，也不能分解
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/ba-shu-zi-fan-yi-cheng-zi-fu-chuan-lcof/solution/di-gui-qiu-jie-shuang-bai-by-xiang-shang-de-gua-ni/
-   *
-   * @param num
-   * @return
-   */
-  public int translateNum(int num) {
-    if (num <= 9) return 1;
-    // xyzcba
-    int ba = num % 100;
-    return ba <= 9 || ba >= 26
-        ? translateNum(num / 10)
-        : translateNum(num / 10) + translateNum(num / 100);
-  }
-
   private String num2Str(int x) {
-    StringBuilder str = new StringBuilder();
+    StringBuilder res = new StringBuilder();
     if (x >= 100) {
-      str.append(num2str_small[x / 100] + " Hundred ");
+      res.append(num2str_small[x / 100] + " Hundred ");
       x %= 100;
     }
     if (x >= 20) {
-      str.append(num2str_medium[x / 10] + " ");
+      res.append(num2str_medium[x / 10] + " ");
       x %= 10;
     }
-    if (x != 0) str.append(num2str_small[x] + " ");
-    return str.toString();
+    if (x != 0) res.append(num2str_small[x] + " ");
+    return res.toString();
   }
 }
 

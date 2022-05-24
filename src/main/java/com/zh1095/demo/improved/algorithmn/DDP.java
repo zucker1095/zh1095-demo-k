@@ -230,12 +230,12 @@ class OptimalSubSequence extends DichotomyClassic {
     }
     int maxLen = 0;
     for (int n : set) {
-      if (set.contains(n - 1)) continue;
-      int hi = n;
-      while (set.contains(hi + 1)) {
-        hi += 1;
+      if (set.contains(n - 1)) continue; // indicates that the number has been traversed
+      int hiNum = n;
+      while (set.contains(hiNum + 1)) { // go up downing the number
+        hiNum += 1;
       }
-      maxLen = Math.max(maxLen, hi - n + 1);
+      maxLen = Math.max(maxLen, hiNum - n + 1);
     }
     return maxLen;
   }
@@ -254,22 +254,22 @@ class OptimalSubSequence extends DichotomyClassic {
    * @return int int
    */
   public int longestCommonSubsequence(String text1, String text2) {
-    int len1 = text1.length(), len2 = text2.length();
-    int[][] dp = new int[len1 + 1][len2 + 1];
+    int l1 = text1.length(), l2 = text2.length();
+    int[][] dp = new int[l1 + 1][l2 + 1];
     //    int lo = 0, hi = 0;
-    for (int i = 1; i <= len1; i++) {
-      for (int j = 1; j <= len2; j++) {
-        dp[i][j] =
-            text1.charAt(i - 1) == text2.charAt(j - 1)
-                ? dp[i - 1][j - 1] + 1
-                : Math.max(dp[i - 1][j], dp[i][j - 1]);
-        //        if (hi - lo + 1 < j - i + 1) {
-        //          i = lo;
-        //          j = hi;
+    for (int p1 = 1; p1 <= l1; p1++) {
+      for (int p2 = 1; p2 <= l2; p2++) {
+        dp[p1][p2] =
+            text1.charAt(p1 - 1) == text2.charAt(p2 - 1)
+                ? dp[p1 - 1][p2 - 1] + 1
+                : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
+        //        if (hi - lo + 1 < p2 - p1 + 1) {
+        //          p1 = lo;
+        //          p2 = hi;
         //        }
       }
     }
-    return dp[len1][len2];
+    return dp[l1][l2];
   }
 
   /**
@@ -615,6 +615,8 @@ class OptimalElse {
   /**
    * 接雨水，贪心，漏桶效应
    *
+   * <p>首尾双指针，更新短边
+   *
    * @param height the height
    * @return int int
    */
@@ -637,20 +639,21 @@ class OptimalElse {
   }
 
   /**
-   * 盛最多水的容器
+   * 盛最多水的容器，同理更新短边
    *
    * @param height the height
    * @return int int
    */
   public int maxArea(int[] height) {
     int maxVolume = 0;
-    for (int lo = 0, hi = height.length - 1; lo < hi; ) {
-      int left = height[lo], right = height[hi];
+    int lo = 0, hi = height.length - 1;
+    while (lo < hi) {
+      int left = height[lo], right = height[hi], width = hi - lo;
       if (left <= right) {
-        maxVolume = Math.max(maxVolume, left * (hi - lo));
+        maxVolume = Math.max(maxVolume, left * width);
         lo += 1;
       } else {
-        maxVolume = Math.max(maxVolume, right * (hi - lo));
+        maxVolume = Math.max(maxVolume, right * width);
         hi -= 1;
       }
     }
@@ -658,7 +661,7 @@ class OptimalElse {
   }
 
   /**
-   * 最长有效括号，需要考虑上一个成对的括号区间
+   * 最长有效括号，考虑上一个成对的括号区间
    *
    * <p>括号相关的参考「括号生成」与「有效的括号」
    *
@@ -668,21 +671,18 @@ class OptimalElse {
    * @return int int
    */
   public int longestValidParentheses(String s) {
-    int res = 0;
+    int maxLen = 0;
     int[] dp = new int[s.length()];
-    for (int i = 1; i < s.length(); i++) {
-      if (s.charAt(i) == '(') {
-        continue;
-      }
+    char[] chs = s.toCharArray();
+    for (int i = 1; i < chs.length; i++) {
+      if (chs[i] == '(') continue;
       int preCount = i - dp[i - 1];
-      if (s.charAt(i - 1) == '(') {
-        dp[i] = i >= 2 ? dp[i - 2] + 2 : 2;
-      } else if (preCount > 0 && s.charAt(preCount - 1) == '(') {
-        dp[i] = dp[i - 1] + (preCount >= 2 ? dp[preCount - 2] + 2 : 2);
-      }
-      res = Math.max(res, dp[i]);
+      if (chs[i - 1] == '(') dp[i] = 2 + i < 2 ? 0 : dp[i - 2];
+      else if (preCount > 0 && chs[preCount - 1] == '(')
+        dp[i] = dp[i - 1] + 2 + preCount < 2 ? 0 : dp[preCount - 2];
+      maxLen = Math.max(maxLen, dp[i]);
     }
-    return res;
+    return maxLen;
   }
 
   /**
@@ -1082,18 +1082,17 @@ class OptimalRectangle {
     // 相当于已经预处理新增第一行、第一列均 0
     int[] dp = new int[matrix[0].length + 1];
     for (char[] row : matrix) {
-      // 左上角
-      int leftTop = 0;
+      int topLeft = 0;
       for (int col = 0; col < row.length; col++) {
-        int nxtTopLeft = dp[col + 1];
+        int nxt = dp[col + 1];
+        // maxSide = max(maxSide, dp[row+1][col+1]);
         if (row[col] == '1') {
-          dp[col + 1] = 1 + Math.min(Math.min(dp[col], dp[col + 1]), leftTop);
-          // maxSide = max(maxSide, dp[row+1][col+1]);
+          dp[col + 1] = 1 + Math.min(Math.min(dp[col], dp[col + 1]), topLeft);
           maxSide = Math.max(maxSide, dp[col + 1]);
         } else {
           dp[col + 1] = 0;
         }
-        leftTop = nxtTopLeft;
+        topLeft = nxt;
       }
     }
     return maxSide * maxSide;

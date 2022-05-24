@@ -102,6 +102,27 @@ public class OOthers {
   }
 
   /**
+   * 把数字翻译成字符串，返回方案数
+   *
+   * <p>以 xyzcba 为例，先取最后两位 即 ba，如果ba>=26，必然不能分解成 f(xyzcb)+f(xyzc)，此时只能分解成 f(xyzcb)
+   *
+   * <p>但还有一种情况 ba<=9 即也就是该数十位上为 0，也不能分解
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/ba-shu-zi-fan-yi-cheng-zi-fu-chuan-lcof/solution/di-gui-qiu-jie-shuang-bai-by-xiang-shang-de-gua-ni/
+   *
+   * @param num
+   * @return
+   */
+  public int translateNum(int num) {
+    if (num <= 9) return 1;
+    int ba = num % 100; // xyzcba
+    return ba <= 9 || ba >= 26
+        ? translateNum(num / 10)
+        : translateNum(num / 10) + translateNum(num / 100);
+  }
+
+  /**
    * 排名百分比，根据成绩获取，要求 O(n) for time
    *
    * <p>counts 类似 bitmap，对 score 排序。
