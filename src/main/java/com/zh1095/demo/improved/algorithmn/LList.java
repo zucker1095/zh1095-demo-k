@@ -415,8 +415,7 @@ class ReorderList extends LList {
       even.next = odd.next;
       even = even.next;
     }
-    // 奇尾连偶头
-    odd.next = evenHead;
+    odd.next = evenHead; // 奇尾连偶头
     return head;
   }
 
@@ -453,7 +452,7 @@ class ReorderList extends LList {
    * 排序链表，建议掌握递归 up-to-bottom 即可，找中点 & 分割 & 分别排序 & 合并
    *
    * <p>bottom-to-up 参考
-   * https://leetcode-cn.com/problems/sort-list/solution/148-pai-xu-lian-biao-bottom-to-up-o1-kong-jian-by-/
+   * https://leetcode.cn/problems/sort-list/solution/pai-xu-lian-biao-di-gui-die-dai-xiang-jie-by-cherr/
    *
    * <p>扩展1，去重，参下 annotate
    *
@@ -469,8 +468,37 @@ class ReorderList extends LList {
     }
     ListNode l2Head = lo.next;
     lo.next = null;
-    ListNode l1 = sortList(head), l2 = sortList(l2Head);
-    return mergeTwoLists(l1, l2);
+    return mergeTwoLists(sortList(head), sortList(l2Head));
+    //    ListNode dummy = new ListNode();
+    //    dummy.next = head;
+    //    int len = 0; // 1.count length
+    //    while (head != null) {
+    //      len += 1;
+    //      head = head.next;
+    //    }
+    //    for (int step = 1; step < len; step *= 2) { // 2.依次将链表分成1块，2块，4块...
+    //      // 每次变换步长，pre 和 cur 都初始化在链表头
+    //      ListNode pre = dummy, cur = dummy.next;
+    //      while (cur != null) {
+    //        ListNode h1 = cur, h2 = split(h1, step);
+    //        cur = split(h2, step);
+    //        pre.next = mergeTwoLists(h1, h2);
+    //        while (pre.next != null) pre = pre.next; // 3.pre 步进到排序好的部分的末尾
+    //      }
+    //    }
+    //    return dummy.next;
+  }
+
+  private ListNode split(ListNode head, int step) {
+    // 断链操作 返回第二部分链表头
+    if (head == null) return null;
+    ListNode l1 = head;
+    for (int i = 1; i < step && l1.next != null; i++) {
+      l1 = l1.next;
+    }
+    ListNode l2 = l1.next;
+    l1.next = null;
+    return l2;
   }
 
   // 链表快排，时间复杂度炸裂

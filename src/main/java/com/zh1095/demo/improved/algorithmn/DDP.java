@@ -95,7 +95,7 @@ class OptimalSubArray {
   }
 
   /**
-   * 乘积最大子数组，可能存在负数，因此至少需要引入两个状态
+   * 乘积最大子数组，返回乘积，可能存在负数，因此至少需要引入两个状态
    *
    * <p>dp[i][0] 表示以 nums[i] 结尾的子数组的乘积的最小值，dp[i][1] 为最大
    *
@@ -103,12 +103,14 @@ class OptimalSubArray {
    *
    * <p>递归关系只与前一个相关，因此滚动变量，即状态压缩第一维，而保留 0 & 1 两个状态
    *
+   * <p>参考
+   * https://leetcode.cn/problems/maximum-product-subarray/solution/hua-jie-suan-fa-152-cheng-ji-zui-da-zi-xu-lie-by-g/
+   *
    * @param nums the nums
    * @return int int
    */
   public int maxProduct(int[] nums) {
-    int maxPro = Integer.MIN_VALUE;
-    int proMax = 1, proMin = 1;
+    int maxPro = Integer.MIN_VALUE, proMax = 1, proMin = 1;
     for (int n : nums) {
       // 以该点结尾的乘积大小调换
       if (n < 0) {
@@ -153,7 +155,7 @@ class OptimalSubSequence extends DichotomyClassic {
         tails[hi] = n;
         // dp[i] = hi + 1;
       } else {
-        int lo = lowerBound(Arrays.copyOfRange(tails, 0, hi), n);
+        int lo = lowmostBound(Arrays.copyOfRange(tails, 0, hi), n);
         tails[lo] = n;
         // dp[i] = lo + 1;
       }
@@ -555,7 +557,7 @@ class OptimalPath {
 /** 最优解，状态压缩 & 双指针 */
 class OptimalElse {
   /**
-   * 买卖股票的最佳时机 I~III
+   * 买卖股票的最佳时机 I~IV
    *
    * <p>参考
    * https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iii/solution/zui-jian-dan-2-ge-bian-liang-jie-jue-suo-71fe/
@@ -570,44 +572,50 @@ class OptimalElse {
   // 限定一次
   private int maxProfitI(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
-    for (int price : prices) {
-      // max(不买，买了)
-      buy = Math.max(buy, -price);
-      // max(不卖，卖了)
-      sell = Math.max(sell, buy + price);
+    for (int p : prices) {
+      buy = Math.max(buy, -p); // max(不买，买了)
+      sell = Math.max(sell, buy + p); // max(不卖，卖了)
     }
     return sell;
   }
 
   // 不限次数
+  // 扩展1，含手续费，参下 annotate
+  // 扩展2，限定 n 次，参下 maxProfitIII
+  // 扩展3，含冷冻期，参下 annotate
   private int maxProfitII(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
-    for (int price : prices) {
-      // 因为需要多次买卖，所以每天都要尝试是否能获得更多利润
-      buy = Math.max(buy, sell - price);
-      sell = Math.max(sell, buy + price);
+    //    int lock = 0; // 表示无法交易的时候
+    for (int p : prices) {
+      // 冷冻期，注意顺序
+      //      int preSell = sell;
+      //      sell = Math.max(sell, buy + p);
+      //      buy = Math.max(buy, lock - p);
+      //      lock = preSell;
+      // 因为能够多次买卖，所以每天都要尝试能否更优解
+      buy = Math.max(buy, sell - p);
+      //      buy = Math.max(buy, sell - p - fee);
+      sell = Math.max(sell, buy + p);
     }
     return sell;
   }
 
-  // 限定两次，综合上方二者
-  // 限定 n 次，参下 annotate
-  private int maxProfitIII(int[] prices) {
+  private int maxProfitIII(int[] prices) { // 限定两次，综合上方二者
+    //    int[] buys = new int[k + 1], sells = new int[k + 1];
+    //    for (int p : prices) {
+    //      for (int i = 1; i <= k; ++i) {
+    //        buys[i] = Math.max(buys[i], sells[i - 1] - p); // 卖了买
+    //        sells[i] = Math.max(sells[i], buys[i] + p); // 买了卖
+    //      }
+    //    }
+    //    return sells[k];
     // 因为只能交易 2 次，所以定义 2 组 buy & sell
-    int buy1 = Integer.MIN_VALUE, sell1 = 0;
-    int buy2 = Integer.MIN_VALUE, sell2 = 0;
-    //    int[][] buySells = new int[n][2];
-    for (int price : prices) {
-      buy1 = Math.max(buy1, -price); // 第一次买
-      sell1 = Math.max(sell1, buy1 + price); // 第一次卖
-      buy2 = Math.max(buy2, sell1 - price); // 第一次卖了后现在买
-      sell2 = Math.max(sell2, buy2 + price); // 第二次买了后现在卖
-      //      buySells[0][0] = Math.max(buySells[0][0], -price);
-      //      buySells[0][1] = Math.max(buySells[0][1], buySells[0][0] + price);
-      //      for (int i = 1; i < buySells.length; i++) {
-      //        int buy = buySells[i][0], sell = buySells[i][1];
-      //        // ...
-      //      }
+    int buy1 = Integer.MIN_VALUE, sell1 = 0, buy2 = Integer.MIN_VALUE, sell2 = 0;
+    for (int p : prices) {
+      buy1 = Math.max(buy1, -p); // 第一次买
+      sell1 = Math.max(sell1, buy1 + p); // 第一次卖
+      buy2 = Math.max(buy2, sell1 - p); // 第一次卖了后现在买
+      sell2 = Math.max(sell2, buy2 + p); // 第二次买了后现在卖
     }
     return sell2;
   }
@@ -917,6 +925,32 @@ class CCount {
   }
 
   /**
+   * 圆环回原点，返回方案总数，类似爬楼梯，参考 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
+   *
+   * <p>圆环上有 m 个点，编号为 0~m-1，从 0 点出发，每次可以逆时针和顺时针走一步，求 n 步回到 0 点的走法
+   *
+   * <p>dp[i][j] 表示从 0 出发走 i 步到达 j 点的方案，即排列数
+   *
+   * <p>递推，走 n 步到 0 的方案数 = 走 n-1 步到 1 的方案数 + 走 n-1 步到 m-1 的方案数
+   *
+   * @param m 点数
+   * @param n 步数
+   * @return int int
+   */
+  public int backToOrigin(int m, int n) {
+    int[][] dp = new int[m][n + 1]; // 便于从 1 开始递推
+    dp[0][0] = 1;
+    // j+1 or j-1 可能越界 [0, m-1] 因此取余
+    for (int step = 1; step < n + 1; step++) {
+      for (int idx = 0; idx < m; idx++) {
+        int idxNxt = (idx + 1) % m, idxTail = (idx - 1 + m) % m;
+        dp[step][idx] = dp[step - 1][idxNxt] + dp[step - 1][idxTail];
+      }
+    }
+    return dp[n][0];
+  }
+
+  /**
    * 零钱兑换II，返回可以凑成总金额的硬币组合数，硬币可重，即 coins[i] 同个索引可重复选择
    *
    * <p>dp[i] 表示凑成 i 元的路径总数，即组合
@@ -978,33 +1012,6 @@ class CCount {
       }
     }
     return dp[len - 1];
-  }
-
-  /**
-   * 圆环回原点，类似爬楼梯，参考 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
-   *
-   * <p>圆环上有 m 个点，编号为 0~m-1，从 0 点出发，每次可以逆时针和顺时针走一步，求 n 步回到 0 点的走法
-   *
-   * <p>dp[i][j] 表示从 0 出发走 i 步到达 j 点的方案，即排列数
-   *
-   * <p>递推，走 n 步到 0 的方案数 = 走 n-1 步到 1 的方案数 + 走 n-1 步到 m-1 的方案数
-   *
-   * @param m 点数
-   * @param n 步数
-   * @return int int
-   */
-  public int backToOrigin(int m, int n) {
-    // 便于从 1 开始递推
-    int[][] dp = new int[m][n + 1];
-    dp[0][0] = 1;
-    // j+1 or j-1 可能越界 [0, m-1] 因此取余
-    for (int step = 1; step < n + 1; step++) {
-      for (int idx = 0; idx < m; idx++) {
-        int idxNxt = (idx + 1) % m, idxTail = (idx - 1 + m) % m;
-        dp[step][idx] = dp[step - 1][idxNxt] + dp[step - 1][idxTail];
-      }
-    }
-    return dp[n][0];
   }
 
   /**

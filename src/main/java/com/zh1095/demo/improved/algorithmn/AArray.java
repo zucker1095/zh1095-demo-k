@@ -370,15 +370,15 @@ class HHeap extends DefaultArray {
     PriorityQueue<int[]> pq =
         new PriorityQueue<>(
             K, (p1, p2) -> p2[0] * p2[0] + p2[1] * p2[1] - p1[0] * p1[0] - p1[1] * p1[1]);
-    for (int[] point : points) {
+    for (int[] p : points) {
       if (pq.size() < K) {
-        pq.offer(point);
+        pq.offer(p);
         continue;
       }
       // 判断当前点的距离是否小于堆中的最大距离
-      if (pq.comparator().compare(point, pq.peek()) > 0) {
+      if (pq.comparator().compare(p, pq.peek()) > 0) {
         pq.poll();
-        pq.offer(point);
+        pq.offer(p);
       }
     }
     for (int i = 0; i < K; i++) {
@@ -802,13 +802,13 @@ class DichotomyClassic extends DefaultArray {
     if (nums.length < 1 || target < nums[0] || nums[nums.length - 1] < target) {
       return new int[] {-1, -1};
     }
-    int lower = lowerBound(nums, target);
-    if (lower == -1) return new int[] {-1, -1};
-    int upper = upperBound(nums, target, lower);
-    return new int[] {lower, upper};
+    int lowmost = lowmostBound(nums, target);
+    if (lowmost == -1) return new int[] {-1, -1};
+    int himost = himostBound(nums, target, lowmost);
+    return new int[] {lowmost, himost};
   }
 
-  protected int lowerBound(int[] nums, int target) {
+  protected int lowmostBound(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
@@ -819,11 +819,10 @@ class DichotomyClassic extends DefaultArray {
     return nums[lo] == target ? lo : -1;
   }
 
-  private int upperBound(int[] nums, int target, int start) {
+  private int himostBound(int[] nums, int target, int start) {
     int lo = start, hi = nums.length - 1;
     while (lo < hi) {
-      // 需要右开区间
-      int mid = lo + (hi - lo) / 2 + 1;
+      int mid = lo + (hi - lo) / 2 + 1; // 需要右开区间
       // 下一轮搜索区间是 [lo..mid - 1]
       if (nums[mid] <= target) lo = mid;
       else hi = mid - 1;
@@ -857,13 +856,13 @@ class DichotomyClassic extends DefaultArray {
   public int search(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
-      // 根据分支的逻辑，将中间数改成上取整
-      int mid = lo + (hi - lo + 1) / 2;
+      int mid = lo + (hi - lo + 1) / 2; // 向上取整
       if (nums[mid] < nums[hi]) {
-        // target 落在 [mid...hi]
+        // target 落在 [mid, hi]
         if (nums[mid] <= target && target <= nums[hi]) lo = mid;
         else hi = mid - 1;
       } else {
+        // target 落在 [lo, mid-1]
         if (nums[lo] <= target && target <= nums[mid - 1]) hi = mid - 1;
         else lo = mid;
       }
@@ -872,11 +871,11 @@ class DichotomyClassic extends DefaultArray {
   }
 
   /**
-   * 寻找旋转排序数组中的最小值，比较边界
+   * 寻找旋转排序数组中的最小值，无重复，比较边界
    *
    * <p>扩展1，找最大，可复用本题，参考「山脉数组的顶峰索引」
    *
-   * <p>扩展2，存在重复元素，参下
+   * <p>扩展2，寻找旋转排序数组中的最小值II，有重复，参下 annotate
    *
    * <p>扩展3，降序且旋转的数组，求最小值
    *
@@ -884,68 +883,34 @@ class DichotomyClassic extends DefaultArray {
    * @return int int
    */
   public int findMin(int[] nums) {
-    return findMinI(nums);
-  }
-
-  // 已去重
-  private int findMinI(int[] nums) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
       if (nums[mid] < nums[hi]) hi = mid;
-      else lo = mid + 1;
-    }
-    return nums[lo];
-  }
-
-  // 寻找旋转排序数组中的最小值II，有重复
-  private int findMinII(int[] nums) {
-    int lo = 0, hi = nums.length - 1;
-    while (lo < hi) {
-      int mid = (lo + hi) / 2;
-      if (nums[mid] < nums[hi]) hi = mid;
-      else if (nums[mid] == nums[hi]) hi -= 1; // 比上方多的一个判断
+      // 有重复，则判断
+      // else if (nums[mid] == nums[hi]) hi -= 1;
       else lo = mid + 1;
     }
     return nums[lo];
   }
 
   /**
-   * 寻找峰值，比较相邻
+   * 寻找峰值，返回任意一个峰的索引
    *
-   * <p>对比其余二分，此处需要 lo < hi
+   * <p>扩展1，需要返回的峰索引满足左右均单调递增，山脉数组的顶峰索引，参下 annotate
    *
    * @param nums the nums
    * @return int int
    */
   public int findPeakElement(int[] nums) {
     int lo = 0, hi = nums.length - 1;
+    // int lo = 1, hi = nums.length - 2; // peakIndexInMountainArray
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
+      if (nums[mid] < nums[mid + 1]) lo = mid + 1; // 缩减区间为 [mid+1, hi]
       else hi = mid;
     }
-    return lo;
-  }
-
-  /**
-   * 山脉数组的顶峰索引，与上方几乎一致
-   *
-   * <p>TODO
-   *
-   * @param nums
-   * @return
-   */
-  public int peakIndexInMountainArray(int[] nums) {
-    int lo = 1, hi = nums.length - 2;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      // 缩减区间为 [mid+1,hi]
-      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
-      else hi = mid;
-    }
-    // 碰撞时结束
-    return lo;
+    return lo; // 碰撞时结束
   }
 
   /**
@@ -985,7 +950,7 @@ class DichotomyClassic extends DefaultArray {
 
 class DichotomyElse extends DefaultArray {
   /**
-   * 搜索二维矩阵，模拟 BST 以右上角作根开始遍历，复杂度 m+n
+   * 搜索二维矩阵，模拟 BST 以右上角作根开始遍历，O(m+n)
    *
    * <p>I & II 通用，或二分，复杂度为 mlogn
    *
@@ -994,7 +959,7 @@ class DichotomyElse extends DefaultArray {
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
-    int y = 0, x = matrix[0].length - 1;
+    int x = matrix[0].length - 1, y = 0;
     while (-1 < x && y < matrix.length) {
       if (matrix[y][x] < target) y += 1;
       else if (matrix[y][x] == target) return true;
@@ -1114,23 +1079,24 @@ class SSum extends DefaultArray {
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
       if (pivot > target) break;
-      if (i > 0 && pivot == nums[i - 1]) continue;
+      if (i > 0 && pivot == nums[i - 1]) continue; // first deduplication
+      // two sum
       int lo = i + 1, hi = nums.length - 1;
       while (lo < hi) {
         int sum = pivot + nums[lo] + nums[hi];
         if (sum < target) {
           lo += 1;
+        } else if (sum > target) {
+          hi -= 1;
         } else if (sum == target) {
           sums.add(Arrays.asList(pivot, nums[lo], nums[hi]));
-          while (lo < hi && nums[lo] == nums[lo + 1]) {
+          while (lo < hi && nums[lo] == nums[lo + 1]) { // second deduplication
             lo += 1;
           }
           while (lo < hi && nums[hi] == nums[hi - 1]) {
             hi -= 1;
           }
           lo += 1;
-          hi -= 1;
-        } else if (sum > target) {
           hi -= 1;
         }
       }
@@ -1147,8 +1113,7 @@ class SSum extends DefaultArray {
    */
   public int threeSumClosest(int[] nums, int target) {
     Arrays.sort(nums);
-    // 题设至少三位
-    int closestSum = nums[0] + nums[1] + nums[2];
+    int closestSum = nums[0] + nums[1] + nums[2]; // 题设至少三位
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
       if (pivot > target) break;
@@ -1214,9 +1179,9 @@ class SSum extends DefaultArray {
     Arrays.sort(nums);
     int count = 0;
     for (int i = nums.length - 1; i >= 2; i--) {
-      int edge = nums[i], lo = 0, hi = i - 1;
+      int pivot = nums[i], lo = 0, hi = i - 1;
       while (lo < hi) {
-        if (nums[lo] + nums[hi] > edge) {
+        if (nums[lo] + nums[hi] > pivot) {
           count += hi - lo;
           hi -= 1;
         } else {
@@ -1298,16 +1263,16 @@ class PreSum {
    */
   public int subarraySum(int[] nums, int k) {
     int count = 0, preSum = 0;
-    Map<Integer, Integer> countBySum = new HashMap<>();
+    Map<Integer, Integer> sum2Count = new HashMap<>();
     // 需要预存 0 否则会漏掉前几位就满足的情况
     // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
     // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
-    countBySum.put(0, 1);
+    sum2Count.put(0, 1);
     for (int n : nums) {
       preSum += n;
       // 判断是否含有 presum-k 的前缀和，则获悉某区间的和为 k
-      count += countBySum.getOrDefault(preSum - k, 0);
-      countBySum.put(preSum, countBySum.getOrDefault(preSum, 0) + 1);
+      count += sum2Count.getOrDefault(preSum - k, 0);
+      sum2Count.put(preSum, sum2Count.getOrDefault(preSum, 0) + 1);
     }
     return count;
   }
@@ -1327,55 +1292,15 @@ class PreSum {
    */
   public int findMaxLength(int[] nums) {
     int preSum = 0, maxLen = 0;
-    Map<Integer, Integer> firstIdxBySum = new HashMap<>();
-    firstIdxBySum.put(0, -1); // 可能存在前缀和刚好满足条件的情况
+    Map<Integer, Integer> sum2FirstIdx = new HashMap<>();
+    sum2FirstIdx.put(0, -1); // 可能存在前缀和刚好满足条件的情况
     for (int i = 0; i < nums.length; i++) {
       preSum += nums[i] == 0 ? -1 : 1;
       // 因为求的是最长的长度，只记录前缀和第一次出现的下标
-      if (firstIdxBySum.containsKey(preSum))
-        maxLen = Math.max(maxLen, i - firstIdxBySum.get(preSum));
-      else firstIdxBySum.put(preSum, i);
+      if (sum2FirstIdx.containsKey(preSum)) maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
+      else sum2FirstIdx.put(preSum, i);
     }
     return maxLen;
-  }
-
-  /**
-   * 长度最小的子数组，和至少，最短，前缀和搭配滑窗
-   *
-   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
-   *
-   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」或「表现良好的最长时间段」
-   *
-   * @param target the target
-   * @param nums the nums
-   * @return int int
-   */
-  public int minSubArrayLen(int target, int[] nums) {
-    int preSum = 0, minLen = nums.length + 1;
-    int lo = 0, hi = 0;
-    while (hi < nums.length) {
-      // in
-      preSum += nums[hi];
-      while (preSum >= target) {
-        minLen = Math.min(minLen, hi - lo + 1);
-        // out
-        preSum -= nums[lo];
-        lo += 1;
-      }
-      hi += 1;
-    }
-    //    for (int hi = 0; hi < nums.length; i++) {
-    //      preSum += nums[hi];
-    //      if (preSum == target) {
-    //        // 入结果集
-    //        continue;
-    //      }
-    //      while (preSum > target) {
-    //        preSum -= nums[lo];
-    //        lo += 1;
-    //      }
-    //    }
-    return minLen == nums.length + 1 ? 0 : minLen;
   }
 
   /**
@@ -1390,15 +1315,15 @@ class PreSum {
    */
   public int subarraysDivByK(int[] nums, int k) {
     int preSum = 0, count = 0;
-    HashMap<Integer, Integer> countByRemainder = new HashMap<>();
-    countByRemainder.put(0, 1);
+    HashMap<Integer, Integer> remainder2Count = new HashMap<>();
+    remainder2Count.put(0, 1);
     for (int num : nums) {
       preSum += num;
       // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
-      int remainder = (preSum % k + k) % k, curCount = countByRemainder.getOrDefault(remainder, 0);
+      int remainder = (preSum % k + k) % k, curCount = remainder2Count.getOrDefault(remainder, 0);
       // 余数的次数
       count += curCount;
-      countByRemainder.put(remainder, curCount + 1);
+      remainder2Count.put(remainder, curCount + 1);
     }
     return count;
   }
@@ -1423,19 +1348,19 @@ class PreSum {
     for (int i = 1; i <= len; i++) {
       preSum[i] = preSum[i - 1] + nums[i - 1];
     }
-    Map<Integer, Integer> mapping = new HashMap<>();
+    Map<Integer, Integer> visted = new HashMap<>();
     for (int i = 2; i <= len; i++) {
-      mapping.put(preSum[i - 2] % target, 0);
-      if (mapping.containsKey(preSum[i] % target)) return true;
+      visted.put(preSum[i - 2] % target, 0); // can be replaced with HashSet
+      if (visted.containsKey(preSum[i] % target)) return true;
     }
     return false;
     // 方案数
     //    int count = 0;
-    //    mapping.put(0, 1);
+    //    remainder2Count.put(0, 1);
     //    for (int i = 1; i <= nums.length; i++) {
     //      int mod = preSum[i] % target;
-    //      mapping.put(mod, mapping.getOrDefault(mod, 0) + 1);
-    //      if (mapping.containsKey(mod)) count += mapping.get(mod);
+    //      remainder2Count.put(mod, remainder2Count.getOrDefault(mod, 0) + 1);
+    //      if (remainder2Count.containsKey(mod)) count += remainder2Count.get(mod);
     //    }
   }
 
@@ -1446,6 +1371,9 @@ class PreSum {
    *
    * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
    *
+   * <p>参考
+   * https://leetcode.cn/problems/shortest-subarray-with-sum-at-least-k/solution/he-zhi-shao-wei-k-de-zui-duan-zi-shu-zu-by-leetcod/
+   *
    * <p>扩展1，最长，参考「表现良好的最长时间段」，将 <8 视作 -1 否则视作 1，找和为正数的最长子数组
    *
    * @param nums the nums
@@ -1454,13 +1382,13 @@ class PreSum {
    */
   public int shortestSubarray(int[] nums, int k) {
     int len = nums.length, minLen = len + 1;
-    int[] preSum = new int[len + 1];
+    long[] preSum = new long[len + 1];
     for (int i = 0; i < len; i++) {
       preSum[i + 1] = preSum[i] + nums[i];
     }
     Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < preSum.length; i++) {
-      int sum = preSum[i];
+      long sum = preSum[i];
       while (!mq.isEmpty() && preSum[mq.getLast()] >= sum) {
         mq.removeLast();
       }
@@ -1765,7 +1693,7 @@ class Delete extends DefaultArray {
 /** 遍历相关 */
 class Traversal extends DefaultArray {
   /**
-   * 轮转数组 / 旋转数组，反转三次，all & [0,k-1] & [k,end]
+   * 轮转数组 / 旋转数组，反转三次，the whole & [0,k-1] & [k,end]
    *
    * @param nums the nums
    * @param k the k
@@ -2125,23 +2053,18 @@ class DicOrder extends DefaultArray {
    * @return int int
    */
   public int findKthNumber(int n, int k) {
-    // 字典序最小即起点为 1，其前缀为 1
-    int count = 1, prefix = 1;
+    int count = 1, prefix = 1; // 字典序最小即起点为 1，其前缀为 1
     while (count < k) {
-      // 当前 prefix 峰的值
       int curCount = count(prefix, n);
-      if (curCount + count > k) {
-        // 本层，往下层遍历，一直遍历到第 K 个推出循环
+      if (curCount + count > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
         prefix *= 10;
         count += 1;
-      } else {
-        // 去下个前缀，即相邻子树遍历
+      } else { // 去下个前缀，即相邻子树遍历
         prefix += 1;
         count += curCount;
       }
     }
-    // 退出循环时 cur==k 正好找到
-    return prefix;
+    return prefix; // 退出循环时 cur==k 正好找到
   }
 
   // DFS prefix 为根的树，统计至 n 的个数

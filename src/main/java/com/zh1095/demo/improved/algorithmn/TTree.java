@@ -646,8 +646,7 @@ class BBSTInorder {
       if (count == 0) return cur.val;
       cur = cur.left;
     }
-    // impossible
-    return -1;
+    return -1; // impossible
   }
 
   /**
@@ -657,9 +656,9 @@ class BBSTInorder {
    * @return minimum difference
    */
   public int getMinimumDifference(TreeNode root) {
-    int minDiff = Integer.MAX_VALUE, pre = minDiff;
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
+    int minDiff = Integer.MAX_VALUE, pre = minDiff;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
@@ -681,8 +680,8 @@ class BBSTInorder {
    * @param root the root
    */
   public void recoverTree(TreeNode root) {
-    TreeNode n1 = null, n2 = null, pre = new TreeNode(Integer.MIN_VALUE), cur = root;
     Deque<TreeNode> stack = new ArrayDeque<>();
+    TreeNode n1 = null, n2 = null, pre = new TreeNode(Integer.MIN_VALUE), cur = root;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
@@ -1575,7 +1574,7 @@ class BacktrackingSearch extends DDFS {
   }
 
   /**
-   * 单词搜索
+   * 单词搜索 / 矩阵中的路径
    *
    * @param board the board
    * @param word the word
@@ -1711,8 +1710,7 @@ class BacktrackingElse extends DDFS {
    */
   public List<String> restoreIpAddresses(String s) {
     List<String> res = new ArrayList<>();
-    // 特判
-    if (s.length() > 12 || s.length() < 4) return res;
+    if (s.length() > 12 || s.length() < 4) return res; // 特判
     backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
     return res;
   }
@@ -1723,7 +1721,7 @@ class BacktrackingElse extends DDFS {
       if (segment == 0) res.add(String.join(".", path));
       return;
     }
-    // 每段只截取三位数
+    // only truncate 3 digits per segment
     for (int i = start; i < start + 3 && i < s.length(); i++) {
       // 当前段分配的位数不够，或分配的位数过多，或数字过大
       if (segment * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {

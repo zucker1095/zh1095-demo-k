@@ -264,18 +264,16 @@ class DData {
   /**
    * LRU缓存机制
    *
-   * <p>hash 保证 O(1) 寻址 & 链表保证 DML 有序
+   * <p>hash 保证 O(1) 寻址 & 链表保证 DML 有序，双向保证将一个节点移到双向链表的头部，可以分成「删除该节点」&「在双向链表的头部添加节点」两步操作都 O(1)
    *
-   * <p>双向保证将一个节点移到双向链表的头部，可以分成「删除该节点」和「在双向链表的头部添加节点」两步操作，都可以在 O(1) 时间内完成
+   * <p>To be implemented: addToHead, moveToHead, removeTail, removeTail.
    *
-   * <p>扩展1，处理输入输出
+   * <p>扩展1，带超时，可以懒删除或 Daemon 随机 scan
    *
    * <p>扩展2，线程安全，空结点 throw exception，分别对 hash & 双向链表改用 ConcurrentHashMap & 读写锁，前者可以使用另一把锁代替
-   *
-   * <p>扩展3，带超时
    */
   public class LRUCache {
-    private final Map<Integer, DLinkedNode> cache = new HashMap<>();
+    private final Map<Integer, DLinkedNode> key2Node = new HashMap<>();
     private final DLinkedNode head = new DLinkedNode(), tail = new DLinkedNode(); // dummy
     private final int capacity;
     /**
@@ -296,7 +294,7 @@ class DData {
      * @return the int
      */
     public int get(int key) {
-      DLinkedNode node = cache.get(key);
+      DLinkedNode node = key2Node.get(key);
       if (node == null) return -1;
       moveToHead(node);
       return node.value;
@@ -311,18 +309,18 @@ class DData {
      * @param value the value
      */
     public void put(int key, int value) {
-      DLinkedNode node = cache.get(key);
+      DLinkedNode node = key2Node.get(key);
       if (node != null) {
         node.value = value;
         moveToHead(node);
         return;
       }
       DLinkedNode newNode = new DLinkedNode(key, value);
-      cache.put(key, newNode);
+      key2Node.put(key, newNode);
       addToHead(newNode);
-      if (cache.size() > capacity) {
+      if (key2Node.size() > capacity) {
         DLinkedNode tail = removeTail();
-        cache.remove(tail.key);
+        key2Node.remove(tail.key);
       }
     }
 
@@ -461,9 +459,7 @@ class DData {
   }
 
   /**
-   * 最小栈
-   *
-   * <p>全局保存最小值，入栈存差并更新，出栈与取顶均需判负
+   * 最小栈，全局保存最小值，入栈存差并更新，出栈与取顶均需判负
    *
    * <p>参考 https://yeqown.xyz/2018/03/01/Stack%E5%AE%9E%E7%8E%B0O1%E7%9A%84Min%E5%92%8CMax/
    *
@@ -484,10 +480,8 @@ class DData {
      */
     public void push(int x) {
       if (stack.isEmpty()) min = x;
-      //      if (stack.isEmpty()) max = x;
       stack.push(x - min);
       if (x < min) min = x;
-      //      if (x > max) max = x;
     }
 
     /**
@@ -499,7 +493,6 @@ class DData {
       if (stack.isEmpty()) return;
       int pop = stack.pop();
       if (pop < 0) min -= pop;
-      //      if (pop > 0) max -= pop;
     }
 
     /**
@@ -509,9 +502,8 @@ class DData {
      */
     public int top() {
       int top = stack.peek();
-      // 负数的话，出栈的值保存在 min 中，出栈元素加上最小值即可
+      // 负数则出栈的值保存在 min 中，出栈元素加上最小值即可
       return top < 0 ? min : top + min;
-      //      return top > 0 ? max : max + top;
     }
 
     /**

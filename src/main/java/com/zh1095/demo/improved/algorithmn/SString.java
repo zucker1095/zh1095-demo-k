@@ -252,6 +252,43 @@ class WWindow {
   }
 
   /**
+   * 长度最小的子数组，和至少，最短，滑窗
+   *
+   * <p>扩展1，列出所有满足和为 target 的连续子序列，参考「和为k的子数组」，参下 annotate
+   *
+   * <p>扩展2，里边有负数，参考「和至少为k的最短子数组」或「表现良好的最长时间段」
+   *
+   * @param target the target
+   * @param nums the nums
+   * @return int int
+   */
+  public int minSubArrayLen(int target, int[] nums) {
+    int winSum = 0, minLen = nums.length + 1;
+    int lo = 0, hi = 0;
+    while (hi < nums.length) {
+      winSum += nums[hi]; // in
+      while (winSum >= target) {
+        minLen = Math.min(minLen, hi - lo + 1);
+        winSum -= nums[lo]; // out
+        lo += 1;
+      }
+      hi += 1;
+    }
+    //    for (int hi = 0; hi < nums.length; i++) {
+    //      winSum += nums[hi];
+    //      if (winSum == target) {
+    //        // 入结果集
+    //        continue;
+    //      }
+    //      while (winSum > target) {
+    //        winSum -= nums[lo];
+    //        lo += 1;
+    //      }
+    //    }
+    return minLen == nums.length + 1 ? 0 : minLen;
+  }
+
+  /**
    * 至多包含K个不同字符的最长子串，三步同上
    *
    * @param s the s
@@ -494,7 +531,7 @@ class SStack {
   /**
    * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
    *
-   * <p>需要分别保存计数和字符串，且需要两对分别保存当前和括号内
+   * <p>recursion 参考「基本计算器」
    *
    * @param s the s
    * @return string string
@@ -569,28 +606,35 @@ class SStack {
     int sign = 1;
     Deque<Integer> opStack = new ArrayDeque<>();
     opStack.offerLast(sign);
-    for (char ch : s.toCharArray()) {
-      ch = Character.toLowerCase(ch);
+    for (int i = 0; i < s.length(); i++) {
+      char ch = Character.toLowerCase(s.charAt(i));
       if ('a' <= ch && ch <= 'z') counter[ch - 'a'] += sign;
       else if (ch == '(') opStack.offerLast(sign);
       else if (ch == ')') opStack.pollLast();
       else if (ch == '+') sign = opStack.peekLast();
       else if (ch == '-') sign = -opStack.peekLast();
-      // 基本计算器II
+      // 基本计算器
       //      else {
-      //        while (i < n && Character.isDigit(s.charAt(i))) {
-      //          long num = 0;
-      //          num = num * 10 + s.charAt(i) - '0';
-      //          i++;
+      //        long num = 0;
+      //        while (i < chs.length && Character.isDigit(chs[i])) {
+      //          num = num * 10 + chs[i] - '0';
+      //          i += 1;
       //        }
-      //        res += sign * num;
+      //        i -= 1;
+      //        ret += sign * num;
       //      }
     }
     return counter;
   }
 
   /**
-   * 基本计算器
+   * 基本计算器，思路类似「字符串解码」
+   *
+   * <p>单栈存放 oprations 参考
+   * https://leetcode.cn/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-leetcode-solution-jvir/
+   *
+   * <p>不包含括号，则参考
+   * https://leetcode.cn/problems/basic-calculator-ii/solution/ji-ben-ji-suan-qi-ii-by-leetcode-solutio-cm28/
    *
    * <p>扩展1，同时有括号与五种运算符，才使用双栈，否则建议单栈即可
    *
@@ -609,18 +653,14 @@ class SStack {
             put('^', 3);
           }
         };
-    //    s = s.replaceAll(" ", "");
-    // 所有的数字
-    Deque<Integer> numStack = new ArrayDeque<>();
-    // 防止第一个数为负数
-    numStack.addLast(0);
-    // 存放所有非数字的操作
-    Deque<Character> opStack = new ArrayDeque<>();
+    Deque<Integer> numStack = new ArrayDeque<>(); // 所有的数字
+    numStack.addLast(0); // 防止第一个数为负数
+    Deque<Character> opStack = new ArrayDeque<>(); // 存放所有非数字的操作
     char[] chs = s.toCharArray();
     for (int i = 0; i < chs.length; i++) {
       char cur = chs[i];
       if (cur == ' ') continue;
-      if (cur == '(') {
+      else if (cur == '(') {
         opStack.addLast(cur);
       } else if (cur == ')') {
         // 计算到最近一个左括号为止
@@ -745,18 +785,17 @@ class SSubString {
    * @return string string
    */
   public String longestCommonPrefix(String[] strs) {
-    if (strs.length == 0) return "";
-    int count = strs.length;
-    // 需要特判
-    for (int i = 0; i < strs[0].length(); i++) {
-      char pivot = strs[0].charAt(i);
-      for (int j = 1; j < count; j++) {
+    if (strs.length == 0) return ""; // 需要特判
+    String ref = strs[0];
+    for (int i = 0; i < ref.length(); i++) {
+      char pivot = ref.charAt(i);
+      for (int j = 1; j < strs.length; j++) { // 有 j 个字符需要比对
         if (i == strs[j].length() || strs[j].charAt(i) != pivot) {
-          return strs[0].substring(0, i);
+          return ref.substring(0, i);
         }
       }
     }
-    return strs[0];
+    return ref;
   }
 
   /**
@@ -1296,16 +1335,15 @@ class WWord extends DefaultSString {
     Set<String> wordSet = new HashSet(); // 仅用于 O(1) 匹配
     for (String w : wordDict) {
       wordSet.add(w);
-      // dp[i] 探索至最长的单词即可
-      maxLen = Math.max(maxLen, w.length());
+      maxLen = Math.max(maxLen, w.length()); // dp[i] 探索至最长的单词即可
     }
-
     boolean[] dp = new boolean[len + 1];
     dp[0] = true;
     for (int i = 1; i < len + 1; i++) {
-      for (int j = i; j > -1; j--) {
+      for (int j = i; j > -1; j--) { // O(n^2)
         if (j < i - maxLen) break; // curing
-        if (dp[j] && wordSet.contains(s.substring(j, i))) {
+        String word = s.substring(j, i);
+        if (dp[j] && wordSet.contains(word)) {
           dp[i] = true;
           break;
         }
