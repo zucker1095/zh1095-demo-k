@@ -342,7 +342,7 @@ class WWindow {
   }
 
   /**
-   * 绝对差不超过限制的最长连续子数组
+   * 绝对差不超过限制的最长连续子数组，数组内任意元素差有上限。
    *
    * <p>滑窗 & 双单调队列维护窗口内的最值 滑窗 R 右移的过程意味着新的值进窗口，维护更新单调队列
    *
@@ -375,7 +375,7 @@ class WWindow {
         if (minMQ.peekFirst() < lo) minMQ.pollFirst();
       }
       maxLen = Math.max(maxLen, hi - lo + 1);
-      hi++;
+      hi += 1;
     }
     return maxLen;
   }
@@ -805,22 +805,22 @@ class SSubString {
    * @return the string
    */
   public String longestPalindrome(String s) {
+    char[] chs = s.toCharArray();
     int lo = 0, hi = 0;
-    for (int i = 0; i < s.length(); i++) {
-      int odd = findLongestPalindrome(s, i, i),
-          even = findLongestPalindrome(s, i, i + 1),
-          len = Math.max(odd, even);
-      if (len > hi - lo) {
-        lo = i - (len - 1) / 2;
-        hi = i + len / 2;
+    for (int i = 0; i < chs.length; i++) {
+      int odd = findLongestPalindrome(chs, i, i),
+          even = findLongestPalindrome(chs, i, i + 1),
+          maxLen = Math.max(odd, even);
+      if (maxLen > hi - lo) {
+        lo = i - (maxLen - 1) / 2;
+        hi = i + maxLen / 2;
       }
     }
     return s.substring(lo, hi + 1);
   }
 
-  // 分别从 lo & hi 扩散，直到二者所在字符不同
-  private int findLongestPalindrome(String s, int lo, int hi) {
-    while (-1 < lo && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
+  private int findLongestPalindrome(char[] chs, int lo, int hi) {
+    while (-1 < lo && hi < chs.length && chs[lo] == chs[hi]) {
       lo -= 1;
       hi += 1;
     }
@@ -873,7 +873,7 @@ class SSubString {
       counter[ch - 'a'] += 1;
     }
     for (char ch : chs) {
-      // 找到首个次数少于 k 的字符，切分为多个小段分治
+      // split origin string by first char whose frequency is less than k to divide & conquer
       if (counter[ch - 'a'] >= k) continue;
       int maxLen = 0;
       for (String seg : s.split(String.valueOf(ch))) {
@@ -897,9 +897,8 @@ class SSubString {
   public int strStr(String haystack, String needle) {
     char[] chs = haystack.toCharArray(), chsNeedle = needle.toCharArray();
     int lenChs = chs.length, lenNeedle = chsNeedle.length;
-    // 枚举原串的发起点
-    for (int i = 0; i <= lenChs - lenNeedle; i++) {
-      int p1 = i, p2 = 0;
+    for (int i = 0; i <= lenChs - lenNeedle; i++) { // 枚举原串的发起点
+      int p1 = i, p2 = 0; // 开始一轮匹配
       while (p2 < lenNeedle && chs[p1] == chsNeedle[p2]) {
         p1 += 1;
         p2 += 1;
@@ -1278,43 +1277,30 @@ class CConvert {
 /** 子串相关，单词搜索参考 TTree */
 class WWord extends DefaultSString {
   /**
-   * 翻转字符串里的单词，Java 无法实现 O(1) space，因此要求 s 原地即可
+   * 翻转字符串里的单词，如 www.abc.com -> com.abc.www
    *
-   * <p>扩展1，类似翻转 url，如 www.abc.com -> com.abc.www
+   * <p>保证空格只有单词间的单个，先翻转整个串，再逐个翻转
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/reverse-words-in-a-string/solution/fan-zhuan-zi-fu-chuan-li-de-dan-ci-by-leetcode-sol/
    *
    * @param s the s
    * @return string string
    */
   public String reverseWords(String s) {
-    int start = 0, end = 0;
-    // 1.去首尾空格并翻转整个
+    // 1.去除首尾空格 & 翻转整个串
     StringBuilder str = new StringBuilder(s.trim()).reverse();
-    for (int i = 0; i < str.length(); i++) {
-      // 2.单词间保留一个空格
-      if (str.charAt(i) != ' ') continue;
-      int write = i + 1;
-      while (str.charAt(write) == ' ') {
-        write += 1;
-      }
-      str.delete(i + 1, write);
-      // 3.翻转单个单词
-      end = i - 1;
-      revSingleWord(str, start, end);
-      start = i + 1;
-    }
-    // 4.翻转整个单词
-    revSingleWord(str, start, str.length() - 1);
-    return str.toString();
-  }
+    char[] chs = new char[0];
+    int write = 0, readStart = 0;
+    for (int readEnd = 0; readEnd < s.length(); readEnd++) {
+      if (s.charAt(readEnd) != ' ') continue;
 
-  private void revSingleWord(StringBuilder sentence, int lo, int hi) {
-    while (lo < hi) {
-      char temp = sentence.charAt(lo);
-      sentence.setCharAt(lo, sentence.charAt(hi));
-      sentence.setCharAt(hi, temp);
-      lo += 1;
-      hi -= 1;
+      for (int i = readEnd - 1; i >= write; i++) {
+        chs[i] = chs[readEnd];
+      }
     }
+
+    return str.toString();
   }
 
   /**

@@ -231,7 +231,8 @@ class HHeap extends DefaultArray {
   /**
    * 数组中的第k个最大元素，原地维护小根堆
    *
-   * <p>堆化 [0,k] & 依次入堆 [k+1,l-1] 的元素 & 最终堆顶即 [0]
+   * <p>堆化 [0,k] & 依次入堆 [k+1,l-1] 的元素 & 最终堆顶即 [0]，具体过程参考动图
+   * https://leetcode.cn/problems/sort-an-array/solution/pai-xu-shu-zu-by-leetcode-solution/
    *
    * <p>扩展1，寻找两个有序数组的第 k 大，参下「寻找两个有序数组的中位数」
    *
@@ -239,7 +240,7 @@ class HHeap extends DefaultArray {
    *
    * <p>扩展3，如何只选出 [n, m]，分别建两个长度为 n & m-n 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
    *
-   * <p>扩展4，不同的量级如何选择，如 10 & 100 & 10k，分别为计数排序，快速选择 or 建堆，分治 & 外排
+   * <p>扩展4，不同量级的策略，如 10 & 100 & 10k 分别为计数排序，快速选择 or 建堆，分治 & 外排
    *
    * @param nums the nums
    * @param k the k
@@ -247,9 +248,10 @@ class HHeap extends DefaultArray {
    */
   public int findKthLargest(int[] nums, int k) {
     // 对前 k 个元素建小根堆，即堆化 [0,k-1] 区间的元素
-    for (int i = 0; i < k; i++) {
-      swim(nums, i);
-    }
+    //    for (int i = 0; i < k; i++) {
+    //      swim(nums, i);
+    //    }
+    heapify(nums, k);
     // 剩下的元素与堆顶比较，若大于堆顶则去掉堆顶，再将其插入
     for (int i = k; i < nums.length; i++) {
       if (priorityThan(nums[i], nums[0])) continue;
@@ -263,7 +265,6 @@ class HHeap extends DefaultArray {
     //      idx--;
     //      down(nums, 0, idx - 1);
     //    }
-    // 结束后第 k 个大的数即小根堆堆顶
     return nums[0];
   }
 
@@ -275,15 +276,11 @@ class HHeap extends DefaultArray {
    * @param nums the nums
    */
   public void heapSort(int[] nums) {
-    int idx = nums.length - 1;
-    heapify(nums, nums.length);
-    // 循环不变量，区间 [0, idx] 堆有序
-    while (idx >= 1) {
-      // 把堆顶元素交换到数组末尾
-      swap(nums, 0, idx);
-      idx -= 1;
-      // 下标 0 位置下沉操作，使得区间 [0, i] 堆有序
-      sink(nums, 0, idx);
+    int len = nums.length - 1;
+    heapify(nums, len);
+    for (int i = len; i >= 1; i--) { // 循环不变量，[0:idx] 堆有序
+      swap(nums, i, 0); // 把堆顶元素交换到数组末尾
+      sink(nums, 0, i - 1); // 下标 0 位置下沉操作，使得 [0:i] 堆有序
     }
   }
 
@@ -952,6 +949,8 @@ class DichotomyElse extends DefaultArray {
   /**
    * 搜索二维矩阵，模拟 BST 以右上角作根开始遍历，O(m+n)
    *
+   * <p>行内有序，行间不重叠。否则，参考「有序矩阵中第k小的元素」
+   *
    * <p>I & II 通用，或二分，复杂度为 mlogn
    *
    * @param matrix the matrix
@@ -970,6 +969,8 @@ class DichotomyElse extends DefaultArray {
 
   /**
    * 有序矩阵中第k小的元素，题设元素唯一，因此对数值进行二分，即值域
+   *
+   * <p>只保证行内与单列有序，意味着行间区间可能重叠。
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/solution/er-fen-chao-ji-jian-dan-by-jacksu1024/
@@ -995,7 +996,7 @@ class DichotomyElse extends DefaultArray {
     int count = 0, x = 0, y = matrix.length - 1;
     while (-1 < y && x < matrix[0].length) {
       if (matrix[y][x] <= target) {
-        // 第 j 列有 i+1 个元素 <=mid
+        // 第 j 列有 i+1 个元素 <= mid
         count += y + 1;
         x += 1;
       } else {
@@ -1039,7 +1040,7 @@ class DichotomyElse extends DefaultArray {
    * @return
    */
   public int[][] findContinuousSequence(int target) {
-    List<int[]> res = new ArrayList<int[]>();
+    List<int[]> seq = new ArrayList<int[]>();
     int lo = 1, hi = 2;
     while (lo < hi) {
       // 区间求和公式
@@ -1051,13 +1052,56 @@ class DichotomyElse extends DefaultArray {
         for (int i = lo; i <= hi; i++) {
           ans[i - lo] = i;
         }
-        res.add(ans);
+        seq.add(ans);
         lo += 1;
       } else {
         lo += 1;
       }
     }
-    return res.toArray(new int[res.size()][]);
+    return seq.toArray(new int[seq.size()][]);
+  }
+
+  /**
+   * 分割数组的最大值
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/split-array-largest-sum/solution/er-fen-cha-zhao-by-liweiwei1419-4/
+   *
+   * @param nums
+   * @param m
+   * @return
+   */
+  public int splitArray(int[] nums, int m) {
+    int max = 0, sum = 0;
+    // 计算子数组各自和的最大值的上下界
+    for (int n : nums) {
+      max = Math.max(max, n);
+      sum += n;
+    }
+    // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
+    int lo = max, hi = sum;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2, splits = split(nums, mid);
+      // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要调大该值
+      if (splits > m) lo = mid + 1; // 下一轮搜索的区间是 [mid + 1, right]
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  // 满足不超过「子数组各自的和的最大值」的分割数
+  private int split(int[] nums, int maxIntervalSum) {
+    // 至少是一个分割 & 当前区间的和
+    int splits = 1, curIntervalSum = 0;
+    for (int n : nums) {
+      // 尝试加上当前遍历的这个数，如果加上去超过了「子数组各自的和的最大值」，就不加这个数，另起炉灶
+      if (curIntervalSum + n > maxIntervalSum) {
+        curIntervalSum = 0;
+        splits += 1;
+      }
+      curIntervalSum += n;
+    }
+    return splits;
   }
 }
 
@@ -1167,7 +1211,7 @@ class SSum extends DefaultArray {
   }
 
   /**
-   * 有效三角形的个数
+   * 有效三角形的个数，类似三数之和
    *
    * <p>参考
    * https://leetcode.cn/problems/valid-triangle-number/solution/ming-que-tiao-jian-jin-xing-qiu-jie-by-jerring/
@@ -1250,7 +1294,9 @@ class PreSum {
   }
 
   /**
-   * 和为k的子数组，返回子数组数量，严格相等
+   * 和为k的子数组，返回其数量，严格相等
+   *
+   * <p>设 [i:j] 子数组和为 k，则有 pre[j−1] == pre[i]-k，因此计数 pre[j−1] 即可
    *
    * <p>参考
    * https://leetcode-cn.com/problems/subarray-sum-equals-k/solution/de-liao-yi-wen-jiang-qian-zhui-he-an-pai-yhyf/
@@ -1270,8 +1316,7 @@ class PreSum {
     sum2Count.put(0, 1);
     for (int n : nums) {
       preSum += n;
-      // 判断是否含有 presum-k 的前缀和，则获悉某区间的和为 k
-      count += sum2Count.getOrDefault(preSum - k, 0);
+      if (sum2Count.containsKey(preSum - k)) count += sum2Count.get(preSum - k);
       sum2Count.put(preSum, sum2Count.getOrDefault(preSum, 0) + 1);
     }
     return count;
@@ -1282,7 +1327,7 @@ class PreSum {
    *
    * <p>找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
    *
-   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小下标」
+   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小右边界」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
@@ -1292,13 +1337,14 @@ class PreSum {
    */
   public int findMaxLength(int[] nums) {
     int preSum = 0, maxLen = 0;
-    Map<Integer, Integer> sum2FirstIdx = new HashMap<>();
-    sum2FirstIdx.put(0, -1); // 可能存在前缀和刚好满足条件的情况
+    Map<Integer, Integer> sum2FirstHi = new HashMap<>();
+    sum2FirstHi.put(0, -1); // 可能存在前缀和刚好满足条件的情况
     for (int i = 0; i < nums.length; i++) {
       preSum += nums[i] == 0 ? -1 : 1;
-      // 因为求的是最长的长度，只记录前缀和第一次出现的下标
-      if (sum2FirstIdx.containsKey(preSum)) maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
-      else sum2FirstIdx.put(preSum, i);
+      // 画图可知，i - map[preSum] 即和为 0 的数组的长度
+      if (sum2FirstHi.containsKey(preSum)) maxLen = Math.max(maxLen, i - sum2FirstHi.get(preSum));
+      // 仍未遍历到和为 0 的子数组，更新即可
+      else sum2FirstHi.put(preSum, i);
     }
     return maxLen;
   }
@@ -1860,49 +1906,6 @@ class Traversal extends DefaultArray {
     }
     return res;
   }
-
-  /**
-   * 分割数组的最大值
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/split-array-largest-sum/solution/er-fen-cha-zhao-by-liweiwei1419-4/
-   *
-   * @param nums
-   * @param m
-   * @return
-   */
-  public int splitArray(int[] nums, int m) {
-    int max = 0, sum = 0;
-    // 计算子数组各自和的最大值的上下界
-    for (int num : nums) {
-      max = Math.max(max, num);
-      sum += num;
-    }
-    // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
-    int lo = max, hi = sum;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2, splits = split(nums, mid);
-      // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要将「子数组各自的和的最大值」调大
-      if (splits > m) lo = mid + 1; // 下一轮搜索的区间是 [mid + 1, right]
-      else hi = mid;
-    }
-    return lo;
-  }
-
-  // 满足不超过「子数组各自的和的最大值」的分割数
-  private int split(int[] nums, int maxIntervalSum) {
-    // 至少是一个分割 & 当前区间的和
-    int splits = 1, curIntervalSum = 0;
-    for (int num : nums) {
-      // 尝试加上当前遍历的这个数，如果加上去超过了「子数组各自的和的最大值」，就不加这个数，另起炉灶
-      if (curIntervalSum + num > maxIntervalSum) {
-        curIntervalSum = 0;
-        splits += 1;
-      }
-      curIntervalSum += num;
-    }
-    return splits;
-  }
 }
 
 /** 字典序相关 */
@@ -1919,18 +1922,21 @@ class DicOrder extends DefaultArray {
   public void nextPermutation(int[] nums) {
     int peak = nums.length - 1; // nums.length - 2
     while (peak > 0) {
-      if (nums[peak] > nums[peak - 1]) { // find the first peak
-        Arrays.sort(nums, peak, nums.length); // sort from its idx to end
+      // 1.find the first peak and sort from its idx to end
+      if (nums[peak] > nums[peak - 1]) {
+        Arrays.sort(nums, peak, nums.length);
         break;
       }
       peak -= 1;
     }
+    // 2.find the second peak larger than IDX-1 and swap them
     for (int j = peak; j < nums.length; j++) {
-      if (nums[j] <= nums[peak - 1]) continue; // find the second peak larger than IDX-1
-      swap(nums, peak - 1, j); // swap them
+      if (nums[j] <= nums[peak - 1]) continue;
+      swap(nums, peak - 1, j);
       return;
     }
-    Arrays.sort(nums); // monotonic without peaks
+    // 3.Otherwise, monotonic without peaks
+    Arrays.sort(nums);
   }
 
   /**
@@ -1986,11 +1992,11 @@ class DicOrder extends DefaultArray {
       strs.add(String.valueOf(n));
     }
     strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
-    for (String str : strs) {
-      maxNum.append(str);
+    for (String n : strs) {
+      maxNum.append(n);
     }
     return maxNum.toString();
-    // 最小数需要去除前导零，因为可能有 02>20
+    // 「最小数」需要去除前导零，因为可能有 02>20
     //    int start = 0;
     //    while (start < nums.length - 1 && res.charAt(start) == '0') {
     //      start += 1;
@@ -2093,8 +2099,7 @@ class DicOrder extends DefaultArray {
     List<Integer> res = new ArrayList<>();
     int num = 1;
     while (res.size() < n) {
-      // 1.单分支向下遍历
-      while (num <= n) {
+      while (num <= n) { // 1.深度遍历
         res.add(num);
         num *= 10;
       }
@@ -2102,10 +2107,42 @@ class DicOrder extends DefaultArray {
       while (num % 10 == 9 || num > n) {
         num /= 10;
       }
-      // 3.下一个子节点
-      num += 1;
+      num += 1; // 3.根的下一个子节点
     }
     return res;
+  }
+
+  /**
+   * 第k个排列，[1:n] 所有数字全排列按数字序第 k 小。
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/permutation-sequence/solution/hui-su-jian-zhi-python-dai-ma-java-dai-ma-by-liwei/
+   *
+   * @param n
+   * @param k
+   * @return
+   */
+  public String getPermutation(int n, int k) {
+    // 阶乘即该节点叶节点总数
+    final int[] factorials = new int[n + 1];
+    factorials[0] = 1;
+    for (int i = 1; i < n; i++) {
+      factorials[i] = factorials[i - 1] * i;
+    }
+    boolean[] visited = new boolean[n + 1];
+    StringBuilder permutation = new StringBuilder(n);
+    for (int i = n - 1; i > -1; i--) {
+      int cnt = factorials[i];
+      for (int j = 1; j <= n; j++) {
+        if (!visited[j] && cnt >= k) {
+          visited[j] = true;
+          permutation.append(j);
+          break;
+        }
+        if (cnt < k) k -= cnt;
+      }
+    }
+    return permutation.toString();
   }
 
   /**

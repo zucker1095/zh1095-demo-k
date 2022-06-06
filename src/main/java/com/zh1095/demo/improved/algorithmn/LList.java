@@ -5,6 +5,8 @@ import java.util.*;
 /**
  * 收集所有链表相关，建议直接记代码行数，因为链表的题型基本没有冗余的步骤
  *
+ * <p>选择尾插则引入哑节点
+ *
  * <p>尾插 & 暂存 & 变向 & 步进
  *
  * <p>反转 & 环形 & 回文 & 合并 & 删除
@@ -90,25 +92,26 @@ public class LList {
    * @return
    */
   public Node copyRandomList(Node head) {
+    // 1.在每个原节点后面创建一个新节点
     Node cur = head;
     while (cur != null) {
-      // 1.在每个原节点后面创建一个新节点
       Node newNode = new Node(cur.val);
       newNode.next = cur.next;
       cur.next = newNode;
       cur = newNode.next;
     }
 
+    // 2.逐一设置新节点的随机节点
     cur = head;
     while (cur != null) {
       // 保证 DAG
       if (cur.random != null) cur.next.random = cur.random.next;
-      // 2.逐一设置新节点的随机节点
       cur = cur.next.next;
     }
 
+    // 3.分离
     Node dummy = new Node(-1), lo = dummy, hi = head;
-    while (hi != null) { // 分离
+    while (hi != null) {
       lo.next = hi.next;
       lo = lo.next;
       hi.next = lo.next;
@@ -146,13 +149,10 @@ public class LList {
 
   private class Node {
     int val;
-    Node next;
-    Node random;
+    Node next, random;
 
     public Node(int val) {
       this.val = val;
-      this.next = null;
-      this.random = null;
     }
   }
 }
@@ -277,20 +277,21 @@ class ReverseList extends LList {
    */
   public ListNode rotateRight(ListNode head, int k) {
     if (head == null || head.next == null || k == 0) return head;
-    int len = 1;
     ListNode cur = head;
+    // 1.count length
+    int len = 1;
     while (cur.next != null) {
       cur = cur.next;
       len += 1;
     }
-
+    // 2.find the next count node
     int count = len - k % len;
     if (count == len) return head;
     cur.next = head;
     for (int i = count; i > 0; i--) {
       cur = cur.next;
     }
-
+    // 3.merge and separate
     ListNode newHead = cur.next;
     cur.next = null;
     return newHead;
@@ -422,15 +423,15 @@ class ReorderList extends LList {
   /**
    * 重排奇偶链表，奇数位置升序，偶数位置反之，升序排列整个链表
    *
-   * <p>分别取出奇偶链表，奇数位链表需断尾 & 反转偶数位链表 & 合并
-   *
    * <p>参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
    *
    * @param head
    * @return
    */
   public ListNode sortOddEvenList(ListNode head) {
+    // 分隔奇偶链表
     ListNode evenHead = separateOddEvenList(head);
+    // 反转偶链表，并合并二者
     return mergeTwoLists(head, reverseList(evenHead));
   }
 
@@ -560,13 +561,9 @@ class ReorderList extends LList {
    * @return list node
    */
   public ListNode partition(ListNode head, int x) {
-    ListNode ltDummy = new ListNode(),
-        ltHead = ltDummy,
-        gteDummy = new ListNode(),
-        gteHead = gteDummy,
-        cur = head;
-    while (cur != null) {
-      // 如果当前节点的值小于x，则把当前节点挂到小链表的后面
+    ListNode ltDummy = new ListNode(), gteDummy = new ListNode();
+    ListNode ltHead = ltDummy, gteHead = gteDummy;
+    for (ListNode cur = head; cur != null; cur = cur.next) {
       if (cur.val < x) {
         ltHead.next = cur;
         ltHead = ltHead.next;
@@ -574,9 +571,8 @@ class ReorderList extends LList {
         gteHead.next = cur;
         gteHead = gteHead.next;
       }
-      cur = cur.next;
     }
-    // 合并
+    // merge
     ltHead.next = gteDummy.next;
     gteHead.next = null;
     return ltDummy.next;

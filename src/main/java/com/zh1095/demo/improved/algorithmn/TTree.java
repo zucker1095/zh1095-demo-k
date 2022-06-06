@@ -488,20 +488,20 @@ class DDFS {
     Map<Integer, TreeNode> parents = new HashMap<Integer, TreeNode>(500);
     List<Integer> nodes = new ArrayList<Integer>();
     if (root == null) return nodes;
-    collect(root, parents);
-    // 为避免在深度优先搜索时重复访问结点，递归时额外传入来源，在递归前比较目标结点是否与来源结点相同
+    collectFrom(root, parents);
+    // 为避免重复，递归时传入来源，在递归前比较目标结点是否与来源结点相同
     dfs17(target, null, k, parents, nodes);
     return nodes;
   }
 
-  private void collect(TreeNode node, Map<Integer, TreeNode> parents) {
+  private void collectFrom(TreeNode node, Map<Integer, TreeNode> parents) {
     if (node.left != null) {
       parents.put(node.left.val, node);
-      collect(node.left, parents);
+      collectFrom(node.left, parents);
     }
     if (node.right != null) {
       parents.put(node.right.val, node);
-      collect(node.right, parents);
+      collectFrom(node.right, parents);
     }
   }
 
@@ -607,7 +607,7 @@ class BBSTInorder {
   public boolean isValidBST(TreeNode root) {
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
-    double pre = -Double.MAX_VALUE; // Integer.MIN_VALUE 即可，此处仅为通过官方示例
+    double pre = -Double.MAX_VALUE; // Integer.MIN_VALUE 即可，此处仅为通过官方测试
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
@@ -755,8 +755,8 @@ class BBSTInorder {
 
 /** 二叉搜索树，深搜为主 */
 class BBSTDFS {
-  // 「二叉搜索树与双向链表」上次与当前遍历结点，按照中序遍历，前者即后者的左子树
-  private TreeNode pre, cur;
+  // 「二叉搜索树与双向链表」中序中当前遍历的上个节点 & 链表头节点，后者不变。
+  private TreeNode pre, head;
 
   /**
    * 二叉搜索树中的插入操作，比当前小，则入左，否则入右
@@ -832,7 +832,7 @@ class BBSTDFS {
   }
 
   /**
-   * 有序链表转换二叉搜索树
+   * 有序链表转换二叉搜索树，同理「将有序数组转换为二叉搜索树」找中点作根，再分治左右子树
    *
    * @param head the head
    * @return tree node
@@ -854,7 +854,7 @@ class BBSTDFS {
   }
 
   /**
-   * 二叉搜索树与双向链表，生成正序链表，中序
+   * 二叉搜索树与双向链表，生成正序双向链表，即补充叶节点的指针，中序
    *
    * <p>扩展1，逆序，则右中左
    *
@@ -864,18 +864,18 @@ class BBSTDFS {
   public TreeNode treeToDoublyList(TreeNode root) {
     if (root == null) return null;
     dfs7(root);
-    // 关联头尾
-    pre.right = cur;
-    cur.left = pre;
-    return cur;
+    // connect head and tail
+    pre.right = head;
+    head.left = pre;
+    return head;
   }
 
-  // 每次只处理前驱即左子树，因此尾插
+  // 每次只处理前驱即左子树，即尾插
   private void dfs7(TreeNode root) {
     if (root == null) return;
     dfs7(root.left);
-    if (pre != null) pre.right = root; // 尾插
-    else cur = root; // 最左，因为是中序首个被遍历的
+    if (pre != null) pre.right = root; // 已经找到头节点，则尾插
+    else head = root; // 中序首个节点，即最左子树，指向链表的头节点
     root.left = pre; // 补充前驱，头插
     pre = root;
     dfs7(root.right);
@@ -1174,7 +1174,7 @@ class BBFS {
   }
 
   /**
-   * 二叉树最大宽度，原地修改，否则引入 hash 以 val 为 key 记录
+   * 二叉树最大宽度，原地修改，若节点值唯一，则引入 hash 记录
    *
    * @param root the root
    * @return int int

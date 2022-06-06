@@ -331,11 +331,13 @@ class DData {
       head.next = node;
     }
 
+    // removeTail & addToHead
     private void moveToHead(DLinkedNode node) {
       removeNode(node);
       addToHead(node);
     }
 
+    // revmoeNode
     private DLinkedNode removeTail() {
       DLinkedNode res = tail.prev;
       removeNode(res);
@@ -675,9 +677,6 @@ class DData {
   public class Trie {
     private final TireNode root = new TireNode(); // 哑结点
 
-    /** Instantiates a new Trie. */
-    public Trie() {}
-
     /**
      * Insert.
      *
@@ -699,12 +698,8 @@ class DData {
      * @return the boolean
      */
     public boolean search(String word) {
-      TireNode cur = root;
-      for (char ch : word.toCharArray()) {
-        cur = cur.next[ch - 'a'];
-        if (cur == null) return false;
-      }
-      return cur.isEnd;
+      TireNode target = lookup(word);
+      return target == null ? false : target.isEnd;
     }
 
     /**
@@ -714,12 +709,16 @@ class DData {
      * @return the boolean
      */
     public boolean startsWith(String prefix) {
+      return lookup(prefix) != null;
+    }
+
+    private TireNode lookup(String word) {
       TireNode cur = root;
-      for (char ch : prefix.toCharArray()) {
+      for (char ch : word.toCharArray()) {
         cur = cur.next[ch - 'a'];
-        if (cur == null) return false;
+        if (cur == null) return null;
       }
-      return true;
+      return cur;
     }
 
     private class TireNode {
@@ -884,7 +883,7 @@ class MMath {
   /**
    * 分数到小数，高精度除法
    *
-   * <p>每一位小数通过 *10 再除余计算，而循环小数可以通过判断被除数如 1/7 有没有出现过 & 出现的位置在哪儿来判断。
+   * <p>每一位小数通过 *10 再除余计算，而循环小数可以通过判断被除数如 1/7 有没有出现过，及其结果的左边界来判断。
    *
    * <p>TODO 参考
    * https://leetcode.cn/problems/fraction-to-recurring-decimal/solution/pythonjavajavascript-gao-jing-du-chu-fa-44td5/
@@ -900,20 +899,21 @@ class MMath {
 
     // 2.取出余数
     long quotient = a / b, remainder = a % b;
-    if (remainder == 0) return String.valueOf(quotient * flag);
-    StringBuilder num = new StringBuilder(String.valueOf(quotient));
+    if (remainder == 0) return String.valueOf(quotient * flag); // 整除
+    StringBuilder num = new StringBuilder(String.valueOf(quotient)); // 先插入整数部分
+    if (flag == -1) num.insert(0, '-'); // 正负
     num.append('.');
     int len = num.length(); // 小数之外的长度
 
-    // 3.保存某个被除数与 denominator 的结果
     final int PRECISSION = 10000; // 精度可控
+    // 3.保存某个被除数与原除数的结果
     Map<Long, Integer> quotients = new HashMap<>();
     for (int i = 0; i < PRECISSION; i++) {
       a = remainder * 10;
       quotient = a / b;
       remainder = a % b;
 
-      // 4.该被除数已出现过
+      // 4.该被除数已出现过，在该区间首末插入括号即可
       if (quotients.containsKey(a)) {
         num.insert(quotients.get(a).intValue(), '(');
         num.append(')');
@@ -921,10 +921,9 @@ class MMath {
       }
 
       num.append(quotient);
-      quotients.put(a, i + len);
+      quotients.put(a, i + len); // 该除数所得结果的左边界
       if (remainder == 0) break; // 入迭代前非整除
     }
-    if (flag == -1) num.insert(0, '-');
     return num.toString();
   }
 
@@ -1407,18 +1406,16 @@ class BBit {
    * @return int int
    */
   public int reverse(int x) {
-    // 暂存已反转的 & 待反转的部分
-    int res = 0, left = x;
+    // 已反转 & 待反转
+    int rever = 0, left = x;
     while (left != 0) {
-      // 判断溢出
-      if (res < Integer.MIN_VALUE / 10 || res > Integer.MAX_VALUE / 10) {
-        return 0;
-      }
-      // 每次取末尾数字
-      res = res * 10 + left % 10;
+      // overflow
+      if (rever < Integer.MIN_VALUE / 10 || rever > Integer.MAX_VALUE / 10) return 0;
+      // tail digit
+      rever = rever * 10 + left % 10;
       left /= 10;
     }
-    return res;
+    return rever;
   }
 
   /**

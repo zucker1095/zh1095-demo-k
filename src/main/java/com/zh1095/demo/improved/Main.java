@@ -1,104 +1,68 @@
 package com.zh1095.demo.improved;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 public class Main {
   public static void main(String[] args) {
-    //    testList(new int[] {8, 3, 6, 5});
-    //
-    //    testList(new int[] {8, 3, 6});
+    Graph graph = new Graph(4);
+    graph.addEdge(0, 1);
+    graph.addEdge(0, 2);
+    graph.addEdge(1, 2);
+    graph.addEdge(2, 0);
+    graph.addEdge(2, 3);
+    graph.addEdge(3, 3);
+
+    if (graph.isCyclic()) System.out.println("Graph contains cycle");
+    else System.out.println("Graph doesn't " + "contain cycle");
   }
-  //
-  //  private static void testList(int[] tests2) {
-  //    ListNode h = new ListNode(1), cur = h;
-  //    for (int n : tests2) {
-  //      cur.next = new ListNode(n);
-  //      cur = cur.next;
-  //    }
-  //    h = sortOddEvenList(h);
-  //    while (h.next != null) {
-  //      System.out.println(h.val);
-  //      h = h.next;
-  //    }
-  //  }
-  //
-  //  /**
-  //   * 重排奇偶链表，奇数位置升序，偶数位置反之，升序排列整个链表
-  //   *
-  //   * <p>分别取出奇偶链表，奇数位链表需断尾 & 反转偶数位链表 & 合并
-  //   *
-  //   * <p>参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
-  //   *
-  //   * @param head
-  //   * @return
-  //   */
-  //  static ListNode sortOddEvenList(ListNode head) {
-  //    return mergeTwoLists(head, separateOddEvenList(head));
-  //  }
-  //
-  //  static ListNode mergeTwoLists(ListNode list1, ListNode list2) {
-  //    ListNode dummy = new ListNode(), cur = dummy, l1 = list1, l2 = list2;
-  //    while (l1 != null && l2 != null) {
-  //      if (l1.val < l2.val) {
-  //        cur.next = l1;
-  //        l1 = l1.next;
-  //      } else {
-  //        cur.next = l2;
-  //        l2 = l2.next;
-  //      }
-  //      cur = cur.next;
-  //    }
-  //    cur.next = l1 != null ? l1 : l2;
-  //    return dummy.next;
-  //  }
-  //
-  //  // 代码与「奇偶链表」一致，但分离且返回偶头
-  //  static ListNode separateOddEvenList(ListNode head) {
-  //    if (head == null) return null;
-  //    ListNode odd = head, even = head.next, nxtOdd = null;
-  //    if (even != null) {
-  //      nxtOdd = even.next;
-  //      even.next = null;
-  //    }
-  //    while (nxtOdd != null) {
-  //      nxtOdd = even.next;
-  //      odd.next = nxtOdd;
-  //      odd = odd.next;
-  //      if (nxtOdd.next == null) break;
-  //      nxtOdd = nxtOdd.next.next;
-  //      nxtOdd.next.next = even;
-  //      even = nxtOdd.next;
-  //    }
-  //    odd.next = null;
-  //    return even;
-  //  }
-  //
-  //  static class ListNode { // 链表节点
-  //    /** The Val. */
-  //    int val;
-  //
-  //    /** The Next. */
-  //    ListNode next;
-  //
-  //    /** Instantiates a new List node. */
-  //    ListNode() {}
-  //
-  //    /**
-  //     * Instantiates a new List node.
-  //     *
-  //     * @param val the val
-  //     */
-  //    ListNode(int val) {
-  //      this.val = val;
-  //    }
-  //
-  //    /**
-  //     * Instantiates a new List node.
-  //     *
-  //     * @param val the val
-  //     * @param next the next
-  //     */
-  //    ListNode(int val, ListNode next) {
-  //      this.val = val;
-  //      this.next = next;
-  //    }
-  //  }
+
+  static class Graph {
+
+    private final int V;
+    private final List<List<Integer>> adj;
+
+    public Graph(int V) {
+      this.V = V;
+      adj = new ArrayList<>(V);
+      for (int i = 0; i < V; i++) adj.add(new LinkedList<>());
+    }
+
+    // Returns true if the graph contains a cycle, else false.
+    // This function is a variation of DFS() in
+    // https://www.geeksforgeeks.org/archives/18212
+    public boolean isCyclic() {
+      // Mark all the vertices as not visited and not part of recursion stack
+      boolean[] visited = new boolean[V], recStack = new boolean[V];
+      // Call the recursive helper function to
+      // detect cycle in different DFS trees
+      for (int i = 0; i < V; i++) {
+        if (isCyclicUtil(i, visited, recStack)) return true;
+      }
+      return false;
+    }
+
+    // BUT space complexity is 2n
+    // This function is a variation of DFSUtil() in
+    // https://www.geeksforgeeks.org/archives/18212
+    private boolean isCyclicUtil(int i, boolean[] visited, boolean[] recStack) {
+      // Mark the current node as visited and part of recursion stack
+      if (recStack[i]) return true;
+      if (visited[i]) return false;
+      visited[i] = true;
+      recStack[i] = true;
+      List<Integer> children = adj.get(i);
+      // recur for all the vertices adjacent to this vertex
+      for (Integer c : children) {
+        if (isCyclicUtil(c, visited, recStack)) return true;
+      }
+      recStack[i] = false; // remove vertex from recursion stack
+      return false;
+    }
+
+    private void addEdge(int src, int dst) {
+      adj.get(src).add(dst);
+    }
+  }
 }

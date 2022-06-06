@@ -5,6 +5,9 @@ import java.util.*;
 /**
  * 收集 DP 相关
  *
+ * <p>所有的 DP 要输出路径 / 具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考
+ * https://blog.51cto.com/u_15127578/3748446
+ *
  * <p>以下均为右闭期间
  *
  * <p>状态压缩基于滚动数组，尽量用具体含义，如 buy & sell 而非 dp1 & dp2
@@ -57,41 +60,31 @@ class OptimalSubArray {
   }
 
   /**
-   * 目标和，找到 nums 一个正子集与一个负子集，使其总和等于 target，统计这种可能性的总数
+   * 最长连续序列，逐个数字递增查找
    *
-   * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和 + 序列总和，即 01 背包
+   * <p>仅当该数是连续序列的首个数，才会进入内循环匹配连续序列中的数，因此数组中的每个数只会进入内层循环一次，即线性时间复杂度
    *
-   * <p>dp[j] 表示填满 j 容积的包的方案数，即组合
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/target-sum/solution/dai-ma-sui-xiang-lu-494-mu-biao-he-01bei-rte9/
-   *
-   * <p>扩展1，改为乘法
-   *
-   * <p>扩展2，target 为负
+   * <p>参考
+   * https://leetcode.cn/problems/longest-consecutive-sequence/solution/ha-xi-zui-qing-xi-yi-dong-de-jiang-jie-c-xpnr/
    *
    * @param nums the nums
-   * @param target the target
-   * @return int
+   * @return int int
    */
-  public int findTargetSumWays(int[] nums, int target) {
-    int sum = 0;
-    for (int num : nums) {
-      sum += num;
+  public int longestConsecutive(int[] nums) {
+    Set<Integer> set = new HashSet<>();
+    for (int n : nums) {
+      set.add(n);
     }
-    if ((target + sum) % 2 != 0) return 0;
-
-    int maxCapacity = (target + sum) / 2;
-    if (maxCapacity < 0) maxCapacity *= -1;
-
-    int[] dp = new int[maxCapacity + 1];
-    dp[0] = 1;
-    for (int volume : nums) {
-      for (int capacity = maxCapacity; capacity >= volume; capacity--) {
-        dp[capacity] += dp[capacity - volume];
+    int maxLen = 0;
+    for (int n : set) {
+      if (set.contains(n - 1)) continue; // indicates that the number has been traversed
+      int hiNum = n;
+      while (set.contains(hiNum + 1)) { // go up downing the number
+        hiNum += 1;
       }
+      maxLen = Math.max(maxLen, hiNum - n + 1);
     }
-    return dp[maxCapacity];
+    return maxLen;
   }
 
   /**
@@ -112,7 +105,6 @@ class OptimalSubArray {
   public int maxProduct(int[] nums) {
     int maxPro = Integer.MIN_VALUE, proMax = 1, proMin = 1;
     for (int n : nums) {
-      // 以该点结尾的乘积大小调换
       if (n < 0) {
         int tmp = proMax;
         proMax = proMin;
@@ -123,6 +115,44 @@ class OptimalSubArray {
       maxPro = Math.max(maxPro, proMax);
     }
     return maxPro;
+  }
+
+  /**
+   * 目标和，找到 nums 一个正子集与一个负子集，使其总和等于 target，统计这种可能性的总数
+   *
+   * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和 + 序列总和，即 01 背包
+   *
+   * <p>dp[j] 表示填满 j 容积的包的方案数，即组合
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/target-sum/solution/dai-ma-sui-xiang-lu-494-mu-biao-he-01bei-rte9/
+   *
+   * <p>扩展1，改为乘法
+   *
+   * <p>扩展2，target 为负
+   *
+   * @param nums the nums
+   * @param target the target
+   * @return int
+   */
+  public int findTargetSumWays(int[] nums, int target) {
+    int sum = 0;
+    for (int n : nums) {
+      sum += n;
+    }
+    if ((target + sum) % 2 != 0) return 0;
+
+    int maxCapacity = (target + sum) / 2;
+    if (maxCapacity < 0) maxCapacity *= -1;
+
+    int[] dp = new int[maxCapacity + 1];
+    dp[0] = 1;
+    for (int volume : nums) {
+      for (int capacity = maxCapacity; capacity >= volume; capacity--) {
+        dp[capacity] += dp[capacity - volume];
+      }
+    }
+    return dp[maxCapacity];
   }
 }
 
@@ -183,6 +213,36 @@ class OptimalSubSequence extends DichotomyClassic {
   }
 
   /**
+   * 递增的三元子序列，贪心，顺序找到三个递增的数即可
+   *
+   * <p>赋初始值的时候，已经满足 second>first，现在找第三个数 third
+   *
+   * <p>如果 t>s，返回 true
+   *
+   * <p>如果 t < s && t>f，则赋值 s=t，然后继续找 t
+   *
+   * <p>如果 t < f，则赋值 s=f，然后继续找 t
+   *
+   * <p>f 会跑到 s 的后边，因为在 s 的前边，旧 f 还是满足的
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/increasing-triplet-subsequence/solution/di-zeng-de-san-yuan-zi-xu-lie-by-leetcod-dp2r/
+   *
+   * @param nums
+   * @return
+   */
+  public boolean increasingTriplet(int[] nums) {
+    if (nums.length < 3) return false;
+    int first = Integer.MAX_VALUE, second = Integer.MAX_VALUE;
+    for (int n : nums) {
+      if (n > second) return true;
+      else if (n > first) second = n;
+      else first = n;
+    }
+    return false;
+  }
+
+  /**
    * 最长递增子序列的个数
    *
    * <p>TODO 参考
@@ -215,41 +275,13 @@ class OptimalSubSequence extends DichotomyClassic {
   }
 
   /**
-   * 最长连续序列，逐个数字递增查找
-   *
-   * <p>仅当该数是连续序列的首个数，才会进入内循环匹配连续序列中的数，因此数组中的每个数只会进入内层循环一次，即线性时间复杂度
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/longest-consecutive-sequence/solution/ha-xi-zui-qing-xi-yi-dong-de-jiang-jie-c-xpnr/
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int longestConsecutive(int[] nums) {
-    Set<Integer> set = new HashSet<>();
-    for (int n : nums) {
-      set.add(n);
-    }
-    int maxLen = 0;
-    for (int n : set) {
-      if (set.contains(n - 1)) continue; // indicates that the number has been traversed
-      int hiNum = n;
-      while (set.contains(hiNum + 1)) { // go up downing the number
-        hiNum += 1;
-      }
-      maxLen = Math.max(maxLen, hiNum - n + 1);
-    }
-    return maxLen;
-  }
-
-  /**
    * 最长公共子序列，[1,m] & [1,n]
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
    * <p>扩展1，求最长公共子串的长度，参上「最长连续序列」
    *
-   * <p>扩展2，输出该子序列，则补充首尾指针，参下 annotate
+   * <p>扩展2，输出该子序列，即求路径
    *
    * @param text1 the text 1
    * @param text2 the text 2
@@ -265,13 +297,39 @@ class OptimalSubSequence extends DichotomyClassic {
             text1.charAt(p1 - 1) == text2.charAt(p2 - 1)
                 ? dp[p1 - 1][p2 - 1] + 1
                 : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
-        //        if (hi - lo + 1 < p2 - p1 + 1) {
-        //          p1 = lo;
-        //          p2 = hi;
+        //        if (hi - lo < p2 - p1) {
+        //          lo = p1;
+        //          hi = p2;
         //        }
       }
     }
     return dp[l1][l2];
+  }
+
+  /**
+   * 最长回文子序列
+   *
+   * <p>dp[i][j] indicted s[i:j] 内的最优解
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/longest-palindromic-subsequence/solution/dong-tai-gui-hua-si-yao-su-by-a380922457-3/
+   *
+   * @param s
+   * @return
+   */
+  public int longestPalindromeSubseq(String s) {
+    int len = s.length();
+    int[][] dp = new int[len][len];
+    for (int i = len - 1; i > -1; i--) {
+      dp[i][i] = 1;
+      char c1 = s.charAt(i);
+      // [i+1:len-1]
+      for (int j = i + 1; j < len; j++) {
+        if (c1 == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
+        else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
+      }
+    }
+    return dp[0][len - 1];
   }
 
   /**
@@ -356,7 +414,7 @@ class OptimalSubSequence extends DichotomyClassic {
     boolean[][] dp = new boolean[l1 + 1][l2 + 1];
     dp[0][0] = true;
     for (int i = 0; i < l2; i++) {
-      dp[0][i + 1] = (pChs[i] == '*' && dp[0][i - 1]);
+      dp[0][i + 1] = pChs[i] == '*' && dp[0][i - 1];
     }
     // 以下均基于 p 判定
     for (int i = 0; i < l1; i++) {
@@ -378,6 +436,26 @@ class OptimalSubSequence extends DichotomyClassic {
     }
     return dp[l1][l2];
   }
+
+  private boolean wildcard(char[] sChs, char[] pChs) {
+    int l1 = sChs.length, l2 = pChs.length;
+    boolean[][] dp = new boolean[l1 + 1][l2 + 1];
+    dp[0][0] = true;
+    for (int i = 1; i <= l2; i++) {
+      if (pChs[i - 1] != '*') break;
+      dp[0][i] = true;
+    }
+    for (int i = 1; i <= l1; ++i) {
+      for (int j = 1; j <= l2; ++j) {
+        if (pChs[j - 1] == '*') {
+          dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
+        } else if (pChs[j - 1] == '?' || sChs[i - 1] == pChs[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        }
+      }
+    }
+    return dp[l1][l2];
+  }
 }
 
 /**
@@ -392,7 +470,7 @@ class OptimalPath {
    * 最小路径和，题设自然数
    *
    * <p>参考
-   * https://leetcode-cn.com/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/0/
+   * https://leetcode.cn/problems/minimum-path-sum/solution/dong-tai-gui-hua-lu-jing-wen-ti-ni-bu-ne-fkil/
    *
    * <p>dp[i][j] 表示 (0,0) to (i,j) 的最小路径和
    *
@@ -418,22 +496,39 @@ class OptimalPath {
         dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
       }
     }
-    //    List<Integer> path = new ArrayList<>();
-    //    int i = grid.length - 1, j = grid[0].length - 1;
-    //    path.add(grid[i][j]);
-    //    int sum = dp[i][j];
-    //    while (i > 0 || j > 0) {
-    //      sum -= grid[i][j];
-    //      if (j - 1 >= 0 && dp[i][j - 1] == sum) {
-    //        path.add(grid[i][j - 1]);
-    //        j -= 1;
-    //      } else {
-    //        path.add(grid[i - 1][j]);
-    //        i -= 1;
+    return dp[len - 1];
+    //    int rows = grid.length, cols = grid[0].length;
+    //    int[][] dp = new int[rows][cols];
+    //    int[] from = new int[rows * cols];
+    //    for (int i = 0; i < rows; i++) {
+    //      for (int j = 0; j < cols; j++) {
+    //        if (i == 0 && j == 0) {
+    //          dp[i][j] = grid[i][j];
+    //        } else {
+    //          // 记录当前分支做的选择，空间复杂度为 O(n)，n 为分支总数
+    //          int top = i > 0 ? dp[i - 1][j] + grid[i][j] : Integer.MAX_VALUE,
+    //              left = j > 0 ? dp[i][j - 1] + grid[i][j] : Integer.MAX_VALUE;
+    //          dp[i][j] = Math.min(top, left);
+    //          // encoding 的具体实现保证唯一约束该分支即可
+    //          from[encoding(i, j)] = top < left ? encoding(i - 1, j) : encoding(i, j - 1);
+    //        }
     //      }
     //    }
-    return dp[len - 1];
+    //    int idx = encoding(rows - 1, cols - 1); // 从「结尾」开始在 from[] 找「上一步」
+    //    int[][] path = new int[rows + cols][2]; // 逆序添加路径点
+    //    path[rows + cols - 1] = new int[] {rows - 1, cols - 1};
+    //    for (int i = 1; i < rows + cols; i++) {
+    //      path[rows + cols - 1 - i] = deconding(from[idx]);
+    //      idx = from[idx];
+    //    }
   }
+  //  private int[] deconding(int idx) {
+  //    return new int[] {idx / cols, idx % cols};
+  //  }
+  //
+  //  private int encoding(int x, int y) {
+  //    return x * cols + y;
+  //  }
 
   /**
    * 三角形的最小路径和，bottom to up
@@ -521,7 +616,7 @@ class OptimalPath {
   /**
    * 交错字符串，每次只能向右或下，画图可知即滚动数组
    *
-   * <p>dp[i][j] 代表 s1 前 i 个字符与 s2 前 j 个字符拼接成 s3 任意 i+j 字符，即存在目标路径能够到达 (i,j)
+   * <p>dp[i][j] 代表 s1[0:i+1] 个字符与 s2[0:j+1] 个字符拼接成 s3 任意 i+j 个字符，即存在目标路径能够到达 (i,j)
    *
    * <p>TODO 参考
    * https://leetcode.cn/problems/interleaving-string/solution/lei-si-lu-jing-wen-ti-zhao-zhun-zhuang-tai-fang-ch/
@@ -533,21 +628,22 @@ class OptimalPath {
    */
   public boolean isInterleave(String s1, String s2, String s3) {
     int l1 = s1.length(), l2 = s2.length(), l3 = s3.length();
+    char[] chs1 = s1.toCharArray(), chs2 = s2.toCharArray(), chs3 = s3.toCharArray();
     if (l1 + l2 != l3) return false;
-    boolean[] dp = new boolean[l2 + 1];
+    boolean[] dp = new boolean[l2 + 1]; // 横轴取 s2
     dp[0] = true;
     for (int j = 1; j <= l2; j++) { // dp[0][?]
-      if (!(s2.charAt(j - 1) == s3.charAt(j - 1))) break;
+      if (chs2[j - 1] != chs3[j - 1]) break;
       dp[j] = dp[j - 1];
     }
     //     dp[i][j] = (dp[i-1][j] && s3.charAt(i + j - 1) == s1.charAt(i - 1))
-    //                    || (dp[i][j - 1] && s3.charAt(i + j - 1) == s2.charAt(j - 1));
+    //                    || (dp[i][j - 1] && s3.charAt(i + j - 1) == chs2[j - 1]);
     for (int i = 1; i <= l1; i++) {
-      dp[0] = dp[0] && s1.charAt(i - 1) == s3.charAt(i - 1);
+      dp[0] = dp[0] && chs1[i - 1] == chs3[i - 1];
       for (int j = 1; j <= l2; j++) {
-        dp[j] =
-            (dp[j] && s1.charAt(i - 1) == s3.charAt(i + j - 1))
-                || (dp[j - 1] && s2.charAt(j - 1) == s3.charAt(i + j - 1));
+        char c1 = chs1[i - 1], c2 = chs2[j - 1], c3 = chs3[i + j - 1];
+        // 画图即上方或左侧递推，分别 s3 匹配取 s1 或 s2
+        dp[j] = (dp[j] && c1 == c3) || (dp[j - 1] && c2 == c3);
       }
     }
     return dp[l2];
@@ -1086,7 +1182,7 @@ class OptimalRectangle {
    */
   public int maximalSquare(char[][] matrix) {
     int maxSide = 0;
-    // 相当于已经预处理新增第一行、第一列均 0
+    // 预处理首行首列均 0
     int[] dp = new int[matrix[0].length + 1];
     for (char[] row : matrix) {
       int topLeft = 0;
