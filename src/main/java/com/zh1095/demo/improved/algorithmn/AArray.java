@@ -506,7 +506,7 @@ class QQuick extends DefaultArray {
    * @param hi the hi
    */
   public void quickSort(int[] nums, int lo, int hi) {
-    if (lo >= hi) return;
+    if (lo >= hi) return; // 对 [lo:hi] 快排
     int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
     // 下方需要确保虚拟头 <pivot，因此从 lt+1 开始遍历
     swap(nums, pivotIdx, lo);

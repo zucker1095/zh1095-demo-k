@@ -5,9 +5,6 @@ import java.util.*;
 /**
  * 收集 DP 相关
  *
- * <p>所有的 DP 要输出路径 / 具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考
- * https://blog.51cto.com/u_15127578/3748446
- *
  * <p>以下均为右闭期间
  *
  * <p>状态压缩基于滚动数组，尽量用具体含义，如 buy & sell 而非 dp1 & dp2
@@ -17,6 +14,315 @@ import java.util.*;
  * @author cenghui
  */
 public class DDP {}
+
+/**
+ * 子序列
+ *
+ * <p>所有的 DP 要输出路径/具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考 https://blog.51cto.com/u_15127578/3748446
+ */
+class OptimalSubSequence extends DichotomyClassic {
+  /**
+   * 最长递增子序列 / 最长上升子序列，基于贪心
+   *
+   * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
+   *
+   * <p>扩展1，打印路径，参下 getPath
+   *
+   * <p>扩展2，求个数
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int lengthOfLIS(int[] nums) {
+    // tail 最后一个已经赋值的元素的索引
+    int len = nums.length, hi = 0;
+    // dp[i] 表示以 i 结尾的 LIS 的最大长度
+    // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
+    int[] tails = new int[len], dp = new int[len];
+    tails[0] = nums[0];
+    // dp[0] = 1;
+    for (int i = 1; i < len; i++) {
+      int n = nums[i];
+      if (n > tails[hi]) {
+        hi += 1;
+        tails[hi] = n;
+        // dp[i] = hi + 1;
+      } else {
+        int lo = lowmostBound(Arrays.copyOfRange(tails, 0, hi), n);
+        tails[lo] = n;
+        // dp[i] = lo + 1;
+      }
+    }
+    //    getPath(nums, dp, hi + 1);
+    return hi + 1; // 返回长度
+  }
+
+  // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
+  // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
+  // https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
+  private int[] getPath(int[] nums, int[] dp, int len) {
+    int[] path = new int[len];
+    int count = len;
+    for (int i = nums.length - 1; i >= 0 && count >= 0; i--) {
+      if (dp[i] != count) continue;
+      count -= 1;
+      path[count] = nums[i];
+    }
+    return path;
+  }
+
+  /**
+   * 递增的三元子序列，贪心，顺序找到三个递增的数即可
+   *
+   * <p>赋初始值的时候，已经满足 second>first，现在找第三个数 third
+   *
+   * <p>如果 t>s，返回 true
+   *
+   * <p>如果 t < s && t>f，则赋值 s=t，然后继续找 t
+   *
+   * <p>如果 t < f，则赋值 s=f，然后继续找 t
+   *
+   * <p>f 会跑到 s 的后边，因为在 s 的前边，旧 f 还是满足的
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/increasing-triplet-subsequence/solution/di-zeng-de-san-yuan-zi-xu-lie-by-leetcod-dp2r/
+   *
+   * @param nums
+   * @return
+   */
+  public boolean increasingTriplet(int[] nums) {
+    if (nums.length < 3) return false;
+    int first = Integer.MAX_VALUE, second = Integer.MAX_VALUE;
+    for (int n : nums) {
+      if (n > second) return true;
+      else if (n > first) second = n;
+      else first = n;
+    }
+    return false;
+  }
+
+  /**
+   * 最长递增子序列的个数
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
+   *
+   * @param nums
+   * @return
+   */
+  public int findNumberOfLIS(int[] nums) {
+    int len = nums.length, maxLen = 1;
+    int[] dp = new int[len], counts = new int[len];
+    for (int i = 0; i < len; i++) {
+      dp[i] = counts[i] = 1;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] >= nums[i]) continue;
+        if (dp[i] < dp[j] + 1) {
+          dp[i] = dp[j] + 1;
+          counts[i] = counts[j];
+        } else if (dp[i] == dp[j] + 1) {
+          counts[i] += counts[j];
+        }
+      }
+      maxLen = Math.max(maxLen, dp[i]);
+    }
+    int count = 0;
+    for (int i = 0; i < len; i++) {
+      if (dp[i] == maxLen) count += counts[i];
+    }
+    return count;
+  }
+
+  /**
+   * 最长公共子序列，[1,m] & [1,n]
+   *
+   * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的 LCS
+   *
+   * <p>扩展1，求最长公共子串的长度，参上「最长连续序列」
+   *
+   * <p>扩展2，输出该子序列，即求路径
+   *
+   * @param text1 the text 1
+   * @param text2 the text 2
+   * @return int int
+   */
+  public int longestCommonSubsequence(String text1, String text2) {
+    int l1 = text1.length(), l2 = text2.length();
+    int[][] dp = new int[l1 + 1][l2 + 1];
+    //    int lo = 0, hi = 0;
+    for (int p1 = 1; p1 <= l1; p1++) {
+      for (int p2 = 1; p2 <= l2; p2++) {
+        // check whether t1[p1-1] can match t2[p2-1]
+        dp[p1][p2] =
+            text1.charAt(p1 - 1) == text2.charAt(p2 - 1)
+                ? dp[p1 - 1][p2 - 1] + 1
+                : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
+        //        if (match(text1, p1, text2, p2) && hi - lo < p2 - p1) {
+        //          lo = p1;
+        //          hi = p2;
+        //        }
+      }
+    }
+    return dp[l1][l2];
+  }
+
+  /**
+   * 最长回文子序列
+   *
+   * <p>dp[i][j] indicted s[i:j] 内的 LPS
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/longest-palindromic-subsequence/solution/dong-tai-gui-hua-si-yao-su-by-a380922457-3/
+   *
+   * @param s
+   * @return
+   */
+  public int longestPalindromeSubseq(String s) {
+    int len = s.length();
+    int[][] dp = new int[len][len];
+    for (int i = len - 1; i > -1; i--) {
+      dp[i][i] = 1;
+      char c1 = s.charAt(i);
+      // [i+1:len-1]
+      for (int j = i + 1; j < len; j++) {
+        // check whether s[i] can match s[j]
+        // otherwise, s[i:j]'s LPS depends on prev and next
+        if (c1 == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
+        else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
+      }
+    }
+    return dp[0][len - 1];
+  }
+
+  /**
+   * 编辑距离 & 两个字符串的删除操作，均是 LCS 最长公共子序列的问题
+   *
+   * <p>与「最长公共子序列」模板一致，[1,m] & [1,n]
+   *
+   * @param word1 the word 1
+   * @param word2 the word 2
+   * @return int int
+   */
+  public int minDistance(String word1, String word2) {
+    return editDistance(word1, word2);
+  }
+
+  // 编辑距离，画图即可，遍历的方向分别代表操作
+  // dp[i][j] 表示由 A[0:i] 转移为 B[0:j] 的最少步数
+  // 递推 1+min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+  // 扩展1，操作带权重，参考 https://www.nowcoder.com/questionTerminal/05fed41805ae4394ab6607d0d745c8e4
+  private int editDistance(String word1, String word2) {
+    int l1 = word1.length(), l2 = word2.length();
+    int[][] dp = new int[l1 + 1][l2 + 1];
+    for (int i = 0; i <= l1; i++) {
+      dp[i][0] = i;
+    }
+    for (int j = 0; j <= l2; j++) {
+      dp[0][j] = j;
+    }
+    for (int i = 1; i <= l1; i++) {
+      for (int j = 1; j <= l2; j++) {
+        dp[i][j] =
+            word1.charAt(i - 1) == word2.charAt(j - 1)
+                ? dp[i - 1][j - 1]
+                : 1 + Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]);
+      }
+    }
+    return dp[l1][l2];
+  }
+
+  // 两个字符串的删除操作
+  // dp[i][j] 表示由 s1[0:i] 转移为 s2[0:j] 的最少步数
+  // 递推 min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1])+1
+  // min(dp
+  private int deleteOperationForTwoStrings(String s1, String s2) {
+    int n1 = s1.length(), n2 = s2.length();
+    int[][] dp = new int[n1 + 1][n2 + 1];
+    for (int i = 0; i <= n1; i++) {
+      dp[i][0] = i;
+    }
+    for (int j = 0; j <= n2; j++) {
+      dp[0][j] = j;
+    }
+    for (int i = 1; i <= n1; i++) {
+      for (int j = 1; j <= n2; j++) {
+        int minDistance = Math.min(dp[i - 1][j], dp[i][j - 1]) + 1;
+        dp[i][j] =
+            (s1.charAt(i - 1) == s2.charAt(j - 1))
+                ? Math.min(minDistance, dp[i - 1][j - 1])
+                : minDistance;
+      }
+    }
+    return dp[n1][n2];
+  }
+
+  /**
+   * 正则表达式匹配 / 通配符匹配，以下均基于 p 判定，类似「通配符匹配」
+   *
+   * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
+   *
+   * <p>dp[i-1][j] 多个字符匹配的情况，dp[i][j-1] 单个字符匹配的情况，dp[i][j-2] 没有匹配的情况
+   *
+   * @param s the s
+   * @param p the p
+   * @return boolean boolean
+   */
+  public boolean isMatch(String s, String p) {
+    return regularMatching(s.toCharArray(), p.toCharArray());
+  }
+
+  private boolean regularMatching(char[] sChs, char[] pChs) {
+    int l1 = sChs.length, l2 = pChs.length;
+    boolean[][] dp = new boolean[l1 + 1][l2 + 1];
+    dp[0][0] = true;
+    for (int i = 0; i < l2; i++) {
+      dp[0][i + 1] = pChs[i] == '*' && dp[0][i - 1];
+    }
+    // 以下均基于 p 判定
+    for (int i = 0; i < l1; i++) {
+      for (int j = 0; j < l2; j++) {
+        // 如果是任意元素 or 是对于元素匹配
+        if (pChs[j] == '.' || pChs[j] == sChs[i]) dp[i + 1][j + 1] = dp[i][j];
+        if (pChs[j] != '*') continue;
+        /*
+        如果前一个元素不匹配且不为任意元素
+        dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
+        or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
+        or dp[i][j] = dp[i][j-2] // 没有匹配的情况
+         */
+        dp[i + 1][j + 1] =
+            (pChs[j - 1] == sChs[i] || pChs[j - 1] == '.')
+                ? dp[i + 1][j] || dp[i][j + 1] || dp[i + 1][j - 1]
+                : dp[i + 1][j - 1];
+      }
+    }
+    return dp[l1][l2];
+  }
+
+  private boolean wildcard(char[] sChs, char[] pChs) {
+    int l1 = sChs.length, l2 = pChs.length;
+    boolean[][] dp = new boolean[l1 + 1][l2 + 1];
+    dp[0][0] = true;
+    for (int i = 1; i <= l2; i++) {
+      if (pChs[i - 1] != '*') break;
+      dp[0][i] = true;
+    }
+    for (int i = 1; i <= l1; ++i) {
+      for (int j = 1; j <= l2; ++j) {
+        if (pChs[j - 1] == '*') {
+          dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
+        } else if (pChs[j - 1] == '?' || sChs[i - 1] == pChs[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        }
+      }
+    }
+    return dp[l1][l2];
+  }
+}
 
 /**
  * 子数组，连续，子序列，不连续，即子数组相当于连续子序列
@@ -156,308 +462,6 @@ class OptimalSubArray {
   }
 }
 
-/** 子序列 */
-class OptimalSubSequence extends DichotomyClassic {
-  /**
-   * 最长递增子序列 / 最长上升子序列，基于贪心
-   *
-   * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
-   *
-   * <p>扩展1，打印路径，参下 getPath
-   *
-   * <p>扩展2，求个数
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int lengthOfLIS(int[] nums) {
-    // tail 最后一个已经赋值的元素的索引
-    int len = nums.length, hi = 0;
-    // dp[i] 表示以 i 结尾的 LIS 的最大长度
-    // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
-    int[] tails = new int[len], dp = new int[len];
-    tails[0] = nums[0];
-    // dp[0] = 1;
-    for (int i = 1; i < len; i++) {
-      int n = nums[i];
-      if (n > tails[hi]) {
-        hi += 1;
-        tails[hi] = n;
-        // dp[i] = hi + 1;
-      } else {
-        int lo = lowmostBound(Arrays.copyOfRange(tails, 0, hi), n);
-        tails[lo] = n;
-        // dp[i] = lo + 1;
-      }
-    }
-    //    getPath(nums, dp, hi + 1);
-    return hi + 1; // 返回长度
-  }
-
-  // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
-  // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
-  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
-  // https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
-  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
-  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
-  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
-  private int[] getPath(int[] nums, int[] dp, int len) {
-    int[] path = new int[len];
-    int count = len;
-    for (int i = nums.length - 1; i >= 0 && count >= 0; i--) {
-      if (dp[i] != count) continue;
-      count -= 1;
-      path[count] = nums[i];
-    }
-    return path;
-  }
-
-  /**
-   * 递增的三元子序列，贪心，顺序找到三个递增的数即可
-   *
-   * <p>赋初始值的时候，已经满足 second>first，现在找第三个数 third
-   *
-   * <p>如果 t>s，返回 true
-   *
-   * <p>如果 t < s && t>f，则赋值 s=t，然后继续找 t
-   *
-   * <p>如果 t < f，则赋值 s=f，然后继续找 t
-   *
-   * <p>f 会跑到 s 的后边，因为在 s 的前边，旧 f 还是满足的
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/increasing-triplet-subsequence/solution/di-zeng-de-san-yuan-zi-xu-lie-by-leetcod-dp2r/
-   *
-   * @param nums
-   * @return
-   */
-  public boolean increasingTriplet(int[] nums) {
-    if (nums.length < 3) return false;
-    int first = Integer.MAX_VALUE, second = Integer.MAX_VALUE;
-    for (int n : nums) {
-      if (n > second) return true;
-      else if (n > first) second = n;
-      else first = n;
-    }
-    return false;
-  }
-
-  /**
-   * 最长递增子序列的个数
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
-   *
-   * @param nums
-   * @return
-   */
-  public int findNumberOfLIS(int[] nums) {
-    int len = nums.length, maxLen = 1;
-    int[] dp = new int[len], counts = new int[len];
-    for (int i = 0; i < len; i++) {
-      dp[i] = counts[i] = 1;
-      for (int j = 0; j < i; j++) {
-        if (nums[j] >= nums[i]) continue;
-        if (dp[i] < dp[j] + 1) {
-          dp[i] = dp[j] + 1;
-          counts[i] = counts[j];
-        } else if (dp[i] == dp[j] + 1) {
-          counts[i] += counts[j];
-        }
-      }
-      maxLen = Math.max(maxLen, dp[i]);
-    }
-    int count = 0;
-    for (int i = 0; i < len; i++) {
-      if (dp[i] == maxLen) count += counts[i];
-    }
-    return count;
-  }
-
-  /**
-   * 最长公共子序列，[1,m] & [1,n]
-   *
-   * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
-   *
-   * <p>扩展1，求最长公共子串的长度，参上「最长连续序列」
-   *
-   * <p>扩展2，输出该子序列，即求路径
-   *
-   * @param text1 the text 1
-   * @param text2 the text 2
-   * @return int int
-   */
-  public int longestCommonSubsequence(String text1, String text2) {
-    int l1 = text1.length(), l2 = text2.length();
-    int[][] dp = new int[l1 + 1][l2 + 1];
-    //    int lo = 0, hi = 0;
-    for (int p1 = 1; p1 <= l1; p1++) {
-      for (int p2 = 1; p2 <= l2; p2++) {
-        dp[p1][p2] =
-            text1.charAt(p1 - 1) == text2.charAt(p2 - 1)
-                ? dp[p1 - 1][p2 - 1] + 1
-                : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
-        //        if (hi - lo < p2 - p1) {
-        //          lo = p1;
-        //          hi = p2;
-        //        }
-      }
-    }
-    return dp[l1][l2];
-  }
-
-  /**
-   * 最长回文子序列
-   *
-   * <p>dp[i][j] indicted s[i:j] 内的最优解
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/longest-palindromic-subsequence/solution/dong-tai-gui-hua-si-yao-su-by-a380922457-3/
-   *
-   * @param s
-   * @return
-   */
-  public int longestPalindromeSubseq(String s) {
-    int len = s.length();
-    int[][] dp = new int[len][len];
-    for (int i = len - 1; i > -1; i--) {
-      dp[i][i] = 1;
-      char c1 = s.charAt(i);
-      // [i+1:len-1]
-      for (int j = i + 1; j < len; j++) {
-        if (c1 == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
-        else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
-      }
-    }
-    return dp[0][len - 1];
-  }
-
-  /**
-   * 编辑距离 & 两个字符串的删除操作，均是 LCS 最长公共子序列的问题
-   *
-   * <p>与「最长公共子序列」模板一致，[1,m] & [1,n]
-   *
-   * @param word1 the word 1
-   * @param word2 the word 2
-   * @return int int
-   */
-  public int minDistance(String word1, String word2) {
-    return editDistance(word1, word2);
-  }
-
-  // 编辑距离，画图即可，遍历的方向分别代表操作
-  // dp[i][j] 表示由 A[0:i] 转移为 B[0:j] 的最少步数
-  // 递推 1+min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
-  // 扩展1，操作带权重，参考 https://www.nowcoder.com/questionTerminal/05fed41805ae4394ab6607d0d745c8e4
-  private int editDistance(String word1, String word2) {
-    int l1 = word1.length(), l2 = word2.length();
-    int[][] dp = new int[l1 + 1][l2 + 1];
-    for (int i = 0; i <= l1; i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= l2; j++) {
-      dp[0][j] = j;
-    }
-    for (int i = 1; i <= l1; i++) {
-      for (int j = 1; j <= l2; j++) {
-        dp[i][j] =
-            word1.charAt(i - 1) == word2.charAt(j - 1)
-                ? dp[i - 1][j - 1]
-                : 1 + Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]);
-      }
-    }
-    return dp[l1][l2];
-  }
-
-  // 两个字符串的删除操作
-  // dp[i][j] 表示由 s1[0:i] 转移为 s2[0:j] 的最少步数
-  // 递推 min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1])+1
-  // min(dp
-  private int deleteOperationForTwoStrings(String s1, String s2) {
-    int n1 = s1.length(), n2 = s2.length();
-    int[][] dp = new int[n1 + 1][n2 + 1];
-    for (int i = 0; i <= n1; i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= n2; j++) {
-      dp[0][j] = j;
-    }
-    for (int i = 1; i <= n1; i++) {
-      for (int j = 1; j <= n2; j++) {
-        int minDistance = Math.min(dp[i - 1][j], dp[i][j - 1]) + 1;
-        dp[i][j] =
-            (s1.charAt(i - 1) == s2.charAt(j - 1))
-                ? Math.min(minDistance, dp[i - 1][j - 1])
-                : minDistance;
-      }
-    }
-    return dp[n1][n2];
-  }
-
-  /**
-   * 正则表达式匹配 / 通配符匹配，以下均基于 p 判定，类似「通配符匹配」
-   *
-   * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
-   *
-   * <p>dp[i-1][j] 多个字符匹配的情况，dp[i][j-1] 单个字符匹配的情况，dp[i][j-2] 没有匹配的情况
-   *
-   * @param s the s
-   * @param p the p
-   * @return boolean boolean
-   */
-  public boolean isMatch(String s, String p) {
-    return regularMatching(s.toCharArray(), p.toCharArray());
-  }
-
-  private boolean regularMatching(char[] sChs, char[] pChs) {
-    int l1 = sChs.length, l2 = pChs.length;
-    boolean[][] dp = new boolean[l1 + 1][l2 + 1];
-    dp[0][0] = true;
-    for (int i = 0; i < l2; i++) {
-      dp[0][i + 1] = pChs[i] == '*' && dp[0][i - 1];
-    }
-    // 以下均基于 p 判定
-    for (int i = 0; i < l1; i++) {
-      for (int j = 0; j < l2; j++) {
-        // 如果是任意元素 or 是对于元素匹配
-        if (pChs[j] == '.' || pChs[j] == sChs[i]) dp[i + 1][j + 1] = dp[i][j];
-        if (pChs[j] != '*') continue;
-        /*
-        如果前一个元素不匹配且不为任意元素
-        dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
-        or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
-        or dp[i][j] = dp[i][j-2] // 没有匹配的情况
-         */
-        dp[i + 1][j + 1] =
-            (pChs[j - 1] == sChs[i] || pChs[j - 1] == '.')
-                ? dp[i + 1][j] || dp[i][j + 1] || dp[i + 1][j - 1]
-                : dp[i + 1][j - 1];
-      }
-    }
-    return dp[l1][l2];
-  }
-
-  private boolean wildcard(char[] sChs, char[] pChs) {
-    int l1 = sChs.length, l2 = pChs.length;
-    boolean[][] dp = new boolean[l1 + 1][l2 + 1];
-    dp[0][0] = true;
-    for (int i = 1; i <= l2; i++) {
-      if (pChs[i - 1] != '*') break;
-      dp[0][i] = true;
-    }
-    for (int i = 1; i <= l1; ++i) {
-      for (int j = 1; j <= l2; ++j) {
-        if (pChs[j - 1] == '*') {
-          dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
-        } else if (pChs[j - 1] == '?' || sChs[i - 1] == pChs[j - 1]) {
-          dp[i][j] = dp[i - 1][j - 1];
-        }
-      }
-    }
-    return dp[l1][l2];
-  }
-}
-
 /**
  * 路径相关，其余如海岛类 & 最长递增路径，参考 TTree
  *
@@ -505,7 +509,7 @@ class OptimalPath {
     //        if (i == 0 && j == 0) {
     //          dp[i][j] = grid[i][j];
     //        } else {
-    //          // 记录当前分支做的选择，空间复杂度为 O(n)，n 为分支总数
+    //          // 记录当前分支做的选择，空间复杂度 O(n)，n 为分支总数
     //          int top = i > 0 ? dp[i - 1][j] + grid[i][j] : Integer.MAX_VALUE,
     //              left = j > 0 ? dp[i][j - 1] + grid[i][j] : Integer.MAX_VALUE;
     //          dp[i][j] = Math.min(top, left);
@@ -522,11 +526,11 @@ class OptimalPath {
     //      idx = from[idx];
     //    }
   }
-  //  private int[] deconding(int idx) {
+
+  //  private int[] deconding(int cols, int idx) {
   //    return new int[] {idx / cols, idx % cols};
   //  }
-  //
-  //  private int encoding(int x, int y) {
+  //  private int encoding(int cols, int x, int y) {
   //    return x * cols + y;
   //  }
 
@@ -611,6 +615,41 @@ class OptimalPath {
     int cur = left[0] + right[0] + root.val,
         nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
     return new int[] {nxt, cur};
+  }
+
+  /**
+   * 单词拆分，wordDict 是否可组合为 s，可重复使用
+   *
+   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 其一匹配，比如 wordDict=["apple", "pen", "code"]
+   *
+   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
+   *
+   * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
+   *
+   * @param s the s
+   * @param wordDict the word dict
+   * @return boolean boolean
+   */
+  public boolean wordBreak(String s, List<String> wordDict) {
+    int len = s.length(), maxLen = 0;
+    Set<String> wordSet = new HashSet(); // 仅用于 O(1) 匹配
+    for (String w : wordDict) {
+      wordSet.add(w);
+      maxLen = Math.max(maxLen, w.length()); // dp[i] 探索至最长的单词即可
+    }
+    boolean[] dp = new boolean[len + 1];
+    dp[0] = true;
+    for (int i = 1; i < len + 1; i++) {
+      for (int j = i; j > -1; j--) {
+        if (j < i - maxLen) break; // curing
+        String word = s.substring(j, i);
+        if (dp[j] && wordSet.contains(word)) {
+          dp[i] = true;
+          break; // s[j:i] can be matched
+        }
+      }
+    }
+    return dp[len];
   }
 
   /**
@@ -780,10 +819,10 @@ class OptimalElse {
     char[] chs = s.toCharArray();
     for (int i = 1; i < chs.length; i++) {
       if (chs[i] == '(') continue;
-      int preCount = i - dp[i - 1];
+      int preCnt = i - dp[i - 1];
       if (chs[i - 1] == '(') dp[i] = 2 + i < 2 ? 0 : dp[i - 2];
-      else if (preCount > 0 && chs[preCount - 1] == '(')
-        dp[i] = dp[i - 1] + 2 + preCount < 2 ? 0 : dp[preCount - 2];
+      else if (preCnt > 0 && chs[preCnt - 1] == '(')
+        dp[i] = dp[i - 1] + 2 + preCnt < 2 ? 0 : dp[preCnt - 2];
       maxLen = Math.max(maxLen, dp[i]);
     }
     return maxLen;
@@ -1091,7 +1130,7 @@ class CCount {
    *
    * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数
    *
-   * <p>TODO 扩展1，打印路径，DFS
+   * <p>TODO 扩展1，打印路径，保留来源并倒推
    *
    * @param obstacleGrid the obstacle grid
    * @return int int

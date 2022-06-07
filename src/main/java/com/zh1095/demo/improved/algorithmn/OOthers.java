@@ -133,8 +133,8 @@ public class OOthers {
    * @return
    */
   public double[] countScore(int[] scores) {
-    final int MaxScore = 100;
-    // 以分数维度，前后两个循环分别对应 equal count & lte count
+    final int MaxScore = 100; // 题设分数的上界
+    // 以分数维度，前后两个循环共用一个数组，分别对应 equal count & lte count
     int[] counts = new int[MaxScore + 1];
     for (int s : scores) {
       counts[s] += 1;
@@ -144,11 +144,11 @@ public class OOthers {
     }
     // 以学生维度
     int count = scores.length;
-    double[] pct = new double[count];
+    double[] pcts = new double[count];
     for (int i = 0; i < count; i++) {
-      pct[i] = 100.0 * counts[scores[i]] / count;
+      pcts[i] = 100.0 * counts[scores[i]] / count;
     }
-    return pct;
+    return pcts;
   }
 
   /**
@@ -383,7 +383,7 @@ class DData {
    * <p>扩展1，并发安全，单个 push 多个 pop
    */
   public class MyCircularQueue {
-    private final int capacity;
+    private final int CAPACITY;
     private final int[] data;
     private int front, rear; // 虚拟头尾
 
@@ -395,8 +395,8 @@ class DData {
     public MyCircularQueue(int k) {
       // 循环数组中任何时刻一定至少有一个位置不存放有效元素
       // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
-      capacity = k + 1;
-      data = new int[capacity];
+      CAPACITY = k + 1;
+      data = new int[CAPACITY];
     }
 
     /**
@@ -408,7 +408,7 @@ class DData {
     public boolean enQueue(int value) {
       if (isFull()) return false;
       data[rear] = value; // CAS
-      rear = (rear + 1) % capacity; // CAS
+      rear = (rear + 1) % CAPACITY; // CAS
       return true;
     }
 
@@ -419,7 +419,7 @@ class DData {
      */
     public boolean deQueue() {
       if (isEmpty()) return false;
-      front = (front + 1) % capacity;
+      front = (front + 1) % CAPACITY;
       return true;
     }
 
@@ -438,7 +438,7 @@ class DData {
      * @return the int
      */
     public int Rear() {
-      return isEmpty() ? -1 : data[(rear - 1 + capacity) % capacity];
+      return isEmpty() ? -1 : data[(rear - 1 + CAPACITY) % CAPACITY];
     }
 
     /**
@@ -456,7 +456,7 @@ class DData {
      * @return the boolean
      */
     public boolean isFull() {
-      return (rear + 1) % capacity == front;
+      return (rear + 1) % CAPACITY == front;
     }
   }
 

@@ -17,13 +17,11 @@ import java.util.*;
  * @author cenghui
  */
 public class TTree {
-  // 「求根节点到叶节点数字之和」
-  private int res3 = 0;
-  // 「输出后序」
-  private int preIdx = 0;
+  private int res3 = 0; // 「求根节点到叶节点数字之和」
+  private int preIdx = 0; // 「构造二叉树」输出后序
 
   /**
-   * 中序遍历，迭代，注意区分遍历 & 处理两个 step
+   * 中序遍历，迭代，区分遍历 & 处理
    *
    * <p>模板参考
    * https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/zhuan-ti-jiang-jie-er-cha-shu-qian-zhong-hou-xu-2/
@@ -100,6 +98,7 @@ public class TTree {
   }
 
   // 从前序与中序遍历序列构造二叉树 / 重建二叉树
+  // 扩展1，从中序与后序遍历序列构造二叉树，参下 annotate
   private TreeNode buildTree1(
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> hm, int inLo) {
     if (preLo > preHi) return null;
@@ -363,13 +362,13 @@ class DDFS {
    * @return int int
    */
   public int pathSumIII(TreeNode root, int targetSum) {
-    Map<Long, Integer> preSum = new HashMap<>();
-    preSum.put(0L, 1); // base case
-    return dfs14(root, preSum, 0, targetSum);
+    Map<Long, Integer> preSum2Cnt = new HashMap<>();
+    preSum2Cnt.put(0L, 1); // base case
+    return dfs14(root, preSum2Cnt, 0, targetSum);
   }
 
   // cur 表示自根的值，该路径唯一
-  private int dfs14(TreeNode root, Map<Long, Integer> preSum, long cur, int targetSum) {
+  private int dfs14(TreeNode root, Map<Long, Integer> preSum2Cnt, long cur, int target) {
     if (root == null) return 0;
     cur += root.val;
     //    path.add(root.val);
@@ -378,11 +377,11 @@ class DDFS {
     //      path.pollLast();
     //      return;
     //    }
-    int path = preSum.getOrDefault(cur - targetSum, 0);
-    preSum.put(cur, preSum.getOrDefault(cur, 0) + 1);
-    path += dfs14(root.left, preSum, cur, targetSum) + dfs14(root.right, preSum, cur, targetSum);
-    preSum.put(cur, preSum.getOrDefault(cur, 0) - 1);
-    return path;
+    int cnt = preSum2Cnt.getOrDefault(cur - target, 0);
+    preSum2Cnt.put(cur, preSum2Cnt.getOrDefault(cur, 0) + 1);
+    cnt += dfs14(root.left, preSum2Cnt, cur, target) + dfs14(root.right, preSum2Cnt, cur, target);
+    preSum2Cnt.put(cur, preSum2Cnt.getOrDefault(cur, 0) - 1);
+    return cnt;
   }
 
   /**
@@ -1531,13 +1530,13 @@ class BacktrackingSearch extends DDFS {
       TreeNode root, Deque<Integer> path, List<List<Integer>> res, int targetSum) {
     if (root == null) return;
     path.offerLast(root.val);
+    // reach leaf
     if (targetSum - root.val == 0 && root.left == null && root.right == null) {
       res.add(new ArrayList<>(path));
-      path.pollLast();
-      return;
+    } else {
+      backtracking0(root.left, path, res, targetSum - root.val);
+      backtracking0(root.right, path, res, targetSum - root.val);
     }
-    backtracking0(root.left, path, res, targetSum - root.val);
-    backtracking0(root.right, path, res, targetSum - root.val);
     path.pollLast();
   }
 

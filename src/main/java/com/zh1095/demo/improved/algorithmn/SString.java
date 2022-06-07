@@ -1274,7 +1274,7 @@ class CConvert {
   }
 }
 
-/** 子串相关，单词搜索参考 TTree */
+/** 子串相关，「单词搜索」参考 TTree，「单词拆分」参考 DP */
 class WWord extends DefaultSString {
   /**
    * 翻转字符串里的单词，如 www.abc.com -> com.abc.www
@@ -1301,41 +1301,6 @@ class WWord extends DefaultSString {
     }
 
     return str.toString();
-  }
-
-  /**
-   * 单词拆分，wordDict 是否可组合为 s，可重复使用
-   *
-   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 其一匹配，比如 wordDict=["apple", "pen", "code"]
-   *
-   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+checkIf("pen")
-   *
-   * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
-   *
-   * @param s the s
-   * @param wordDict the word dict
-   * @return boolean boolean
-   */
-  public boolean wordBreak(String s, List<String> wordDict) {
-    int len = s.length(), maxLen = 0;
-    Set<String> wordSet = new HashSet(); // 仅用于 O(1) 匹配
-    for (String w : wordDict) {
-      wordSet.add(w);
-      maxLen = Math.max(maxLen, w.length()); // dp[i] 探索至最长的单词即可
-    }
-    boolean[] dp = new boolean[len + 1];
-    dp[0] = true;
-    for (int i = 1; i < len + 1; i++) {
-      for (int j = i; j > -1; j--) { // O(n^2)
-        if (j < i - maxLen) break; // curing
-        String word = s.substring(j, i);
-        if (dp[j] && wordSet.contains(word)) {
-          dp[i] = true;
-          break;
-        }
-      }
-    }
-    return dp[len];
   }
 
   /**
