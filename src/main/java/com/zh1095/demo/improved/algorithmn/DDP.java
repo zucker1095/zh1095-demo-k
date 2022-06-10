@@ -138,7 +138,7 @@ class OptimalSubSequence extends DichotomyClassic {
   }
 
   /**
-   * 最长公共子序列，[1,m] & [1,n]
+   * 最长公共子序列
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的 LCS
    *
@@ -161,6 +161,8 @@ class OptimalSubSequence extends DichotomyClassic {
             text1.charAt(p1 - 1) == text2.charAt(p2 - 1)
                 ? dp[p1 - 1][p2 - 1] + 1
                 : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
+        // 需要区间满足存在公共部分
+        //
         //        if (match(text1, p1, text2, p2) && hi - lo < p2 - p1) {
         //          lo = p1;
         //          hi = p2;
@@ -1204,7 +1206,7 @@ class CCount {
   }
 }
 
-/** 收集矩形相关，矩阵参下路径 */
+/** 收集矩形相关，矩阵参考路径 */
 class OptimalRectangle {
   /**
    * 最大正方形，找到只包含 1 的最大正方形

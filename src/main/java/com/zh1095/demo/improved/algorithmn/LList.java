@@ -21,20 +21,19 @@ public class LList {
    * @return the list node
    */
   public ListNode reverseList(ListNode head) {
-    // 递归
+    // recursion
     //    if (head == null || head.next == null) return head;
     //    // 后半部分反转的头，即反转前 head 链表的尾
     //    ListNode newHead = reverseList(head.next);
     //    head.next.next = head;
     //    head.next = null;
     //    return newHead;
-    // 迭代
+    // iteration
     ListNode pre = null, cur = head, nxt;
     while (cur != null) {
       nxt = cur.next; // 1.暂存
       cur.next = pre; // 2.变向
-      // 3.步进
-      pre = cur;
+      pre = cur; // 3.步进
       cur = nxt;
     }
     return pre;
@@ -53,8 +52,10 @@ public class LList {
    */
   public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
     ListNode dummy = new ListNode(), cur = dummy, l1 = list1, l2 = list2;
-    while (l1 != null && l2 != null) {
-      if (l1.val < l2.val) {
+    while (l1 != null || l2 != null) {
+      int n1 = l1 == null ? Integer.MAX_VALUE : l1.val,
+          n2 = l2 == null ? Integer.MAX_VALUE : l2.val;
+      if (n1 < n2) {
         cur.next = l1;
         l1 = l1.next;
       } else {
@@ -63,7 +64,6 @@ public class LList {
       }
       cur = cur.next;
     }
-    cur.next = l1 != null ? l1 : l2;
     return dummy.next;
   }
 
@@ -323,9 +323,9 @@ class MergeList extends LList {
     while (p1 != null || p2 != null || carry != 0) {
       int n1 = p1 == null ? 0 : p1.val, n2 = p2 == null ? 0 : p2.val;
       int tmp = n1 + n2 + carry;
-      carry = tmp / base;
       cur.next = new ListNode(tmp % base);
       cur = cur.next;
+      carry = tmp / base;
       p1 = p1 == null ? null : p1.next;
       p2 = p2 == null ? null : p2.next;
     }
@@ -333,7 +333,7 @@ class MergeList extends LList {
   }
 
   // 123 & 45 -> 168
-  // 并发反转两个链表 & 正序计算 & 反转整个链表
+  // 分别反转 & 正序计算 & 反转整个链表
   // 允许空间，则分别遍历建栈，注意需要逆序尾插，即 cur->head
   private ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
     //    ListNode p1 = reverseList(l1), p2 = reverseList(l2);

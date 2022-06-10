@@ -251,7 +251,7 @@ class HHeap extends DefaultArray {
     //    for (int i = 0; i < k; i++) {
     //      swim(nums, i);
     //    }
-    heapify(nums, k);
+    heapify(nums, k - 1);
     // 剩下的元素与堆顶比较，若大于堆顶则去掉堆顶，再将其插入
     for (int i = k; i < nums.length; i++) {
       if (priorityThan(nums[i], nums[0])) continue;
@@ -276,18 +276,32 @@ class HHeap extends DefaultArray {
    * @param nums the nums
    */
   public void heapSort(int[] nums) {
-    int len = nums.length - 1;
-    heapify(nums, len);
-    for (int i = len; i >= 1; i--) { // 循环不变量，[0:idx] 堆有序
+    int end = nums.length - 1;
+    heapify(nums, end);
+    for (int i = end; i >= 1; i--) { // 循环不变量，[0:idx] 堆有序
       swap(nums, i, 0); // 把堆顶元素交换到数组末尾
       sink(nums, 0, i - 1); // 下标 0 位置下沉操作，使得 [0:i] 堆有序
     }
   }
 
   // 从首个叶结点开始逐层下沉，即堆化
-  private void heapify(int[] nums, int capcacity) {
-    for (int i = capcacity / 2; i >= 0; i--) {
-      sink(nums, i, capcacity - 1);
+  private void heapify(int[] nums, int end) {
+    for (int i = end / 2; i >= 0; i--) {
+      sink(nums, i, end);
+    }
+  }
+
+  // 从下到上调整堆，分别取左右子结点 2*cur+1 与 +2 判断
+  private void sink(int[] heap, int begin, int end) {
+    int cur = begin, child = 2 * cur + 1;
+    while (2 * cur + 1 <= end) {
+      if (child + 1 <= end && priorityThan(heap[child + 1], heap[child])) {
+        child += 1;
+      }
+      if (priorityThan(heap[cur], heap[child])) break;
+      swap(heap, cur, child);
+      cur = child;
+      child = 2 * cur + 1;
     }
   }
 
@@ -298,20 +312,6 @@ class HHeap extends DefaultArray {
       swap(heap, cur, parent);
       cur = parent;
       parent = (cur - 1) / 2;
-    }
-  }
-
-  // 从下到上调整堆，分别取左右子结点 2*cur+1 与 +2 判断
-  private void sink(int[] heap, int idx, int end) {
-    int cur = idx, child = 2 * cur + 1;
-    while (2 * cur + 1 <= end) {
-      if (child + 1 <= end && priorityThan(heap[child + 1], heap[child])) {
-        child += 1;
-      }
-      if (priorityThan(heap[cur], heap[child])) break;
-      swap(heap, cur, child);
-      cur = child;
-      child = 2 * cur + 1;
     }
   }
 
@@ -947,24 +947,49 @@ class DichotomyClassic extends DefaultArray {
 
 class DichotomyElse extends DefaultArray {
   /**
-   * 搜索二维矩阵，模拟 BST 以右上角作根开始遍历，O(m+n)
+   * 搜索二维矩阵，确保每行的首个大于前一行的最后一个
    *
    * <p>行内有序，行间不重叠。否则，参考「有序矩阵中第k小的元素」
    *
-   * <p>I & II 通用，或二分，复杂度为 mlogn
+   * <p>模拟 BST 以右上角作根开始遍历则 I & II 通用
+   *
+   * <p>扩展1，II 不确保「每行的首个大于前一行的最后一个」，因此无法两次二分，只能遍历行/列，再对列/行进行二分
    *
    * @param matrix the matrix
    * @param target the target
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
-    int x = matrix[0].length - 1, y = 0;
-    while (-1 < x && y < matrix.length) {
-      if (matrix[y][x] < target) y += 1;
-      else if (matrix[y][x] == target) return true;
-      else if (matrix[y][x] > target) x -= 1;
+    // 定位到所在行，找到最后一个满足 matrix[x]][0] <= t 的行
+    int lo = 0, hi = matrix.length - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo + 1) / 2;
+      if (matrix[mid][0] <= target) lo = mid;
+      else hi = mid - 1;
     }
-    return false;
+    int row = hi;
+    if (matrix[row][0] == target) return true;
+    if (matrix[row][0] > target) return false;
+    // 从所在行中定位到列，找到最后一个满足 matrix[row][x] <= t 的列
+    lo = 0;
+    hi = matrix[0].length - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo + 1) / 2;
+      if (matrix[row][mid] <= target) lo = mid;
+      else hi = mid - 1;
+    }
+    return matrix[row][hi] == target;
+    // II
+    //    for (int row = 0; row < matrix.length; row++) {
+    //      int lo = 0, hi = matrix[0].length - 1;
+    //      while (lo < hi) {
+    //        int mid = lo + (hi - lo + 1) / 2;
+    //        if (matrix[row][mid] <= target) lo = mid;
+    //        else hi = mid - 1;
+    //      }
+    //      if (matrix[row][hi] == target) return true;
+    //    }
+    //    return false;
   }
 
   /**

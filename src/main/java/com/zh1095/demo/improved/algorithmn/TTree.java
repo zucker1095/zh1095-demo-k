@@ -90,33 +90,32 @@ public class TTree {
    * @return the tree node
    */
   public TreeNode buildTree(int[] preorder, int[] inorder) {
-    Map<Integer, Integer> hm = new HashMap<>();
+    Map<Integer, Integer> val2Idx = new HashMap<>();
     for (int i = 0; i < preorder.length; i++) {
-      hm.put(inorder[i], i);
+      val2Idx.put(inorder[i], i);
     }
-    return buildTree1(preorder, 0, preorder.length - 1, hm, 0);
+    return buildTree1(preorder, 0, preorder.length - 1, val2Idx, 0);
   }
 
   // 从前序与中序遍历序列构造二叉树 / 重建二叉树
-  // 扩展1，从中序与后序遍历序列构造二叉树，参下 annotate
   private TreeNode buildTree1(
-      int[] preorder, int preLo, int preHi, Map<Integer, Integer> hm, int inLo) {
+      int[] preorder, int preLo, int preHi, Map<Integer, Integer> val2Idx, int inLo) {
     if (preLo > preHi) return null;
     TreeNode root = new TreeNode(preorder[preLo]);
-    int idx = hm.get(preorder[preLo]), countLeft = idx - inLo;
-    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, hm, inLo);
-    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, hm, idx + 1);
+    int idx = val2Idx.get(preorder[preLo]), countLeft = idx - inLo;
+    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, val2Idx, inLo);
+    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, val2Idx, idx + 1);
     return root;
   }
 
   // 从中序与后序遍历序列构造二叉树
   private TreeNode buildTree2(
-      int[] postrorder, int postLo, int postHi, Map<Integer, Integer> hm, int inLo) {
+      int[] postrorder, int postLo, int postHi, Map<Integer, Integer> val2Idx, int inLo) {
     if (postLo > postHi) return null;
     TreeNode root = new TreeNode(postrorder[postHi]);
-    int idx = hm.get(postrorder[postHi]), countLeft = idx - inLo;
-    root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, hm, inLo);
-    root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, hm, idx + 1);
+    int idx = val2Idx.get(postrorder[postHi]), countLeft = idx - inLo;
+    root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, val2Idx, inLo);
+    root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, val2Idx, idx + 1);
     return root;
   }
 
@@ -128,16 +127,21 @@ public class TTree {
    * @param pre the pre
    * @param inLo the in lo
    * @param inHi the in hi
-   * @param hm the hm
+   * @param val2Idx the hm
    * @param postorder the postorder
    */
   public void getPostorder(
-      int[] preorder, int preLo, int preHi, Map<Integer, Integer> hm, int inLo, int[] postorder) {
+      int[] preorder,
+      int preLo,
+      int preHi,
+      Map<Integer, Integer> val2Idx,
+      int inLo,
+      int[] postorder) {
     if (preLo > preHi) return;
     int root = preorder[preLo];
-    int idx = hm.get(root), countLeft = idx - inLo;
-    getPostorder(preorder, preLo + 1, preLo + countLeft, hm, inLo, postorder);
-    getPostorder(preorder, preLo + countLeft + 1, preHi, hm, idx + 1, postorder);
+    int idx = val2Idx.get(root), countLeft = idx - inLo;
+    getPostorder(preorder, preLo + 1, preLo + countLeft, val2Idx, inLo, postorder);
+    getPostorder(preorder, preLo + countLeft + 1, preHi, val2Idx, idx + 1, postorder);
     postorder[preorder.length - 1 - preLo] = root;
   }
 
@@ -688,7 +692,7 @@ class BBSTInorder {
       }
       cur = stack.pollLast();
       if (pre.val > cur.val && n1 == null) n1 = pre;
-      // stop recording util it's last wrong pair such as swaping 15 & 5 not 15 & 8
+      // stop recording util the last wrong pair e.g. swaping 15 & 5 not 15 & 8
       //    10
       //  15   5
       // 3 8 13 16
@@ -720,11 +724,7 @@ class BBSTInorder {
      * @param root the root
      */
     public BSTIterator(TreeNode root) {
-      TreeNode cur = root;
-      while (cur != null) {
-        stack.offerLast(cur);
-        cur = cur.left;
-      }
+      filling(root);
     }
 
     /**
@@ -733,12 +733,17 @@ class BBSTInorder {
      * @return the int
      */
     public int next() {
-      TreeNode cur = stack.pollLast(), nxt = cur.right;
-      while (nxt != null) {
-        stack.offerLast(nxt);
-        nxt = nxt.left;
+      TreeNode nxt = stack.pollLast();
+      filling(nxt.right);
+      return nxt.val;
+    }
+
+    private void filling(TreeNode node) {
+      TreeNode cur = node;
+      while (cur != null) {
+        stack.offerLast(cur);
+        cur = cur.left;
       }
-      return cur.val;
     }
 
     /**
@@ -1081,7 +1086,7 @@ class BBFS {
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
-      List<Integer> curLevel = new ArrayList<Integer>();
+      List<Integer> curLevel = new ArrayList<>();
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
         curLevel.add(cur.val);
@@ -1229,7 +1234,7 @@ class BBFS {
   }
 
   /**
-   * 翻转二叉树 / 二叉树的镜像，前序 / 逐一交换遍历的结点的左右子树
+   * 翻转二叉树/二叉树的镜像，前序/逐一交换遍历的结点的左右子树
    *
    * @param root the root
    * @return tree node

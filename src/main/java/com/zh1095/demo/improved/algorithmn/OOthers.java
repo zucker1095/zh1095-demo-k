@@ -271,6 +271,9 @@ class DData {
    * <p>扩展1，带超时，可以懒删除或 Daemon 随机 scan
    *
    * <p>扩展2，线程安全，空结点 throw exception，分别对 hash & 双向链表改用 ConcurrentHashMap & 读写锁，前者可以使用另一把锁代替
+   *
+   * <p>LFU 参考图片即可
+   * https://leetcode-cn.com/problems/lfu-cache/solution/chao-xiang-xi-tu-jie-dong-tu-yan-shi-460-lfuhuan-c/
    */
   public class LRUCache {
     private final Map<Integer, DLinkedNode> key2Node = new HashMap<>();
@@ -881,7 +884,7 @@ class MMath {
   }
 
   /**
-   * 分数到小数，高精度除法
+   * 分数到小数，高精度除法，对比「两数相除」
    *
    * <p>每一位小数通过 *10 再除余计算，而循环小数可以通过判断被除数如 1/7 有没有出现过，及其结果的左边界来判断。
    *
@@ -896,30 +899,26 @@ class MMath {
     // 1.判断正负
     int flag = (numerator > 0 && denominator > 0) || (numerator < 0 && denominator < 0) ? 1 : -1;
     long a = Math.abs((long) numerator), b = Math.abs((long) denominator);
-
     // 2.取出余数
     long quotient = a / b, remainder = a % b;
     if (remainder == 0) return String.valueOf(quotient * flag); // 整除
     StringBuilder num = new StringBuilder(String.valueOf(quotient)); // 先插入整数部分
     if (flag == -1) num.insert(0, '-'); // 正负
     num.append('.');
-    int len = num.length(); // 小数之外的长度
-
-    final int PRECISSION = 10000; // 精度可控
+    // 小数之外的长度 & 精度可控
+    final int PRECISSION = 10000, len = num.length();
     // 3.保存某个被除数与原除数的结果
     Map<Long, Integer> quotients = new HashMap<>();
     for (int i = 0; i < PRECISSION; i++) {
       a = remainder * 10;
       quotient = a / b;
       remainder = a % b;
-
       // 4.该被除数已出现过，在该区间首末插入括号即可
       if (quotients.containsKey(a)) {
         num.insert(quotients.get(a).intValue(), '(');
         num.append(')');
         break;
       }
-
       num.append(quotient);
       quotients.put(a, i + len); // 该除数所得结果的左边界
       if (remainder == 0) break; // 入迭代前非整除
@@ -1541,6 +1540,3 @@ class BBit {
     return res;
   }
 }
-
-// LFU 参考图片即可
-// https://leetcode-cn.com/problems/lfu-cache/solution/chao-xiang-xi-tu-jie-dong-tu-yan-shi-460-lfuhuan-c/

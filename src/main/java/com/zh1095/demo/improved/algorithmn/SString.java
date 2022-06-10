@@ -39,8 +39,8 @@ public class SString extends DefaultSString {
     while (p1 >= 0 || p2 >= 0 || carry != 0) {
       int n1 = p1 < 0 ? 0 : getInt(num1.charAt(p1)), n2 = p2 < 0 ? 0 : getInt(num1.charAt(p2));
       int tmp = n1 + n2 + carry;
-      carry = tmp / BASE;
       res.append(getChar(tmp % BASE));
+      carry = tmp / BASE;
       p1 -= 1;
       p2 -= 1;
     }
@@ -58,30 +58,29 @@ public class SString extends DefaultSString {
    */
   public String reduceStrings(String num1, String num2) {
     StringBuilder res = new StringBuilder();
-    if (integerLess(num1, num2)) { // preprocessing
+    if (integerLess(num1, num2)) {
       String tmp = num1;
       num1 = num2;
       num2 = num1;
       res.append('-');
     }
-    // 逐位
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
     int carry = 0;
     while (p1 >= 0 || p2 >= 0) {
-      int n1 = p1 >= 0 ? num1.charAt(p1) - '0' : 0, n2 = p2 >= 0 ? num2.charAt(p2) - '0' : 0;
+      int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0', n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0';
       int tmp = (n1 - n2 - carry + 10) % 10;
-      res.append(tmp); // res.insert(0,tmp);
+      res.append(tmp); // res.insert(0,tmp) 则无需 reverse
       carry = n1 - carry - n2 < 0 ? 1 : 0;
       p1 -= 1;
       p2 -= 1;
     }
     String str = res.reverse().toString();
-    int pos = 0; // 前导零
+    int idx = 0; // 前导零
     for (char ch : str.toCharArray()) {
       if (ch != '0') break;
-      ch += 1;
+      idx += 1;
     }
-    return str.substring(0, pos);
+    return str.substring(idx, str.length());
   }
 
   private boolean integerLess(String num1, String num2) {
@@ -110,19 +109,15 @@ public class SString extends DefaultSString {
    * @return string string
    */
   public String multiply(String num1, String num2) {
-    final int BASE = 10, l1 = num1.length(), l2 = num2.length();
-    // 特判
     if (num1.equals("0") || num2.equals("0")) return "0";
-    char[] nums1 = num1.toCharArray(), nums2 = num2.toCharArray();
-    // 乘法比加法多出高位的概率更大，因此额外冗余一位暂存计算结果即可，取缔 carry
-    char[] product = new char[l1 + l2];
-    for (int p1 = l1 - 1; p1 > -1; p1--) {
-      int n1 = nums1[p1] - '0';
-      for (int p2 = l2 - 1; p2 > -1; p2--) {
-        int n2 = nums2[p2] - '0';
-        int sum = product[p1 + p2 + 1] + n1 * n2;
+    final int BASE = 10, l1 = num1.length(), l2 = num2.length();
+    int[] product = new int[l1 + l2];
+    for (int p1 = l1 - 1; p1 >= 0; p1--) {
+      int n1 = num1.charAt(p1) - '0';
+      for (int p2 = l2 - 1; p2 >= 0; p2--) {
+        int n2 = num2.charAt(p2) - '0', sum = product[p1 + p2 + 1] + n1 * n2;
+        product[p1 + p2 + 1] = sum % BASE;
         product[p1 + p2] += sum / BASE;
-        product[p1 + p2 + 1] = (char) (sum % BASE - '0');
       }
     }
     // 跳过前导零
@@ -133,8 +128,6 @@ public class SString extends DefaultSString {
       idx += 1;
     }
     return res.toString();
-    //    int offset = product[0] == 0 ? 1 : 0;
-    //    return String.valueOf(product, offset, l1 + l2 - offset + 1);
   }
 
   /**
