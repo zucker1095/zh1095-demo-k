@@ -74,8 +74,9 @@ public class AArray extends DefaultArray {
   public void merge(int[] nums1, int m, int[] nums2, int n) {
     int p1 = m - 1, p2 = n - 1;
     for (int i = m + n - 1; i >= 0; i--) {
-      int n1 = curNum(nums1, p1), n2 = curNum(nums2, p2);
-      int bigger = 0;
+      int bigger,
+          n1 = p1 < 0 || p1 > nums1.length - 1 ? Integer.MIN_VALUE : nums1[p1],
+          n2 = p2 < 0 || p2 > nums2.length - 1 ? Integer.MIN_VALUE : nums2[p2];
       if (n1 <= n2) {
         bigger = n1;
         p1 -= 1; // nextIdx()
@@ -258,13 +259,6 @@ class HHeap extends DefaultArray {
       swap(nums, 0, i);
       sink(nums, 0, k - 1);
     }
-    //    int idx = nums.length - 1;
-    //    heapify(nums, nums.length);
-    //    while (idx >= nums.length - k + 1) {
-    //      swap(nums, 0, idx);
-    //      idx--;
-    //      down(nums, 0, idx - 1);
-    //    }
     return nums[0];
   }
 
@@ -284,16 +278,16 @@ class HHeap extends DefaultArray {
     }
   }
 
-  // 从首个叶结点开始逐层下沉，即堆化
+  // 从首个叶结点开始逐层下沉，即堆化 nums[0:end]
   private void heapify(int[] nums, int end) {
-    for (int i = end / 2; i >= 0; i--) {
+    for (int i = end / 2; i > -1; i--) {
       sink(nums, i, end);
     }
   }
 
   // 从下到上调整堆，分别取左右子结点 2*cur+1 与 +2 判断
-  private void sink(int[] heap, int begin, int end) {
-    int cur = begin, child = 2 * cur + 1;
+  private void sink(int[] heap, int start, int end) {
+    int cur = start, child = 2 * cur + 1;
     while (2 * cur + 1 <= end) {
       if (child + 1 <= end && priorityThan(heap[child + 1], heap[child])) {
         child += 1;
@@ -409,7 +403,7 @@ class HHeap extends DefaultArray {
   }
 
   /**
-   * 数据流的中位数 / 多个无序数组的中位数，分别使用两个堆，保证大根堆元素始终多一个
+   * 数据流的中位数/多个无序数组的中位数，分别使用两个堆，保证大根堆元素始终多一个
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-median-from-data-stream/solution/gong-shui-san-xie-jing-dian-shu-ju-jie-g-pqy8/
@@ -425,18 +419,18 @@ class HHeap extends DefaultArray {
 
     public void addNum(int num) {
       if (maxHeap.size() == minHeap.size()) {
-        if (minHeap.isEmpty() || num <= minHeap.peek()) {
-          maxHeap.add(num);
-        } else {
+        if (!minHeap.isEmpty() && num > minHeap.peek()) {
           maxHeap.add(minHeap.poll());
           minHeap.add(num);
+        } else {
+          maxHeap.add(num);
         }
       } else {
-        if (maxHeap.peek() <= num) {
-          minHeap.add(num);
-        } else {
+        if (maxHeap.peek() > num) {
           minHeap.add(maxHeap.poll());
           maxHeap.add(num);
+        } else {
+          minHeap.add(num);
         }
       }
     }
@@ -448,11 +442,7 @@ class HHeap extends DefaultArray {
     }
   }
 
-  /**
-   * 数据流的第k大
-   *
-   * <p>小根堆
-   */
+  /** 数据流的第k大，维护一个小根堆 */
   public class KthLargest {
     private final int[] minheap;
     private final int ranking;
@@ -577,7 +567,7 @@ class MMerge extends DefaultArray {
     int mid = start + (end - start) / 2;
     divide1(nums, tmp, start, mid);
     divide1(nums, tmp, mid + 1, end);
-    // curing 因为此时 [lo,mid]&[mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
+    // curing 因为此时 [lo,mid] & [mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
     if (nums[mid] <= nums[mid + 1]) return;
     // 合并 nums[start,mid] & nums[mid+1,end]
     merge1(nums, tmp, start, mid, end);
@@ -675,6 +665,22 @@ class MMerge extends DefaultArray {
   }
 
   /**
+   * 会议室，判断是否有交集即可，即某个会议开始时，上一个会议是否结束。
+   *
+   * <p>「会议室II」参上
+   *
+   * @param intervals
+   * @return
+   */
+  public boolean canAttendMeetings(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> (v1[0] - v2[0]));
+    for (int i = 1; i < intervals.length; i++) {
+      if (intervals[i][0] < intervals[i - 1][1]) return false;
+    }
+    return true;
+  }
+
+  /**
    * 螺丝螺母匹配，快速排序 & 分治
    *
    * <p>TODO 参考
@@ -696,22 +702,6 @@ class MMerge extends DefaultArray {
 
   // 可调用函数
   //  private int match(int screw, int nut) {}
-
-  /**
-   * 会议室，判断是否有交集即可，即某个会议开始时，上一个会议是否结束。
-   *
-   * <p>「会议室II」参上
-   *
-   * @param intervals
-   * @return
-   */
-  public boolean canAttendMeetings(int[][] intervals) {
-    Arrays.sort(intervals, (v1, v2) -> (v1[0] - v2[0]));
-    for (int i = 1; i < intervals.length; i++) {
-      if (intervals[i][0] < intervals[i - 1][1]) return false;
-    }
-    return true;
-  }
 }
 
 /**
@@ -799,13 +789,13 @@ class DichotomyClassic extends DefaultArray {
     if (nums.length < 1 || target < nums[0] || nums[nums.length - 1] < target) {
       return new int[] {-1, -1};
     }
-    int lowmost = lowmostBound(nums, target);
-    if (lowmost == -1) return new int[] {-1, -1};
-    int himost = himostBound(nums, target, lowmost);
-    return new int[] {lowmost, himost};
+    int smallmost = smallmostBound(nums, target);
+    if (smallmost == -1) return new int[] {-1, -1};
+    int bigmost = bigmostBound(nums, target, smallmost);
+    return new int[] {smallmost, bigmost};
   }
 
-  protected int lowmostBound(int[] nums, int target) {
+  protected int smallmostBound(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
@@ -816,7 +806,7 @@ class DichotomyClassic extends DefaultArray {
     return nums[lo] == target ? lo : -1;
   }
 
-  private int himostBound(int[] nums, int target, int start) {
+  private int bigmostBound(int[] nums, int target, int start) {
     int lo = start, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2 + 1; // 需要右开区间
@@ -827,8 +817,15 @@ class DichotomyClassic extends DefaultArray {
     return nums[hi] == target ? hi : -1;
   }
 
-  // TODO 对有序数组找到重复数超过 k 的序列
-  // 二分找到某数出现的首个和最后的索引，再分隔两个数组分别递归求解。
+  /**
+   * 对有序数组找到重复数超过 k 的序列
+   *
+   * <p>二分找到某数出现的首个和最后的索引，再分隔两个数组分别递归求解。
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
   public List<Integer> findDuplicatesK(int[] nums, int k) {
     List<Integer> res = new ArrayList<>();
     int[] pos = searchRange(nums, nums[nums.length / 2]);
@@ -1149,8 +1146,7 @@ class SSum extends DefaultArray {
       int pivot = nums[i];
       if (pivot > target) break;
       if (i > 0 && pivot == nums[i - 1]) continue; // first deduplication
-      // two sum
-      int lo = i + 1, hi = nums.length - 1;
+      int lo = i + 1, hi = nums.length - 1; // two sum
       while (lo < hi) {
         int sum = pivot + nums[lo] + nums[hi];
         if (sum < target) {
@@ -1218,7 +1214,7 @@ class SSum extends DefaultArray {
     if (sum % 3 != 0) return false;
     int lo = 0, hi = nums.length - 1;
     int loSum = nums[lo], hiSum = nums[hi];
-    // 使用 left+1<right 防止只能将数组分成两个部分
+    // 通过 left+1<right 防止只能将数组分成两个部分
     // 如 [1,-1,1,-1]，使用 left<right 作为判断条件就会出错
     while (lo + 1 < hi) {
       // 左右两边都等于 sum/3 ，中间也一定等于
@@ -1284,7 +1280,7 @@ class SSum extends DefaultArray {
  */
 class PreSum {
   /**
-   * 最大子数组和 / 最大子序和 / 最大子串和 / 连续子数组的最大和，基于贪心，通过前缀和
+   * 最大子数组和/最大子序和/最大子串和/连续子数组的最大和，基于贪心，通过前缀和
    *
    * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
    *
@@ -1302,12 +1298,12 @@ class PreSum {
    */
   public int maxSubArray(int[] nums) {
     int preSum = 0, maxSum = Integer.MIN_VALUE;
-    int start = 0, end = 0;
-    for (int num : nums) {
-      if (preSum + num > num) {
-        preSum += num;
+    // int start = 0, end = 0;
+    for (int n : nums) {
+      if (preSum + n > n) {
+        preSum += n;
       } else {
-        preSum = num;
+        preSum = n;
         //        start = i;
       }
       if (preSum > maxSum) {
@@ -1348,11 +1344,9 @@ class PreSum {
   }
 
   /**
-   * 连续数组，严格相等，最长
+   * 连续数组，严格相等，最长，找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
    *
-   * <p>找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
-   *
-   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的最小右边界」
+   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的首个右边界」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
@@ -1365,6 +1359,7 @@ class PreSum {
     Map<Integer, Integer> sum2FirstHi = new HashMap<>();
     sum2FirstHi.put(0, -1); // 可能存在前缀和刚好满足条件的情况
     for (int i = 0; i < nums.length; i++) {
+      // 将 0 作为 -1
       preSum += nums[i] == 0 ? -1 : 1;
       // 画图可知，i - map[preSum] 即和为 0 的数组的长度
       if (sum2FirstHi.containsKey(preSum)) maxLen = Math.max(maxLen, i - sum2FirstHi.get(preSum));
@@ -1496,7 +1491,7 @@ class PreSum {
   }
 
   /**
-   * 最大子矩阵，元素和最大
+   * 最大子矩阵，元素和最大，类似「最大子数组和」
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/max-submatrix-lcci/solution/zhe-yao-cong-zui-da-zi-xu-he-shuo-qi-you-jian-dao-/
@@ -1537,32 +1532,9 @@ class PreSum {
     }
     return coordinates;
   }
-
-  /**
-   * 航班预订统计
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/corporate-flight-bookings/solution/5118_hang-ban-yu-ding-tong-ji-by-user9081a/
-   *
-   * @param bookings
-   * @param n
-   * @return
-   */
-  public int[] corpFlightBookings(int[][] bookings, int n) {
-    int[] counters = new int[n];
-    for (int[] booking : bookings) {
-      int first = booking[0], last = booking[1], seat = booking[2];
-      counters[first - 1] += seat;
-      if (last < n) counters[last] -= seat;
-    }
-    for (int i = 1; i < n; i++) {
-      counters[i] += counters[i - 1];
-    }
-    return counters;
-  }
 }
 
-/** 重复，哈希有关 */
+/** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
    * 寻找重复数，无序找首个，快慢指针，与「环形链表II」一致，类似参考「第一个只出现一次的字符」
@@ -1570,15 +1542,16 @@ class DDuplicate extends DefaultArray {
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
    *
-   * <p>TODO 扩展1，重复数字有多个，找出所有，要求复杂度 n & 1，nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当
-   * nums[idx]>2*n 时就能表示 nums[i]，即 idx+1 出现过两次
+   * <p>TODO 扩展1，重复数字有多个，找出所有，要求复杂度 n & 1
+   *
+   * <p>nums[i] 每出现过一次对 nums[idx]+=n，其中 idx=nums[i]-1，加完之后，当nums[idx]>2*n 时就能表示 nums[i]，即 idx+1
+   * 出现过两次
    *
    * @param nums the nums
    * @return int int
    */
   public int findDuplicate(int[] nums) {
-    // 题设区间为 [1,n]
-    int lo = nums[0], hi = nums[nums[0]];
+    int lo = nums[0], hi = nums[nums[0]]; // 题设区间为 [1,n]
     while (lo != hi) {
       lo = nums[lo];
       hi = nums[nums[hi]];
@@ -2219,17 +2192,6 @@ abstract class DefaultArray {
       return i;
     }
     return -1;
-  }
-
-  /**
-   * 返回 nums[idx]，越界则 MIN_VALUE
-   *
-   * @param nums the nums
-   * @param idx the idx
-   * @return int int
-   */
-  protected final int curNum(int[] nums, int idx) {
-    return idx <= -1 || idx >= nums.length ? Integer.MIN_VALUE : nums[idx];
   }
 
   /**

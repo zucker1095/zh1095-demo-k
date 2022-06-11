@@ -20,7 +20,7 @@ public class DDP {}
  *
  * <p>所有的 DP 要输出路径/具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考 https://blog.51cto.com/u_15127578/3748446
  */
-class OptimalSubSequence extends DichotomyClassic {
+class OptimalSubSequence {
   /**
    * 最长递增子序列 / 最长上升子序列，基于贪心
    *
@@ -35,7 +35,7 @@ class OptimalSubSequence extends DichotomyClassic {
    */
   public int lengthOfLIS(int[] nums) {
     // tail 最后一个已经赋值的元素的索引
-    int len = nums.length, hi = 0;
+    int len = nums.length, end = 0;
     // dp[i] 表示以 i 结尾的 LIS 的最大长度
     // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
     int[] tails = new int[len], dp = new int[len];
@@ -43,18 +43,23 @@ class OptimalSubSequence extends DichotomyClassic {
     // dp[0] = 1;
     for (int i = 1; i < len; i++) {
       int n = nums[i];
-      if (n > tails[hi]) {
-        hi += 1;
-        tails[hi] = n;
+      if (n > tails[end]) {
+        end += 1;
+        tails[end] = n;
         // dp[i] = hi + 1;
       } else {
-        int lo = lowmostBound(Arrays.copyOfRange(tails, 0, hi), n);
+        int lo = 0, hi = end;
+        while (lo < hi) {
+          int mid = lo + (hi - lo) / 2;
+          if (tails[mid] < n) lo = mid + 1;
+          else hi = mid;
+        }
         tails[lo] = n;
         // dp[i] = lo + 1;
       }
     }
     //    getPath(nums, dp, hi + 1);
-    return hi + 1; // 返回长度
+    return end + 1; // 返回长度
   }
 
   // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
@@ -527,6 +532,7 @@ class OptimalPath {
     //      path[rows + cols - 1 - i] = deconding(from[idx]);
     //      idx = from[idx];
     //    }
+    //    return dp[rows - 1][cols - 1];
   }
 
   //  private int[] deconding(int cols, int idx) {
@@ -758,9 +764,7 @@ class OptimalElse {
   }
 
   /**
-   * 接雨水，贪心，漏桶效应
-   *
-   * <p>首尾双指针，更新短边
+   * 接雨水，贪心，漏桶效应，更新短边
    *
    * @param height the height
    * @return int int
@@ -784,7 +788,7 @@ class OptimalElse {
   }
 
   /**
-   * 盛最多水的容器，同理更新短边
+   * 盛最多水的容器，更新短边
    *
    * @param height the height
    * @return int int
@@ -831,7 +835,7 @@ class OptimalElse {
   }
 
   /**
-   * 零钱兑换，硬币可重复，与下方 II 保持外 coin 内 amount
+   * 零钱兑换，硬币可重复，类似「排列总和I」，与下方 II 保持外 coin 内 amount
    *
    * <p>dp[i] 表示凑成 i 元需要的最少的硬币数
    *
@@ -841,7 +845,7 @@ class OptimalElse {
    */
   public int coinChange(int[] coins, int amount) {
     int[] dp = new int[amount + 1];
-    // 因为要比较的是最小值，这个不可能的值就得赋值成为一个最大值
+    // 因为要比较的是最小值
     Arrays.fill(dp, amount + 1);
     // 单独一枚硬币如果能够凑出面值，符合最优子结构
     dp[0] = 0;
@@ -869,29 +873,6 @@ class OptimalElse {
       dp[i] = i; // 至少全由 1 组成，即 worst case
       for (int j = 1; j * j <= i; j++) {
         dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
-      }
-    }
-    return dp[n];
-  }
-
-  /**
-   * 整数拆分，设 n=a+b+...+c 求 a*b*...*c 最大乘积的方案
-   *
-   * <p>dp[i] 表示 i 拆分的整数集的最大积
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/integer-break/solution/bao-li-sou-suo-ji-yi-hua-sou-suo-dong-tai-gui-hua-/
-   *
-   * @param n
-   * @return
-   */
-  public int integerBreak(int n) {
-    int[] dp = new int[n + 1];
-    dp[1] = 1;
-    for (int i = 2; i <= n; i++) {
-      for (int j = 1; j <= i - 1; j++) {
-        // max(dp[i], j*(i-j), j*dp[i-j])  后二者分别对应不拆与拆
-        dp[i] = Math.max(dp[i], Math.max(j * (i - j), j * dp[i - j]));
       }
     }
     return dp[n];
@@ -944,7 +925,7 @@ class OptimalElse {
    * @return
    */
   public int minSwap(int[] nums1, int[] nums2) {
-    // 分别保存不交换与交换的最小操作次数
+    // 不交换与交换的最小操作次数
     int keep = 0, swap = 1;
     for (int i = 1; i < nums1.length; i++) {
       if (nums1[i - 1] < nums1[i] && nums2[i - 1] < nums2[i]) {
@@ -961,6 +942,29 @@ class OptimalElse {
       }
     }
     return Math.min(keep, swap);
+  }
+
+  /**
+   * 整数拆分，设 n=a+b+...+c 求 a*b*...*c 最大乘积的方案
+   *
+   * <p>dp[i] 表示 i 拆分的整数集的最大积
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/integer-break/solution/bao-li-sou-suo-ji-yi-hua-sou-suo-dong-tai-gui-hua-/
+   *
+   * @param n
+   * @return
+   */
+  public int integerBreak(int n) {
+    int[] dp = new int[n + 1];
+    dp[1] = 1;
+    for (int i = 2; i <= n; i++) {
+      for (int j = 1; j <= i - 1; j++) {
+        // max(dp[i], j*(i-j), j*dp[i-j])  后二者分别对应不拆与拆
+        dp[i] = Math.max(dp[i], Math.max(j * (i - j), j * dp[i - j]));
+      }
+    }
+    return dp[n];
   }
 
   /**

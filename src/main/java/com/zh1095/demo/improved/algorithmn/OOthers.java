@@ -123,6 +123,54 @@ public class OOthers {
   }
 
   /**
+   * 划分字母区间，类似「跳跃游戏」
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
+   */
+  public List<Integer> partitionLabels(String s) {
+    int[] lastIdxes = new int[26];
+    char[] chs = s.toCharArray();
+    for (int i = 0; i < chs.length; i++) {
+      lastIdxes[chs[i] - 'a'] = i; // 题设均 lowercase
+    }
+    List<Integer> lens = new ArrayList<>();
+    int lo = 0, hi = 0; // 当前片段的首尾
+    for (int i = 0; i < chs.length; i++) {
+      hi = Math.max(lastIdxes[chs[i] - 'a'], hi);
+      if (i == hi) {
+        lens.add(hi - lo + 1);
+        lo = hi + 1;
+      }
+    }
+
+    return lens;
+  }
+
+  /**
+   * 航班预订统计，贪心
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/corporate-flight-bookings/solution/5118_hang-ban-yu-ding-tong-ji-by-user9081a/
+   *
+   * @param bookings
+   * @param n
+   * @return
+   */
+  public int[] corpFlightBookings(int[][] bookings, int n) {
+    int[] counters = new int[n];
+    for (int[] booking : bookings) {
+      int first = booking[0], last = booking[1], seat = booking[2];
+      counters[first - 1] += seat;
+      if (last < n) counters[last] -= seat;
+    }
+    for (int i = 1; i < n; i++) {
+      counters[i] += counters[i - 1];
+    }
+    return counters;
+  }
+
+  /**
    * 排名百分比，根据成绩获取，要求 O(n) for time
    *
    * <p>counts 类似 bitmap，对 score 排序。
@@ -210,31 +258,6 @@ public class OOthers {
     Deque<Integer> tmp = new ArrayDeque<>();
     while (!stack.isEmpty()) {}
     return tmp;
-  }
-
-  /**
-   * 划分字母区间，类似「跳跃游戏」
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
-   */
-  public List<Integer> partitionLabels(String s) {
-    int[] lastIdxes = new int[26];
-    char[] chs = s.toCharArray();
-    for (int i = 0; i < chs.length; i++) {
-      lastIdxes[chs[i] - 'a'] = i; // 题设均 lowercase
-    }
-    List<Integer> lens = new ArrayList<>();
-    int lo = 0, hi = 0; // 当前片段的首尾
-    for (int i = 0; i < chs.length; i++) {
-      hi = Math.max(lastIdxes[chs[i] - 'a'], hi);
-      if (i == hi) {
-        lens.add(hi - lo + 1);
-        lo = hi + 1;
-      }
-    }
-
-    return lens;
   }
 
   // 「多边形周长等分」
@@ -1348,6 +1371,32 @@ class GGraph {
       cloneNode.neighbors.add(cloneGraph(nbh));
     }
     return cloneNode;
+  }
+
+  /**
+   * 找到最终的安全状态，三色标记/拓扑排序
+   *
+   * @param graph
+   * @return
+   */
+  public List<Integer> eventualSafeNodes(int[][] graph) {
+    int len = graph.length;
+    int[] colors = new int[len]; // white
+    List<Integer> res = new ArrayList<>();
+    for (int i = 0; i < len; i++) {
+      if (isCyclic(graph, colors, i)) res.add(i);
+    }
+    return res;
+  }
+
+  private boolean isCyclic(int[][] graph, int[] colors, int vertex) {
+    if (colors[vertex] > 0) return colors[vertex] == 2; // black
+    colors[vertex] = 1; // grey
+    for (int v : graph[vertex]) {
+      if (!isCyclic(graph, colors, v)) return false;
+    }
+    colors[vertex] = 2; // black
+    return true;
   }
 
   private class Edge {
