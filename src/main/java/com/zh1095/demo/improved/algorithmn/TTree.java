@@ -661,6 +661,7 @@ class BBSTInorder {
   public int getMinimumDifference(TreeNode root) {
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
+    // 相邻节点差值最小，因此 pre 存储指针
     int minDiff = Integer.MAX_VALUE, pre = minDiff;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
@@ -1453,7 +1454,7 @@ class BacktrackingCombinatorics {
   }
 
   /**
-   * 组合总和I，可选重复
+   * 组合总和I，可选重复，对于负数仍通用
    *
    * <p>扩展1，不能重复，组合总和II，参下 annotate
    *

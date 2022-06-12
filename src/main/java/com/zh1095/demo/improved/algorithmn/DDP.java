@@ -81,75 +81,13 @@ class OptimalSubSequence {
   }
 
   /**
-   * 递增的三元子序列，贪心，顺序找到三个递增的数即可
-   *
-   * <p>赋初始值的时候，已经满足 second>first，现在找第三个数 third
-   *
-   * <p>如果 t>s，返回 true
-   *
-   * <p>如果 t < s && t>f，则赋值 s=t，然后继续找 t
-   *
-   * <p>如果 t < f，则赋值 s=f，然后继续找 t
-   *
-   * <p>f 会跑到 s 的后边，因为在 s 的前边，旧 f 还是满足的
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/increasing-triplet-subsequence/solution/di-zeng-de-san-yuan-zi-xu-lie-by-leetcod-dp2r/
-   *
-   * @param nums
-   * @return
-   */
-  public boolean increasingTriplet(int[] nums) {
-    if (nums.length < 3) return false;
-    int first = Integer.MAX_VALUE, second = Integer.MAX_VALUE;
-    for (int n : nums) {
-      if (n > second) return true;
-      else if (n > first) second = n;
-      else first = n;
-    }
-    return false;
-  }
-
-  /**
-   * 最长递增子序列的个数
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
-   *
-   * @param nums
-   * @return
-   */
-  public int findNumberOfLIS(int[] nums) {
-    int len = nums.length, maxLen = 1;
-    int[] dp = new int[len], counts = new int[len];
-    for (int i = 0; i < len; i++) {
-      dp[i] = counts[i] = 1;
-      for (int j = 0; j < i; j++) {
-        if (nums[j] >= nums[i]) continue;
-        if (dp[i] < dp[j] + 1) {
-          dp[i] = dp[j] + 1;
-          counts[i] = counts[j];
-        } else if (dp[i] == dp[j] + 1) {
-          counts[i] += counts[j];
-        }
-      }
-      maxLen = Math.max(maxLen, dp[i]);
-    }
-    int count = 0;
-    for (int i = 0; i < len; i++) {
-      if (dp[i] == maxLen) count += counts[i];
-    }
-    return count;
-  }
-
-  /**
    * 最长公共子序列
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的 LCS
    *
    * <p>扩展1，求最长公共子串的长度，参上「最长连续序列」
    *
-   * <p>扩展2，输出该子序列，即求路径
+   * <p>扩展2，输出该子序列，即求路径，参下 annotate
    *
    * @param text1 the text 1
    * @param text2 the text 2
@@ -158,22 +96,24 @@ class OptimalSubSequence {
   public int longestCommonSubsequence(String text1, String text2) {
     int l1 = text1.length(), l2 = text2.length();
     int[][] dp = new int[l1 + 1][l2 + 1];
-    //    int lo = 0, hi = 0;
+    //    int[] from = new int[l1 * l2];
     for (int p1 = 1; p1 <= l1; p1++) {
       for (int p2 = 1; p2 <= l2; p2++) {
-        // check whether t1[p1-1] can match t2[p2-1]
-        dp[p1][p2] =
-            text1.charAt(p1 - 1) == text2.charAt(p2 - 1)
-                ? dp[p1 - 1][p2 - 1] + 1
-                : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
-        // 需要区间满足存在公共部分
-        //
-        //        if (match(text1, p1, text2, p2) && hi - lo < p2 - p1) {
-        //          lo = p1;
-        //          hi = p2;
-        //        }
+        if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) {
+          dp[p1][p2] = dp[p1 - 1][p2 - 1] + 1;
+          //          from[encoding(p1, p2)] = encoding(p1 - 1, p2 - 1);
+        } else {
+          if (dp[p1 - 1][p2] > dp[p1][p2 - 1]) {
+            dp[p1][p2] = dp[p1 - 1][p2];
+            //            from[encoding(p1, p2)] = encoding(p1 - 1, p2);
+          } else {
+            dp[p1][p2] = dp[p1][p2 - 1];
+            //            from[encoding(p1, p2)] = encoding(p1, p2 - 1);
+          }
+        }
       }
     }
+
     return dp[l1][l2];
   }
 
@@ -265,6 +205,68 @@ class OptimalSubSequence {
       }
     }
     return dp[n1][n2];
+  }
+
+  /**
+   * 递增的三元子序列，贪心，顺序找到三个递增的数即可
+   *
+   * <p>赋初始值的时候，已经满足 second>first，现在找第三个数 third
+   *
+   * <p>如果 t>s，返回 true
+   *
+   * <p>如果 t < s && t>f，则赋值 s=t，然后继续找 t
+   *
+   * <p>如果 t < f，则赋值 s=f，然后继续找 t
+   *
+   * <p>f 会跑到 s 的后边，因为在 s 的前边，旧 f 还是满足的
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/increasing-triplet-subsequence/solution/di-zeng-de-san-yuan-zi-xu-lie-by-leetcod-dp2r/
+   *
+   * @param nums
+   * @return
+   */
+  public boolean increasingTriplet(int[] nums) {
+    if (nums.length < 3) return false;
+    int first = Integer.MAX_VALUE, second = Integer.MAX_VALUE;
+    for (int n : nums) {
+      if (n > second) return true;
+      else if (n > first) second = n;
+      else first = n;
+    }
+    return false;
+  }
+
+  /**
+   * 最长递增子序列的个数
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
+   *
+   * @param nums
+   * @return
+   */
+  public int findNumberOfLIS(int[] nums) {
+    int len = nums.length, maxLen = 1;
+    int[] dp = new int[len], counts = new int[len];
+    for (int i = 0; i < len; i++) {
+      dp[i] = counts[i] = 1;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] >= nums[i]) continue;
+        if (dp[i] < dp[j] + 1) {
+          dp[i] = dp[j] + 1;
+          counts[i] = counts[j];
+        } else if (dp[i] == dp[j] + 1) {
+          counts[i] += counts[j];
+        }
+      }
+      maxLen = Math.max(maxLen, dp[i]);
+    }
+    int count = 0;
+    for (int i = 0; i < len; i++) {
+      if (dp[i] == maxLen) count += counts[i];
+    }
+    return count;
   }
 
   /**
@@ -821,14 +823,14 @@ class OptimalElse {
    */
   public int longestValidParentheses(String s) {
     int maxLen = 0;
-    int[] dp = new int[s.length()];
     char[] chs = s.toCharArray();
+    int[] dp = new int[chs.length];
     for (int i = 1; i < chs.length; i++) {
       if (chs[i] == '(') continue;
-      int preCnt = i - dp[i - 1];
-      if (chs[i - 1] == '(') dp[i] = 2 + i < 2 ? 0 : dp[i - 2];
-      else if (preCnt > 0 && chs[preCnt - 1] == '(')
-        dp[i] = dp[i - 1] + 2 + preCnt < 2 ? 0 : dp[preCnt - 2];
+      int preIdx = i - dp[i - 1]; // 0...preIdx(...)) 其中 i 是最后一个括号
+      if (chs[i - 1] == '(') dp[i] = 2 + (i < 2 ? 0 : dp[i - 2]);
+      else if (preIdx > 0 && chs[preIdx - 1] == '(')
+        dp[i] = 2 + dp[i - 1] + (preIdx < 2 ? 0 : dp[preIdx - 2]);
       maxLen = Math.max(maxLen, dp[i]);
     }
     return maxLen;
@@ -1017,11 +1019,7 @@ class OptimalElse {
   }
 }
 
-/**
- * 统计
- *
- * <p>区分统计排列 & 组合的区别
- */
+/** 统计，区分统计排列 & 组合的区别 */
 class CCount {
   /**
    * 爬楼梯，对比零钱兑换 II，可选集为 [1,2] 需要返回凑成 n 的总数，元素可重，前者排列，后者组合

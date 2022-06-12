@@ -1144,19 +1144,6 @@ class CConvert {
     Map<Character, Integer> mapping =
         new HashMap<>() {
           {
-            //            put('一', 1);
-            //            put('二', 2);
-            //            put('三', 3);
-            //            put('四', 4);
-            //            put('五', 5);
-            //            put('六', 6);
-            //            put('七', 7);
-            //            put('八', 8);
-            //            put('九', 9);
-            //            put('十', 10);
-            //            put('百', 100);
-            //            put('千', 1000);
-            //            put('万', 10000);
             put('I', 1);
             put('V', 5);
             put('X', 10);
@@ -1168,9 +1155,10 @@ class CConvert {
         };
     int n = 0;
     char[] chs = s.toCharArray();
-    for (int i = 0; i < s.length(); i++) {
-      int add = mapping.get(chs[i]), addNxt = mapping.get(chs[i + 1]);
-      if (i < s.length() - 1 && add < addNxt) n -= add;
+    for (int i = 0; i < chs.length; i++) {
+      int add = mapping.get(chs[i]);
+      // 罗马数字的规则
+      if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) n -= add;
       else n += add;
     }
     return n;
