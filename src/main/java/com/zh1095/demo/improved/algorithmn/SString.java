@@ -58,35 +58,34 @@ public class SString extends DefaultSString {
    */
   public String reduceStrings(String num1, String num2) {
     StringBuilder res = new StringBuilder();
-    if (integerLess(num1, num2)) {
+    // 1.保证下方大减小，并判断符号
+    if ((num1.length() == num2.length() && Integer.parseInt(num1) < Integer.parseInt(num2))
+        || num1.length() < num2.length()) {
       String tmp = num1;
       num1 = num2;
       num2 = num1;
       res.append('-');
     }
+    // 2.从个位开始相减，注意借位，尾插，最终反转
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
     int carry = 0;
     while (p1 >= 0 || p2 >= 0) {
       int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0', n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0';
+      // 避免 n1 - n2 - carry < 0
       int tmp = (n1 - n2 - carry + 10) % 10;
-      res.append(tmp); // res.insert(0,tmp) 则无需 reverse
+      res.append(tmp); // res.insert(0, tmp) 则无需 reverse
       carry = n1 - carry - n2 < 0 ? 1 : 0;
       p1 -= 1;
       p2 -= 1;
     }
     String str = res.reverse().toString();
-    int idx = 0; // 前导零
+    // 3.移除前导零
+    int idx = 0;
     for (char ch : str.toCharArray()) {
       if (ch != '0') break;
       idx += 1;
     }
     return str.substring(idx, str.length());
-  }
-
-  private boolean integerLess(String num1, String num2) {
-    return num1.length() == num2.length()
-        ? Integer.parseInt(num1) < Integer.parseInt(num2)
-        : num1.length() < num2.length();
   }
 
   // ASCII coding
@@ -1269,18 +1268,21 @@ class WWord extends DefaultSString {
    * @return string string
    */
   public String reverseWords(String s) {
-    // 1.去除首尾空格 & 翻转整个串
+    int i = 0, j = 0, start = 0, end = 0;
     StringBuilder str = new StringBuilder(s.trim()).reverse();
-    char[] chs = new char[0];
-    int write = 0, readStart = 0;
-    for (int readEnd = 0; readEnd < s.length(); readEnd++) {
-      if (s.charAt(readEnd) != ' ') continue;
-
-      for (int i = readEnd - 1; i >= write; i++) {
-        chs[i] = chs[readEnd];
+    for (; i < str.length(); i++) {
+      if (str.charAt(i) != ' ') continue;
+      j = i + 1;
+      while (str.charAt(j) == ' ') {
+        j += 1;
       }
+      str.delete(i + 1, j); // remove blank
+      end = i - 1;
+      reverse(str, start, end);
+      start = i + 1;
     }
-
+    // 由于最后一个单词末尾没有空格，所以这里多处理一下
+    reverse(str, start, i - 1);
     return str.toString();
   }
 
@@ -1345,16 +1347,13 @@ class WWord extends DefaultSString {
         if (originCh == curCh) continue;
         chs[i] = curCh;
         String nextWord = String.valueOf(chs);
-        if (wordSet.contains(nextWord)) {
-          if (endVisited.contains(nextWord)) return true;
-          if (!visited.contains(nextWord)) {
-            nextLevelVisited.add(nextWord);
-            visited.add(nextWord);
-          }
-        }
+        if (wordSet.contains(nextWord)) continue;
+        if (endVisited.contains(nextWord)) return true;
+        if (visited.contains(nextWord)) continue;
+        visited.add(nextWord);
+        nextLevelVisited.add(nextWord);
       }
-      // 恢复，下次再用
-      chs[i] = originCh;
+      chs[i] = originCh; // 恢复，下次再用
     }
     return false;
   }

@@ -173,10 +173,11 @@ class OptimalSubSequence {
     }
     for (int i = 1; i <= l1; i++) {
       for (int j = 1; j <= l2; j++) {
-        dp[i][j] =
-            word1.charAt(i - 1) == word2.charAt(j - 1)
-                ? dp[i - 1][j - 1]
-                : 1 + Math.min(Math.min(dp[i - 1][j], dp[i][j - 1]), dp[i - 1][j - 1]);
+        if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
+        }
       }
     }
     return dp[l1][l2];
@@ -205,6 +206,31 @@ class OptimalSubSequence {
       }
     }
     return dp[n1][n2];
+  }
+
+  public int minEditCost(String s1, String s2, int ic, int dc, int rc) {
+    // write code here
+    int l1 = s1.length(), l2 = s2.length();
+    int[][] dp = new int[l1 + 1][l2 + 1];
+    for (int i = 1; i <= l1; i++) {
+      dp[i][0] = i * dc; // str2 长度为0，只能删除
+    }
+    for (int i = 1; i <= l2; i++) {
+      dp[0][i] = i * ic; // str1 长度为0， 只能插入
+    }
+    for (int p1 = 1; p1 <= l1; p1++) {
+      for (int p2 = 1; p2 <= l2; p2++) {
+        if (s1.charAt(p1 - 1) == s2.charAt(p2 - 1)) {
+          // r1[i] = str2[j]
+          dp[p1][p2] = dp[p1 - 1][p2 - 1];
+        } else {
+          // dp[i][j] 取三种措施的最小的代价
+          dp[p1][p2] =
+              Math.min(dp[p1 - 1][p2 - 1] + rc, Math.min(dp[p1 - 1][p2] + dc, dp[p1][p2 - 1] + ic));
+        }
+      }
+    }
+    return dp[l1][l2];
   }
 
   /**
@@ -435,7 +461,7 @@ class OptimalSubArray {
   /**
    * 目标和，找到 nums 一个正子集与一个负子集，使其总和等于 target，统计这种可能性的总数
    *
-   * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和 + 序列总和，即 01 背包
+   * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和 + 序列总和，即 01 背包，参考 https://zhuanlan.zhihu.com/p/93857890
    *
    * <p>dp[j] 表示填满 j 容积的包的方案数，即组合
    *
@@ -455,16 +481,15 @@ class OptimalSubArray {
     for (int n : nums) {
       sum += n;
     }
+    // 特判
     if ((target + sum) % 2 != 0) return 0;
-
     int maxCapacity = (target + sum) / 2;
     if (maxCapacity < 0) maxCapacity *= -1;
-
     int[] dp = new int[maxCapacity + 1];
     dp[0] = 1;
     for (int volume : nums) {
-      for (int capacity = maxCapacity; capacity >= volume; capacity--) {
-        dp[capacity] += dp[capacity - volume];
+      for (int cap = maxCapacity; cap >= volume; cap--) {
+        dp[cap] += dp[cap - volume];
       }
     }
     return dp[maxCapacity];
@@ -557,7 +582,7 @@ class OptimalPath {
     int[] dp = new int[len + 1];
     for (int i = len - 1; i >= 0; i--) {
       for (int j = 0; j <= i; j++) {
-        dp[j] = Math.min(dp[j], dp[j + 1]) + triangle.get(i).get(j);
+        dp[j] = triangle.get(i).get(j) + Math.min(dp[j], dp[j + 1]);
       }
     }
     return dp[0];
@@ -581,31 +606,45 @@ class OptimalPath {
 
   private int rob1(int[] nums) {
     int pre = 0, cur = 0;
-    //    StringBuilder pathPre = new StringBuilder(), pathCur = new StringBuilder();
-    for (int num : nums) {
-      //      if (cur > pre + num) {
-      //        pathCur = new StringBuilder(pathPre.toString());
-      //        cur = cur;
-      //      } else {
-      //        String tmp1 = pathPre.toString();
-      //        pathPre = new StringBuilder(pathCur.toString()).append(num);
-      //        pathCur = new StringBuilder(tmp1);
-      //        int tmp2 = Math.max(cur, pre + num);
-      //        pre = cur;
-      //        cur = tmp2;
-      //      }
-      int tmp2 = Math.max(cur, pre + num);
+    for (int n : nums) {
+      int tmp2 = Math.max(cur, pre + n);
       pre = cur;
       cur = tmp2;
     }
     return cur;
   }
 
+  // https://blog.csdn.net/Chenguanxixixi/article/details/119540929
+  private int[] getIndexArray(int[] nums) {
+    int len = nums.length;
+    int[] dp = new int[len], path = new int[len];
+    if (len == 1) {
+      dp[0] = nums[0];
+    } else if (len == 2) {
+      dp[0] = Math.max(nums[0], nums[1]);
+    } else {
+      dp[0] = nums[0];
+      dp[1] = Math.max(nums[0], nums[1]);
+      for (int j = 2; j < len; j++) {
+        dp[j] = Math.max(dp[j - 2] + nums[j], dp[j - 1]);
+      }
+    }
+    int idx = Arrays.binarySearch(dp, dp[len - 1]), i = 0;
+    path[i] = idx + 1;
+    while (dp[idx] > nums[idx]) {
+      idx = Arrays.binarySearch(dp, dp[idx] - nums[idx]);
+      i += 1;
+      path[i] = idx + 1;
+    }
+    return path;
+  }
+
+  // 循环数组
   private int rob2(int[] nums) {
-    if (nums.length < 2) return nums[0];
+    int len = nums.length;
+    if (len < 2) return nums[0];
     return Math.max(
-        rob1(Arrays.copyOfRange(nums, 0, nums.length - 1)),
-        rob1(Arrays.copyOfRange(nums, 1, nums.length)));
+        rob1(Arrays.copyOfRange(nums, 0, len - 1)), rob1(Arrays.copyOfRange(nums, 1, len)));
   }
 
   /**
@@ -630,7 +669,7 @@ class OptimalPath {
   /**
    * 单词拆分，wordDict 是否可组合为 s，可重复使用
    *
-   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 其一匹配，比如 wordDict=["apple", "pen", "code"]
+   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 至少其一匹配，比如 wordDict=["apple", "pen", "code"]
    *
    * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
    *
@@ -643,19 +682,23 @@ class OptimalPath {
   public boolean wordBreak(String s, List<String> wordDict) {
     int len = s.length(), maxLen = 0;
     Set<String> wordSet = new HashSet(); // 仅用于 O(1) 匹配
+    //
     for (String w : wordDict) {
       wordSet.add(w);
-      maxLen = Math.max(maxLen, w.length()); // dp[i] 探索至最长的单词即可
+      // 下方 [j:i-1] 过长，无法用单词补足，可 curing
+      maxLen = Math.max(maxLen, w.length());
     }
     boolean[] dp = new boolean[len + 1];
     dp[0] = true;
     for (int i = 1; i < len + 1; i++) {
+      // O(n^2) 判断 [0:i-1] 是否能被匹配，即分别判断 [0:j-1] & [j:i-1]
       for (int j = i; j > -1; j--) {
-        if (j < i - maxLen) break; // curing
+        if (j + maxLen < i) break;
         String word = s.substring(j, i);
+        // s[j:i-1] can be matched
         if (dp[j] && wordSet.contains(word)) {
           dp[i] = true;
-          break; // s[j:i] can be matched
+          break;
         }
       }
     }
@@ -1105,7 +1148,11 @@ class CCount {
   public int change(int amount, int[] coins) {
     int[] dp = new int[amount + 1];
     dp[0] = 1;
-    for (int coin : coins) for (int i = coin; i <= amount; i++) dp[i] += dp[i - coin];
+    for (int c : coins) {
+      for (int i = c; i <= amount; i++) {
+        dp[i] += dp[i - c];
+      }
+    }
     return dp[amount];
   }
 
@@ -1132,9 +1179,9 @@ class CCount {
   /**
    * 不同路径II with obstacles
    *
-   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数
+   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数，根据递推关系，可以压缩至一维
    *
-   * <p>TODO 扩展1，打印路径，保留来源并倒推
+   * <p>扩展1，打印路径，参考「最小路径和」
    *
    * @param obstacleGrid the obstacle grid
    * @return int int

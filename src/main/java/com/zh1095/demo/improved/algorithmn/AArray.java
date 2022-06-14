@@ -227,6 +227,80 @@ public class AArray extends DefaultArray {
   }
 }
 
+/**
+ * 基于比较的排序的平均时间复杂度均是 nlogn，快排的推导参考 https://nathanli.tech/2022/03/03/QuickSort/
+ *
+ * <p>数组全排列共有 n! 种情况，而二分每次最多能排除一半的情况，根据斯特林级数，算法的渐进复杂度为 O(log(n!)) = O(nlogn)
+ *
+ * <p>最坏时间复杂度出现在每次划分均为 n-1 & 0，为 n^2
+ *
+ * <p>最好时间复杂度出现在每次划分均为 n/2 & n/2-1，为 nlogn
+ *
+ * <p>平均时间复杂度出现在上述二者的分布为均分时，为 nlogn
+ *
+ * <p>链表快排参考「排序链表」
+ */
+class QQuick extends DefaultArray {
+  private final Random random = new Random();
+
+  /**
+   * 快速排序，三路，循环不变量
+   *
+   * <p>选哨 & 虚拟头尾 & 遍历
+   *
+   * @param nums the nums
+   * @param lo the lo
+   * @param hi the hi
+   */
+  public void quickSort(int[] nums, int lo, int hi) {
+    if (lo >= hi) return; // 对 [lo:hi] 快排
+    int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
+    // 下方需要确保虚拟头 <pivot，因此从 lt+1 开始遍历
+    swap(nums, pivotIdx, lo);
+    // 虚拟头尾，保证界外，因此下方需要先步进，再 swap
+    int lt = lo, cur = lt + 1, gt = hi + 1;
+    while (cur < gt) {
+      if (nums[cur] < pivot) {
+        lt += 1;
+        swap(nums, cur, lt);
+        cur += 1;
+      } else if (nums[cur] == pivot) {
+        cur += 1;
+      } else if (nums[cur] > pivot) {
+        gt -= 1;
+        swap(nums, cur, gt);
+      }
+    }
+    // 扰动，保证等概率分布
+    swap(nums, lo, lt);
+    quickSort(nums, lo, lt - 1);
+    quickSort(nums, gt, hi);
+  }
+
+  /**
+   * 颜色分类，三路快排即可
+   *
+   * @param nums the nums
+   */
+  public void sortColors(int[] nums) {
+    int pivot = 1;
+    // 虚拟头尾，保证界外
+    int lt = -1, cur = 0, gt = nums.length;
+    while (cur < gt) {
+      if (nums[cur] < pivot) {
+        lt += 1;
+        swap(nums, cur, lt);
+        cur += 1;
+      } else if (nums[cur] == pivot) {
+        cur += 1;
+      } else if (nums[cur] > pivot) {
+        gt -= 1;
+        swap(nums, cur, gt);
+      }
+    }
+  }
+}
+
 /** 堆排序相关，建堆 */
 class HHeap extends DefaultArray {
   /**
@@ -470,83 +544,8 @@ class HHeap extends DefaultArray {
   }
 }
 
-/**
- * 基于比较的排序的平均时间复杂度均是 nlogn，快排的推导参考 https://nathanli.tech/2022/03/03/QuickSort/
- *
- * <p>数组全排列共有 n! 种情况，而二分每次最多能排除一半的情况，根据斯特林级数，算法的渐进复杂度为 O(log(n!)) = O(nlogn)
- *
- * <p>最坏时间复杂度出现在每次划分均为 n-1 & 0，为 n^2
- *
- * <p>最好时间复杂度出现在每次划分均为 n/2 & n/2-1，为 nlogn
- *
- * <p>平均时间复杂度出现在上述二者的分布为均分时，为 nlogn
- *
- * <p>链表快排参考「排序链表」
- */
-class QQuick extends DefaultArray {
-  private final Random random = new Random();
-
-  /**
-   * 快速排序，三路，循环不变量
-   *
-   * <p>选哨 & 虚拟头尾 & 遍历
-   *
-   * @param nums the nums
-   * @param lo the lo
-   * @param hi the hi
-   */
-  public void quickSort(int[] nums, int lo, int hi) {
-    if (lo >= hi) return; // 对 [lo:hi] 快排
-    int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
-    // 下方需要确保虚拟头 <pivot，因此从 lt+1 开始遍历
-    swap(nums, pivotIdx, lo);
-    // 虚拟头尾，保证界外，因此下方需要先步进，再 swap
-    int lt = lo, cur = lt + 1, gt = hi + 1;
-    while (cur < gt) {
-      if (nums[cur] < pivot) {
-        lt += 1;
-        swap(nums, cur, lt);
-        cur += 1;
-      } else if (nums[cur] == pivot) {
-        cur += 1;
-      } else if (nums[cur] > pivot) {
-        gt -= 1;
-        swap(nums, cur, gt);
-      }
-    }
-    // 扰动，保证等概率分布
-    swap(nums, lo, lt);
-    quickSort(nums, lo, lt - 1);
-    quickSort(nums, gt, hi);
-  }
-
-  /**
-   * 颜色分类，三路快排即可
-   *
-   * @param nums the nums
-   */
-  public void sortColors(int[] nums) {
-    int pivot = 1;
-    // 虚拟头尾，保证界外
-    int lt = -1, cur = 0, gt = nums.length;
-    while (cur < gt) {
-      if (nums[cur] < pivot) {
-        lt += 1;
-        swap(nums, cur, lt);
-        cur += 1;
-      } else if (nums[cur] == pivot) {
-        cur += 1;
-      } else if (nums[cur] > pivot) {
-        gt -= 1;
-        swap(nums, cur, gt);
-      }
-    }
-  }
-}
-
 class MMerge extends DefaultArray {
-  // 「数组中的逆序对」
-  private int count = 0;
+  private int count = 0; // 「数组中的逆序对」
 
   /**
    * 归并排序，up-to-bottom 递归，先分后合
@@ -558,63 +557,32 @@ class MMerge extends DefaultArray {
    * @param hi the hi
    */
   public void mergeSort(int[] nums, int start, int end) {
-    divide1(nums, new int[nums.length], 0, nums.length - 1);
-  }
-
-  private void divide1(int[] nums, int[] tmp, int start, int end) {
-    // 对于双指针，假如迭代内部基于比较，则不需要=，假如需要统计每个元素，则需要
-    if (start >= end) return;
-    int mid = start + (end - start) / 2;
-    divide1(nums, tmp, start, mid);
-    divide1(nums, tmp, mid + 1, end);
-    // curing 因为此时 [lo,mid] & [mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
-    if (nums[mid] <= nums[mid + 1]) return;
-    // 合并 nums[start,mid] & nums[mid+1,end]
-    merge1(nums, tmp, start, mid, end);
-  }
-
-  // 合并 nums[lo:mid] & nums[mid+1:hi] 即排序区间 [lo,hi]
-  // 四种情况，其一遍历结束 & 比较
-  // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
-  private void merge1(int[] nums, int[] tmp, int start, int mid, int end) {
-    if (end > start) {
-      System.arraycopy(nums, start, tmp, start, end + 1 - start);
-    }
-    int p1 = start, p2 = mid + 1;
-    for (int i = start; i <= end; i++) {
-      if (p1 == mid + 1) {
-        nums[i] = tmp[p2];
-        p2 += 1;
-      } else if (p2 == end + 1) {
-        nums[i] = tmp[p1];
-        p1 += 1;
-      } else if (tmp[p1] <= tmp[p2]) {
-        nums[i] = tmp[p1];
-        p1 += 1;
-      } else if (tmp[p1] > tmp[p2]) {
-        nums[i] = tmp[p2];
-        p2 += 1;
-      }
-    }
+    divideAndCount(nums, new int[nums.length], 0, nums.length - 1);
   }
 
   /**
-   * 数组中的逆序对，与上方「归并排序」基本一致
+   * 数组中的逆序对，「归并排序」基本一致
    *
    * @param nums the nums
    * @return int int
    */
   public int reversePairs(int[] nums) {
-    divide2(nums, new int[nums.length], 0, nums.length - 1);
+    divideAndCount(nums, new int[nums.length], 0, nums.length - 1);
     return count;
   }
 
-  private void divide2(int[] nums, int[] tmp, int start, int end) {
+  // 合并 nums[lo:mid] & nums[mid+1:hi] 即排序区间 [lo,hi]
+  // 四种情况，其一遍历结束 & 比较
+  // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
+  private void divideAndCount(int[] nums, int[] tmp, int start, int end) {
+    // 对于双指针，假如迭代内部基于比较，则不需要=，假如需要统计每个元素，则需要
     if (start >= end) return;
     int mid = start + (end - start) / 2;
-    divide2(nums, tmp, start, mid);
-    divide2(nums, tmp, mid + 1, end);
+    divideAndCount(nums, tmp, start, mid);
+    divideAndCount(nums, tmp, mid + 1, end);
+    // curing 因为此时 [lo,mid] & [mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
     if (nums[mid] <= nums[mid + 1]) return;
+    // 合并 nums[start,mid] & nums[mid+1,end]
     count += mergeAndCount(nums, tmp, start, mid, end);
   }
 
@@ -636,7 +604,7 @@ class MMerge extends DefaultArray {
       } else if (tmp[p1] > tmp[p2]) {
         nums[i] = tmp[p2];
         p2 += 1;
-        count += mid - p1 + 1;
+        count += mid - p1 + 1; // 统计逆序的数目
       }
     }
     return count;

@@ -11,7 +11,7 @@ import java.util.*;
  */
 public class OOthers {
   /**
-   * 加油站，解法类似「最大子序和」，本题环 & 求该子序和的起始位
+   * 加油站，求最大子序和的起始位
    *
    * @param gas the gas
    * @param cost the cost
@@ -21,16 +21,16 @@ public class OOthers {
     // 将问题转化为找最大子串的起始位置
     int startIdx = 0, sumGas = 0, leftGas = 0;
     for (int i = 0; i < gas.length; i++) {
-      int curLeft = gas[i] - cost[i];
-      leftGas += curLeft;
+      int left = gas[i] - cost[i]; // 剩余
+      leftGas += left;
       if (sumGas > 0) {
-        sumGas += curLeft;
+        sumGas += left;
       } else {
-        sumGas = curLeft;
+        sumGas = left;
         startIdx = i;
       }
     }
-    return leftGas >= 0 ? startIdx : -1;
+    return leftGas < 0 ? -1 : startIdx;
   }
 
   /**
@@ -847,11 +847,12 @@ class MMath {
   public int countDigitOne(int n) {
     int count = 0;
     int high = n / 10, cur = n % 10, low = 0, digit = 1;
-    while (high != 0 || cur != 0) {
+    while (high > 0 || cur > 0) {
       // 状态
-      if (cur == 0) count += high * digit;
-      else if (cur == 1) count += high * digit + low + 1;
-      else count += (high + 1) * digit;
+      count += high * digit;
+      //      if (cur == 0) count += 0;
+      if (cur == 1) count += low + 1;
+      if (cur > 1) count += digit;
       // 递推
       low += cur * digit;
       cur = high % 10;
@@ -1351,6 +1352,32 @@ class GGraph {
     return ans;
   }
 
+  /**
+   * 找到最终的安全状态，不在环内的节点，三色标记/拓扑排序
+   *
+   * @param graph
+   * @return
+   */
+  public List<Integer> eventualSafeNodes(int[][] graph) {
+    int V = graph.length;
+    int[] colors = new int[V]; // white
+    List<Integer> vtxs = new ArrayList<>();
+    for (int i = 0; i < V; i++) {
+      if (isCyclic(graph, colors, i)) vtxs.add(i);
+    }
+    return vtxs;
+  }
+
+  private boolean isCyclic(int[][] graph, int[] colors, int v) {
+    if (colors[v] > 0) return colors[v] == 2; // black
+    colors[v] = 1; // grey
+    for (int node : graph[v]) { // 邻接矩阵
+      if (!isCyclic(graph, colors, node)) return false;
+    }
+    colors[v] = 2; // black
+    return true;
+  }
+
   // 「克隆图」
   private final Map<Node, Node> visited = new HashMap<>();
 
@@ -1371,32 +1398,6 @@ class GGraph {
       cloneNode.neighbors.add(cloneGraph(nbh));
     }
     return cloneNode;
-  }
-
-  /**
-   * 找到最终的安全状态，三色标记/拓扑排序
-   *
-   * @param graph
-   * @return
-   */
-  public List<Integer> eventualSafeNodes(int[][] graph) {
-    int len = graph.length;
-    int[] colors = new int[len]; // white
-    List<Integer> res = new ArrayList<>();
-    for (int i = 0; i < len; i++) {
-      if (isCyclic(graph, colors, i)) res.add(i);
-    }
-    return res;
-  }
-
-  private boolean isCyclic(int[][] graph, int[] colors, int vertex) {
-    if (colors[vertex] > 0) return colors[vertex] == 2; // black
-    colors[vertex] = 1; // grey
-    for (int v : graph[vertex]) {
-      if (!isCyclic(graph, colors, v)) return false;
-    }
-    colors[vertex] = 2; // black
-    return true;
   }
 
   private class Edge {

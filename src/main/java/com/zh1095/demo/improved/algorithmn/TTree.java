@@ -322,13 +322,13 @@ public class TTree {
 /**
  * 深度优先搜索
  *
+ * <p>caller 遍历每一个点，类比 Goosip 协议，而 DFS 本身决定每个点的步进方向
+ *
  * <p>对于树，按照遍历的次序，dfs 即选型前序遍历或后序，而回溯相当于同时前序与后序
  *
  * <p>回溯 & dfs 框架基本一致，但前者适用 tree 这类不同分支互不连通的结构，而后者更适合 graph 这类各个分支都可能连通的
  *
  * <p>因此后者为避免 loop 不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复
- *
- * <p>DFS 可联想至 Goosip Protocol 即扩散，因此不存在遗漏的点
  */
 class DDFS {
   /** The Directions. */
@@ -337,22 +337,6 @@ class DDFS {
   private final List<Integer> res5 = new ArrayList<>();
   // 「二叉树中所有距离为k的结点」目标结点的父
   private TreeNode parent;
-
-  /**
-   * 坐标界内
-   *
-   * @param board the board
-   * @param i the
-   * @param j the j
-   * @return the boolean
-   */
-  protected boolean inArea(char[][] board, int i, int j) {
-    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
-  }
-
-  private boolean inArea(int[][] board, int i, int j) {
-    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
-  }
 
   /**
    * 路径总和III，返回路径总数，但从任意点出发，题设值不重复，前缀和
@@ -596,6 +580,22 @@ class DDFS {
   private int dfs15(TreeNode root, int from) {
     if (root == null || root.val != from) return 0;
     return 1 + Math.max(dfs15(root.left, root.val), dfs15(root.right, root.val));
+  }
+
+  /**
+   * 坐标界内
+   *
+   * @param board the board
+   * @param i the
+   * @param j the j
+   * @return the boolean
+   */
+  protected boolean inArea(char[][] board, int i, int j) {
+    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
+  }
+
+  private boolean inArea(int[][] board, int i, int j) {
+    return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
   }
 }
 

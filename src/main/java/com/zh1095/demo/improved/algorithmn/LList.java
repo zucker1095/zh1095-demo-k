@@ -580,7 +580,7 @@ class ReorderList extends LList {
 }
 
 /** 收集环形，搜索相关 */
-class CycleList extends LList {
+class Cyclic extends LList {
   /**
    * 环形链表I，判断即可
    *
