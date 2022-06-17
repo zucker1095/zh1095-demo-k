@@ -29,11 +29,11 @@ public class LList {
     //    head.next = null;
     //    return newHead;
     // iteration
-    ListNode pre = null, cur = head, nxt;
+    ListNode pre = null, cur = head;
     while (cur != null) {
-      nxt = cur.next; // 1.暂存
-      cur.next = pre; // 2.变向
-      pre = cur; // 3.步进
+      ListNode nxt = cur.next; // 暂存
+      cur.next = pre; // 变向
+      pre = cur; // 步进
       cur = nxt;
     }
     return pre;
@@ -170,9 +170,9 @@ class ReverseList extends LList {
   }
 
   /**
-   * k个一组反转链表，tail [first ... cur] nxt
+   * k个一组反转链表，pre [start...cur...] nxt
    *
-   * <p>变向顺序 cur tail first，只需专注其后驱即可，下方反转区间同理
+   * <p>变向顺序 cur pre start，只需专注其后驱即可，下方反转区间同理
    *
    * <p>参考
    * https://leetcode-cn.com/problems/reverse-nodes-in-k-group/solution/tu-jie-kge-yi-zu-fan-zhuan-lian-biao-by-user7208t/
@@ -188,9 +188,9 @@ class ReverseList extends LList {
   public ListNode reverseKGroup(ListNode head, int k) {
     ListNode dummy = new ListNode();
     dummy.next = head;
-    ListNode tail = dummy, first = null, cur = dummy, nxt = null;
+    ListNode pre = dummy, cur = dummy;
     while (cur.next != null) {
-      // 扩展1，cur.next!=null 并统计 i 是否为 k 因为可能刚好等于 k，且不需判空当前结点
+      // cur.next != null 并统计 i 是否为 k 因为可能刚好等于 k，且不需判空当前结点
       //      for (int i = 0; i < k && cur.next != null; i++) {
       //        cur = cur.next;
       //      }
@@ -199,22 +199,23 @@ class ReverseList extends LList {
       }
       // 此时 cur 为区间尾
       if (cur == null) break;
-      first = tail.next;
-      nxt = cur.next;
+      // 暂存
+      ListNode start = pre.next, nxt = cur.next;
+      // 变向
       cur.next = null;
-      tail.next = reverseList(first);
-      first.next = nxt;
+      pre.next = reverseList(start);
+      start.next = nxt;
       // 步进
-      tail = first;
-      cur = first;
+      pre = start;
+      cur = start;
     }
     return dummy.next;
   }
 
   /**
-   * 反转链表II，区间，tail [first cur...] nxt
+   * 反转链表II，区间，pre [start...cur...] nxt
    *
-   * <p>三步曲，暂存 & 变向三次 & 步进，顺序同上 cur tail first
+   * <p>三步曲，暂存 & 变向三次 & 步进，顺序同上 cur pre start
    *
    * @param head the head
    * @param left the left
@@ -224,47 +225,47 @@ class ReverseList extends LList {
   public ListNode reverseBetween(ListNode head, int left, int right) {
     ListNode dummy = new ListNode();
     dummy.next = head;
-    ListNode tail = dummy;
+    ListNode pre = dummy;
     for (int step = 0; step < left - 1; step++) {
-      tail = tail.next;
+      pre = pre.next;
     }
-    ListNode first = tail.next, cur = first.next, nxt = cur.next;
+    // 题设保证区间合法，因此 pre.next.next 非空
+    ListNode start = pre.next, cur = pre.next.next;
     for (int i = 0; i < right - left; i++) {
-      nxt = cur.next;
-      cur.next = tail.next;
-      tail.next = cur;
-      first.next = nxt;
+      ListNode nxt = cur.next;
+      cur.next = pre.next;
+      pre.next = cur;
+      start.next = nxt;
       cur = nxt;
     }
     return dummy.next;
   }
 
   /**
-   * 回文链表，找中点，同时反转前半部分 & 逐一比对两条链表
+   * 回文链表，找中点，同时反转前半部分 & 逐一比对两条链表，相当于中间扩散
    *
    * @param head the head
    * @return boolean boolean
    */
   public boolean isPalindrome(ListNode head) {
-    ListNode tail = new ListNode(), lo = head, hi = head;
+    ListNode dummy = new ListNode(), lo = head, hi = head;
     while (hi != null && hi.next != null) {
       ListNode cur = lo;
+      // 头插
+      cur.next = dummy.next;
+      dummy.next = cur;
+      // 步进
       lo = lo.next;
       hi = hi.next.next;
-      // 两次变向，头插
-      cur.next = tail.next;
-      tail.next = cur;
     }
-
     // 长度为奇数应跳过中点，否则下方比对 lo 会多一位
     if (hi != null) lo = lo.next;
-    ListNode l1 = tail.next, l2 = lo;
+    ListNode l1 = dummy.next, l2 = lo;
     while (l1 != null && l2 != null) {
       if (l1.val != l2.val) return false;
       l1 = l1.next;
       l2 = l2.next;
     }
-
     return true;
   }
 
@@ -319,10 +320,9 @@ class MergeList extends LList {
   private ListNode addTwoNumbers1(ListNode l1, ListNode l2) {
     final int base = 10; // 36 进制
     ListNode dummy = new ListNode(), cur = dummy, p1 = l1, p2 = l2;
-    int carry = 0;
+    int carry = 0; // 还要加上一个高位
     while (p1 != null || p2 != null || carry != 0) {
-      int n1 = p1 == null ? 0 : p1.val, n2 = p2 == null ? 0 : p2.val;
-      int tmp = n1 + n2 + carry;
+      int n1 = p1 == null ? 0 : p1.val, n2 = p2 == null ? 0 : p2.val, tmp = n1 + n2 + carry;
       cur.next = new ListNode(tmp % base);
       cur = cur.next;
       carry = tmp / base;
@@ -351,8 +351,9 @@ class MergeList extends LList {
     ListNode head = null;
     int carry = 0;
     while (!st1.isEmpty() || !st2.isEmpty() || carry > 0) {
-      int n1 = st1.isEmpty() ? 0 : st1.pollLast(), n2 = st2.isEmpty() ? 0 : st2.pollLast();
-      int tmp = n1 + n2 + carry;
+      int n1 = st1.isEmpty() ? 0 : st1.pollLast(),
+          n2 = st2.isEmpty() ? 0 : st2.pollLast(),
+          tmp = n1 + n2 + carry;
       carry = tmp / base;
       ListNode cur = new ListNode(tmp % base);
       cur.next = head;
@@ -610,7 +611,7 @@ class Cyclic extends LList {
    *
    * <p>扩展1，求环路长度，遍历回到入口即可
    *
-   * <p>扩展2，打印环首尾，后者指 tail.next=entry
+   * <p>扩展2，打印环首尾，后者指 pre.next=entry
    *
    * @param head the head
    * @return the list node
@@ -705,7 +706,7 @@ class DeleteList extends LList {
         cur = cur.next;
         continue;
       }
-      cur.next = cur.next.next;
+      cur.next = cur.next.next; // 进入迭代 next 非空
     }
     return dummy.next;
   }
@@ -724,7 +725,7 @@ class DeleteList extends LList {
         pre = pre.next;
         continue;
       }
-      int pivot = pre.next.val;
+      int pivot = pre.next.val; // 进入迭代非空
       while (pre.next != null && pre.next.val == pivot) {
         pre.next = pre.next.next;
       }

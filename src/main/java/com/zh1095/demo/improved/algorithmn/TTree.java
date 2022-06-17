@@ -90,32 +90,32 @@ public class TTree {
    * @return the tree node
    */
   public TreeNode buildTree(int[] preorder, int[] inorder) {
-    Map<Integer, Integer> val2Idx = new HashMap<>();
+    Map<Integer, Integer> v2i = new HashMap<>();
     for (int i = 0; i < preorder.length; i++) {
-      val2Idx.put(inorder[i], i);
+      v2i.put(inorder[i], i);
     }
-    return buildTree1(preorder, 0, preorder.length - 1, val2Idx, 0);
+    return buildTree1(preorder, 0, preorder.length - 1, v2i, 0);
   }
 
   // 从前序与中序遍历序列构造二叉树 / 重建二叉树
   private TreeNode buildTree1(
-      int[] preorder, int preLo, int preHi, Map<Integer, Integer> val2Idx, int inLo) {
+      int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo) {
     if (preLo > preHi) return null;
     TreeNode root = new TreeNode(preorder[preLo]);
-    int idx = val2Idx.get(preorder[preLo]), countLeft = idx - inLo;
-    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, val2Idx, inLo);
-    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, val2Idx, idx + 1);
+    int idx = v2i.get(preorder[preLo]), countLeft = idx - inLo;
+    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, v2i, inLo);
+    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, v2i, idx + 1);
     return root;
   }
 
   // 从中序与后序遍历序列构造二叉树
   private TreeNode buildTree2(
-      int[] postrorder, int postLo, int postHi, Map<Integer, Integer> val2Idx, int inLo) {
+      int[] postrorder, int postLo, int postHi, Map<Integer, Integer> v2i, int inLo) {
     if (postLo > postHi) return null;
     TreeNode root = new TreeNode(postrorder[postHi]);
-    int idx = val2Idx.get(postrorder[postHi]), countLeft = idx - inLo;
-    root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, val2Idx, inLo);
-    root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, val2Idx, idx + 1);
+    int idx = v2i.get(postrorder[postHi]), countLeft = idx - inLo;
+    root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, v2i, inLo);
+    root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, v2i, idx + 1);
     return root;
   }
 
@@ -127,26 +127,21 @@ public class TTree {
    * @param pre the pre
    * @param inLo the in lo
    * @param inHi the in hi
-   * @param val2Idx the hm
+   * @param v2i the hm
    * @param postorder the postorder
    */
   public void getPostorder(
-      int[] preorder,
-      int preLo,
-      int preHi,
-      Map<Integer, Integer> val2Idx,
-      int inLo,
-      int[] postorder) {
+      int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo, int[] postorder) {
     if (preLo > preHi) return;
     int root = preorder[preLo];
-    int idx = val2Idx.get(root), countLeft = idx - inLo;
-    getPostorder(preorder, preLo + 1, preLo + countLeft, val2Idx, inLo, postorder);
-    getPostorder(preorder, preLo + countLeft + 1, preHi, val2Idx, idx + 1, postorder);
+    int idx = v2i.get(root), countLeft = idx - inLo;
+    getPostorder(preorder, preLo + 1, preLo + countLeft, v2i, inLo, postorder);
+    getPostorder(preorder, preLo + countLeft + 1, preHi, v2i, idx + 1, postorder);
     postorder[preorder.length - 1 - preLo] = root;
   }
 
   /**
-   * 路径总和，从根出发要求达到叶，BFS / 前序，前者模板与下方「求根节点到叶节点数字之和」一致
+   * 路径总和，从根出发要求达到叶，BFS/前序，前者模板与下方「求根节点到叶节点数字之和」一致
    *
    * <p>打印路径则参下「路径总和II」回溯
    *
@@ -298,22 +293,22 @@ public class TTree {
      * @return the tree node
      */
     public TreeNode deserialize(String data) {
-      return traversal(data.split(","));
+      return traverse(data.split(","));
     }
 
-    private TreeNode traversal(String[] vals) {
+    private TreeNode traverse(String[] vals) {
       if (idx >= vals.length) return null;
       String val = vals[idx];
       idx += 1;
       //      String count = vals[idx++];
       if ("null".equals(val)) return null;
       TreeNode root = new TreeNode(Integer.parseInt(val));
+      root.left = traverse(vals);
+      root.right = traverse(vals);
       //      root.children = new TreeNode[count];
       //      for (int i = 0; i < count; i++) {
       //        root.children[i] = traversal(vals);
       //      }
-      root.left = traversal(vals);
-      root.right = traversal(vals);
       return root;
     }
   }
@@ -471,10 +466,10 @@ class DDFS {
    * @return list list
    */
   public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    // 题设节点数有限，值互异，且 O(1) 查找采用 Map
-    Map<Integer, TreeNode> parents = new HashMap<Integer, TreeNode>(500);
-    List<Integer> nodes = new ArrayList<Integer>();
+    List<Integer> nodes = new ArrayList<>();
     if (root == null) return nodes;
+    // 题设节点数有限，值互异，且 O(1) 查找采用 Map
+    Map<Integer, TreeNode> parents = new HashMap<>(500);
     collectFrom(root, parents);
     // 为避免重复，递归时传入来源，在递归前比较目标结点是否与来源结点相同
     dfs17(target, null, k, parents, nodes);
@@ -493,15 +488,44 @@ class DDFS {
   }
 
   private void dfs17(
-      TreeNode to, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> nodes) {
-    if (to == null) return;
+      TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> nodes) {
+    if (n == null) return;
     if (dist == 0) {
-      nodes.add(to.val);
+      nodes.add(n.val);
       return;
     }
-    if (to.left != from) dfs17(to.left, to, dist - 1, parents, nodes);
-    if (to.right != from) dfs17(to.right, to, dist - 1, parents, nodes);
-    if (parents.get(to.val) != from) dfs17(parents.get(to.val), to, dist - 1, parents, nodes);
+    if (n.left != from) dfs17(n.left, n, dist - 1, parents, nodes);
+    if (n.right != from) dfs17(n.right, n, dist - 1, parents, nodes);
+    if (parents.get(n.val) != from) dfs17(parents.get(n.val), n, dist - 1, parents, nodes);
+  }
+
+  /**
+   * 不同岛屿的数量
+   *
+   * @param grid the grid
+   * @return the int
+   */
+  public int numDistinctIslands(int[][] grid) {
+    Set<String> paths = new HashSet<>(); // 通过字符串去重
+    for (int i = 0; i < grid.length; i++) {
+      for (int j = 0; j < grid[0].length; j++) {
+        if (grid[i][j] != 1) continue;
+        StringBuilder path = new StringBuilder();
+        dfs5(grid, path, i, j, i, j);
+        paths.add(path.toString());
+      }
+    }
+    return paths.size();
+  }
+
+  private void dfs5(int[][] grid, StringBuilder path, int x, int y, int preX, int preY) {
+    if (!inArea(grid, x, y) || grid[x][y] == 0) return;
+    grid[x][y] = 0; // mark it
+    path.append(x - preX); // 分别记录相对的横纵坐标
+    path.append(y - preY);
+    for (int[] dir : DIRECTIONS) {
+      dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
+    }
   }
 
   /**
@@ -537,35 +561,6 @@ class DDFS {
   }
 
   /**
-   * 不同岛屿的数量
-   *
-   * @param grid the grid
-   * @return the int
-   */
-  public int numDistinctIslands(int[][] grid) {
-    Set<String> path = new HashSet<>();
-    for (int i = 0; i < grid.length; i++) {
-      for (int j = 0; j < grid[0].length; j++) {
-        if (grid[i][j] != 1) continue;
-        StringBuilder curPath = new StringBuilder();
-        dfs5(grid, curPath, i, j, i, j);
-        path.add(curPath.toString());
-      }
-    }
-    return path.size();
-  }
-
-  private void dfs5(int[][] grid, StringBuilder path, int x, int y, int preX, int preY) {
-    if (!inArea(grid, x, y) || grid[x][y] == 0) return;
-    grid[x][y] = 0;
-    path.append(x - preX); // 记录相对横坐标
-    path.append(y - preY); // 记录相对纵坐标
-    for (int[] dir : DIRECTIONS) {
-      dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
-    }
-  }
-
-  /**
    * 最长相同值路径，找到任意起点的一条路径，所有结点值一致
    *
    * @param root
@@ -573,12 +568,14 @@ class DDFS {
    */
   public int longestUnivaluePath(TreeNode root) {
     if (root == null) return 0;
-    int sub = Math.max(longestUnivaluePath(root.left), longestUnivaluePath(root.right));
-    return Math.max(sub, dfs15(root.left, root.val) + dfs15(root.right, root.val));
+    int both = dfs15(root.left, root.val) + dfs15(root.right, root.val),
+        subLeft = longestUnivaluePath(root.left),
+        subRight = longestUnivaluePath(root.right);
+    return Math.max(both, Math.max(subLeft, subRight));
   }
 
   private int dfs15(TreeNode root, int from) {
-    if (root == null || root.val != from) return 0;
+    if (root == null || root.val != from) return 0; // curing
     return 1 + Math.max(dfs15(root.left, root.val), dfs15(root.right, root.val));
   }
 
@@ -1283,7 +1280,7 @@ class BBFS {
 /** 比对多棵树 */
 class MultiTrees {
   /**
-   * 二叉树的最近公共祖先，结点互异，后序遍历 / 转换为相交链表
+   * 二叉树的最近公共祖先，结点互异，后序遍历/转换为相交链表
    *
    * <p>特判 & 剪枝，判断 p & q 均在左子树内 & 返回非空结点
    *
@@ -1327,28 +1324,27 @@ class MultiTrees {
     queue.offer(r1);
     queue.offer(r2);
     while (queue.size() > 0) {
-      TreeNode node1 = queue.poll(), node2 = queue.poll();
-      node1.val += node2.val;
+      TreeNode n1 = queue.poll(), n2 = queue.poll();
+      n1.val += n2.val;
       // 如果二者左都不为空，就放到队列中
+      if (n1.left != null && n2.left != null) {
+        queue.offer(n1.left);
+        queue.offer(n2.left);
+      }
       // 如果 r1 左空，就把 r2 左挂为前者左
-      if (node1.left != null && node2.left != null) {
-        queue.offer(node1.left);
-        queue.offer(node2.left);
-      } else if (node1.left == null) {
-        node1.left = node2.left;
+      if (n1.left == null) n1.left = n2.left;
+      // 同理
+      if (n1.right != null && n2.right != null) {
+        queue.offer(n1.right);
+        queue.offer(n2.right);
       }
-      if (node1.right != null && node2.right != null) {
-        queue.offer(node1.right);
-        queue.offer(node2.right);
-      } else if (node1.right == null) {
-        node1.right = node2.right;
-      }
+      if (n1.right == null) n1.right = n2.right;
     }
     return r1;
   }
 
   /**
-   * 另一棵树的子树 / 树的子结构 isSubStructure
+   * 另一棵树的子树/树的子结构 isSubStructure
    *
    * <p>特判匹配树 & 主树为空两种情况，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
    *
@@ -1411,7 +1407,7 @@ class MultiTrees {
       if (n1 == null || n2 == null || n1.val != n2.val) {
         return false;
       }
-      // 顺序
+      // 按序
       queue.offer(n1.left);
       queue.offer(n2.left);
       queue.offer(n1.right);
@@ -1640,28 +1636,28 @@ class BacktrackingSearch extends DDFS {
   }
 
   /**
-   * 所有可能的路径
+   * 所有可能的路径，DFS
    *
    * @param graph the graph
    * @return list
    */
   public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
-    List<List<Integer>> res = new ArrayList<>();
+    List<List<Integer>> paths = new ArrayList<>();
     Deque<Integer> path = new ArrayDeque<>();
     path.offerLast(0);
-    backtracking3(graph, 0, path, res);
-    return res;
+    backtracking3(graph, 0, path, paths);
+    return paths;
   }
 
   private void backtracking3(
-      int[][] graph, int start, Deque<Integer> path, List<List<Integer>> res) {
+      int[][] graph, int start, Deque<Integer> path, List<List<Integer>> paths) {
     if (start == graph.length - 1) {
-      res.add(new ArrayList<>(path));
+      paths.add(new ArrayList<>(path));
       return;
     }
     for (int nxt : graph[start]) {
       path.offerLast(nxt);
-      backtracking3(graph, nxt, path, res);
+      backtracking3(graph, nxt, path, paths);
       path.pollLast();
     }
   }

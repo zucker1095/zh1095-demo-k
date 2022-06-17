@@ -35,10 +35,11 @@ public class SString extends DefaultSString {
     final int BASE = 10; // 36 进制
     StringBuilder res = new StringBuilder();
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
-    int carry = 0;
-    while (p1 >= 0 || p2 >= 0 || carry != 0) {
-      int n1 = p1 < 0 ? 0 : getInt(num1.charAt(p1)), n2 = p2 < 0 ? 0 : getInt(num1.charAt(p2));
-      int tmp = n1 + n2 + carry;
+    int carry = 0; // 还要加上一个高位
+    while (p1 > -1 || p2 > -1 || carry != 0) {
+      int n1 = p1 < 0 ? 0 : getInt(num1.charAt(p1)),
+          n2 = p2 < 0 ? 0 : getInt(num1.charAt(p2)),
+          tmp = n1 + n2 + carry;
       res.append(getChar(tmp % BASE));
       carry = tmp / BASE;
       p1 -= 1;
@@ -58,7 +59,7 @@ public class SString extends DefaultSString {
    */
   public String reduceStrings(String num1, String num2) {
     StringBuilder res = new StringBuilder();
-    // 1.保证下方大减小，并判断符号
+    // 1.预处理下方大减小，并判断符号
     if ((num1.length() == num2.length() && Integer.parseInt(num1) < Integer.parseInt(num2))
         || num1.length() < num2.length()) {
       String tmp = num1;
@@ -68,12 +69,14 @@ public class SString extends DefaultSString {
     }
     // 2.从个位开始相减，注意借位，尾插，最终反转
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
-    int carry = 0;
-    while (p1 >= 0 || p2 >= 0) {
-      int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0', n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0';
+    int carry = 0; // 由于保证大建小，因此不需要保留高位
+    while (p1 > -1 || p2 > -1) {
       // 避免 n1 - n2 - carry < 0
-      int tmp = (n1 - n2 - carry + 10) % 10;
-      res.append(tmp); // res.insert(0, tmp) 则无需 reverse
+      int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
+          n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
+          tmp = (n1 - n2 - carry + 10) % 10;
+      // res.insert(0, tmp) 则无需 reverse
+      res.append(tmp);
       carry = n1 - carry - n2 < 0 ? 1 : 0;
       p1 -= 1;
       p2 -= 1;
@@ -218,8 +221,8 @@ class WWindow {
    */
   public String minWindow(String s, String t) {
     // 遍历的指针与结果的始末
+    int start = -1, end = s.length(), counter = t.length();
     int lo = 0, hi = 0;
-    int start = 0, end = Integer.MAX_VALUE, counter = t.length();
     int[] needle = new int[128];
     for (char ch : t.toCharArray()) {
       needle[ch] += 1;
@@ -240,7 +243,7 @@ class WWindow {
         lo += 1;
       }
     }
-    return end == Integer.MAX_VALUE ? "" : s.substring(start, end);
+    return end == s.length() ? "" : s.substring(start, end);
   }
 
   /**
@@ -469,13 +472,14 @@ class SStack {
     for (char ch : s.toCharArray()) {
       // if ((priorities.indexOf(ch) + 1) % 3 > level) return false;
       if (!pairs.containsKey(ch)) {
-        stack.addLast(ch);
         // level = Math.max((priorities.indexOf(ch) + 1) % 3, level);
-        continue;
+        stack.addLast(ch);
+      } else if (stack.isEmpty() || stack.getLast() != pairs.get(ch)) {
+        // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
+        return false;
+      } else {
+        stack.removeLast();
       }
-      // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
-      if (stack.isEmpty() || stack.getLast() != pairs.get(ch)) return false;
-      stack.removeLast();
     }
     //    int curLeft1 = 0, curLeft2 = 0, curLeft3 = 0;
     //    for (char ch : s.toCharArray()) {
@@ -565,7 +569,7 @@ class SStack {
       else if (seg.equals("..")) stack.pollLast();
       else stack.offerLast(seg);
     }
-    StringBuilder res = new StringBuilder();
+    StringBuilder res = new StringBuilder(stack.size());
     for (String str : stack) {
       res.append('/');
       res.append(str);
@@ -606,7 +610,7 @@ class SStack {
       else if (ch == '+') sign = opStack.peekLast();
       else if (ch == '-') sign = -opStack.peekLast();
       // 基本计算器
-      //      else {
+      //      if {
       //        long num = 0;
       //        while (i < chs.length && Character.isDigit(chs[i])) {
       //          num = num * 10 + chs[i] - '0';
@@ -724,14 +728,15 @@ class SStack {
     int stackTop = 0, popIdx = 0;
     //    for (int add = 0; i < N; i++) {
     for (int add : pushed) {
-      pushed[stackTop] = add;
+      pushed[stackTop] = add; // 入栈
       stackTop += 1;
+      // 出栈，直至空或序列不匹配
       while (stackTop != 0 && pushed[stackTop - 1] == popped[popIdx]) {
         stackTop -= 1;
         popIdx += 1;
       }
     }
-    return stackTop == 0;
+    return stackTop == 0; // 是否还有未出栈的
   }
 
   /**
@@ -778,7 +783,7 @@ class SSubString {
    */
   public String longestCommonPrefix(String[] strs) {
     if (strs.length == 0) return ""; // 需要特判
-    String ref = strs[0];
+    String ref = strs[0]; // 参照物
     for (int i = 0; i < ref.length(); i++) {
       char pivot = ref.charAt(i);
       for (int j = 1; j < strs.length; j++) { // 有 j 个字符需要比对
@@ -890,7 +895,7 @@ class SSubString {
     char[] chs = haystack.toCharArray(), chsNeedle = needle.toCharArray();
     int lenChs = chs.length, lenNeedle = chsNeedle.length;
     for (int i = 0; i <= lenChs - lenNeedle; i++) { // 枚举原串的发起点
-      int p1 = i, p2 = 0; // 开始一轮匹配
+      int p1 = i, p2 = 0; // 开始一轮匹配，O(n^2)
       while (p2 < lenNeedle && chs[p1] == chsNeedle[p2]) {
         p1 += 1;
         p2 += 1;
@@ -926,7 +931,7 @@ class SSubString {
 /**
  * 进制转换，编码相关
  *
- * <p>num to str: greedy
+ * <p>num to str: 尽可能匹大大
  *
  * <p>str to num: multiply by multiple which the char represtants starting from the low order
  */
@@ -978,15 +983,14 @@ class CConvert {
     int idx = 0, len = s.length();
     boolean isNegative = false;
     char[] chs = s.toCharArray();
-
+    // 去首空格，并判正负
     while (idx < len && chs[idx] == ' ') {
       idx += 1;
     }
     if (idx == len) return 0;
-
     if (chs[idx] == '-') isNegative = true;
     if (chs[idx] == '-' || chs[idx] == '+') idx += 1;
-
+    // 从高位开始取，留意溢出
     int num = 0;
     for (int i = idx; i < len; i++) {
       char ch = chs[i];
@@ -994,14 +998,11 @@ class CConvert {
       //        int decimal = myAtoi(s.substring(i, len));
       //        return (num + decimal * Math.pow(0.1, len - i + 1)) * (isNegative ? -1 : 1);
       //      }
-      // 非数字
       if (ch < '0' || ch > '9') break;
-      // 判溢出
       int pre = num;
       num = num * 10 + (ch - '0');
       if (pre != num / 10) return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
     }
-
     return num * (isNegative ? -1 : 1);
   }
 
@@ -1025,8 +1026,8 @@ class CConvert {
       lo += 1;
       if (cur - hi > 1) {
         // 逐位写入
-        char[] num = Integer.toString(cur - hi).toCharArray();
-        for (char digit : num) {
+        char[] cnt = Integer.toString(cur - hi).toCharArray();
+        for (char digit : cnt) {
           chars[lo] = digit;
           lo += 1;
         }
@@ -1053,21 +1054,17 @@ class CConvert {
       res.append(CHARS[(int) (cur % 16)]); // 取余
       cur /= 16; // 除以
     }
-
     // 10->16
     //    while (n > 0) {
     //      res += CHARS[n % 16];
     //      n /= 16;
     //    }
-
     // 16->10
     //    for (int i = 0; i < len; i++) {
-    // 尽量匹配大的
     //      if (s[i] - 'a' >= 0 && s[i] - 'a' <= 5)
     //        sum += (long) (s[i] - 'a' + 10) * (long) pow(16.0, len - i - 1);
     //      else sum += (s[i] - '0') * (int) pow(16.0, len - i - 1);
     //    }
-
     return res.reverse().toString();
   }
 
@@ -1155,8 +1152,7 @@ class CConvert {
     int n = 0;
     char[] chs = s.toCharArray();
     for (int i = 0; i < chs.length; i++) {
-      int add = mapping.get(chs[i]);
-      // 罗马数字的规则
+      int add = mapping.get(chs[i]); // 单独一个字符对应的十进制值
       if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) n -= add;
       else n += add;
     }
@@ -1268,22 +1264,43 @@ class WWord extends DefaultSString {
    * @return string string
    */
   public String reverseWords(String s) {
-    int i = 0, j = 0, start = 0, end = 0;
-    StringBuilder str = new StringBuilder(s.trim()).reverse();
-    for (; i < str.length(); i++) {
-      if (str.charAt(i) != ' ') continue;
-      j = i + 1;
-      while (str.charAt(j) == ' ') {
-        j += 1;
-      }
-      str.delete(i + 1, j); // remove blank
-      end = i - 1;
-      reverse(str, start, end);
-      start = i + 1;
+    char[] chs = s.toCharArray();
+    int len = chs.length;
+    reverseChs(chs, 0, len - 1);
+    reverseEachWord(chs, len);
+    return removeBlanks(chs, len);
+  }
+
+  private void reverseEachWord(char[] chs, int len) {
+    int start = 0;
+    while (start < len) {
+      // 找到首字母
+      while (start < len && chs[start] == ' ') start += 1;
+      int end = start;
+      // 末位置
+      while (end < len && chs[end] != ' ') end += 1;
+      reverseChs(chs, start, end - 1);
+      start = end;
     }
-    // 由于最后一个单词末尾没有空格，所以这里多处理一下
-    reverse(str, start, i - 1);
-    return str.toString();
+  }
+
+  private String removeBlanks(char[] chs, int len) {
+    int lo = 0, hi = 0;
+    while (hi < len) {
+      // 找到尾空格
+      while (hi < len && chs[hi] == ' ') hi += 1;
+      while (hi < len && chs[hi] != ' ') {
+        chs[lo] = chs[hi];
+        lo += 1;
+        hi += 1;
+      }
+      while (hi < len && chs[hi] == ' ') hi += 1;
+      if (hi < len) {
+        chs[lo] = ' ';
+        lo += 1;
+      }
+    }
+    return String.valueOf(chs, 0, lo);
   }
 
   /**
@@ -1421,6 +1438,7 @@ class MonotonicStack {
     if (num.length() == k) return "0";
     StringBuilder ms = new StringBuilder();
     for (char ch : num.toCharArray()) {
+      // 单调递减栈，<= 入栈
       while (k > 0 && ms.length() > 0 && ms.charAt(ms.length() - 1) > ch) {
         ms.deleteCharAt(ms.length() - 1);
         k -= 1;
@@ -1428,9 +1446,8 @@ class MonotonicStack {
       if (ch == '0' && ms.length() == 0) continue; // 避免前导零
       ms.append(ch);
     }
-    // 没有删除足够 k
     String str = ms.substring(0, Math.max(ms.length() - k, 0));
-    return str.length() == 0 ? "0" : str;
+    return str.length() == 0 ? "0" : str; // 没有删除足够 k
   }
 
   /**

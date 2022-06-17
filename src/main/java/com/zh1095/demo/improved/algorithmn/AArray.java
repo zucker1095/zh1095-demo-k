@@ -679,7 +679,9 @@ class MMerge extends DefaultArray {
  */
 class DichotomyClassic extends DefaultArray {
   /**
-   * 寻找两个有序数组的中位数，单个数组无重，根据排位二分
+   * 寻找两个有序数组的中位数，数组内去重，数组间重叠，根据排位二分，掌握迭代即可
+   *
+   * <p>topK 需要去重，而中位则保留
    *
    * <p>对于两个有序数组，逆序则顺序遍历求第 k 大，正序则顺序遍历求第 k 小，反之，二者均需要逆序遍历
    *
@@ -697,50 +699,64 @@ class DichotomyClassic extends DefaultArray {
     int l1 = nums1.length, l2 = nums2.length;
     int ranking = (l1 + l2 + 1) / 2, rankingMore = (l1 + l2 + 2) / 2;
     // 将偶数和奇数的情况合并，奇数则求两次同样的 k
-    //    return (getkSmallElement2(nums1, 0, n - 1, nums2, 0, m - 1, ranking)
-    //            + getkSmallElement2(nums1, 0, n - 1, nums2, 0, m - 1, rankingMore))
+    //    return (getkSmallElement(nums1, 0, n - 1, nums2, 0, m - 1, ranking)
+    //            + getkSmallElement(nums1, 0, n - 1, nums2, 0, m - 1, rankingMore))
     //        * 0.5;
-    return (getKSmallElement1(nums1, nums2, ranking) + getKSmallElement1(nums1, nums2, rankingMore))
+    return (getLargestElement(nums1, nums2, ranking) + getLargestElement(nums1, nums2, rankingMore))
         * 0.5;
   }
 
-  // 迭代，特判其一为空 & 其一遍历结束 & k 为 1
-  private int getKSmallElement1(int[] nums1, int[] nums2, int k) {
+  // 扩展1，求第 k 小参下 annotate
+  private int getLargestElement(int[] nums1, int[] nums2, int k) {
     int l1 = nums1.length, l2 = nums2.length;
-    int p1 = 0, p2 = 0, ranking = k;
-    while (p1 < l1 && p2 < l2 && ranking > 1) {
+    int p1 = l1 - 1, p2 = l2 - 1, ranking = k;
+    //    int p1 = 0, p2 = 0, ranking = k;
+    while (p1 > -1 && p2 > -1 && ranking > 1) {
+      //    while (p1 < l1 && p2 < l2 && ranking > 1) {
       int half = ranking / 2,
-          newP1 = Math.min(p1 + half, l1) - 1,
-          newP2 = Math.min(p2 + half, l2) - 1;
+          newP1 = Math.max(p1 - half, -1) + 1,
+          newP2 = Math.max(p2 - half, -1) + 1;
+      //          newP1 = Math.min(p1 + half, l1) - 1,
+      //          newP2 = Math.min(p2 + half, l2) - 1;
       int n1 = nums1[newP1], n2 = nums2[newP2];
-      if (n1 <= n2) {
-        ranking -= (newP1 - p1 + 1);
-        p1 = newP1 + 1;
+      if (n1 >= n2) {
+        ranking -= (p1 - newP1 + 1);
+        p1 = newP1 - 1;
       } else {
-        ranking -= (newP2 - p2 + 1);
-        p2 = newP2 + 1;
+        ranking -= (p2 - newP2 + 1);
+        p2 = newP2 - 1;
       }
+      //      if (n1 <= n2) {
+      //        ranking -= (newP1 - p1 + 1);
+      //        p1 = newP1 + 1;
+      //      } else {
+      //        ranking -= (newP2 - p2 + 1);
+      //        p2 = newP2 + 1;
+      //      }
     }
-    if (p1 == l1) return nums2[p2 + ranking - 1];
-    if (p2 == l2) return nums1[p1 + ranking - 1];
-    return Math.min(nums1[p1], nums2[p2]);
+    if (p1 == l1) return nums2[p2 - ranking + 1];
+    if (p2 == l2) return nums1[p1 - ranking + 1];
+    return Math.max(nums1[p1], nums2[p2]);
+    //    if (p1 == l1) return nums2[p2 + ranking - 1];
+    //    if (p2 == l2) return nums1[p1 + ranking - 1];
+    //    return Math.min(nums1[p1], nums2[p2]);
   }
 
   // 尾递归，特判 k=1 & 其一为空
-  private int getkSmallElement2(
+  private int getkSmallElement(
       int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
     if (k == 1) return Math.min(nums1[lo1], nums2[lo2]);
     int l1 = hi1 - lo1 + 1, l2 = hi2 - lo2 + 1;
     // 让 len1 的长度小于 len2，这样就能保证如果有数组空了，一定是 len1
     if (l1 > l2) {
-      return getkSmallElement2(nums2, lo2, hi2, nums1, lo1, hi1, k);
+      return getkSmallElement(nums2, lo2, hi2, nums1, lo1, hi1, k);
     } else if (l1 == 0) {
       return nums2[lo2 + k - 1];
     }
     int p1 = lo1 + Math.min(l1, k / 2) - 1, p2 = lo2 + Math.min(l2, k / 2) - 1;
     return (nums1[p1] > nums2[p2])
-        ? getkSmallElement2(nums1, lo1, hi1, nums2, p2 + 1, hi2, k - (p2 - lo2 + 1))
-        : getkSmallElement2(nums1, p1 + 1, hi1, nums2, lo2, hi2, k - (p1 - lo1 + 1));
+        ? getkSmallElement(nums1, lo1, hi1, nums2, p2 + 1, hi2, k - (p2 - lo2 + 1))
+        : getkSmallElement(nums1, p1 + 1, hi1, nums2, lo2, hi2, k - (p1 - lo1 + 1));
   }
 
   /**
@@ -754,35 +770,13 @@ class DichotomyClassic extends DefaultArray {
    * @return int [ ]
    */
   public int[] searchRange(int[] nums, int target) {
-    if (nums.length < 1 || target < nums[0] || nums[nums.length - 1] < target) {
+    if (target < nums[0] || nums[nums.length - 1] < target) {
       return new int[] {-1, -1};
     }
     int smallmost = smallmostBound(nums, target);
     if (smallmost == -1) return new int[] {-1, -1};
     int bigmost = bigmostBound(nums, target, smallmost);
     return new int[] {smallmost, bigmost};
-  }
-
-  protected int smallmostBound(int[] nums, int target) {
-    int lo = 0, hi = nums.length - 1;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      // 下一轮搜索区间是 [lo...mid] 因为小于一定不是解
-      if (nums[mid] < target) lo = mid + 1;
-      else hi = mid;
-    }
-    return nums[lo] == target ? lo : -1;
-  }
-
-  private int bigmostBound(int[] nums, int target, int start) {
-    int lo = start, hi = nums.length - 1;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2 + 1; // 需要右开区间
-      // 下一轮搜索区间是 [lo..mid - 1]
-      if (nums[mid] <= target) lo = mid;
-      else hi = mid - 1;
-    }
-    return nums[hi] == target ? hi : -1;
   }
 
   /**
@@ -932,27 +926,16 @@ class DichotomyElse extends DefaultArray {
       if (matrix[mid][0] <= target) lo = mid;
       else hi = mid - 1;
     }
-    int row = hi;
+    int row = hi, col;
     if (matrix[row][0] == target) return true;
     if (matrix[row][0] > target) return false;
     // 从所在行中定位到列，找到最后一个满足 matrix[row][x] <= t 的列
-    lo = 0;
-    hi = matrix[0].length - 1;
-    while (lo < hi) {
-      int mid = lo + (hi - lo + 1) / 2;
-      if (matrix[row][mid] <= target) lo = mid;
-      else hi = mid - 1;
-    }
-    return matrix[row][hi] == target;
+    col = bigmostBound(matrix[row], target, 0);
+    return col == -1 ? false : matrix[row][col] == target;
     // II
     //    for (int row = 0; row < matrix.length; row++) {
-    //      int lo = 0, hi = matrix[0].length - 1;
-    //      while (lo < hi) {
-    //        int mid = lo + (hi - lo + 1) / 2;
-    //        if (matrix[row][mid] <= target) lo = mid;
-    //        else hi = mid - 1;
-    //      }
-    //      if (matrix[row][hi] == target) return true;
+    //    int col = bigmostBound(matrix[row], target, 0);
+    //    if (col != -1 && matrix[row][col] == target) return true;
     //    }
     //    return false;
   }
@@ -1329,7 +1312,7 @@ class PreSum {
     for (int i = 0; i < nums.length; i++) {
       // 将 0 作为 -1
       preSum += nums[i] == 0 ? -1 : 1;
-      // 画图可知，i - map[preSum] 即和为 0 的数组的长度
+      // 画图可知 i - map[preSum] 即和为 0 的数组的长度
       if (sum2FirstHi.containsKey(preSum)) maxLen = Math.max(maxLen, i - sum2FirstHi.get(preSum));
       // 仍未遍历到和为 0 的子数组，更新即可
       else sum2FirstHi.put(preSum, i);
@@ -1505,7 +1488,7 @@ class PreSum {
 /** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，无序找首个，快慢指针，与「环形链表II」一致，类似参考「第一个只出现一次的字符」
+   * 寻找重复数，无序找首个，快慢指针，类似「环形链表II」，可参考「第一个只出现一次的字符」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1579,7 +1562,7 @@ class DDuplicate extends DefaultArray {
   public int firstMissingPositive(int[] nums) {
     int len = nums.length;
     for (int i = 0; i < len; i++) {
-      // 不断判断 i 位置上被放入正确的数，即 nums[i]-1
+      // 不断判断 i 位置上被放入正确的数 nums[i]-1
       while (nums[i] > 0 && nums[i] <= len && nums[i] != nums[nums[i] - 1]) {
         swap(nums, nums[i] - 1, i);
       }
@@ -1587,7 +1570,7 @@ class DDuplicate extends DefaultArray {
     for (int i = 0; i < len; i++) {
       if (nums[i] != i + 1) return i + 1;
     }
-    return len + 1;
+    return len + 1; // 没有缺失
   }
 }
 
@@ -2126,6 +2109,28 @@ class DicOrder extends DefaultArray {
 
 /** 提供一些数组的通用方法 */
 abstract class DefaultArray {
+  protected int smallmostBound(int[] nums, int target) {
+    int lo = 0, hi = nums.length - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      // 下一轮搜索区间是 [lo...mid] 因为小于一定不是解
+      if (nums[mid] < target) lo = mid + 1;
+      else hi = mid;
+    }
+    return nums[lo] == target ? lo : -1;
+  }
+
+  protected int bigmostBound(int[] nums, int target, int start) {
+    int lo = start, hi = nums.length - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2 + 1; // 需要右开区间
+      // 下一轮搜索区间是 [lo..mid - 1]
+      if (nums[mid] <= target) lo = mid;
+      else hi = mid - 1;
+    }
+    return nums[hi] == target ? hi : -1;
+  }
+
   /**
    * 调换
    *
