@@ -34,9 +34,9 @@ class OptimalSubSequence {
    * @return int int
    */
   public int lengthOfLIS(int[] nums) {
-    // tail 最后一个已经赋值的元素的索引
+    // 最后一个已经赋值的元素的索引
     int len = nums.length, end = 0;
-    // dp[i] 表示以 i 结尾的 LIS 的最大长度
+    // dp[i] 表示以 i 结尾的 LIS
     // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
     int[] tails = new int[len], dp = new int[len];
     tails[0] = nums[0];
@@ -59,7 +59,7 @@ class OptimalSubSequence {
       }
     }
     //    getPath(nums, dp, hi + 1);
-    return end + 1; // 返回长度
+    return end + 1; // 索引 +1 即长度
   }
 
   // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
@@ -72,7 +72,7 @@ class OptimalSubSequence {
   private int[] getPath(int[] nums, int[] dp, int len) {
     int[] path = new int[len];
     int count = len;
-    for (int i = nums.length - 1; i >= 0 && count >= 0; i--) {
+    for (int i = nums.length - 1; i > -1 && count > -1; i--) {
       if (dp[i] != count) continue;
       count -= 1;
       path[count] = nums[i];
@@ -136,8 +136,7 @@ class OptimalSubSequence {
       char c1 = s.charAt(i);
       // [i+1:len-1]
       for (int j = i + 1; j < len; j++) {
-        // check whether s[i] can match s[j]
-        // otherwise, s[i:j]'s LPS depends on prev and next
+        // s[i] 是否匹配 s[j] 否则 s[i:j]'s LPS depends on prev and next
         if (c1 == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
         else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
       }
@@ -376,7 +375,7 @@ class OptimalSubSequence {
  */
 class OptimalSubArray {
   /**
-   * 最长重复子数组 / 最长公共子串，区别于子序列的代码
+   * 最长重复子数组/最长公共子串，区别于子序列的代码
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
@@ -661,9 +660,9 @@ class OptimalPath {
   private int[] dfs11(TreeNode root) {
     if (root == null) return new int[2];
     int[] left = dfs11(root.left), right = dfs11(root.right);
-    int cur = left[0] + right[0] + root.val,
-        nxt = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
-    return new int[] {nxt, cur};
+    int settle = left[0] + right[0] + root.val,
+        skip = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
+    return new int[] {skip, settle};
   }
 
   /**
@@ -870,7 +869,8 @@ class OptimalElse {
     int[] dp = new int[chs.length];
     for (int i = 1; i < chs.length; i++) {
       if (chs[i] == '(') continue;
-      int preIdx = i - dp[i - 1]; // 0...preIdx(...)) 其中 i 是最后一个括号
+      // 0...preIdx(...)) 其中 i 是最后一个括号
+      int preIdx = i - dp[i - 1];
       if (chs[i - 1] == '(') dp[i] = 2 + (i < 2 ? 0 : dp[i - 2]);
       else if (preIdx > 0 && chs[preIdx - 1] == '(')
         dp[i] = 2 + dp[i - 1] + (preIdx < 2 ? 0 : dp[preIdx - 2]);

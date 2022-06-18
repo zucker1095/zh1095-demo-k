@@ -224,7 +224,13 @@ public class TTree {
   }
 
   /**
-   * 二叉树的下一个节点，给定一棵树中任一结点，返回其中序遍历顺序的下一个结点，提供结点的 next 指向父结点
+   * 二叉树的下一个节点，给定一棵树中任一结点，返回其中序遍历顺序的下一个结点，from 指向父
+   *
+   * <p>若 x 有右子树，则下一个节点为 x 右子树最左侧节点。否则，分为两种情况
+   *
+   * <p>若 x 是父节点的左孩子，则 x 的父节点就是 x 的下一个节点。
+   *
+   * <p>若 x 是父节点的右孩子，则沿着父节点向上，直到找到一个节点的父节点的左孩子是该节点，则该节点的父节点就是 x 的下一个节点。
    *
    * <p>参考 https://mp.weixin.qq.com/s/yewlHvHSilMsrUMFIO8WAA
    *
@@ -240,18 +246,18 @@ public class TTree {
       }
       return cur;
     }
-    // 否则，找首个当前结点是父结点左孩子的结点
+    // 否则，找第一个 node 是父节点左孩子的节点
     _TreeNode cur = node;
-    while (cur.next != null) {
-      if (!cur.next.left.equals(cur)) cur = cur.next;
-      return cur.next;
+    while (cur.from != null) {
+      if (cur.from.left.equals(cur)) return cur.from;
+      cur = cur.from;
     }
-    // 退到根结点仍没找到
+    // 回溯至 root 仍没找到
     return null;
   }
 
   private class _TreeNode {
-    private _TreeNode left, right, next;
+    private _TreeNode left, right, from;
   }
 
   /**
@@ -315,7 +321,8 @@ public class TTree {
 }
 
 /**
- * 深度优先搜索
+ * 深度优先搜索，注意 visited 与 recStack 的区别，前者与一整条路径对应，不会重置，而后者与遍历一条路径有关，遍历完后，遍历下一条路径前重置，参考
+ * https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
  *
  * <p>caller 遍历每一个点，类比 Goosip 协议，而 DFS 本身决定每个点的步进方向
  *
@@ -1496,19 +1503,19 @@ class BacktrackingCombinatorics {
   }
 
   private void backtracking4(
-      int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] visited) {
+      int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] recStack) {
     if (path.size() == nums.length) {
       res.add(new ArrayList<>(path));
       return;
     }
     for (int i = 0; i < nums.length; i++) {
-      if (visited[i]) continue;
-      // if (visited[i] || (i > 0 && nums[i] == nums[i - 1] && !visited[i-1])) continue;
-      visited[i] = true;
+      if (recStack[i]) continue;
+      // if (recStack[i] || (i > 0 && nums[i] == nums[i - 1] && !recStack[i-1])) continue;
+      recStack[i] = true;
       path.offerLast(nums[i]);
-      backtracking4(nums, path, res, visited);
+      backtracking4(nums, path, res, recStack);
       path.pollLast();
-      visited[i] = false;
+      recStack[i] = false;
     }
   }
 }
@@ -1575,7 +1582,7 @@ class BacktrackingSearch extends DDFS {
   }
 
   /**
-   * 单词搜索 / 矩阵中的路径
+   * 单词搜索/矩阵中的路径
    *
    * @param board the board
    * @param word the word
@@ -1583,30 +1590,30 @@ class BacktrackingSearch extends DDFS {
    */
   public boolean exist(char[][] board, String word) {
     int row = board.length, col = board[0].length;
-    boolean[][] visited = new boolean[row][col];
+    char[] chs = word.toCharArray();
+    boolean[][] recStack = new boolean[row][col];
     for (int r = 0; r < row; r++) {
       for (int c = 0; c < col; c++) {
-        if (backtracking8(board, r, c, word.toCharArray(), 0, visited)) return true;
+        if (backtracking8(board, r, c, chs, 0, recStack)) return true;
       }
     }
     return false;
   }
 
   private boolean backtracking8(
-      char[][] board, int r, int c, char[] word, int start, boolean[][] visited) {
+      char[][] board, int r, int c, char[] word, int start, boolean[][] recStack) {
     if (start == word.length - 1) return board[r][c] == word[start];
     if (board[r][c] != word[start]) return false;
-
-    visited[r][c] = true;
+    recStack[r][c] = true;
     for (int[] dir : DIRECTIONS) {
       int nX = r + dir[0], nY = c + dir[1];
-      if (!visited[nX][nY]
+      if (!recStack[nX][nY]
           && inArea(board, nX, nY)
-          && backtracking8(board, nX, nY, word, start + 1, visited)) {
+          && backtracking8(board, nX, nY, word, start + 1, recStack)) {
         return true;
       }
     }
-    visited[r][c] = false;
+    recStack[r][c] = false;
     return false;
   }
 

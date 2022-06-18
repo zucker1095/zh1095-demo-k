@@ -378,7 +378,7 @@ class WWindow {
   /**
    * 最大连续1的个数III，返回最长子数组，最多可转换 k 个 0
    *
-   * <p>统计窗口内 0 的个数，窗口内容忍 k 个 0 即假设其全 1
+   * <p>统计窗口内 0 的个数，翻转所有扩窗的值为 1，次数上限后再缩窗
    *
    * <p>参考
    * https://leetcode.cn/problems/max-consecutive-ones-iii/solution/fen-xiang-hua-dong-chuang-kou-mo-ban-mia-f76z/
@@ -388,12 +388,11 @@ class WWindow {
    * @return
    */
   public int longestOnes(int[] nums, int k) {
-    int maxLen = 0, zeroNum = 0;
-    int lo = 0, hi = 0;
+    int maxLen = 0, lo = 0, hi = 0;
     while (hi < nums.length) {
-      if (nums[hi] == 0) zeroNum += 1;
-      while (zeroNum > k) {
-        if (nums[lo] == 0) zeroNum -= 1;
+      if (nums[hi] == 0) k -= 1;
+      while (k < 0) {
+        if (nums[lo] == 0) k += 1;
         lo += 1;
       }
       maxLen = Math.max(maxLen, hi - lo + 1);
@@ -1451,7 +1450,7 @@ class MonotonicStack {
   }
 
   /**
-   * 去除重复字母 / 不同字符的最小子序列，且要求之后的整体字典序最小
+   * 去除重复字母/不同字符的最小子序列，且要求之后的整体字典序最小
    *
    * <p>greedy - 结果中第一个字母的字典序靠前的优先级最高
    *

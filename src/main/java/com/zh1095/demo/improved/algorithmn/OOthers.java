@@ -138,12 +138,10 @@ public class OOthers {
     int lo = 0, hi = 0; // 当前片段的首尾
     for (int i = 0; i < chs.length; i++) {
       hi = Math.max(lastIdxes[chs[i] - 'a'], hi);
-      if (i == hi) {
-        lens.add(hi - lo + 1);
-        lo = hi + 1;
-      }
+      if (i != hi) continue;
+      lens.add(hi - lo + 1);
+      lo = hi + 1;
     }
-
     return lens;
   }
 
@@ -285,11 +283,9 @@ public class OOthers {
 /** 构建新数据结构 */
 class DData {
   /**
-   * LRU缓存机制
+   * LRU缓存机制 addToHead, moveToHead, removeTail, removeTail
    *
    * <p>hash 保证 O(1) 寻址 & 链表保证 DML 有序，双向保证将一个节点移到双向链表的头部，可以分成「删除该节点」&「在双向链表的头部添加节点」两步操作都 O(1)
-   *
-   * <p>To be implemented: addToHead, moveToHead, removeTail, removeTail.
    *
    * <p>扩展1，带超时，可以懒删除或 Daemon 随机 scan
    *
@@ -299,16 +295,16 @@ class DData {
    * https://leetcode-cn.com/problems/lfu-cache/solution/chao-xiang-xi-tu-jie-dong-tu-yan-shi-460-lfuhuan-c/
    */
   public class LRUCache {
-    private final Map<Integer, DLinkedNode> key2Node = new HashMap<>();
+    private final Map<Integer, DLinkedNode> k2n = new HashMap<>();
     private final DLinkedNode head = new DLinkedNode(), tail = new DLinkedNode(); // dummy
-    private final int capacity;
+    private final int CAPACITY;
     /**
      * Instantiates a new Lru cache.
      *
      * @param capacity the capacity
      */
     public LRUCache(int capacity) {
-      this.capacity = capacity;
+      this.CAPACITY = capacity;
       head.next = tail;
       tail.prev = head;
     }
@@ -320,7 +316,7 @@ class DData {
      * @return the int
      */
     public int get(int key) {
-      DLinkedNode node = key2Node.get(key);
+      DLinkedNode node = k2n.get(key);
       if (node == null) return -1;
       moveToHead(node);
       return node.value;
@@ -335,18 +331,18 @@ class DData {
      * @param value the value
      */
     public void put(int key, int value) {
-      DLinkedNode node = key2Node.get(key);
+      DLinkedNode node = k2n.get(key);
       if (node != null) {
         node.value = value;
         moveToHead(node);
         return;
       }
       DLinkedNode newNode = new DLinkedNode(key, value);
-      key2Node.put(key, newNode);
+      k2n.put(key, newNode);
       addToHead(newNode);
-      if (key2Node.size() > capacity) {
+      if (k2n.size() > CAPACITY) {
         DLinkedNode tail = removeTail();
-        key2Node.remove(tail.key);
+        k2n.remove(tail.key);
       }
     }
 
@@ -365,9 +361,9 @@ class DData {
 
     // revmoeNode
     private DLinkedNode removeTail() {
-      DLinkedNode res = tail.prev;
-      removeNode(res);
-      return res;
+      DLinkedNode last = tail.prev;
+      removeNode(last);
+      return last;
     }
 
     private void removeNode(DLinkedNode node) {
@@ -402,16 +398,16 @@ class DData {
   }
 
   /**
-   * 设计循环队列，三种实现方式，冗余一个元素 / 边界标记 / 计数器，此处选用前者
+   * 设计循环队列，三种实现方式，冗余一个元素/边界标记/计数器，此处选用前者
    *
-   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即从队尾入队元素的位置
+   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即元素入队的位置
    *
-   * <p>扩展1，并发安全，单个 push 多个 pop
+   * <p>扩展1，并发安全，单个 push 多个 pop，采用 CAS 或参考 Disruptor
    */
   public class MyCircularQueue {
     private final int CAPACITY;
     private final int[] data;
-    private int front, rear; // 虚拟头尾
+    private int front, rear; // dummy head and tail
 
     /**
      * Instantiates a new My circular queue.
@@ -951,6 +947,44 @@ class MMath {
   }
 
   /**
+   * 两数相除
+   *
+   * <p>实现一个「倍增乘法」，然后利用对于 x/y 必然落在区间 [0:x] 的规律进行二分
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/divide-two-integers/solution/shua-chuan-lc-er-fen-bei-zeng-cheng-fa-j-m73b/
+   *
+   * @param a
+   * @param b
+   * @return
+   */
+  public int divide(int a, int b) {
+    boolean isNeg = false;
+    if ((a > 0 && b < 0) || (a < 0 && b > 0)) isNeg = true;
+    if (a < 0) a = -a;
+    if (b < 0) b = -b;
+    long lo = 0, hi = a;
+    while (lo < hi) {
+      long mid = lo + (hi - lo + 1) / 2;
+      if (mul(mid, b) <= a) lo = mid;
+      else hi = mid - 1;
+    }
+    long res = isNeg ? -lo : lo;
+    if (res > Integer.MAX_VALUE || res < Integer.MIN_VALUE) return Integer.MAX_VALUE;
+    return (int) res;
+  }
+
+  private long mul(long a, long k) {
+    long res = 0;
+    while (k > 0) {
+      if ((k & 1) == 1) res += a;
+      k >>= 1; // 除以 2
+      a += a; // 乘以 2
+    }
+    return res;
+  }
+
+  /**
    * 第N位数字 / 第n个数字
    *
    * <p>k 位数共有 9*10^(k-1) 个数字，迭代试减 n 以确定 k 所在的整个数字
@@ -1164,7 +1198,9 @@ class GGraph {
   }
 
   /**
-   * 课程表，check if DAG，拓扑排序
+   * 课程表/检测循环依赖，返回是否 DAG，拓扑排序
+   *
+   * <p>参考 https://mp.weixin.qq.com/s/pCRscwKqQdYYN7M1Sia7xA
    *
    * <p>原理是对 DAG 的顶点进行排序，使得对每一条有向边 (u, v)，均有 u（在排序记录中）比 v 先出现。亦可理解为对某点 v 而言，只有当 v 的所有源点均出现了，v 才能出现
    *
@@ -1211,7 +1247,7 @@ class GGraph {
   }
 
   /**
-   * 课程表II，上方新增记录即可，检测循环依赖同理
+   * 课程表II，上方新增记录即可
    *
    * <p>若存在循环依赖则返回空，否则返回可行的编译顺序
    *

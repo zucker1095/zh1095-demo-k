@@ -5,11 +5,7 @@ import java.util.*;
 /**
  * 收集所有链表相关，建议直接记代码行数，因为链表的题型基本没有冗余的步骤
  *
- * <p>选择尾插则引入哑节点
- *
- * <p>尾插 & 暂存 & 变向 & 步进
- *
- * <p>反转 & 环形 & 回文 & 合并 & 删除
+ * <p>头插需要引入哑节点
  *
  * @author cenghui
  */
@@ -83,7 +79,7 @@ public class LList {
   }
 
   /**
-   * 复制带随机指针的链表，三次遍历
+   * 复制带随机指针的链表，三次遍历，一次需要引入 hash
    *
    * <p>参考
    * https://leetcode-cn.com/problems/copy-list-with-random-pointer/solution/liang-chong-shi-xian-tu-jie-138-fu-zhi-dai-sui-ji-/
@@ -100,7 +96,6 @@ public class LList {
       cur.next = newNode;
       cur = newNode.next;
     }
-
     // 2.逐一设置新节点的随机节点
     cur = head;
     while (cur != null) {
@@ -108,7 +103,6 @@ public class LList {
       if (cur.random != null) cur.next.random = cur.random.next;
       cur = cur.next.next;
     }
-
     // 3.分离
     Node dummy = new Node(-1), lo = dummy, hi = head;
     while (hi != null) {
@@ -172,7 +166,7 @@ class ReverseList extends LList {
   /**
    * k个一组反转链表，pre [start...cur...] nxt
    *
-   * <p>变向顺序 cur pre start，只需专注其后驱即可，下方反转区间同理
+   * <p>只需专注后驱，下方反转区间同理
    *
    * <p>参考
    * https://leetcode-cn.com/problems/reverse-nodes-in-k-group/solution/tu-jie-kge-yi-zu-fan-zhuan-lian-biao-by-user7208t/
