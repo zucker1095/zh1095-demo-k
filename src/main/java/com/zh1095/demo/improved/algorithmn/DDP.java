@@ -579,6 +579,9 @@ class OptimalPath {
   public int minimumTotal(List<List<Integer>> triangle) {
     int len = triangle.get(triangle.size() - 1).size();
     int[] dp = new int[len + 1];
+    // a
+    // b c
+    // d e f
     for (int i = len - 1; i >= 0; i--) {
       for (int j = 0; j <= i; j++) {
         dp[j] = triangle.get(i).get(j) + Math.min(dp[j], dp[j + 1]);
@@ -694,7 +697,7 @@ class OptimalPath {
       for (int j = i; j > -1; j--) {
         if (j + maxLen < i) break;
         String word = s.substring(j, i);
-        // s[j:i-1] can be matched
+        // 二者均可被匹配，即 s[0:i-1] 可被匹配，进入下一个区间即 s[0:i]
         if (dp[j] && wordSet.contains(word)) {
           dp[i] = true;
           break;

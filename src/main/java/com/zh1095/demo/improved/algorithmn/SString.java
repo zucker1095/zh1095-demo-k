@@ -514,6 +514,7 @@ class SStack {
         minCount -= 1;
         maxCount -= 1;
       } else if (ch == '*') {
+        // 贪心，默认匹配
         minCount -= 1;
         maxCount += 1;
       }

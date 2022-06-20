@@ -1117,19 +1117,18 @@ class MMath {
 }
 
 /**
- * 收集图相关，有如下题型
+ * 收集图相关，参考 https://oi-wiki.org/graph，有如下题型
  *
- * <p>判断两点之间的连通性，拓扑排序
+ * <p>环路 & 两点连通性
  *
- * <p>求两点之间的最短路径
+ * <p>最短路
  *
- * <p>求两点之间的路径总数
+ * <p>路径总数
  *
  * <p>求两点之间的权值最小的路径
  */
 class GGraph {
-  // 「N叉树的直径」结果
-  private int diameter = 0;
+  private int diameter = 0; // 「N叉树的直径」结果
 
   // 分为存图与算法两步
   // 存图分为两种
@@ -1182,7 +1181,7 @@ class GGraph {
     // 从节点开始的最大与第二深度
     int maxDepth = 0, secondMaxDepth = 0;
     for (Edge edge : graph[to]) {
-      int neighbor = edge.end;
+      int neighbor = edge.to;
       if (neighbor == from) continue; // 防止返回访问父节点
       int depth = edge.weight + dfs13(graph, to, neighbor);
       if (depth > maxDepth) {
@@ -1217,33 +1216,34 @@ class GGraph {
    * @return boolean boolean
    */
   public boolean canFinish(int numCourses, int[][] prerequisites) {
+    int V = numCourses;
     // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
-    int[] indegrees = new int[numCourses];
-    List<List<Integer>> graph = new ArrayList<>(numCourses);
-    for (int i = 0; i < numCourses; i++) {
-      graph.add(new ArrayList<>());
-    }
+    int[] indegrees = new int[V];
+    int[][] matrix = new int[V][V];
+    buildAdjacencyMatrix(prerequisites, matrix, indegrees);
     Queue<Integer> queue = new LinkedList<>();
-    // [0, 1] is 0->1
-    for (int[] cp : prerequisites) {
-      int toID = cp[0], fromID = cp[1];
-      indegrees[toID] += 1;
-      graph.get(fromID).add(toID);
-    }
-    // courseID range 0 from numCourses-1 incrementally
-    for (int i = 0; i < numCourses; i++) {
+    // courseID range 0 from N-1 incrementally
+    for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.add(i);
     }
     // BFS TopSort
     while (!queue.isEmpty()) {
       int pre = queue.poll();
-      numCourses -= 1; // handle it
-      for (int cur : graph.get(pre)) { // traverse its adjacency
-        indegrees[cur] -= 1;
-        if (indegrees[cur] == 0) queue.add(cur);
+      V -= 1;
+      for (int adj : matrix[pre]) {
+        indegrees[adj] -= 1;
+        if (indegrees[adj] == 0) queue.add(adj);
       }
     }
-    return numCourses == 0;
+    return V == 0;
+  }
+
+  private void buildAdjacencyMatrix(int[][] prerequisites, int[][] matrix, int[] indegrees) {
+    for (int[] cp : prerequisites) {
+      int to = cp[0], from = cp[1];
+      indegrees[to] += 1;
+      matrix[from][to] = 0;
+    }
   }
 
   /**
@@ -1288,45 +1288,74 @@ class GGraph {
   }
 
   /**
-   * 网络延迟时间，到达所有结点的最短路径，floyd
+   * 网络延迟时间，到达所有结点的最短路径，Dijkstra
    *
    * <p>参考
-   * https://leetcode-cn.com/problems/network-delay-time/solution/gong-shui-san-xie-yi-ti-wu-jie-wu-chong-oghpz/
+   * https://leetcode.cn/problems/network-delay-time/solution/gong-shui-san-xie-yi-ti-wu-jie-wu-chong-oghpz/
    *
    * @param times the times
    * @param n the n
    * @param k the k
    * @return int int
    */
-  public int networkDelayTime(int[][] times, int n, int k) {
-    int[][] matrix = new int[n][n];
-    // 初始化邻接矩阵
-    for (int i = 1; i <= n; i++) {
-      for (int j = 1; j <= n; j++) {
-        matrix[i][j] = matrix[j][i] = i == j ? 0 : Integer.MAX_VALUE;
-      }
-    }
-    // 存图
-    for (int[] t : times) {
-      int u = t[0], v = t[1], c = t[2];
-      matrix[u][v] = c;
-    }
+  public int networkDelayTime(int[][] ts, int n, int k) {
+    int V = 110, E = 6010;
+    // 邻接表链式前向星存图，head[i] 第 i 节点对应边的集合的头节点
+    int[] heads = new int[V];
+    // to[i] 第 i 边指向的节点，若无向图则需占用两项
+    // weights[i] 第 i 边权重
+    // next[i] 第 i 边的起点存储的某个邻接节点，由于是以链表的形式进行存边，该数组就是用于找到下一条边
+    int[] tos = new int[E], weights = new int[E], nexts = new int[E];
+    buildAdjacencyTable(ts, heads, tos, weights, nexts);
     // 最短路
-    // floyd 基本流程为三层循环
-    // 枚举中转点 - 枚举起点 - 枚举终点 - 松弛操作
-    for (int p = 1; p <= n; p++) {
-      for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
-          matrix[i][j] = Math.min(matrix[i][j], matrix[i][p] + matrix[p][j]);
-        }
+    int[] dists = dijkstra(V, k, heads, tos, weights, nexts);
+    // 遍历答案
+    int dist = 0;
+    for (int i = 1; i <= n; i++) {
+      dist = Math.max(dist, dists[i]);
+    }
+    return dist > Integer.MAX_VALUE / 2 ? -1 : dist;
+  }
+
+  private void buildAdjacencyTable(int[][] ts, int[] heads, int[] tos, int[] weights, int[] nexts) {
+    Arrays.fill(heads, -1); // 初始化链表头
+    int idx = 0;
+    for (int[] t : ts) {
+      int from = t[0], to = t[1], weight = t[2];
+      tos[idx] = to;
+      nexts[idx] = heads[from];
+      weights[idx] = weight;
+      heads[from] = idx;
+      idx += 1;
+    }
+  }
+
+  private int[] dijkstra(int V, int k, int[] heads, int[] tos, int[] weights, int[] nexts) {
+    // 记录哪些点已经被更新过
+    boolean[] visited = new boolean[V];
+    Arrays.fill(visited, false);
+    // dist[x] = y 代表从「源点/起点」到 x 的最短距离为 y
+    int[] dists = new int[V];
+    Arrays.fill(dists, Integer.MAX_VALUE);
+    // 只有起点最短距离为 0
+    dists[k] = 0;
+    // 通过优先队列存储所有可用于更新的点，以 (点编号, 到起点的距离) 进行存储，优先弹出「最短距离」较小的点
+    PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[1] - b[1]);
+    pq.add(new int[] {k, 0});
+    while (!pq.isEmpty()) {
+      int[] poll = pq.poll();
+      int node = poll[0], step = poll[1];
+      if (visited[node]) continue;
+      // 标记该点「已更新」，并使用该点更新其他点的「最短距离」
+      visited[node] = true;
+      for (int i = heads[node]; i != -1; i = nexts[i]) {
+        int adj = tos[i];
+        if (dists[adj] <= dists[node] + weights[i]) continue;
+        dists[adj] = dists[node] + weights[i];
+        pq.add(new int[] {adj, dists[adj]});
       }
     }
-    // 遍历答案
-    int res = 0;
-    for (int i = 1; i <= n; i++) {
-      res = Math.max(res, matrix[k][i]);
-    }
-    return res >= Integer.MAX_VALUE / 2 ? -1 : res;
+    return dists;
   }
 
   /**
@@ -1437,19 +1466,18 @@ class GGraph {
   }
 
   private class Edge {
-    /** The End. */
-    int end,
-        /** The Weight. */
-        weight;
+
+    // 链式前向星存图实现邻接表，方便起见通常拆分为三个数组
+    int to, weight, next;
 
     /**
      * Instantiates a new Edge.
      *
-     * @param end the end
+     * @param to the end
      * @param w the w
      */
-    Edge(int end, int w) {
-      this.end = end;
+    Edge(int to, int w) {
+      this.to = to;
       this.weight = w;
     }
   }

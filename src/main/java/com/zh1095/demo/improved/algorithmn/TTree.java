@@ -238,7 +238,7 @@ public class TTree {
    * @return next next
    */
   public _TreeNode getNext(_TreeNode node) {
-    // 如果有右子树，则找右子树的最左结点
+    // 若有右子树，则返回其最左结点
     if (node.right != null) {
       _TreeNode cur = node.right;
       while (cur.left != null) {
@@ -246,7 +246,7 @@ public class TTree {
       }
       return cur;
     }
-    // 否则，找第一个 node 是父节点左孩子的节点
+    // 否则，回溯父节点记 P，直到 P 的左子树是 node，返回 P
     _TreeNode cur = node;
     while (cur.from != null) {
       if (cur.from.left.equals(cur)) return cur.from;
@@ -321,7 +321,7 @@ public class TTree {
 }
 
 /**
- * 深度优先搜索，注意 visited 与 recStack 的区别，前者与一整条路径对应，不会重置，而后者与遍历一条路径有关，遍历完后，遍历下一条路径前重置，参考
+ * 深度优先搜索，注意 visited 与 recStack 的区别，前者与整个图对应，因此不会重置，而后者与遍历一条路径有关，遍历完后，遍历下一条路径前重置，参考
  * https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
  *
  * <p>caller 遍历每一个点，类比 Goosip 协议，而 DFS 本身决定每个点的步进方向
@@ -729,7 +729,7 @@ class BBSTInorder {
      * @param root the root
      */
     public BSTIterator(TreeNode root) {
-      filling(root);
+      fillLeft(root);
     }
 
     /**
@@ -739,11 +739,11 @@ class BBSTInorder {
      */
     public int next() {
       TreeNode nxt = stack.pollLast();
-      filling(nxt.right);
+      fillLeft(nxt.right);
       return nxt.val;
     }
 
-    private void filling(TreeNode node) {
+    private void fillLeft(TreeNode node) {
       TreeNode cur = node;
       while (cur != null) {
         stack.offerLast(cur);
@@ -1080,7 +1080,7 @@ class BBFS {
   }
 
   /**
-   * 二叉树的层序遍历II，选用链表
+   * 二叉树的层序遍历II
    *
    * @param root the root
    * @return list
@@ -1099,7 +1099,6 @@ class BBFS {
         if (left != null) queue.offer(left);
         if (right != null) queue.offer(right);
       }
-      // 因此上方选用链表
       res.add(0, curLevel);
     }
     return res;
@@ -1183,7 +1182,52 @@ class BBFS {
   }
 
   /**
-   * 二叉树最大宽度，原地修改，若节点值唯一，则引入 hash 记录
+   * 翻转二叉树/二叉树的镜像，前序/逐一交换遍历的结点的左右子树
+   *
+   * @param root the root
+   * @return tree node
+   */
+  public TreeNode invertTree(TreeNode root) {
+    if (root == null) return null;
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+      TreeNode cur = queue.poll();
+      TreeNode tmp = cur.left;
+      cur.left = cur.right;
+      cur.right = tmp;
+      if (cur.left != null) queue.offer(cur.left);
+      if (cur.right != null) queue.offer(cur.right);
+    }
+    return root;
+  }
+
+  /**
+   * 对称二叉树
+   *
+   * @param root
+   * @return
+   */
+  public boolean isSymmetric(TreeNode root) {
+    if (root == null || (root.left == null && root.right == null)) return true;
+    LinkedList<TreeNode> queue = new LinkedList<>();
+    queue.add(root.left);
+    queue.add(root.right);
+    while (queue.size() > 0) {
+      TreeNode l = queue.removeFirst(), r = queue.removeFirst();
+      if (l == null && r == null) continue;
+      if (l == null || r == null) return false;
+      if (l.val != r.val) return false;
+      queue.add(l.left);
+      queue.add(r.right);
+      queue.add(l.right);
+      queue.add(r.left);
+    }
+    return true;
+  }
+
+  /**
+   * 二叉树最大宽度，原地修改，或引入 hash 记录，如 key=level+value
    *
    * @param root the root
    * @return int int
@@ -1236,51 +1280,6 @@ class BBFS {
       maxDepth += 1;
     }
     return maxDepth;
-  }
-
-  /**
-   * 翻转二叉树/二叉树的镜像，前序/逐一交换遍历的结点的左右子树
-   *
-   * @param root the root
-   * @return tree node
-   */
-  public TreeNode invertTree(TreeNode root) {
-    if (root == null) return null;
-    Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(root);
-    while (!queue.isEmpty()) {
-      TreeNode cur = queue.poll();
-      TreeNode tmp = cur.left;
-      cur.left = cur.right;
-      cur.right = tmp;
-      if (cur.left != null) queue.offer(cur.left);
-      if (cur.right != null) queue.offer(cur.right);
-    }
-    return root;
-  }
-
-  /**
-   * 对称二叉树
-   *
-   * @param root
-   * @return
-   */
-  public boolean isSymmetric(TreeNode root) {
-    if (root == null || (root.left == null && root.right == null)) return true;
-    LinkedList<TreeNode> queue = new LinkedList<>();
-    queue.add(root.left);
-    queue.add(root.right);
-    while (queue.size() > 0) {
-      TreeNode l = queue.removeFirst(), r = queue.removeFirst();
-      if (l == null && r == null) continue;
-      else if (l == null || r == null) return false;
-      else if (l.val != r.val) return false;
-      queue.add(l.left);
-      queue.add(r.right);
-      queue.add(l.right);
-      queue.add(r.left);
-    }
-    return true;
   }
 }
 
@@ -1491,14 +1490,19 @@ class BacktrackingCombinatorics {
    *
    * <p>扩展1，有重复，全排列II，参下 annotate
    *
+   * <p>扩展2，「字符串的排列」一致的代码
+   *
    * @param nums the nums
    * @return the list
    */
   public List<List<Integer>> permute(int[] nums) {
+    //    char[] chs = s.toCharArray();
+    //    Arrays.sort(chs);
     List<List<Integer>> res = new ArrayList<>();
     if (nums.length == 0) return res;
-    // Arrays.sort(nums);
+    //    Arrays.sort(nums);
     backtracking4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
+    //    return res.toArray(new String[0]);
     return res;
   }
 
