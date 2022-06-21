@@ -1197,7 +1197,7 @@ class GGraph {
   }
 
   /**
-   * 课程表/检测循环依赖，返回是否 DAG，拓扑排序
+   * 课程表/检测循环依赖，返回是否 DAG，拓扑排序 Kahn 算法
    *
    * <p>参考 https://mp.weixin.qq.com/s/pCRscwKqQdYYN7M1Sia7xA
    *

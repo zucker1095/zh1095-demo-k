@@ -15,7 +15,7 @@ import java.util.*;
  *
  * @author cenghui
  */
-public class SString extends DefaultSString {
+public class SString {
   /**
    * 字符串相加，双指针同时遍历 & 比对 & 最后处理高位，模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
@@ -1386,16 +1386,16 @@ class MonotonicStack {
    */
   public int[] dailyTemperatures(int[] temperatures) {
     Deque<Integer> stack = new ArrayDeque<>();
-    int[] res = new int[temperatures.length];
+    int[] tpts = new int[temperatures.length];
     for (int i = 0; i < temperatures.length; i++) {
       // 更新 res[pre] 直到满足其数字超过 temperatures[i]
       while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
         int preIdx = stack.removeLast();
-        res[preIdx] = i - preIdx;
+        tpts[preIdx] = i - preIdx;
       }
       stack.addLast(i);
     }
-    return res;
+    return tpts;
   }
 
   /**
@@ -1407,15 +1407,15 @@ class MonotonicStack {
   public int[] nextGreaterElements(int[] nums) {
     Deque<Integer> stack = new ArrayDeque<>();
     int len = nums.length;
-    int[] res = new int[len];
-    Arrays.fill(res, -1);
+    int[] elms = new int[len];
+    Arrays.fill(elms, -1);
     for (int i = 0; i < 2 * len; i++) {
       while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()]) {
-        res[stack.removeLast()] = nums[i % len];
+        elms[stack.removeLast()] = nums[i % len];
       }
       stack.addLast(i % len);
     }
-    return res;
+    return elms;
   }
 
   /**
@@ -1488,7 +1488,7 @@ class MonotonicStack {
 }
 
 /** The type Default s string. */
-abstract class DefaultSString {
+abstract class DefaultSString extends DefaultArray {
   /**
    * Reverse.
    *

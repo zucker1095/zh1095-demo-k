@@ -64,21 +64,6 @@ public class LList {
   }
 
   /**
-   * 链表的中间结点，快慢指针
-   *
-   * @param head the head
-   * @return list node
-   */
-  public ListNode middleNode(ListNode head) {
-    ListNode lo = head, hi = head;
-    while (hi != null && hi.next != null) {
-      lo = lo.next;
-      hi = hi.next.next;
-    }
-    return lo;
-  }
-
-  /**
    * 复制带随机指针的链表，三次遍历，一次需要引入 hash
    *
    * <p>参考
@@ -112,6 +97,21 @@ public class LList {
       hi = hi.next;
     }
     return dummy.next;
+  }
+
+  /**
+   * 链表的中间结点，快慢指针
+   *
+   * @param head the head
+   * @return list node
+   */
+  public ListNode middleNode(ListNode head) {
+    ListNode lo = head, hi = head;
+    while (hi != null && hi.next != null) {
+      lo = lo.next;
+      hi = hi.next.next;
+    }
+    return lo;
   }
 
   /**
@@ -153,16 +153,6 @@ public class LList {
 
 /** 收集反转相关 */
 class ReverseList extends LList {
-  /**
-   * 两两交换链表中的节点，复用 reverseKGroup 即可
-   *
-   * @param head the head
-   * @return list node
-   */
-  public ListNode swapPairs(ListNode head) {
-    return reverseKGroup(head, 2);
-  }
-
   /**
    * k个一组反转链表，pre [start...cur...] nxt
    *
@@ -291,6 +281,16 @@ class ReverseList extends LList {
     cur.next = null;
     return newHead;
   }
+
+  /**
+   * 两两交换链表中的节点，复用 reverseKGroup 即可
+   *
+   * @param head the head
+   * @return list node
+   */
+  public ListNode swapPairs(ListNode head) {
+    return reverseKGroup(head, 2);
+  }
 }
 
 /** 收集合并相关 */
@@ -404,14 +404,8 @@ class ReorderList extends LList {
    */
   public ListNode oddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode odd = head, even = head.next, evenHead = even;
-    while (even != null && even.next != null) {
-      odd.next = even.next;
-      odd = odd.next;
-      even.next = odd.next;
-      even = even.next;
-    }
-    odd.next = evenHead; // 奇尾连偶头
+    ListNode evenHead = head.next, oddTail = getOddTail(head);
+    oddTail.next = evenHead;
     return head;
   }
 
@@ -424,24 +418,22 @@ class ReorderList extends LList {
    * @return
    */
   public ListNode sortOddEvenList(ListNode head) {
-    // 分隔奇偶链表
-    ListNode evenHead = separateOddEvenList(head);
-    // 反转偶链表，并合并二者
+    if (head == null) return null;
+    ListNode evenHead = head.next, oddTail = getOddTail(head);
+    oddTail.next = null;
     return mergeTwoLists(head, reverseList(evenHead));
   }
 
-  // 代码与「奇偶链表」一致，但分离且返回偶头
-  private ListNode separateOddEvenList(ListNode head) {
+  private ListNode getOddTail(ListNode head) {
     if (head == null) return null;
-    ListNode odd = head, even = head.next, evenHead = even;
+    ListNode odd = head, even = head.next;
     while (even != null && even.next != null) {
       odd.next = even.next;
       odd = odd.next;
       even.next = odd.next;
       even = even.next;
     }
-    odd.next = null;
-    return evenHead;
+    return odd;
   }
 
   /**
@@ -462,9 +454,9 @@ class ReorderList extends LList {
       lo = lo.next;
       hi = hi.next.next;
     }
-    ListNode l2Head = lo.next;
+    ListNode l2 = lo.next;
     lo.next = null;
-    return mergeTwoLists(sortList(head), sortList(l2Head));
+    return mergeTwoLists(sortList(head), sortList(l2));
     //    ListNode dummy = new ListNode();
     //    dummy.next = head;
     //    int len = 0; // 1.count length
@@ -531,12 +523,12 @@ class ReorderList extends LList {
    * @param head the head
    */
   public void reorderList(ListNode head) {
-    // middle
+    // 偶数个节点返回前一个
     ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
     mid.next = null;
-    // reverse
+    // 翻转
     l2 = reverseList(l2);
-    // merge
+    // 逐个尾插
     while (l1 != null && l2 != null) {
       ListNode l1Nxt = l1.next, l2Nxt = l2.next;
       l1.next = l2;
@@ -587,6 +579,31 @@ class Cyclic extends LList {
    * @return the boolean
    */
   public boolean hasCycle(ListNode head) {
+    return cyclic(head) != null;
+  }
+
+  /**
+   * 环形链表II
+   *
+   * <p>扩展1，求环路长度，遍历回到入口即可
+   *
+   * <p>扩展2，打印环首尾，后者指 pre.next=entry
+   *
+   * @param head the head
+   * @return the list node
+   */
+  public ListNode detectCycle(ListNode head) {
+    ListNode meet = cyclic(head);
+    if (meet == null) return null;
+    ListNode finder = head;
+    while (meet != finder) {
+      meet = meet.next;
+      finder = finder.next;
+    }
+    return meet;
+  }
+
+  private ListNode cyclic(ListNode head) {
     boolean cycle = false;
     ListNode lo = head, hi = head;
     while (lo != null && hi != null && hi.next != null) {
@@ -597,41 +614,11 @@ class Cyclic extends LList {
         break;
       }
     }
-    return cycle;
+    return cycle ? lo : null;
   }
 
   /**
-   * 环形链表II，前半部分与环形链表 I 一致
-   *
-   * <p>扩展1，求环路长度，遍历回到入口即可
-   *
-   * <p>扩展2，打印环首尾，后者指 pre.next=entry
-   *
-   * @param head the head
-   * @return the list node
-   */
-  public ListNode detectCycle(ListNode head) {
-    boolean hasCycle = false;
-    ListNode lo = head, hi = head;
-    while (lo != null && hi != null && hi.next != null) {
-      lo = lo.next;
-      hi = hi.next.next;
-      if (lo == hi) {
-        hasCycle = true;
-        break;
-      }
-    }
-    if (!hasCycle) return null;
-    ListNode finder = head;
-    while (lo != finder) {
-      lo = lo.next;
-      finder = finder.next;
-    }
-    return lo;
-  }
-
-  /**
-   * 相交链表 / 两个链表的第一个公共节点，获取两个链表的首个交点，不存在则返空
+   * 相交链表/两个链表的第一个公共节点，获取两个链表的首个交点，不存在则返空
    *
    * @param headA the head a
    * @param headB the head b
@@ -648,7 +635,7 @@ class Cyclic extends LList {
   }
 }
 
-/** 删除相关 */
+/** 删除相关，数组遇到目标则 skip 而链表是变向 */
 class DeleteList extends LList {
   /**
    * 删除链表的倒数第 N 个结点
@@ -696,11 +683,8 @@ class DeleteList extends LList {
     ListNode dummy = new ListNode(), cur = head;
     dummy.next = head;
     while (cur != null && cur.next != null) {
-      if (cur.val != cur.next.val) {
-        cur = cur.next;
-        continue;
-      }
-      cur.next = cur.next.next; // 进入迭代 next 非空
+      if (cur.val != cur.next.val) cur = cur.next;
+      else cur.next = cur.next.next; // 进入迭代 next 非空
     }
     return dummy.next;
   }

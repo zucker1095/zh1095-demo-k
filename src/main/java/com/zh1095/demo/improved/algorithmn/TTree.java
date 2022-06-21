@@ -357,20 +357,15 @@ class DDFS {
     return dfs14(root, preSum2Cnt, 0, targetSum);
   }
 
-  // cur 表示自根的值，该路径唯一
-  private int dfs14(TreeNode root, Map<Long, Integer> preSum2Cnt, long cur, int target) {
+  private int dfs14(TreeNode root, Map<Long, Integer> preSum2Cnt, long sum, int target) {
     if (root == null) return 0;
-    cur += root.val;
+    sum += root.val;
     //    path.add(root.val);
-    //    if (cur == targetSum) {
-    //      res.add(new ArrayList(path));
-    //      path.pollLast();
-    //      return;
-    //    }
-    int cnt = preSum2Cnt.getOrDefault(cur - target, 0);
-    preSum2Cnt.put(cur, preSum2Cnt.getOrDefault(cur, 0) + 1);
-    cnt += dfs14(root.left, preSum2Cnt, cur, target) + dfs14(root.right, preSum2Cnt, cur, target);
-    preSum2Cnt.put(cur, preSum2Cnt.getOrDefault(cur, 0) - 1);
+    //    if (cur == target) res.add(new ArrayList(path));
+    int cnt = preSum2Cnt.getOrDefault(sum - target, 0);
+    preSum2Cnt.put(sum, preSum2Cnt.getOrDefault(sum, 0) + 1);
+    cnt += dfs14(root.left, preSum2Cnt, sum, target) + dfs14(root.right, preSum2Cnt, sum, target);
+    preSum2Cnt.put(sum, preSum2Cnt.getOrDefault(sum, 0) - 1);
     return cnt;
   }
 
@@ -893,10 +888,8 @@ class BBSTDFS {
 
 /** 后序相关，常见为统计，自顶向下的递归相当于前序遍历，自底向上的递归相当于后序遍历 */
 class Postorder {
-  // 「二叉树中的最大路径和」
-  private int maxSum = Integer.MIN_VALUE;
-  // 「二叉树中的最大路径和」follow up 打印路径
-  private String maxPath;
+  private int maxSum = Integer.MIN_VALUE; // 「二叉树中的最大路径和」
+  private String maxPath; // 「二叉树中的最大路径和」follow up 打印路径
   // 「二叉树的直径」
   private int diameter = 0;
 

@@ -1574,7 +1574,11 @@ class DDuplicate extends DefaultArray {
   }
 }
 
-/** 移除相关，类似滑窗 */
+/**
+ * 移除相关，类似滑窗
+ *
+ * <p>数组遇到目标则 skip 而链表是变向
+ */
 class Delete extends DefaultArray {
   /**
    * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
@@ -1858,13 +1862,15 @@ class Traversal extends DefaultArray {
 }
 
 /** 字典序相关 */
-class DicOrder extends DefaultArray {
+class DicOrder extends DefaultSString {
   /**
    * 下一个排列，求按照字典序，该排列下一个大的
    *
    * <p>对比下方「最大交换」，后者是找到交换结果的最大
    *
    * <p>扩展1，上一个排列，从 n-2 开始找到首个峰 & 峰右边调为降序 & 从 n-1 开始找到首个比峰小的数，交换
+   *
+   * <p>扩展2，数字转字符串，即「下一个更大元素III」
    *
    * @param nums the nums
    */
@@ -1879,13 +1885,43 @@ class DicOrder extends DefaultArray {
       peak -= 1;
     }
     // 2.find the second peak larger than IDX-1 and swap them
-    for (int j = peak; j < nums.length; j++) {
-      if (nums[j] <= nums[peak - 1]) continue;
-      swap(nums, peak - 1, j);
+    for (int i = peak; i < nums.length; i++) {
+      if (nums[i] <= nums[peak - 1]) continue;
+      swap(nums, peak - 1, i);
       return;
     }
     // 3.Otherwise, monotonic without peaks
     Arrays.sort(nums);
+  }
+
+  /**
+   * 下一个更大元素III
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/next-greater-element-iii/solution/cchao-100shu-xue-jie-fa-by-zhouzihong-lcg9/
+   *
+   * @param n
+   * @return
+   */
+  public int nextGreaterElement(int n) {
+    char[] chs = String.valueOf(n).toCharArray();
+    int len = chs.length, peak = len - 2;
+    while (peak >= 0) {
+      if (chs[peak] < chs[peak + 1]) break;
+      peak -= 1;
+    }
+    if (peak == -1) return -1;
+    for (int i = len - 1; i > peak; i--) {
+      if (chs[i] <= chs[peak]) continue;
+      swap(chs, peak, i);
+      break;
+    }
+    reverseChs(chs, peak + 1, chs.length - 1);
+    long res = 0;
+    for (int i = 0; i < len; i++) {
+      res = res * 10 + (chs[i] - '0');
+    }
+    return res > Integer.MAX_VALUE ? -1 : (int) (res);
   }
 
   /**
