@@ -1830,32 +1830,37 @@ class Traversal extends DefaultArray {
   /**
    * 对角线遍历
    *
-   * <p>扩展1，反对角线，则将下方 bXFlag 初始为 false
+   * <p>扩展1，反对角线，调换下方的移动方向即可
    *
    * @param matrix
    * @return
    */
   public int[] findDiagonalOrder(int[][] matrix) {
-    if (matrix == null || matrix.length == 0) {
-      return new int[0];
-    }
-    int m = matrix.length, n = matrix[0].length;
-    int[] res = new int[m * n];
-    // 当前共遍历 k 个元素
-    int k = 0;
-    // 当前是否东北向遍历，反之为西南向
-    boolean bXFlag = true;
-    // 共有 m+n-1 条对角线
-    for (int i = 0; i < m + n - 1; i++) {
-      int pm = bXFlag ? m : n, pn = bXFlag ? n : m;
-      int x = (i < pm) ? i : pm - 1, y = i - x;
-      while (x >= 0 && y < pn) {
-        res[k] = bXFlag ? matrix[x][y] : matrix[y][x];
-        k += 1;
-        x -= 1;
-        y += 1;
+    int rows = matrix.length, cols = matrix[0].length;
+    int[] res = new int[rows * cols];
+    int r = 0, c = 0;
+    for (int i = 0; i < res.length; i++) {
+      res[i] = matrix[r][c];
+      // r + c 即为遍历的层数，偶数向上遍历，奇数向下遍历
+      if ((r + c) % 2 == 0) {
+        if (c == cols - 1) {
+          r += 1; // 往下移动一格准备向下遍历
+        } else if (r == 0) {
+          c += 1; // 往右移动一格准备向下遍历
+        } else {
+          r -= 1; // 往上移动
+          c += 1;
+        }
+      } else {
+        if (r == rows - 1) {
+          c += 1; // 往右移动一格准备向上遍历
+        } else if (c == 0) {
+          r += 1; // 往下移动一格准备向上遍历
+        } else {
+          r += 1; // 往下移动
+          c -= 1;
+        }
       }
-      bXFlag = !bXFlag;
     }
     return res;
   }
