@@ -57,7 +57,7 @@ public class TTree {
   }
 
   /**
-   * 路径总和，从根出发要求达到叶，BFS/前序，前者模板与下方「求根节点到叶节点数字之和」一致
+   * 路径总和，从根出发要求达到叶，BFS/前序
    *
    * <p>打印路径则参下「路径总和II」回溯
    *
@@ -92,7 +92,7 @@ public class TTree {
   }
 
   /**
-   * 求根节点到叶节点数字之和，BFS 维护两个队列逐层相加 / 前序，前者参上「路径总和」
+   * 求根节点到叶节点数字之和，BFS 维护两个队列逐层相加/前序
    *
    * @param root the root
    * @return int int
@@ -286,15 +286,15 @@ class Build {
       return traverse(data.split(","));
     }
 
-    private TreeNode traverse(String[] vals) {
-      if (idx >= vals.length) return null;
-      String val = vals[idx];
+    private TreeNode traverse(String[] nodes) {
+      if (idx >= nodes.length) return null;
+      String val = nodes[idx];
       idx += 1;
       //      String count = vals[idx++];
       if ("null".equals(val)) return null;
       TreeNode root = new TreeNode(Integer.parseInt(val));
-      root.left = traverse(vals);
-      root.right = traverse(vals);
+      root.left = traverse(nodes);
+      root.right = traverse(nodes);
       //      root.children = new TreeNode[count];
       //      for (int i = 0; i < count; i++) {
       //        root.children[i] = traversal(vals);
@@ -354,7 +354,7 @@ class DDFS {
   }
 
   /**
-   * 岛屿数量，原地标记代替 visited
+   * 岛屿数量，即求连通路总数，原地标记代替 visited
    *
    * <p>参考
    * https://leetcode-cn.com/problems/number-of-islands/solution/dao-yu-lei-wen-ti-de-tong-yong-jie-fa-dfs-bian-li-/
@@ -363,15 +363,15 @@ class DDFS {
    * @return int int
    */
   public int numIslands(char[][] grid) {
-    int res = 0;
+    int cnt = 0;
     for (int i = 0; i < grid.length; i++) {
       for (int j = 0; j < grid[0].length; j++) {
         if (grid[i][j] != '1') continue;
         dfs1(grid, i, j);
-        res += 1;
+        cnt += 1;
       }
     }
-    return res;
+    return cnt;
   }
 
   private void dfs1(char[][] grid, int r, int c) {
@@ -385,7 +385,7 @@ class DDFS {
   }
 
   /**
-   * 岛屿的最大面积
+   * 岛屿的最大面积，即返回最长路径
    *
    * @param grid the grid
    * @return int int
@@ -404,40 +404,40 @@ class DDFS {
   private int dfs2(int[][] grid, int r, int c) {
     if (!inArea(grid, r, c) || grid[r][c] == 0) return 0;
     grid[r][c] = 0; // marking to avoid loop
-    int maxArea = 1;
+    int pathLen = 1;
     for (int[] dir : DIRECTIONS) {
-      maxArea += dfs2(grid, r + dir[0], c + dir[1]);
+      pathLen += dfs2(grid, r + dir[0], c + dir[1]);
     }
-    return maxArea;
+    return pathLen;
   }
 
   /**
-   * 矩阵中的最长递增路径，记忆化搜索
+   * 矩阵中的最长递增路径，记忆化搜索，记录从每个节点开始的最长的长度
    *
    * @param matrix the matrix
    * @return int int
    */
   public int longestIncreasingPath(int[][] matrix) {
     int rows = matrix.length, cols = matrix[0].length;
-    int[][] memo = new int[rows][cols];
+    int[][] lens = new int[rows][cols];
     int maxLen = 0;
     for (int r = 0; r < rows; r++) {
       for (int c = 0; c < cols; c++) {
-        maxLen = Math.max(maxLen, dfs3(matrix, r, c, memo));
+        maxLen = Math.max(maxLen, dfs3(matrix, r, c, lens));
       }
     }
     return maxLen;
   }
 
-  private int dfs3(int[][] matrix, int r, int c, int[][] memo) {
-    if (memo[r][c] != 0) return memo[r][c];
-    memo[r][c] += 1;
+  private int dfs3(int[][] matrix, int r, int c, int[][] lens) {
+    if (lens[r][c] != 0) return lens[r][c];
+    lens[r][c] += 1;
     for (int[] dir : DIRECTIONS) {
       int nr = r + dir[0], nc = c + dir[1];
-      if (inArea(matrix, nr, nc) && matrix[nr][nc] > matrix[r][c])
-        memo[r][c] = Math.max(memo[r][c], dfs3(matrix, nr, nc, memo) + 1);
+      if (!inArea(matrix, nr, nc) || matrix[nr][nc] <= matrix[r][c]) continue;
+      lens[r][c] = Math.max(lens[r][c], dfs3(matrix, nr, nc, lens) + 1);
     }
-    return memo[r][c];
+    return lens[r][c];
   }
 
   /**
@@ -456,20 +456,20 @@ class DDFS {
     if (root == null) return nodes;
     // 题设节点数有限，值互异，且 O(1) 查找采用 Map
     Map<Integer, TreeNode> parents = new HashMap<>(500);
-    collectFrom(root, parents);
+    collectParents(root, parents);
     // 为避免重复，递归时传入来源，在递归前比较目标结点是否与来源结点相同
     dfs17(target, null, k, parents, nodes);
     return nodes;
   }
 
-  private void collectFrom(TreeNode node, Map<Integer, TreeNode> parents) {
+  private void collectParents(TreeNode node, Map<Integer, TreeNode> parents) {
     if (node.left != null) {
       parents.put(node.left.val, node);
-      collectFrom(node.left, parents);
+      collectParents(node.left, parents);
     }
     if (node.right != null) {
       parents.put(node.right.val, node);
-      collectFrom(node.right, parents);
+      collectParents(node.right, parents);
     }
   }
 
@@ -526,14 +526,14 @@ class DDFS {
     int row = board.length, col = board[0].length;
     for (int r = 0; r < row; r++) {
       for (int c = 0; c < col; c++) {
-        if (r == 0 || c == 0 || r == row - 1 || c == col - 1 && board[r][c] == 'O')
+        if (board[r][c] == 'O' && (r == 0 || c == 0 || r == row - 1 || c == col - 1))
           dfs16(board, r, c);
       }
     }
     for (int r = 0; r < row; r++) {
       for (int c = 0; c < col; c++) {
         if (board[r][c] == 'O') board[r][c] = 'X';
-        else if (board[r][c] == '#') board[r][c] = 'O';
+        if (board[r][c] == '#') board[r][c] = 'O';
       }
     }
   }
@@ -555,9 +555,9 @@ class DDFS {
   public int longestUnivaluePath(TreeNode root) {
     if (root == null) return 0;
     int both = dfs15(root.left, root.val) + dfs15(root.right, root.val),
-        subLeft = longestUnivaluePath(root.left),
-        subRight = longestUnivaluePath(root.right);
-    return Math.max(both, Math.max(subLeft, subRight));
+        l = longestUnivaluePath(root.left),
+        r = longestUnivaluePath(root.right);
+    return Math.max(both, Math.max(l, r));
   }
 
   private int dfs15(TreeNode root, int from) {
@@ -565,19 +565,11 @@ class DDFS {
     return 1 + Math.max(dfs15(root.left, root.val), dfs15(root.right, root.val));
   }
 
-  /**
-   * 坐标界内
-   *
-   * @param board the board
-   * @param i the
-   * @param j the j
-   * @return the boolean
-   */
   protected boolean inArea(char[][] board, int i, int j) {
     return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
   }
 
-  private boolean inArea(int[][] board, int i, int j) {
+  protected boolean inArea(int[][] board, int i, int j) {
     return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
   }
 }
@@ -1286,7 +1278,7 @@ class MultiTrees {
   }
 
   /**
-   * 合并二叉树，将 r2 合并至 r1，BFS 本质是只处理子节点
+   * 合并二叉树，将 r2 合并至 r1
    *
    * @param r1 the r 1
    * @param r2 the r 2
@@ -1383,7 +1375,7 @@ class MultiTrees {
       if (n1 == null || n2 == null || n1.val != n2.val) {
         return false;
       }
-      // 按序
+      // 按序，保证出队同侧
       queue.offer(n1.left);
       queue.offer(n2.left);
       queue.offer(n1.right);
@@ -1394,9 +1386,9 @@ class MultiTrees {
 }
 
 /**
- * 回溯，前序与后序结合，遵从如下规范
+ * 回溯，前序与后序结合，入参遵循
  *
- * <p>入参顺序为 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
+ * <p>次序 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
  *
  * <p>按照子组列的顺序，建议按照表格记忆
  *
@@ -1411,15 +1403,17 @@ class BacktrackingCombinatorics {
    */
   public List<List<Integer>> subsets(int[] nums) {
     List<List<Integer>> res = new ArrayList<>();
-    if (nums.length == 0) return res;
+    if (nums.length == 0) return res; // 需要特判
     backtracking1(nums, new ArrayDeque<>(), res, 0);
     return res;
   }
 
   private void backtracking1(int[] nums, Deque<Integer> path, List<List<Integer>> res, int start) {
     res.add(new ArrayList<>(path));
+    // 另起一条路径
     for (int i = start; i < nums.length; i++) {
       path.offerLast(nums[i]);
+      // 不可选重复，则当前路径下一步选下一个元素
       backtracking1(nums, path, res, i + 1);
       path.pollLast();
     }
@@ -1447,10 +1441,13 @@ class BacktrackingCombinatorics {
     if (target == 0) res.add(new ArrayList<>(path));
     for (int i = start; i < candidates.length; i++) {
       if (candidates[i] > target) break;
+      // 不可选重复则跳过
+      //      if (i > start && candidates[i - 1] == candidates[i]) continue;
       path.offerLast(candidates[i]);
+      // 可选重复，则当前路径下一步选当前元素
       backtracking2(candidates, path, res, i, target - candidates[i]);
-      // if (i > start && candidates[i - 1] == candidates[i]) continue;
-      // backtracking2(candidates, path, res, i + 1, target - candidates[i]);
+      // 不可选重复，则当前路径下一步选下一个元素
+      //      backtracking2(candidates, path, res, i + 1, target - candidates[i]);
       path.pollLast();
     }
   }
@@ -1484,7 +1481,8 @@ class BacktrackingCombinatorics {
     }
     for (int i = 0; i < nums.length; i++) {
       if (recStack[i]) continue;
-      // if (recStack[i] || (i > 0 && nums[i] == nums[i - 1] && !recStack[i-1])) continue;
+      // 在当前路径上，或不在，但重复
+      //      if (recStack[i] || (i > 0 && nums[i] == nums[i - 1] && !recStack[i - 1])) continue;
       recStack[i] = true;
       path.offerLast(nums[i]);
       backtracking4(nums, path, res, recStack);
@@ -1499,26 +1497,27 @@ class BacktrackingSearch extends DDFS {
   /**
    * 路径总和II，从根出发要求达到叶，打印路径
    *
+   * <p>扩展1，从任何路径，参考「路径总和III」
+   *
    * @param root the root
    * @param targetSum the target sum
    * @return list list
    */
   public List<List<Integer>> pathSum(TreeNode root, int targetSum) {
-    List<List<Integer>> res = new ArrayList<>();
-    backtracking0(root, new ArrayDeque<>(), res, targetSum);
-    return res;
+    List<List<Integer>> paths = new ArrayList<>();
+    backtracking0(root, new ArrayDeque<>(), paths, targetSum);
+    return paths;
   }
 
   private void backtracking0(
-      TreeNode root, Deque<Integer> path, List<List<Integer>> res, int targetSum) {
+      TreeNode root, Deque<Integer> path, List<List<Integer>> paths, int targetSum) {
     if (root == null) return;
     path.offerLast(root.val);
-    // reach leaf
-    if (targetSum - root.val == 0 && root.left == null && root.right == null) {
-      res.add(new ArrayList<>(path));
+    if (root.left == null && root.right == null && targetSum - root.val == 0) {
+      paths.add(new ArrayList<>(path));
     } else {
-      backtracking0(root.left, path, res, targetSum - root.val);
-      backtracking0(root.right, path, res, targetSum - root.val);
+      backtracking0(root.left, path, paths, targetSum - root.val);
+      backtracking0(root.right, path, paths, targetSum - root.val);
     }
     path.pollLast();
   }
@@ -1530,10 +1529,9 @@ class BacktrackingSearch extends DDFS {
    * @return list list
    */
   public List<String> generateParenthesis(int n) {
-    List<String> res = new ArrayList<>();
-    // 需要特判
-    if (n > 0) backtracking7(n, n, new StringBuilder(), res);
-    return res;
+    List<String> pts = new ArrayList<>();
+    if (n > 0) backtracking7(n, n, new StringBuilder(), pts); // 需要特判
+    return pts;
   }
 
   // 可选集为左右括号的剩余量
@@ -1646,10 +1644,49 @@ class BacktrackingSearch extends DDFS {
 
 /** The type Backtracking else. */
 class BacktrackingElse extends DDFS {
-  // 「电话号码的字母组合」
   private final String[] LetterMap = {
     " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
-  };
+  }; // 「电话号码的字母组合」
+
+  /**
+   * 复原IP地址
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/restore-ip-addresses/solution/hui-su-suan-fa-hua-tu-fen-xi-jian-zhi-tiao-jian-by/
+   *
+   * @param s the s
+   * @return list list
+   */
+  public List<String> restoreIpAddresses(String s) {
+    List<String> res = new ArrayList<>();
+    if (s.length() > 12 || s.length() < 4) return res; // 特判
+    backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
+    return res;
+  }
+
+  private void backtracking6(String s, Deque<String> path, List<String> res, int start, int seg) {
+    if (start == s.length()) {
+      if (seg == 0) res.add(String.join(".", path));
+      return;
+    }
+    // only truncate 3 digits per segment
+    for (int i = start; i < start + 3 && i < s.length(); i++) {
+      // 当前段分配的位数不够，或分配的位数过多，或数字过大
+      if (seg * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
+        continue;
+      }
+      path.offerLast(s.substring(start, i + 1));
+      backtracking6(s, path, res, i + 1, seg - 1);
+      path.pollLast();
+    }
+  }
+
+  private boolean isValidIpSegment(String s, int lo, int hi) {
+    int len = hi - lo + 1;
+    if (len > 1 && s.charAt(lo) == '0') return false;
+    int num = len <= 0 ? 0 : Integer.parseInt(s.substring(lo, hi + 1));
+    return 0 <= num && num <= 255;
+  }
 
   /**
    * 将数字串拆分为多个不超过 k 的子串，打印路径
@@ -1671,56 +1708,14 @@ class BacktrackingElse extends DDFS {
       return;
     }
     // 每轮只截到 K 的位数
-    int num = 0;
+    int n = 0;
     for (int i = start; i < s.length(); i++) {
-      num = num * 10 + (s.charAt(i) - '0');
-      if (num > K) break;
-      path.offerLast(num);
+      n = n * 10 + (s.charAt(i) - '0');
+      if (n > K) break;
+      path.offerLast(n);
       backtracking5(s, i + 1, path, res, K);
       path.pollLast();
     }
-  }
-
-  /**
-   * 复原IP地址
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/restore-ip-addresses/solution/hui-su-suan-fa-hua-tu-fen-xi-jian-zhi-tiao-jian-by/
-   *
-   * @param s the s
-   * @return list list
-   */
-  public List<String> restoreIpAddresses(String s) {
-    List<String> res = new ArrayList<>();
-    if (s.length() > 12 || s.length() < 4) return res; // 特判
-    backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
-    return res;
-  }
-
-  private void backtracking6(
-      String s, Deque<String> path, List<String> res, int start, int segment) {
-    if (start == s.length()) {
-      if (segment == 0) res.add(String.join(".", path));
-      return;
-    }
-    // only truncate 3 digits per segment
-    for (int i = start; i < start + 3 && i < s.length(); i++) {
-      // 当前段分配的位数不够，或分配的位数过多，或数字过大
-      if (segment * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
-        continue;
-      }
-      path.offerLast(s.substring(start, i + 1));
-      backtracking6(s, path, res, i + 1, segment - 1);
-      path.pollLast();
-    }
-  }
-
-  private boolean isValidIpSegment(String s, int lo, int hi) {
-    int len = hi - lo + 1;
-    // 前导零剪枝
-    if (len > 1 && s.charAt(lo) == '0') return false;
-    int num = len > 0 ? Integer.parseInt(s.substring(lo, hi + 1)) : 0;
-    return 0 <= num && num <= 255;
   }
 
   /**
@@ -1763,7 +1758,7 @@ class BacktrackingElse extends DDFS {
       return;
     }
     for (int i = start; i < s.length(); i++) {
-      if (!dp[start][i]) continue; // 非回文则剪枝
+      if (!dp[start][i]) continue; // [start:i] 区间非回文
       path.offerLast(s.substring(start, i + 1));
       backtracking11(s, path, res, i + 1, dp);
       path.pollLast();
