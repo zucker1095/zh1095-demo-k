@@ -1278,6 +1278,29 @@ class MultiTrees {
   }
 
   /**
+   * 任意两个节点之间的最短路径，两个点分别沿着 LCA DFS 即可
+   *
+   * @param root
+   * @param p
+   * @param q
+   * @return
+   */
+  public int distBetween(TreeNode root, TreeNode p, TreeNode q) {
+    TreeNode LCA = lowestCommonAncestor(root, p, q);
+    return dfs18(LCA, p) + dfs18(LCA, q);
+  }
+
+  // 返回 target 与根的距离
+  private int dfs18(TreeNode root, TreeNode target) {
+    if (root == null) return -1;
+    if (root == target) return 0;
+    int l = dfs18(root.left, target);
+    if (l != -1) return l + 1;
+    int r = dfs18(root.right, target);
+    return r == -1 ? -1 : r + 1;
+  }
+
+  /**
    * 合并二叉树，将 r2 合并至 r1
    *
    * @param r1 the r 1

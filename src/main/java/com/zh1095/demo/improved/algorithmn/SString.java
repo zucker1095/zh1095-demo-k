@@ -35,8 +35,8 @@ public class SString {
     final int BASE = 10; // 36 进制
     StringBuilder res = new StringBuilder();
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
-    int carry = 0; // 还要加上一个高位
-    while (p1 > -1 || p2 > -1 || carry != 0) {
+    int carry = 0;
+    while (p1 > -1 || p2 > -1 || carry != 0) { // 还要加上一个高位
       int n1 = p1 < 0 ? 0 : getInt(num1.charAt(p1)),
           n2 = p2 < 0 ? 0 : getInt(num1.charAt(p2)),
           tmp = n1 + n2 + carry;
@@ -58,23 +58,23 @@ public class SString {
    * @return
    */
   public String reduceStrings(String num1, String num2) {
+    final int BASE = 10, l1 = num1.length(), l2 = num2.length(); // 36 进制
     StringBuilder res = new StringBuilder();
     // 1.预处理下方大减小，并判断符号
-    if ((num1.length() == num2.length() && Integer.parseInt(num1) < Integer.parseInt(num2))
-        || num1.length() < num2.length()) {
+    if ((l1 == l2 && Integer.parseInt(num1) < Integer.parseInt(num2)) || l1 < l2) {
       String tmp = num1;
       num1 = num2;
       num2 = num1;
       res.append('-');
     }
     // 2.从个位开始相减，注意借位，尾插，最终反转
-    int p1 = num1.length() - 1, p2 = num2.length() - 1;
-    int carry = 0; // 由于保证大建小，因此不需要保留高位
-    while (p1 > -1 || p2 > -1) {
-      // 避免 n1 - n2 - carry < 0
+    int p1 = l1 - 1, p2 = l2 - 1;
+    int carry = 0;
+    while (p1 > -1 || p2 > -1) { // 由于保证大建小，因此不需要保留高位
+      // 避免 n1-n2-carry < 0
       int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
           n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
-          tmp = (n1 - n2 - carry + 10) % 10;
+          tmp = (n1 - n2 - carry + BASE) % BASE;
       // res.insert(0, tmp) 则无需 reverse
       res.append(tmp);
       carry = n1 - carry - n2 < 0 ? 1 : 0;
@@ -113,7 +113,7 @@ public class SString {
   public String multiply(String num1, String num2) {
     if (num1.equals("0") || num2.equals("0")) return "0";
     final int BASE = 10, l1 = num1.length(), l2 = num2.length();
-    int[] product = new int[l1 + l2];
+    int[] product = new int[l1 + l2]; // 100*100=010000
     for (int p1 = l1 - 1; p1 >= 0; p1--) {
       int n1 = num1.charAt(p1) - '0';
       for (int p2 = l2 - 1; p2 >= 0; p2--) {
@@ -187,9 +187,9 @@ public class SString {
  */
 class WWindow {
   /**
-   * 无重复字符的最长子串 / 最长无重复数组
+   * 无重复字符的最长子串/最长无重复数组
    *
-   * <p>扩展1，允许重复 k 次，即字符的个数，下方「至少有k个重复字符的最长子串」指种类
+   * <p>扩展1，允许每种字符重复 k 次，下方「至少有k个重复字符的最长子串」允许有 k 种字符
    *
    * @param s the s
    * @return the int
@@ -201,7 +201,7 @@ class WWindow {
     while (hi < s.length()) {
       char add = s.charAt(hi);
       window[add] += 1;
-      while (window[add] == 2) {
+      while (window[add] > 1) {
         char out = s.charAt(lo);
         window[out] -= 1;
         lo += 1;
@@ -220,13 +220,13 @@ class WWindow {
    * @return string string
    */
   public String minWindow(String s, String t) {
-    // 遍历的指针与结果的始末
-    int start = -1, end = s.length(), counter = t.length();
-    int lo = 0, hi = 0;
     int[] needle = new int[128];
     for (char ch : t.toCharArray()) {
       needle[ch] += 1;
     }
+    // 遍历的指针与结果的始末
+    int start = -1, end = s.length(), counter = t.length();
+    int lo = 0, hi = 0;
     while (hi < s.length()) {
       char add = s.charAt(hi);
       if (needle[add] > 0) counter -= 1;
@@ -297,80 +297,16 @@ class WWindow {
     char[] chs = s.toCharArray();
     while (hi < chs.length) {
       char add = chs[hi];
-      if (window[add] == 0) counter -= 1;
       window[add] += 1;
+      if (window[add] == 1) counter -= 1;
       hi += 1;
-      while (counter < 0) { // just contain one more different char
+      while (counter < 0) {
         char out = chs[lo];
-        if (window[out] == 1) counter += 1;
         window[out] -= 1;
+        if (window[out] == 0) counter += 1;
         lo += 1;
       }
       maxLen = Math.max(maxLen, hi - lo + 1);
-    }
-    return maxLen;
-  }
-
-  /**
-   * 滑动窗口的最大值，单调队列，双端实现，offer & max & poll
-   *
-   * @param nums the nums
-   * @param k the k
-   * @return int [ ]
-   */
-  public int[] maxSlidingWindow(int[] nums, int k) {
-    int[] segMax = new int[nums.length - k + 1];
-    Deque<Integer> mq = new LinkedList<>();
-    for (int i = 0; i < nums.length; i++) {
-      int n = nums[i];
-      while (mq.size() > 0 && mq.peekLast() < n) {
-        mq.pollLast();
-      }
-      mq.offerLast(n);
-      if (i < k - 1) continue;
-      int outIdx = i - k + 1, curMax = mq.peekFirst(); // 左边界
-      segMax[outIdx] = curMax; // segMax[outIdx] = mq.max();
-      // mq.poll(nums[outIdx]);
-      if (mq.size() > 0 && nums[outIdx] == curMax) mq.pollFirst();
-    }
-    return segMax;
-  }
-
-  /**
-   * 绝对差不超过限制的最长连续子数组，数组内任意元素差有上限。
-   *
-   * <p>滑窗 & 双单调队列维护窗口内的最值 滑窗 R 右移的过程意味着新的值进窗口，维护更新单调队列
-   *
-   * <p>然后检查最值差值是否 <= k，如果 > 就 shrink L，同时也更新单调队列即可
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit/solution/gai-zhuang-ban-hua-dong-chuang-kou-liang-271k/
-   *
-   * @param nums
-   * @param limit
-   * @return
-   */
-  public int longestSubarray(int[] nums, int limit) {
-    int maxLen = 0;
-    Deque<Integer> maxMQ = new ArrayDeque<>(), minMQ = new ArrayDeque<>();
-    int lo = 0, hi = 0;
-    while (hi < nums.length) {
-      int add = nums[hi];
-      while (!maxMQ.isEmpty() && add >= nums[maxMQ.peekLast()]) {
-        maxMQ.pollLast();
-      }
-      maxMQ.addLast(hi);
-      while (!minMQ.isEmpty() && add <= nums[minMQ.peekLast()]) {
-        minMQ.pollLast();
-      }
-      minMQ.addLast(hi);
-      while (Math.abs(nums[maxMQ.peekFirst()] - nums[minMQ.peekFirst()]) > limit) {
-        lo += 1;
-        if (maxMQ.peekFirst() < lo) maxMQ.pollFirst();
-        if (minMQ.peekFirst() < lo) minMQ.pollFirst();
-      }
-      maxLen = Math.max(maxLen, hi - lo + 1);
-      hi += 1;
     }
     return maxLen;
   }
@@ -401,6 +337,66 @@ class WWindow {
     return maxLen;
   }
 
+  /**
+   * 滑动窗口的最大值，单调队列，offer & max & poll
+   *
+   * @param nums the nums
+   * @param k the k
+   * @return int [ ]
+   */
+  public int[] maxSlidingWindow(int[] nums, int k) {
+    int[] segMax = new int[nums.length - k + 1];
+    Deque<Integer> mq = new LinkedList<>();
+    for (int i = 0; i < nums.length; i++) {
+      int n = nums[i];
+      while (mq.size() > 0 && mq.peekLast() < n) mq.pollLast();
+      mq.offerLast(n);
+      if (i < k - 1) continue;
+      // 左边界与当前窗口的值上界
+      int outIdx = i - k + 1, winMax = mq.peekFirst();
+      // segMax[outIdx] = mq.max();
+      segMax[outIdx] = winMax;
+      // mq.poll(nums[outIdx]);
+      if (mq.size() > 0 && nums[outIdx] == winMax) mq.pollFirst();
+    }
+    return segMax;
+  }
+
+  /**
+   * 绝对差不超过限制的最长连续子数组，数组内任意元素差有上限。
+   *
+   * <p>滑窗 & 双单调队列维护窗口内的最值 滑窗 R 右移的过程意味着新的值进窗口，维护更新单调队列
+   *
+   * <p>然后检查最值差值是否 <= k，如果 > 就 shrink L，同时也更新单调队列即可
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit/solution/gai-zhuang-ban-hua-dong-chuang-kou-liang-271k/
+   *
+   * @param nums
+   * @param limit
+   * @return
+   */
+  public int longestSubarray(int[] nums, int limit) {
+    Deque<Integer> maxMQ = new ArrayDeque<>(), minMQ = new ArrayDeque<>();
+    int lo = 0, hi = 0, maxLen = 0;
+    while (hi < nums.length) {
+      int add = nums[hi];
+      while (maxMQ.size() > 0 && add > maxMQ.peekLast()) maxMQ.pollLast();
+      maxMQ.offerLast(add);
+      while (minMQ.size() > 0 && add < minMQ.peekLast()) minMQ.pollLast();
+      minMQ.offerLast(add);
+      hi += 1;
+      while (maxMQ.peekFirst() - minMQ.peekFirst() > limit) {
+        int out = nums[lo];
+        if (maxMQ.peekFirst() == out) maxMQ.pollFirst();
+        if (minMQ.peekFirst() == out) minMQ.pollFirst();
+        lo += 1;
+      }
+      maxLen = Math.max(maxLen, hi - lo);
+    }
+    return maxLen;
+  }
+
   private static class MonotonicQueue {
     private final Deque<Integer> mq = new LinkedList<>();
 
@@ -411,9 +407,9 @@ class WWindow {
      */
     public void push(int num) {
       while (mq.size() > 0 && mq.getLast() < num) {
-        mq.removeLast();
+        mq.pollLast();
       }
-      mq.addLast(num);
+      mq.offerLast(num);
     }
 
     /**
@@ -439,7 +435,7 @@ class WWindow {
 }
 
 /**
- * 收集栈相关，括号左入右出，入则清空，出则赋值
+ * 收集栈相关，括号左入右出，入则清空，出则覆盖
  *
  * <p>关于 Java 模拟 stack 的选型
  * https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
@@ -448,7 +444,7 @@ class SStack {
   /**
    * 有效的括号，括号相关的参考「最长有效括号」与「括号生成」
    *
-   * <p>扩展1，需保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，在出入栈时更新，参下 annotate
+   * <p>扩展1，需保证优先级，如 {} 优先级最高即其 [{}] 非法，因此需要额外维护一个变量标识，入栈时判断，出入栈时更新，参下 annotate
    *
    * <p>扩展2，左括号可不以正确的任意闭合，如 ([)] 返回true，同时不能视作同一种即只统计数量，如 {{][}}
    * 非法，即放弃对顺序的要求，而只要求同种的数量，因此使用三个变量分别统计数目，无需栈
@@ -460,8 +456,6 @@ class SStack {
    */
   public boolean isValid(String s) {
     if (s.length() % 2 == 1) return false;
-    // 外层括弧定义一个 Anonymous Inner Class
-    // 内层括弧上是一个 instance initializer block，在内部匿名类构造时被执行
     Map<Character, Character> pairs = new HashMap<>(3);
     pairs.put(')', '(');
     pairs.put(']', '[');
@@ -469,23 +463,24 @@ class SStack {
     Deque<Character> stack = new ArrayDeque<>();
     // int level = 0;
     for (char ch : s.toCharArray()) {
+      // 左括号入栈
       // if ((priorities.indexOf(ch) + 1) % 3 > level) return false;
+      // level = Math.max((priorities.indexOf(ch) + 1) % 3, level);
       if (!pairs.containsKey(ch)) {
-        // level = Math.max((priorities.indexOf(ch) + 1) % 3, level);
-        stack.addLast(ch);
-      } else if (stack.isEmpty() || stack.getLast() != pairs.get(ch)) {
-        // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
-        return false;
-      } else {
-        stack.removeLast();
+        stack.offerLast(ch);
+        continue;
       }
+      // 右括号出栈并判断
+      if (stack.isEmpty() || stack.peekLast() != pairs.get(ch)) return false;
+      // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
+      stack.pollLast();
     }
     //    int curLeft1 = 0, curLeft2 = 0, curLeft3 = 0;
     //    for (char ch : s.toCharArray()) {
-    //      int weight = pairs.containsKey(ch) ? 1 : -1;
-    //      if (ch == ')' || ch == '(') curLeft1 += weight;
-    //      else if (ch == '}' || ch == '{') curLeft2 += weight;
-    //      else if (ch == ']' || ch == '[') curLeft3 += weight;
+    //      int cnt = pairs.containsKey(ch) ? 1 : -1;
+    //      if (ch == ')' || ch == '(') curLeft1 += cnt;
+    //      else if (ch == '}' || ch == '{') curLeft2 += cnt;
+    //      else if (ch == ']' || ch == '[') curLeft3 += cnt;
     //      if (curLeft1 < 0 || curLeft2 < 0 || curLeft3 < 0) return false;
     //    }
     return stack.isEmpty();
@@ -505,23 +500,23 @@ class SStack {
    * @return boolean boolean
    */
   public boolean checkValidString(String s) {
-    int minCount = 0, maxCount = 0;
+    int minCnt = 0, maxCnt = 0;
     for (char ch : s.toCharArray()) {
       if (ch == '(') {
-        minCount += 1;
-        maxCount += 1;
+        minCnt += 1;
+        maxCnt += 1;
       } else if (ch == ')') {
-        minCount -= 1;
-        maxCount -= 1;
+        minCnt -= 1;
+        maxCnt -= 1;
       } else if (ch == '*') {
-        // 贪心，默认匹配
-        minCount -= 1;
-        maxCount += 1;
+        // 贪心，尽可能匹配右括号
+        minCnt -= 1;
+        maxCnt += 1;
       }
-      minCount = Math.max(minCount, 0);
-      if (maxCount < 0) return false;
+      minCnt = Math.max(minCnt, 0);
+      if (maxCnt < 0) return false;
     }
-    return minCount == 0;
+    return minCnt == 0;
   }
 
   /**
@@ -533,22 +528,22 @@ class SStack {
    * @return string string
    */
   public String decodeString(String s) {
-    int curCount = 0;
+    int curCnt = 0;
     StringBuilder curStr = new StringBuilder();
-    Deque<Integer> countStack = new ArrayDeque<>();
+    Deque<Integer> cntStack = new ArrayDeque<>();
     Deque<String> strStack = new ArrayDeque<>();
     for (char ch : s.toCharArray()) {
       if (ch == '[') {
-        countStack.addLast(curCount);
-        strStack.addLast(curStr.toString());
-        curCount = 0;
+        cntStack.offerLast(curCnt);
+        strStack.offerLast(curStr.toString());
+        curCnt = 0;
         curStr = new StringBuilder();
       } else if (ch == ']') {
-        int preCount = countStack.removeLast();
-        String preStr = strStack.removeLast();
+        int preCount = cntStack.pollLast();
+        String preStr = strStack.pollLast();
         curStr = new StringBuilder(preStr + curStr.toString().repeat(preCount));
       } else if (ch >= '0' && ch <= '9') {
-        curCount = curCount * 10 + (ch - '0');
+        curCnt = curCnt * 10 + (ch - '0');
       } else {
         curStr.append(ch);
       }
@@ -604,13 +599,13 @@ class SStack {
     opStack.offerLast(sign);
     for (int i = 0; i < s.length(); i++) {
       char ch = Character.toLowerCase(s.charAt(i));
-      if ('a' <= ch && ch <= 'z') counter[ch - 'a'] += sign;
-      else if (ch == '(') opStack.offerLast(sign);
+      if (ch == '(') opStack.offerLast(sign);
       else if (ch == ')') opStack.pollLast();
       else if (ch == '+') sign = opStack.peekLast();
       else if (ch == '-') sign = -opStack.peekLast();
+      else if ('a' <= ch && ch <= 'z') counter[ch - 'a'] += sign;
       // 基本计算器
-      //      if {
+      //      else {
       //        long num = 0;
       //        while (i < chs.length && Character.isDigit(chs[i])) {
       //          num = num * 10 + chs[i] - '0';
@@ -650,14 +645,14 @@ class SStack {
           }
         };
     Deque<Integer> numStack = new ArrayDeque<>(); // 所有的数字
-    numStack.addLast(0); // 防止第一个数为负数
+    numStack.offerLast(0); // 防止第一个数为负数
     Deque<Character> opStack = new ArrayDeque<>(); // 存放所有非数字的操作
     char[] chs = s.toCharArray();
     for (int i = 0; i < chs.length; i++) {
       char cur = chs[i];
       if (cur == ' ') continue;
       else if (cur == '(') {
-        opStack.addLast(cur);
+        opStack.offerLast(cur);
       } else if (cur == ')') {
         // 计算到最近一个左括号为止
         while (!opStack.isEmpty()) {
@@ -675,12 +670,12 @@ class SStack {
           num = num * 10 + (chs[idx] - '0');
           idx += 1;
         }
-        numStack.addLast(num);
+        numStack.offerLast(num);
         i = idx - 1;
       } else {
         // 操作符
         if (i > 0 && (chs[i - 1] == '(' || chs[i - 1] == '+' || chs[i - 1] == '-')) {
-          numStack.addLast(0);
+          numStack.offerLast(0);
         }
         // 有一个新操作要入栈时，先把栈内可以算的都算了
         // 只有满足「栈内运算符」比「当前运算符」优先级高/同等，才进行运算
@@ -688,7 +683,7 @@ class SStack {
           if (priOps.get(opStack.peekLast()) < priOps.get(cur)) break;
           calc(numStack, opStack);
         }
-        opStack.addLast(cur);
+        opStack.offerLast(cur);
       }
     }
     // 将剩余的计算完
@@ -708,7 +703,7 @@ class SStack {
     else if (op == '/') res = pre / cur;
     else if (op == '^') res = (int) Math.pow(pre, cur);
     else if (op == '%') res = pre % cur;
-    numStack.addLast(res);
+    numStack.offerLast(res);
   }
 
   /**
@@ -725,18 +720,18 @@ class SStack {
    * @return boolean
    */
   public boolean validateStackSequences(int[] pushed, int[] popped) {
-    int stackTop = 0, popIdx = 0;
+    int stTop = 0, popIdx = 0;
     //    for (int add = 0; i < N; i++) {
     for (int add : pushed) {
-      pushed[stackTop] = add; // 入栈
-      stackTop += 1;
+      pushed[stTop] = add; // 入栈
+      stTop += 1;
       // 出栈，直至空或序列不匹配
-      while (stackTop != 0 && pushed[stackTop - 1] == popped[popIdx]) {
-        stackTop -= 1;
+      while (stTop != 0 && pushed[stTop - 1] == popped[popIdx]) {
+        stTop -= 1;
         popIdx += 1;
       }
     }
-    return stackTop == 0; // 是否还有未出栈的
+    return stTop == 0; // 是否还有未出栈的
   }
 
   /**
@@ -755,7 +750,6 @@ class SStack {
     for (char ch : chs) {
       if (ch == ')') unusedRight += 1;
     }
-    // 原地重写
     int write = 0, curLeft = 0, curRight = 0;
     for (char ch : chs) {
       if (ch == '(') {
@@ -783,13 +777,12 @@ class SSubString {
    */
   public String longestCommonPrefix(String[] strs) {
     if (strs.length == 0) return ""; // 需要特判
-    String ref = strs[0]; // 参照物
+    String ref = strs[0]; // 参照串
     for (int i = 0; i < ref.length(); i++) {
       char pivot = ref.charAt(i);
       for (int j = 1; j < strs.length; j++) { // 有 j 个字符需要比对
-        if (i == strs[j].length() || strs[j].charAt(i) != pivot) {
-          return ref.substring(0, i);
-        }
+        if (i < strs[j].length() && strs[j].charAt(i) == pivot) continue;
+        return ref.substring(0, i);
       }
     }
     return ref;
@@ -851,7 +844,32 @@ class SSubString {
   }
 
   /**
-   * 至少有k个重复字符的最长子串，每种字符的频率不少于。
+   * 验证回文串II
+   *
+   * @param s
+   * @return
+   */
+  public boolean validPalindrome(String s) {
+    char[] chs = s.toCharArray();
+    for (int lo = 0, hi = chs.length - 1; lo < hi; lo++, hi--) {
+      // 分两种情况，一是右边减一，二是左边加一
+      if (chs[lo] == chs[hi]) continue;
+      return isPalindrome(chs, lo, hi - 1) || isPalindrome(chs, lo + 1, hi);
+    }
+    return true;
+  }
+
+  private boolean isPalindrome(char[] s, int lo, int hi) {
+    while (lo < hi) {
+      if (s[lo] != s[hi]) return false;
+      lo += 1;
+      hi -= 1;
+    }
+    return true;
+  }
+
+  /**
+   * 至少有k个重复字符的最长子串，同个字符的个数。
    *
    * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
    *
@@ -871,7 +889,9 @@ class SSubString {
     }
     for (char ch : chs) {
       // split origin string by first char whose frequency is less than k to divide & conquer
+      // 题设选任意一个频率不足的字符
       if (counter[ch - 'a'] >= k) continue;
+      // 将原串以该字符分割，分别获取子串内的最优解
       int maxLen = 0;
       for (String seg : s.split(String.valueOf(ch))) {
         maxLen = Math.max(maxLen, longestSubstring(seg, k));
@@ -935,7 +955,7 @@ class SSubString {
  *
  * <p>str to num: multiply by multiple which the char represtants starting from the low order
  */
-class CConvert {
+class CConvert extends DefaultSString {
   private final char[] CHARS = "0123456789ABCDEF".toCharArray();
   // 「整数转换英文表示」
   private final String[]
@@ -980,13 +1000,10 @@ class CConvert {
    * @return the int
    */
   public int myAtoi(String s) {
-    int idx = 0, len = s.length();
     boolean isNegative = false;
     char[] chs = s.toCharArray();
     // 去首空格，并判正负
-    while (idx < len && chs[idx] == ' ') {
-      idx += 1;
-    }
+    int len = s.length(), idx = firstNotBlank(chs, 0);
     if (idx == len) return 0;
     if (chs[idx] == '-') isNegative = true;
     if (chs[idx] == '-' || chs[idx] == '+') idx += 1;
@@ -1019,9 +1036,7 @@ class CConvert {
     int lo = 0, hi = 0, len = chars.length;
     while (hi < len) {
       int cur = hi;
-      while (cur < len && chars[cur] == chars[hi]) {
-        cur += 1;
-      }
+      while (cur < len && chars[cur] == chars[hi]) cur += 1;
       chars[lo] = chars[hi];
       lo += 1;
       if (cur - hi > 1) {
@@ -1255,9 +1270,7 @@ class WWord extends DefaultSString {
   /**
    * 翻转字符串里的单词，如 www.abc.com -> com.abc.www
    *
-   * <p>保证空格只有单词间的单个，先翻转整个串，再逐个翻转
-   *
-   * <p>TODO 参考
+   * <p>参考
    * https://leetcode.cn/problems/reverse-words-in-a-string/solution/fan-zhuan-zi-fu-chuan-li-de-dan-ci-by-leetcode-sol/
    *
    * @param s the s
@@ -1285,22 +1298,23 @@ class WWord extends DefaultSString {
   }
 
   private String removeBlanks(char[] chs, int len) {
-    int lo = 0, hi = 0;
-    while (hi < len) {
-      // 找到尾空格
-      while (hi < len && chs[hi] == ' ') hi += 1;
-      while (hi < len && chs[hi] != ' ') {
-        chs[lo] = chs[hi];
-        lo += 1;
-        hi += 1;
+    // 移除首空格
+    int write = 0, read = firstNotBlank(chs, 0);
+    // 单词间留一个空，并移除尾空格
+    while (read < len) {
+      // 找到首空格
+      while (read < len && chs[read] != ' ') {
+        chs[write] = chs[read];
+        write += 1;
+        read += 1;
       }
-      while (hi < len && chs[hi] == ' ') hi += 1;
-      if (hi < len) {
-        chs[lo] = ' ';
-        lo += 1;
-      }
+      // 找到尾空格，单词间留一个空
+      read = firstNotBlank(chs, read);
+      if (read == len) break;
+      chs[write] = ' ';
+      write += 1;
     }
-    return String.valueOf(chs, 0, lo);
+    return String.valueOf(chs, 0, write);
   }
 
   /**
@@ -1390,10 +1404,10 @@ class MonotonicStack {
     for (int i = 0; i < temperatures.length; i++) {
       // 更新 res[pre] 直到满足其数字超过 temperatures[i]
       while (!stack.isEmpty() && temperatures[i] > temperatures[stack.getLast()]) {
-        int preIdx = stack.removeLast();
+        int preIdx = stack.pollLast();
         tpts[preIdx] = i - preIdx;
       }
-      stack.addLast(i);
+      stack.offerLast(i);
     }
     return tpts;
   }
@@ -1411,9 +1425,9 @@ class MonotonicStack {
     Arrays.fill(elms, -1);
     for (int i = 0; i < 2 * len; i++) {
       while (!stack.isEmpty() && nums[i % len] > nums[stack.getLast()]) {
-        elms[stack.removeLast()] = nums[i % len];
+        elms[stack.pollLast()] = nums[i % len];
       }
-      stack.addLast(i % len);
+      stack.offerLast(i % len);
     }
     return elms;
   }
@@ -1474,9 +1488,9 @@ class MonotonicStack {
       char cur = s.charAt(i);
       if (visited[cur - 'a']) continue;
       while (!stack.isEmpty() && cur < stack.getLast() && lastIdxs[stack.getLast() - 'a'] > i) {
-        visited[stack.removeLast() - 'a'] = false;
+        visited[stack.pollLast() - 'a'] = false;
       }
-      stack.addLast(cur);
+      stack.offerLast(cur);
       visited[cur - 'a'] = true;
     }
     StringBuilder res = new StringBuilder();
@@ -1523,5 +1537,10 @@ abstract class DefaultSString extends DefaultArray {
       lo += 1;
       hi -= 1;
     }
+  }
+
+  protected int firstNotBlank(char[] chs, int start) {
+    while (start < chs.length && chs[start] == ' ') start += 1;
+    return start;
   }
 }
