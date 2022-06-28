@@ -3,7 +3,7 @@ package com.zh1095.demo.improved.algorithmn;
 import java.util.*;
 
 /**
- * 收集 DP 相关
+ * 收集 DP 相关，根据题设划分，而非解法
  *
  * <p>以下均为右闭期间
  *
@@ -20,7 +20,7 @@ public class DDP {}
  *
  * <p>所有的 DP 要输出路径/具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考 https://blog.51cto.com/u_15127578/3748446
  */
-class OptimalSubSequence {
+class OptimalSubSequence extends DefaultArray {
   /**
    * 最长递增子序列 / 最长上升子序列，基于贪心
    *
@@ -41,19 +41,13 @@ class OptimalSubSequence {
     int[] tails = new int[len], dp = new int[len];
     tails[0] = nums[0];
     // dp[0] = 1;
-    for (int i = 1; i < len; i++) {
-      int n = nums[i];
+    for (int n : nums) {
       if (n > tails[end]) {
         end += 1;
         tails[end] = n;
         // dp[i] = hi + 1;
       } else {
-        int lo = 0, hi = end;
-        while (lo < hi) {
-          int mid = lo + (hi - lo) / 2;
-          if (tails[mid] < n) lo = mid + 1;
-          else hi = mid;
-        }
+        int lo = smallmostBound(tails, 0, end, n);
         tails[lo] = n;
         // dp[i] = lo + 1;
       }
@@ -113,7 +107,6 @@ class OptimalSubSequence {
         }
       }
     }
-
     return dp[l1][l2];
   }
 
@@ -133,11 +126,11 @@ class OptimalSubSequence {
     int[][] dp = new int[len][len];
     for (int i = len - 1; i > -1; i--) {
       dp[i][i] = 1;
-      char c1 = s.charAt(i);
+      char ch = s.charAt(i);
       // [i+1:len-1]
       for (int j = i + 1; j < len; j++) {
         // s[i] 是否匹配 s[j] 否则 s[i:j]'s LPS depends on prev and next
-        if (c1 == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
+        if (ch == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
         else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
       }
     }
@@ -419,7 +412,8 @@ class OptimalSubArray {
     for (int n : set) {
       if (set.contains(n - 1)) continue; // indicates that the number has been traversed
       int hiNum = n;
-      while (set.contains(hiNum + 1)) { // go up downing the number
+      // go up downing the number
+      while (set.contains(hiNum + 1)) {
         hiNum += 1;
       }
       maxLen = Math.max(maxLen, hiNum - n + 1);
@@ -684,7 +678,6 @@ class OptimalPath {
   public boolean wordBreak(String s, List<String> wordDict) {
     int len = s.length(), maxLen = 0;
     Set<String> wordSet = new HashSet(); // 仅用于 O(1) 匹配
-    //
     for (String w : wordDict) {
       wordSet.add(w);
       // 下方 [j:i-1] 过长，无法用单词补足，可 curing
@@ -759,17 +752,29 @@ class OptimalElse {
     return maxProfitI(prices);
   }
 
-  // 限定一次
+  // 有限次
   private int maxProfitI(int[] prices) {
-    int buy = Integer.MIN_VALUE, sell = 0;
+    //    int[] buys = new int[k + 1], sells = new int[k + 1];
+    //    for (int p : prices) {
+    //      for (int i = 1; i <= k; ++i) {
+    // BASE CASE buys[1] = max(buys[1], -p) & sells[1] = max(sells[1], buys[1]+p)
+    //        buys[i] = Math.max(buys[i], sells[i - 1] - p); // 卖了买
+    //        sells[i] = Math.max(sells[i], buys[i] + p); // 买了卖
+    //      }
+    //    }
+    //    return sells[k];
+    // 如限定交易 2 次，则定义 2 组 buy & sell
+    int buy1 = Integer.MIN_VALUE, sell1 = 0, buy2 = Integer.MIN_VALUE, sell2 = 0;
     for (int p : prices) {
-      buy = Math.max(buy, -p); // max(不买，买了)
-      sell = Math.max(sell, buy + p); // max(不卖，卖了)
+      buy1 = Math.max(buy1, -p); // max(不买，买了) 第一次买
+      sell1 = Math.max(sell1, buy1 + p); // max(不卖，卖了) 第一次卖
+      buy2 = Math.max(buy2, sell1 - p); // 第一次卖了后现在买
+      sell2 = Math.max(sell2, buy2 + p); // 第二次买了后现在卖
     }
-    return sell;
+    return sell2;
   }
 
-  // 不限次数
+  // 无限次
   // 扩展1，含手续费，参下 annotate
   // 扩展2，限定 n 次，参下 maxProfitIII
   // 扩展3，含冷冻期，参下 annotate
@@ -788,26 +793,6 @@ class OptimalElse {
       sell = Math.max(sell, buy + p);
     }
     return sell;
-  }
-
-  private int maxProfitIII(int[] prices) { // 限定两次，综合上方二者
-    //    int[] buys = new int[k + 1], sells = new int[k + 1];
-    //    for (int p : prices) {
-    //      for (int i = 1; i <= k; ++i) {
-    //        buys[i] = Math.max(buys[i], sells[i - 1] - p); // 卖了买
-    //        sells[i] = Math.max(sells[i], buys[i] + p); // 买了卖
-    //      }
-    //    }
-    //    return sells[k];
-    // 因为只能交易 2 次，所以定义 2 组 buy & sell
-    int buy1 = Integer.MIN_VALUE, sell1 = 0, buy2 = Integer.MIN_VALUE, sell2 = 0;
-    for (int p : prices) {
-      buy1 = Math.max(buy1, -p); // 第一次买
-      sell1 = Math.max(sell1, buy1 + p); // 第一次卖
-      buy2 = Math.max(buy2, sell1 - p); // 第一次卖了后现在买
-      sell2 = Math.max(sell2, buy2 + p); // 第二次买了后现在卖
-    }
-    return sell2;
   }
 
   /**
@@ -1068,6 +1053,50 @@ class OptimalElse {
 /** 统计，区分统计排列 & 组合的区别 */
 class CCount {
   /**
+   * 不同路径I，求总数
+   *
+   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
+   *
+   * @param m the m
+   * @param n the n
+   * @return int int
+   */
+  public int uniquePaths(int m, int n) {
+    int[] dp = new int[n];
+    Arrays.fill(dp, 1);
+    for (int i = 1; i < m; i++) {
+      for (int j = 1; j < n; j++) {
+        dp[j] += dp[j - 1];
+      }
+    }
+    return dp[n - 1];
+  }
+
+  /**
+   * 不同路径II with obstacles
+   *
+   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数，根据递推关系，可以压缩至一维
+   *
+   * <p>扩展1，打印路径，参考「最小路径和」
+   *
+   * @param obstacleGrid the obstacle grid
+   * @return int int
+   */
+  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+    int len = obstacleGrid[0].length;
+    int[] dp = new int[len];
+    // 起点可能有障碍物
+    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
+    for (int[] rows : obstacleGrid) {
+      for (int i = 0; i < len; i++) {
+        if (rows[i] == 1) dp[i] = 0;
+        if (rows[i] == 0 && i > 0) dp[i] += dp[i - 1];
+      }
+    }
+    return dp[len - 1];
+  }
+
+  /**
    * 爬楼梯，对比零钱兑换 II，可选集为 [1,2] 需要返回凑成 n 的总数，元素可重，前者排列，后者组合
    *
    * <p>先走 2 步再走 1 步与先 1 后 2 是两种爬楼梯的方案，而先拿 2 块再拿 1 块 & 相反是同种凑金额的方案
@@ -1125,7 +1154,7 @@ class CCount {
   public int backToOrigin(int m, int n) {
     int[][] dp = new int[m][n + 1]; // 便于从 1 开始递推
     dp[0][0] = 1;
-    // j+1 or j-1 可能越界 [0, m-1] 因此取余
+    // j+1 与 j-1 可能越界 [0, m-1] 因此取余
     for (int step = 1; step < n + 1; step++) {
       for (int idx = 0; idx < m; idx++) {
         int idxNxt = (idx + 1) % m, idxTail = (idx - 1 + m) % m;
@@ -1157,50 +1186,6 @@ class CCount {
       }
     }
     return dp[amount];
-  }
-
-  /**
-   * 不同路径I，求总数
-   *
-   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
-   *
-   * @param m the m
-   * @param n the n
-   * @return int int
-   */
-  public int uniquePaths(int m, int n) {
-    int[] dp = new int[n];
-    Arrays.fill(dp, 1);
-    for (int i = 1; i < m; i++) {
-      for (int j = 1; j < n; j++) {
-        dp[j] += dp[j - 1];
-      }
-    }
-    return dp[n - 1];
-  }
-
-  /**
-   * 不同路径II with obstacles
-   *
-   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数，根据递推关系，可以压缩至一维
-   *
-   * <p>扩展1，打印路径，参考「最小路径和」
-   *
-   * @param obstacleGrid the obstacle grid
-   * @return int int
-   */
-  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
-    int len = obstacleGrid[0].length;
-    int[] dp = new int[len];
-    // 起点可能有障碍物
-    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
-    for (int[] rows : obstacleGrid) {
-      for (int i = 0; i < len; i++) {
-        if (rows[i] == 1) dp[i] = 0;
-        else if (rows[i] == 0 && i >= 1) dp[i] = dp[i] + dp[i - 1];
-      }
-    }
-    return dp[len - 1];
   }
 
   /**
@@ -1265,7 +1250,7 @@ class OptimalRectangle {
    *
    * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
    *
-   * <p>递推 dp[i+1][j+1]=min(dp[i+1][j], dp[i][j+1], dp[i][j])+1)
+   * <p>递推 dp[i+1][j+1]=1+min(dp[i+1][j], dp[i][j+1], dp[i][j]))
    *
    * <p>只需关注当前格子的周边，故可二维降一维优化，参考
    * https://leetcode-cn.com/problems/maximal-square/solution/li-jie-san-zhe-qu-zui-xiao-1-by-lzhlyle/
@@ -1275,15 +1260,16 @@ class OptimalRectangle {
    */
   public int maximalSquare(char[][] matrix) {
     int maxSide = 0;
-    // 预处理首行首列均 0
+    // 首行首列均 0
     int[] dp = new int[matrix[0].length + 1];
-    for (char[] row : matrix) {
+    for (int row = 0; row < matrix.length; row++) {
       int topLeft = 0;
-      for (int col = 0; col < row.length; col++) {
+      for (int col = 0; col < matrix[0].length; col++) {
         int nxt = dp[col + 1];
-        // maxSide = max(maxSide, dp[row+1][col+1]);
-        if (row[col] == '1') {
-          dp[col + 1] = 1 + Math.min(Math.min(dp[col], dp[col + 1]), topLeft);
+        if (matrix[row][col] == '1') {
+          // 类似木桶短边 matrix[i][j] 为右下角组成的最大面积受限于左上，上边与左侧的 0
+          dp[col + 1] = 1 + Math.min(topLeft, Math.min(dp[col], dp[col + 1]));
+          // maxSide = max(maxSide, dp[row+1][col+1]);
           maxSide = Math.max(maxSide, dp[col + 1]);
         } else {
           dp[col + 1] = 0;

@@ -773,7 +773,7 @@ class DichotomyClassic extends DefaultArray {
     if (target < nums[0] || nums[nums.length - 1] < target) {
       return new int[] {-1, -1};
     }
-    int smallmost = smallmostBound(nums, target);
+    int smallmost = smallmostBound(nums, 0, nums.length - 1, target);
     if (smallmost == -1) return new int[] {-1, -1};
     int bigmost = bigmostBound(nums, target, smallmost);
     return new int[] {smallmost, bigmost};
@@ -2150,8 +2150,8 @@ class DicOrder extends DefaultSString {
 
 /** 提供一些数组的通用方法 */
 abstract class DefaultArray {
-  protected int smallmostBound(int[] nums, int target) {
-    int lo = 0, hi = nums.length - 1;
+  protected int smallmostBound(int[] nums, int start, int end, int target) {
+    int lo = start, hi = end;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
       // 下一轮搜索区间是 [lo...mid] 因为小于一定不是解
