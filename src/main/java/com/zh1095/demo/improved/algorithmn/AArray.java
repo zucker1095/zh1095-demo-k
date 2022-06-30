@@ -63,7 +63,7 @@ public class AArray extends DefaultArray {
   /**
    * 合并两个有序数组，题设不需要滤重，逆向，参考合并两个有序链表
    *
-   * <p>扩展1，滤重，取代为 nextIdx
+   * <p>扩展1，滤重，替换为 nextIdx
    *
    * @param nums1 the nums 1
    * @param m the m
@@ -89,7 +89,7 @@ public class AArray extends DefaultArray {
   }
 
   /**
-   * 有序数组的平方，入参已升序
+   * 有序数组的平方，返回每个数字的平方，且非递减顺序组成的新数组，入参已升序
    *
    * @param nums
    * @return
@@ -99,12 +99,12 @@ public class AArray extends DefaultArray {
     int[] res = new int[len];
     for (int i = len - 1; i > -1; i--) {
       int a = nums[lo] * nums[lo], b = nums[hi] * nums[hi];
-      if (a > b) {
-        res[i] = a;
-        lo += 1;
-      } else {
+      if (a <= b) {
         res[i] = b;
         hi -= 1;
+      } else {
+        res[i] = a;
+        lo += 1;
       }
     }
     return res;
@@ -285,7 +285,7 @@ class QQuick extends DefaultArray {
   public void sortColors(int[] nums) {
     int pivot = 1;
     // 虚拟头尾，保证界外
-    int lt = -1, cur = 0, gt = nums.length;
+    int lt = -1, cur = lt + 1, gt = nums.length;
     while (cur < gt) {
       if (nums[cur] < pivot) {
         lt += 1;
@@ -309,11 +309,11 @@ class HHeap extends DefaultArray {
    * <p>堆化 [0,k] & 依次入堆 [k+1,l-1] 的元素 & 最终堆顶即 [0]，具体过程参考动图
    * https://leetcode.cn/problems/sort-an-array/solution/pai-xu-shu-zu-by-leetcode-solution/
    *
-   * <p>扩展1，寻找两个有序数组的第 k 大，参下「寻找两个有序数组的中位数」
+   * <p>扩展1，两个有序数组的 topk 参考「寻找两个有序数组的中位数」
    *
    * <p>TODO 扩展2，判断 num 是否为第 k 大，有重复，partition 如果在 K 位置的左边和右边都遇到该数，直接结束，否则直到找到第 k 大的元素比较是否为同一个数
    *
-   * <p>扩展3，如何只选出 [n, m]，分别建两个长度为 n & m-n 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
+   * <p>扩展3，选出排名区间 n 至 m，分别建两个长度为 n-1 & m-(n+1) 的小根堆，优先入前者，前者出队至入后者，后者不允则舍弃
    *
    * <p>扩展4，不同量级的策略，如 10 & 100 & 10k 分别为计数排序，快速选择 or 建堆，分治 & 外排
    *
@@ -398,10 +398,9 @@ class HHeap extends DefaultArray {
    * @return string字符串二维数组
    */
   public String[][] topKstrings(String[] strings, int k) {
-    String[][] res = new String[k][2];
     Map<String, Integer> counter = new HashMap<>();
-    for (String str : strings) {
-      counter.put(str, counter.getOrDefault(str, 0) + 1);
+    for (String s : strings) {
+      counter.put(s, counter.getOrDefault(s, 0) + 1);
     }
     PriorityQueue<String[]> pq =
         new PriorityQueue<>(
@@ -415,6 +414,7 @@ class HHeap extends DefaultArray {
       pq.offer(new String[] {str, counter.get(str).toString()});
       if (pq.size() > k) pq.poll();
     }
+    String[][] res = new String[k][2];
     int idx = k - 1;
     while (!pq.isEmpty()) {
       res[idx] = pq.poll();
@@ -544,8 +544,9 @@ class HHeap extends DefaultArray {
   }
 }
 
+/** 分治相关，归并排序 */
 class MMerge extends DefaultArray {
-  private int count = 0; // 「数组中的逆序对」
+  private int cnt = 0; // 「数组中的逆序对」
 
   /**
    * 归并排序，up-to-bottom 递归，先分后合
@@ -568,7 +569,7 @@ class MMerge extends DefaultArray {
    */
   public int reversePairs(int[] nums) {
     divideAndCount(nums, new int[nums.length], 0, nums.length - 1);
-    return count;
+    return cnt;
   }
 
   // 合并 nums[lo:mid] & nums[mid+1:hi] 即排序区间 [lo,hi]
@@ -583,7 +584,7 @@ class MMerge extends DefaultArray {
     // curing 因为此时 [lo,mid] & [mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
     if (nums[mid] <= nums[mid + 1]) return;
     // 合并 nums[start,mid] & nums[mid+1,end]
-    count += mergeAndCount(nums, tmp, start, mid, end);
+    cnt += mergeAndCount(nums, tmp, start, mid, end);
   }
 
   private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
@@ -770,9 +771,7 @@ class DichotomyClassic extends DefaultArray {
    * @return int [ ]
    */
   public int[] searchRange(int[] nums, int target) {
-    if (target < nums[0] || nums[nums.length - 1] < target) {
-      return new int[] {-1, -1};
-    }
+    if (target < nums[0] || nums[nums.length - 1] < target) return new int[] {-1, -1};
     int smallmost = smallmostBound(nums, 0, nums.length - 1, target);
     if (smallmost == -1) return new int[] {-1, -1};
     int bigmost = bigmostBound(nums, target, smallmost);
@@ -1004,7 +1003,7 @@ class DichotomyElse extends DefaultArray {
   }
 
   /**
-   * 和为s的连续正数序列
+   * 和为s的连续正数序列，输出所有和为 target 的连续正整数序列，至少两个元素
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/solution/shi-yao-shi-hua-dong-chuang-kou-yi-ji-ru-he-yong-h/
@@ -1013,25 +1012,23 @@ class DichotomyElse extends DefaultArray {
    * @return
    */
   public int[][] findContinuousSequence(int target) {
-    List<int[]> seq = new ArrayList<int[]>();
+    List<int[]> seqs = new ArrayList<int[]>();
     int lo = 1, hi = 2;
     while (lo < hi) {
       // 区间求和公式
       int sum = (lo + hi) * (hi - lo + 1) / 2;
-      if (sum < target) {
-        hi += 1;
-      } else if (sum == target) {
+      if (sum < target) hi += 1;
+      if (sum == target) {
         int[] ans = new int[hi - lo + 1];
         for (int i = lo; i <= hi; i++) {
           ans[i - lo] = i;
         }
-        seq.add(ans);
-        lo += 1;
-      } else {
+        seqs.add(ans);
         lo += 1;
       }
+      if (sum > target) lo += 1;
     }
-    return seq.toArray(new int[seq.size()][]);
+    return seqs.toArray(new int[seqs.size()][]);
   }
 
   /**
@@ -1096,22 +1093,18 @@ class SSum extends DefaultArray {
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
       if (pivot > target) break;
-      if (i > 0 && pivot == nums[i - 1]) continue; // first deduplication
+      // first deduplication
+      if (i > 0 && pivot == nums[i - 1]) continue;
       int lo = i + 1, hi = nums.length - 1; // two sum
       while (lo < hi) {
         int sum = pivot + nums[lo] + nums[hi];
-        if (sum < target) {
-          lo += 1;
-        } else if (sum > target) {
-          hi -= 1;
-        } else if (sum == target) {
+        if (sum < target) lo += 1;
+        if (sum > target) hi -= 1;
+        if (sum == target) {
           sums.add(Arrays.asList(pivot, nums[lo], nums[hi]));
-          while (lo < hi && nums[lo] == nums[lo + 1]) { // second deduplication
-            lo += 1;
-          }
-          while (lo < hi && nums[hi] == nums[hi - 1]) {
-            hi -= 1;
-          }
+          // second deduplication
+          while (lo < hi && nums[lo] == nums[lo + 1]) lo += 1;
+          while (lo < hi && nums[hi] == nums[hi - 1]) hi -= 1;
           lo += 1;
           hi -= 1;
         }
@@ -1138,8 +1131,8 @@ class SSum extends DefaultArray {
         int sum = pivot + nums[lo] + nums[hi];
         if (Math.abs(target - sum) < Math.abs(target - closestSum)) closestSum = sum;
         if (sum < target) lo += 1;
-        else if (sum == target) return closestSum;
-        else hi -= 1;
+        if (sum == target) return closestSum;
+        if (sum > target) hi -= 1;
       }
     }
     return closestSum;
@@ -1193,19 +1186,19 @@ class SSum extends DefaultArray {
    */
   public int triangleNumber(int[] nums) {
     Arrays.sort(nums);
-    int count = 0;
+    int cnt = 0;
     for (int i = nums.length - 1; i >= 2; i--) {
       int pivot = nums[i], lo = 0, hi = i - 1;
       while (lo < hi) {
         if (nums[lo] + nums[hi] > pivot) {
-          count += hi - lo;
+          cnt += hi - lo;
           hi -= 1;
         } else {
           lo += 1;
         }
       }
     }
-    return count;
+    return cnt;
   }
 
   /**
@@ -1233,7 +1226,7 @@ class PreSum {
   /**
    * 最大子数组和/最大子序和/最大子串和/连续子数组的最大和，基于贪心，通过前缀和
    *
-   * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，状态压缩为 curSum
+   * <p>dp[i] 表示以 nums[i] 结尾的最大子序和，可状态压缩为 preSum
    *
    * <p>sum>0 说明 sum 对结果有增益效果，则后者保留并加上当前遍历数字，否则舍弃，sum 直接更新为当前遍历数字
    *
@@ -1280,18 +1273,18 @@ class PreSum {
    * @return int int
    */
   public int subarraySum(int[] nums, int k) {
-    int count = 0, preSum = 0;
-    Map<Integer, Integer> sum2Count = new HashMap<>();
+    int cnt = 0, preSum = 0;
+    Map<Integer, Integer> sum2Cnt = new HashMap<>();
     // 需要预存 0 否则会漏掉前几位就满足的情况
     // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
     // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
-    sum2Count.put(0, 1);
+    sum2Cnt.put(0, 1);
     for (int n : nums) {
       preSum += n;
-      if (sum2Count.containsKey(preSum - k)) count += sum2Count.get(preSum - k);
-      sum2Count.put(preSum, sum2Count.getOrDefault(preSum, 0) + 1);
+      if (sum2Cnt.containsKey(preSum - k)) cnt += sum2Cnt.get(preSum - k);
+      sum2Cnt.put(preSum, sum2Cnt.getOrDefault(preSum, 0) + 1);
     }
-    return count;
+    return cnt;
   }
 
   /**
@@ -1331,18 +1324,18 @@ class PreSum {
    * @return
    */
   public int subarraysDivByK(int[] nums, int k) {
-    int preSum = 0, count = 0;
-    HashMap<Integer, Integer> remainder2Count = new HashMap<>();
-    remainder2Count.put(0, 1);
+    int preSum = 0, cnt = 0;
+    HashMap<Integer, Integer> remainder2Cnt = new HashMap<>();
+    remainder2Cnt.put(0, 1);
     for (int num : nums) {
       preSum += num;
       // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
-      int remainder = (preSum % k + k) % k, curCount = remainder2Count.getOrDefault(remainder, 0);
+      int remainder = (preSum % k + k) % k, curCount = remainder2Cnt.getOrDefault(remainder, 0);
       // 余数的次数
-      count += curCount;
-      remainder2Count.put(remainder, curCount + 1);
+      cnt += curCount;
+      remainder2Cnt.put(remainder, curCount + 1);
     }
-    return count;
+    return cnt;
   }
 
   // 以下均需要区间和，因此前缀和为数组。
@@ -1365,19 +1358,19 @@ class PreSum {
     for (int i = 1; i <= len; i++) {
       preSum[i] = preSum[i - 1] + nums[i - 1];
     }
-    Map<Integer, Integer> visted = new HashMap<>();
+    Set<Integer> visted = new HashSet<>();
     for (int i = 2; i <= len; i++) {
-      visted.put(preSum[i - 2] % target, 0); // can be replaced with HashSet
-      if (visted.containsKey(preSum[i] % target)) return true;
+      visted.add(preSum[i - 2] % target);
+      if (visted.contains(preSum[i] % target)) return true;
     }
     return false;
     // 方案数
-    //    int count = 0;
-    //    remainder2Count.put(0, 1);
+    //    int cnt = 0;
+    //    remainder2Cnt.put(0, 1);
     //    for (int i = 1; i <= nums.length; i++) {
     //      int mod = preSum[i] % target;
-    //      remainder2Count.put(mod, remainder2Count.getOrDefault(mod, 0) + 1);
-    //      if (remainder2Count.containsKey(mod)) count += remainder2Count.get(mod);
+    //      remainder2Cnt.put(mod, remainder2Cnt.getOrDefault(mod, 0) + 1);
+    //      if (remainder2Cnt.containsKey(mod)) cnt += remainder2Cnt.get(mod);
     //    }
   }
 
@@ -1406,13 +1399,13 @@ class PreSum {
     Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < preSum.length; i++) {
       long sum = preSum[i];
-      while (!mq.isEmpty() && preSum[mq.getLast()] >= sum) {
-        mq.removeLast();
+      while (!mq.isEmpty() && preSum[mq.peekLast()] >= sum) {
+        mq.pollLast();
       }
-      while (!mq.isEmpty() && preSum[mq.getFirst()] + k <= sum) {
-        minLen = Math.min(minLen, i - mq.removeFirst());
+      while (!mq.isEmpty() && preSum[mq.peekFirst()] + k <= sum) {
+        minLen = Math.min(minLen, i - mq.pollFirst());
       }
-      mq.addLast(i);
+      mq.offerLast(i);
     }
     return minLen == len + 1 ? -1 : minLen;
   }
@@ -1429,16 +1422,16 @@ class PreSum {
    */
   public int numberOfSubarrays(int[] nums, int k) {
     // preSum
-    int len = nums.length, countOdd = 0, count = 0;
-    int[] map = new int[len + 1];
-    map[0] = 1;
+    int len = nums.length, cntOdd = 0, cnt = 0;
+    int[] counter = new int[len + 1];
+    counter[0] = 1;
     for (int i = 0; i < len; ++i) {
       // 如果是奇数则加 1 偶数加 0
-      countOdd += nums[i] & 1;
-      if (countOdd - k >= 0) count += map[countOdd - k];
-      map[countOdd] += 1;
+      cntOdd += nums[i] & 1;
+      if (cntOdd - k >= 0) cnt += counter[cntOdd - k];
+      counter[cntOdd] += 1;
     }
-    return count;
+    return cnt;
   }
 
   /**
@@ -1488,7 +1481,7 @@ class PreSum {
 /** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，无序找首个，快慢指针，类似「环形链表II」，可参考「第一个只出现一次的字符」
+   * 寻找重复数，无序找首个，快慢指针，等同根「环形链表II」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1512,25 +1505,7 @@ class DDuplicate extends DefaultArray {
       lo = nums[lo];
       finder = nums[finder];
     }
-    return lo;
-  }
-
-  /**
-   * 数组中重复的数字，返回任意一个重复的数字，区间 [0,nums.length-1]
-   *
-   * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
-   *
-   * @param nums
-   * @return
-   */
-  public int findRepeatNumber(int[] nums) {
-    for (int i = 0; i < nums.length; i++) {
-      while (nums[i] != i) {
-        if (nums[i] == nums[nums[i]]) return nums[i];
-        swap(nums, i, nums[i]);
-      }
-    }
-    return -1;
+    return finder;
   }
 
   /**
@@ -1549,6 +1524,24 @@ class DDuplicate extends DefaultArray {
       else nums[idx] *= -1; // mark num
     }
     return duplicates;
+  }
+
+  /**
+   * 数组中重复的数字，返回任意一个重复的数字，区间 [0,nums.length-1]
+   *
+   * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
+   *
+   * @param nums
+   * @return
+   */
+  public int findRepeatNumber(int[] nums) {
+    for (int i = 0; i < nums.length; i++) {
+      while (nums[i] != i) {
+        if (nums[i] == nums[nums[i]]) return nums[i];
+        swap(nums, i, nums[i]);
+      }
+    }
+    return -1;
   }
 
   /**
@@ -1705,9 +1698,7 @@ class Traversal extends DefaultArray {
   }
 
   /**
-   * 旋转图像 / 旋转矩阵
-   *
-   * <p>沿东南斜对角线 & 垂直中线翻转
+   * 旋转图像/旋转矩阵，依次沿右下斜对角线与垂直中线翻转
    *
    * <p>扩展1，翻转 180 度，则分别沿水平与垂直翻转，而 270 度则改为沿西南斜对角线
    *
@@ -1738,25 +1729,19 @@ class Traversal extends DefaultArray {
     int row = matrix.length, col = matrix[0].length;
     List<Integer> res = new ArrayList<>(row * col);
     int up = 0, down = row - 1, left = 0, right = col - 1;
-    while (true) { // 任何一组越界即结束遍历
-      for (int i = left; i <= right; i++) {
-        res.add(matrix[up][i]);
-      }
+    while (true) {
+      // 右下左上，任何一组越界即结束遍历
+      for (int i = left; i <= right; i++) res.add(matrix[up][i]);
       up += 1;
       if (up > down) break;
-      for (int i = up; i <= down; i++) {
-        res.add(matrix[i][right]);
-      }
+      // 下同
+      for (int i = up; i <= down; i++) res.add(matrix[i][right]);
       right -= 1;
       if (right < left) break;
-      for (int i = right; i >= left; i--) {
-        res.add(matrix[down][i]);
-      }
+      for (int i = right; i >= left; i--) res.add(matrix[down][i]);
       down -= 1;
       if (down < up) break;
-      for (int i = down; i >= up; i--) {
-        res.add(matrix[i][left]);
-      }
+      for (int i = down; i >= up; i--) res.add(matrix[i][left]);
       left += 1;
       if (left > right) break;
     }
@@ -1774,8 +1759,9 @@ class Traversal extends DefaultArray {
   public int[][] generateMatrix(int n) {
     int[][] res = new int[n][n];
     int num = 1;
-    int left = 0, right = n - 1, up = 0, down = n - 1;
+    int up = 0, down = n - 1, left = 0, right = n - 1;
     while (num <= n * n) {
+      // 右下左上，等同「螺旋举证」
       for (int i = left; i <= right; i++) {
         res[up][i] = num;
         num += 1;
@@ -1814,17 +1800,17 @@ class Traversal extends DefaultArray {
    */
   public int[] shortestToChar(String s, char c) {
     int len = s.length(), pre = Integer.MIN_VALUE / 2;
-    int[] minDistances = new int[len];
+    int[] misDists = new int[len];
     for (int i = 0; i < len; i++) {
       if (s.charAt(i) == c) pre = i;
-      minDistances[i] = i - pre;
+      misDists[i] = i - pre;
     }
     pre = Integer.MAX_VALUE / 2;
     for (int i = len - 1; i >= 0; i--) {
       if (s.charAt(i) == c) pre = i;
-      minDistances[i] = Math.min(minDistances[i], pre - i);
+      misDists[i] = Math.min(misDists[i], pre - i);
     }
-    return minDistances;
+    return misDists;
   }
 
   /**
@@ -1942,7 +1928,7 @@ class DicOrder extends DefaultSString {
    */
   public int maximumSwap(int num) {
     char[] chs = Integer.toString(num).toCharArray();
-    int[] lastIdxes = new int[10]; // 每种数字最后的索引
+    int[] lastIdxes = new int[10]; // 每个数字最后出现的索引
     for (int i = 0; i < chs.length; i++) {
       lastIdxes[chs[i] - '0'] = i;
     }
@@ -2035,9 +2021,7 @@ class DicOrder extends DefaultSString {
     }
     // 比如 2 & {2} 无解，需要统计，且去除前导零。
     int num = 0;
-    for (int n : resNums) {
-      num += num * 10 + n;
-    }
+    for (int n : resNums) num += num * 10 + n;
     return num;
   }
 
@@ -2049,21 +2033,21 @@ class DicOrder extends DefaultSString {
    * @return int int
    */
   public int findKthNumber(int n, int k) {
-    int count = 1, prefix = 1; // 字典序最小即起点为 1，其前缀为 1
-    while (count < k) {
-      int curCount = count(prefix, n);
-      if (curCount + count > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
+    int cnt = 1, prefix = 1; // 字典序最小即起点为 1，其前缀为 1
+    while (cnt < k) {
+      int curCnt = count(prefix, n);
+      if (curCnt + cnt > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
         prefix *= 10;
-        count += 1;
+        cnt += 1;
       } else { // 去下个前缀，即相邻子树遍历
         prefix += 1;
-        count += curCount;
+        cnt += curCnt;
       }
     }
     return prefix; // 退出循环时 cur==k 正好找到
   }
 
-  // DFS prefix 为根的树，统计至 n 的个数
+  // DFS lo 为根的树，统计至 hi 的个数
   private int count(int lo, int hi) {
     // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出
     long cur = lo, nxt = cur + 1;
