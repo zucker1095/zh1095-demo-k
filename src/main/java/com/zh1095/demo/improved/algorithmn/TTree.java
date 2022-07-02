@@ -45,14 +45,14 @@ public class TTree {
       //      }
       while (cur != null) {
         //        res.add(cur.val); // 前序与后序
-        stack.offerLast(cur); // 1.traverse
+        stack.offerLast(cur);
         cur = cur.left; // 后序 right
       }
-      cur = stack.pollLast(); // 2.handle
+      cur = stack.pollLast();
       res.add(cur.val); // 仅中序
       cur = cur.right; // 后序 left
     }
-    Collections.reverse(res); // 仅后序
+    //    Collections.reverse(res); // 仅后序
     return res;
   }
 
@@ -178,7 +178,6 @@ public class TTree {
 
 /** 根据序列建树相关 */
 class Build {
-
   /**
    * 构造二叉树，题设元素唯一，否则，存在多棵树
    *
@@ -220,6 +219,8 @@ class Build {
     return root;
   }
 
+  private int postIdx = 0; // 「输出后序」
+
   /**
    * 输出后序，根据前序和中序
    *
@@ -241,8 +242,6 @@ class Build {
     postorder[postIdx] = root;
     postIdx += 1;
   }
-
-  private int postIdx = 0; // 「输出后序」
 
   /**
    * 二叉树的序列化与反序列化，以下选用前序
@@ -869,7 +868,7 @@ class Postorder {
   private int diameter = 0; // 「二叉树的直径」
 
   /**
-   * 平衡二叉树，后序递归
+   * 平衡二叉树，后序
    *
    * @param root the root
    * @return boolean boolean
@@ -878,6 +877,7 @@ class Postorder {
     return getHeight(root) != -1;
   }
 
+  // 平衡则返高度，否则 -1
   private int getHeight(TreeNode root) {
     if (root == null) return 0;
     int l = getHeight(root.left);
@@ -1123,7 +1123,7 @@ class BBFS {
   }
 
   /**
-   * 二叉树的完全性校验
+   * 二叉树的完全性校验，是否完全二叉树
    *
    * @param root the root
    * @return boolean boolean
@@ -1335,6 +1335,33 @@ class MultiTrees {
   }
 
   /**
+   * 相同的树，前序，迭代选用 bfs
+   *
+   * @param p the p
+   * @param q the q
+   * @return boolean boolean
+   */
+  public boolean isSameTree(TreeNode p, TreeNode q) {
+    //    if (p == null && q == null) return true;
+    //    else if (p == null || q == null) return false;
+    //    return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(p);
+    queue.offer(q);
+    while (!queue.isEmpty()) {
+      TreeNode n1 = queue.poll(), n2 = queue.poll();
+      if (n1 == null && n2 == null) continue;
+      if (n1 == null || n2 == null || n1.val != n2.val) return false;
+      // 按序，保证出队同侧
+      queue.offer(n1.left);
+      queue.offer(n2.left);
+      queue.offer(n1.right);
+      queue.offer(n2.right);
+    }
+    return true;
+  }
+
+  /**
    * 另一棵树的子树/树的子结构 isSubStructure
    *
    * <p>特判匹配树 & 主树为空两种情况，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
@@ -1376,35 +1403,6 @@ class MultiTrees {
     // 均非空且值相同，则依次比较同侧与异侧
     return (flipEquiv(r1.left, r2.left) && flipEquiv(r1.right, r2.right))
         || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
-  }
-
-  /**
-   * 相同的树，前序，迭代选用 bfs
-   *
-   * @param p the p
-   * @param q the q
-   * @return boolean boolean
-   */
-  public boolean isSameTree(TreeNode p, TreeNode q) {
-    //    if (p == null && q == null) return true;
-    //    else if (p == null || q == null) return false;
-    //    return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
-    Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(p);
-    queue.offer(q);
-    while (!queue.isEmpty()) {
-      TreeNode n1 = queue.poll(), n2 = queue.poll();
-      if (n1 == null && n2 == null) continue;
-      if (n1 == null || n2 == null || n1.val != n2.val) {
-        return false;
-      }
-      // 按序，保证出队同侧
-      queue.offer(n1.left);
-      queue.offer(n2.left);
-      queue.offer(n1.right);
-      queue.offer(n2.right);
-    }
-    return true;
   }
 }
 
@@ -1681,10 +1679,10 @@ class BacktrackingElse extends DDFS {
    * @return list list
    */
   public List<String> restoreIpAddresses(String s) {
-    List<String> res = new ArrayList<>();
-    if (s.length() > 12 || s.length() < 4) return res; // 特判
-    backtracking6(s, new ArrayDeque<>(4), res, 0, 4);
-    return res;
+    List<String> ips = new ArrayList<>();
+    if (s.length() > 12 || s.length() < 4) return ips; // 特判
+    backtracking6(s, new ArrayDeque<>(4), ips, 0, 4);
+    return ips;
   }
 
   private void backtracking6(String s, Deque<String> path, List<String> res, int start, int seg) {
@@ -1695,9 +1693,7 @@ class BacktrackingElse extends DDFS {
     // only truncate 3 digits per segment
     for (int i = start; i < start + 3 && i < s.length(); i++) {
       // 当前段分配的位数不够，或分配的位数过多，或数字过大
-      if (seg * 3 < s.length() - i || !isValidIpSegment(s, start, i)) {
-        continue;
-      }
+      if (seg * 3 < s.length() - i || !isValidIpSegment(s, start, i)) continue;
       path.offerLast(s.substring(start, i + 1));
       backtracking6(s, path, res, i + 1, seg - 1);
       path.pollLast();

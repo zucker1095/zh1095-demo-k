@@ -83,7 +83,7 @@ public class LList {
     }
     // 2.逐一设置新节点的随机节点
     cur = head;
-    while (cur != null) {
+    while (cur != null && cur.next != null) {
       // 保证 DAG
       if (cur.random != null) cur.next.random = cur.random.next;
       cur = cur.next.next;
@@ -125,19 +125,17 @@ public class LList {
    */
   public int[] nextLargerNodes(ListNode head) {
     List<Integer> nodes = new ArrayList<>();
-    Deque<Integer> monotonousStack = new ArrayDeque<>();
+    Deque<Integer> ms = new ArrayDeque<>();
     ListNode cur = head;
     while (cur != null) {
-      while (!monotonousStack.isEmpty() && cur.val > nodes.get(monotonousStack.peekLast())) {
-        nodes.set(monotonousStack.pollLast(), cur.val);
+      while (!ms.isEmpty() && cur.val > nodes.get(ms.peekLast())) {
+        nodes.set(ms.pollLast(), cur.val);
       }
-      monotonousStack.offerLast(nodes.size());
+      ms.offerLast(nodes.size());
       nodes.add(cur.val);
       cur = cur.next;
     }
-    for (int i : monotonousStack) {
-      nodes.set(i, 0);
-    }
+    for (int i : ms) nodes.set(i, 0);
     return nodes.stream().mapToInt(i -> i).toArray();
   }
 
@@ -181,9 +179,8 @@ class ReverseList extends LList {
       for (int i = 0; i < k && cur != null; i++) {
         cur = cur.next;
       }
-      // 此时 cur 为区间尾
       if (cur == null) break;
-      // 暂存
+      // 此时 cur 为区间尾，暂存
       ListNode start = pre.next, nxt = cur.next;
       // 变向
       cur.next = null;
@@ -459,26 +456,28 @@ class ReorderList extends LList {
     return mergeTwoLists(sortList(head), sortList(l2));
     //    ListNode dummy = new ListNode();
     //    dummy.next = head;
-    //    int len = 0; // 1.count length
+    //    // 1.count length
+    //    int len = 0;
     //    while (head != null) {
     //      len += 1;
     //      head = head.next;
     //    }
-    //    for (int step = 1; step < len; step *= 2) { // 2.依次将链表分成1块，2块，4块...
+    //    // 2.依次将链表分成1块，2块，4块...
+    //    for (int step = 1; step < len; step *= 2) {
     //      // 每次变换步长，pre 和 cur 都初始化在链表头
     //      ListNode pre = dummy, cur = dummy.next;
     //      while (cur != null) {
     //        ListNode h1 = cur, h2 = split(h1, step);
     //        cur = split(h2, step);
     //        pre.next = mergeTwoLists(h1, h2);
-    //        while (pre.next != null) pre = pre.next; // 3.pre 步进到排序好的部分的末尾
+    //        // 3.pre 步进到排序好的部分的末尾
+    //        while (pre.next != null) pre = pre.next;
     //      }
     //    }
     //    return dummy.next;
   }
 
   private ListNode split(ListNode head, int step) {
-    // 断链操作 返回第二部分链表头
     if (head == null) return null;
     ListNode l1 = head;
     for (int i = 1; i < step && l1.next != null; i++) {

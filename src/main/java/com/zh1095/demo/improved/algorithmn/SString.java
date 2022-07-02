@@ -33,19 +33,19 @@ public class SString {
    */
   public String addStrings(String num1, String num2) {
     final int BASE = 10; // 36 进制
-    StringBuilder res = new StringBuilder();
+    StringBuilder sum = new StringBuilder();
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
     int carry = 0;
     while (p1 > -1 || p2 > -1 || carry != 0) { // 还要加上一个高位
       int n1 = p1 < 0 ? 0 : getInt(num1.charAt(p1)),
           n2 = p2 < 0 ? 0 : getInt(num1.charAt(p2)),
           tmp = n1 + n2 + carry;
-      res.append(getChar(tmp % BASE));
+      sum.append(getChar(tmp % BASE));
       carry = tmp / BASE;
       p1 -= 1;
       p2 -= 1;
     }
-    return res.reverse().toString();
+    return sum.reverse().toString();
   }
 
   /**
@@ -59,13 +59,13 @@ public class SString {
    */
   public String reduceStrings(String num1, String num2) {
     final int BASE = 10, l1 = num1.length(), l2 = num2.length(); // 36 进制
-    StringBuilder res = new StringBuilder();
+    StringBuilder diff = new StringBuilder();
     // 1.预处理下方大减小，并判断符号
     if ((l1 == l2 && Integer.parseInt(num1) < Integer.parseInt(num2)) || l1 < l2) {
       String tmp = num1;
       num1 = num2;
       num2 = num1;
-      res.append('-');
+      diff.append('-');
     }
     // 2.从个位开始相减，注意借位，尾插，最终反转
     int p1 = l1 - 1, p2 = l2 - 1;
@@ -76,12 +76,12 @@ public class SString {
           n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
           tmp = (n1 - n2 - carry + BASE) % BASE;
       // res.insert(0, tmp) 则无需 reverse
-      res.append(tmp);
+      diff.append(tmp);
       carry = n1 - carry - n2 < 0 ? 1 : 0;
       p1 -= 1;
       p2 -= 1;
     }
-    String str = res.reverse().toString();
+    String str = diff.reverse().toString();
     // 3.移除前导零
     int idx = 0;
     for (char ch : str.toCharArray()) {
@@ -948,6 +948,195 @@ class SSubString {
   }
 }
 
+/** 子串相关，「单词搜索」参考 TTree，「单词拆分」参考 DP */
+class WWord extends DefaultSString {
+  /**
+   * 字符串转换整数，如 " -26" to 26
+   *
+   * <p>去空格 & 判正负 & 逐位加 & 判溢出
+   *
+   * <p>扩展1，包含浮点，参下 annotate
+   *
+   * @param s the s
+   * @return the int
+   */
+  public int myAtoi(String s) {
+    boolean isNegative = false;
+    char[] chs = s.toCharArray();
+    // 去首空格，并判正负
+    int len = s.length(), idx = frontNoBlank(chs, 0);
+    if (idx == len) return 0;
+    if (chs[idx] == '-') isNegative = true;
+    if (chs[idx] == '-' || chs[idx] == '+') idx += 1;
+    // 从高位开始取，留意溢出
+    int num = 0;
+    for (int i = idx; i < len; i++) {
+      char ch = chs[i];
+      //      if (ch == '.') {
+      //        int decimal = myAtoi(s.substring(i, len));
+      //        return (num + decimal * Math.pow(0.1, len - i + 1)) * (isNegative ? -1 : 1);
+      //      }
+      if (ch < '0' || ch > '9') break;
+      int pre = num;
+      num = num * 10 + (ch - '0');
+      if (pre != num / 10) return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+    }
+    return num * (isNegative ? -1 : 1);
+  }
+
+  /**
+   * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
+   *
+   * <p>类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
+   *
+   * @param chars the chars
+   * @return int int
+   */
+  public int compress(char[] chars) {
+    // write & read
+    int write = 0, read = 0, len = chars.length;
+    while (read < len) {
+      int start = read;
+      while (start < len && chars[start] == chars[read]) start += 1;
+      chars[write] = chars[read];
+      write += 1;
+      if (start - read > 1) {
+        // 逐位写入
+        char[] cnt = Integer.toString(start - read).toCharArray();
+        for (char digit : cnt) {
+          chars[write] = digit;
+          write += 1;
+        }
+      }
+      read = start;
+    }
+    //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
+    return write;
+  }
+
+  /**
+   * 翻转字符串里的单词，如 www.abc.com -> com.abc.www
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/reverse-words-in-a-string/solution/fan-zhuan-zi-fu-chuan-li-de-dan-ci-by-leetcode-sol/
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String reverseWords(String s) {
+    char[] chs = s.toCharArray();
+    int len = chs.length;
+    reverseChs(chs, 0, len - 1);
+    reverseEachWord(chs, len);
+    return removeBlanks(chs, len);
+  }
+
+  private void reverseEachWord(char[] chs, int len) {
+    int start = 0;
+    while (start < len) {
+      // 找到首字母
+      while (start < len && chs[start] == ' ') start += 1;
+      int end = start;
+      // 末位置
+      while (end < len && chs[end] != ' ') end += 1;
+      reverseChs(chs, start, end - 1);
+      start = end;
+    }
+  }
+
+  private String removeBlanks(char[] chs, int len) {
+    // 移除首空格
+    int write = 0, read = frontNoBlank(chs, 0);
+    // 单词间留一个空，并移除尾空格
+    while (read < len) {
+      // 找到首空格
+      while (read < len && chs[read] != ' ') {
+        chs[write] = chs[read];
+        write += 1;
+        read += 1;
+      }
+      // 找到尾空格，单词间留一个空
+      read = frontNoBlank(chs, read);
+      if (read == len) break;
+      chs[write] = ' ';
+      write += 1;
+    }
+    return String.valueOf(chs, 0, write);
+  }
+
+  /**
+   * 单词接龙，返回 beginWord 每次 diff 一个字母，最终变为 endWord 的最短路径，且所有路径均包含在 wordList 内
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/word-ladder/solution/yan-du-you-xian-bian-li-shuang-xiang-yan-du-you-2/
+   *
+   * @param beginWord the begin word
+   * @param endWord the end word
+   * @param wordList the word list
+   * @return int
+   */
+  public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+    // 第 1 步：先将 wordList 放到哈希表里，便于判断某个单词是否在 wordList 里
+    Set<String> wordSet = new HashSet<>(wordList);
+    if (wordSet.size() == 0 || !wordSet.contains(endWord)) {
+      return 0;
+    }
+    // 第 2 步：已经访问过的 word 添加到 visited 哈希表里
+    Set<String> visited = new HashSet<>();
+    // 分别用左边和右边扩散的哈希表代替单向 BFS 里的队列，它们在双向 BFS 的过程中交替使用
+    Set<String> beginVisited = new HashSet<>();
+    beginVisited.add(beginWord);
+    Set<String> endVisited = new HashSet<>();
+    endVisited.add(endWord);
+    // 第 3 步：执行双向 BFS，左右交替扩散的步数之和为所求
+    int step = 1;
+    while (!beginVisited.isEmpty() && !endVisited.isEmpty()) {
+      // 优先选择小的哈希表进行扩散，考虑到的情况更少
+      if (beginVisited.size() > endVisited.size()) {
+        Set<String> temp = beginVisited;
+        beginVisited = endVisited;
+        endVisited = temp;
+      }
+      // 逻辑到这里，保证 beginVisited 是相对较小的集合，nextLevelVisited 在扩散完成以后，会成为新的 beginVisited
+      Set<String> nextLevelVisited = new HashSet<>();
+      for (String word : beginVisited) {
+        if (changeWordEveryOneLetter(word, endVisited, visited, wordSet, nextLevelVisited)) {
+          return step + 1;
+        }
+      }
+      // 原来的 beginVisited 废弃，从 nextLevelVisited 开始新的双向 BFS
+      beginVisited = nextLevelVisited;
+      step += 1;
+    }
+    return 0;
+  }
+
+  // 尝试对 word 修改每一个字符，看看能否落在 endVisited 中，扩展得到的新的 word 添加到 nextLevelVisited 里
+  private boolean changeWordEveryOneLetter(
+      String word,
+      Set<String> endVisited,
+      Set<String> visited,
+      Set<String> wordSet,
+      Set<String> nextLevelVisited) {
+    char[] chs = word.toCharArray();
+    for (int i = 0; i < word.length(); i++) {
+      char originCh = chs[i];
+      for (char curCh = 'a'; curCh <= 'z'; curCh++) {
+        if (originCh == curCh) continue;
+        chs[i] = curCh;
+        String nextWord = String.valueOf(chs);
+        if (wordSet.contains(nextWord)) continue;
+        if (endVisited.contains(nextWord)) return true;
+        if (visited.contains(nextWord)) continue;
+        visited.add(nextWord);
+        nextLevelVisited.add(nextWord);
+      }
+      chs[i] = originCh; // 恢复，下次再用
+    }
+    return false;
+  }
+}
+
 /**
  * 进制转换，编码相关
  *
@@ -988,70 +1177,6 @@ class CConvert extends DefaultSString {
           {
             "Billion", "Million", "Thousand", "",
           };
-
-  /**
-   * 字符串转换整数，如 " -26" to 26
-   *
-   * <p>去空格 & 判正负 & 逐位加 & 判溢出
-   *
-   * <p>扩展1，包含浮点，参下 annotate
-   *
-   * @param s the s
-   * @return the int
-   */
-  public int myAtoi(String s) {
-    boolean isNegative = false;
-    char[] chs = s.toCharArray();
-    // 去首空格，并判正负
-    int len = s.length(), idx = firstNotBlank(chs, 0);
-    if (idx == len) return 0;
-    if (chs[idx] == '-') isNegative = true;
-    if (chs[idx] == '-' || chs[idx] == '+') idx += 1;
-    // 从高位开始取，留意溢出
-    int num = 0;
-    for (int i = idx; i < len; i++) {
-      char ch = chs[i];
-      //      if (ch == '.') {
-      //        int decimal = myAtoi(s.substring(i, len));
-      //        return (num + decimal * Math.pow(0.1, len - i + 1)) * (isNegative ? -1 : 1);
-      //      }
-      if (ch < '0' || ch > '9') break;
-      int pre = num;
-      num = num * 10 + (ch - '0');
-      if (pre != num / 10) return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-    }
-    return num * (isNegative ? -1 : 1);
-  }
-
-  /**
-   * 压缩字符串，原地字符串编码，如 [a,a,a,b,b] to [a,3,b,2]，前者即 "aaabb" 后者同理 "a3b2"
-   *
-   * <p>类似「移动零」与滑窗，前后指针分别作读写 & 统计重复区间 & 写入
-   *
-   * @param chars the chars
-   * @return int int
-   */
-  public int compress(char[] chars) {
-    // write & read
-    int lo = 0, hi = 0, len = chars.length;
-    while (hi < len) {
-      int cur = hi;
-      while (cur < len && chars[cur] == chars[hi]) cur += 1;
-      chars[lo] = chars[hi];
-      lo += 1;
-      if (cur - hi > 1) {
-        // 逐位写入
-        char[] cnt = Integer.toString(cur - hi).toCharArray();
-        for (char digit : cnt) {
-          chars[lo] = digit;
-          lo += 1;
-        }
-      }
-      hi = cur;
-    }
-    //    return String.valueOf(Arrays.copyOfRange(chars, 0, lo + 1));
-    return lo;
-  }
 
   /**
    * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
@@ -1119,9 +1244,11 @@ class CConvert extends DefaultSString {
     StringBuilder roman = new StringBuilder();
     int cur = num;
     for (int i = 0; i < NUMs.length; i++) {
-      while (cur >= NUMs[i]) {
-        roman.append(ROMANs[i]);
-        cur -= NUMs[i];
+      int n = NUMs[i];
+      String ch = ROMANs[i]; // 贪心，数字能匹配的最大罗马字符
+      while (cur >= n) { // 一直匹配当前罗马字符，直到取下一个
+        roman.append(ch);
+        cur -= n;
       }
     }
     return roman.toString();
@@ -1134,15 +1261,15 @@ class CConvert extends DefaultSString {
    * @return int int
    */
   public int titleToNumber(String ct) {
-    int n = 0;
+    int sum = 0;
     for (char ch : ct.toCharArray()) {
-      n = n * 26 + (ch - 'A' + 1);
+      sum = sum * 26 + (ch - 'A' + 1);
     }
-    return n;
+    return sum;
   }
 
   /**
-   * 罗马数字转整数，遍历字符，从短开始匹
+   * 罗马数字转整数，累加求和，从短开始匹
    *
    * <p>扩展1，汉字转阿拉伯数字
    *
@@ -1164,14 +1291,15 @@ class CConvert extends DefaultSString {
             put('M', 1000);
           }
         };
-    int n = 0;
+    int sum = 0;
     char[] chs = s.toCharArray();
     for (int i = 0; i < chs.length; i++) {
-      int add = mapping.get(chs[i]); // 单独一个字符对应的十进制值
-      if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) n -= add;
-      else n += add;
+      int add = mapping.get(chs[i]);
+      // IV 与 VI 否则常规的做法是累加即可
+      if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) sum -= add;
+      else sum += add;
     }
-    return n;
+    return sum;
   }
 
   /**
@@ -1262,131 +1390,6 @@ class CConvert extends DefaultSString {
     }
     if (x != 0) res.append(num2str_small[x] + " ");
     return res.toString();
-  }
-}
-
-/** 子串相关，「单词搜索」参考 TTree，「单词拆分」参考 DP */
-class WWord extends DefaultSString {
-  /**
-   * 翻转字符串里的单词，如 www.abc.com -> com.abc.www
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/reverse-words-in-a-string/solution/fan-zhuan-zi-fu-chuan-li-de-dan-ci-by-leetcode-sol/
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String reverseWords(String s) {
-    char[] chs = s.toCharArray();
-    int len = chs.length;
-    reverseChs(chs, 0, len - 1);
-    reverseEachWord(chs, len);
-    return removeBlanks(chs, len);
-  }
-
-  private void reverseEachWord(char[] chs, int len) {
-    int start = 0;
-    while (start < len) {
-      // 找到首字母
-      while (start < len && chs[start] == ' ') start += 1;
-      int end = start;
-      // 末位置
-      while (end < len && chs[end] != ' ') end += 1;
-      reverseChs(chs, start, end - 1);
-      start = end;
-    }
-  }
-
-  private String removeBlanks(char[] chs, int len) {
-    // 移除首空格
-    int write = 0, read = firstNotBlank(chs, 0);
-    // 单词间留一个空，并移除尾空格
-    while (read < len) {
-      // 找到首空格
-      while (read < len && chs[read] != ' ') {
-        chs[write] = chs[read];
-        write += 1;
-        read += 1;
-      }
-      // 找到尾空格，单词间留一个空
-      read = firstNotBlank(chs, read);
-      if (read == len) break;
-      chs[write] = ' ';
-      write += 1;
-    }
-    return String.valueOf(chs, 0, write);
-  }
-
-  /**
-   * 单词接龙，返回 beginWord 每次 diff 一个字母，最终变为 endWord 的最短路径，且所有路径均包含在 wordList 内
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/word-ladder/solution/yan-du-you-xian-bian-li-shuang-xiang-yan-du-you-2/
-   *
-   * @param beginWord the begin word
-   * @param endWord the end word
-   * @param wordList the word list
-   * @return int
-   */
-  public int ladderLength(String beginWord, String endWord, List<String> wordList) {
-    // 第 1 步：先将 wordList 放到哈希表里，便于判断某个单词是否在 wordList 里
-    Set<String> wordSet = new HashSet<>(wordList);
-    if (wordSet.size() == 0 || !wordSet.contains(endWord)) {
-      return 0;
-    }
-    // 第 2 步：已经访问过的 word 添加到 visited 哈希表里
-    Set<String> visited = new HashSet<>();
-    // 分别用左边和右边扩散的哈希表代替单向 BFS 里的队列，它们在双向 BFS 的过程中交替使用
-    Set<String> beginVisited = new HashSet<>();
-    beginVisited.add(beginWord);
-    Set<String> endVisited = new HashSet<>();
-    endVisited.add(endWord);
-    // 第 3 步：执行双向 BFS，左右交替扩散的步数之和为所求
-    int step = 1;
-    while (!beginVisited.isEmpty() && !endVisited.isEmpty()) {
-      // 优先选择小的哈希表进行扩散，考虑到的情况更少
-      if (beginVisited.size() > endVisited.size()) {
-        Set<String> temp = beginVisited;
-        beginVisited = endVisited;
-        endVisited = temp;
-      }
-      // 逻辑到这里，保证 beginVisited 是相对较小的集合，nextLevelVisited 在扩散完成以后，会成为新的 beginVisited
-      Set<String> nextLevelVisited = new HashSet<>();
-      for (String word : beginVisited) {
-        if (changeWordEveryOneLetter(word, endVisited, visited, wordSet, nextLevelVisited)) {
-          return step + 1;
-        }
-      }
-      // 原来的 beginVisited 废弃，从 nextLevelVisited 开始新的双向 BFS
-      beginVisited = nextLevelVisited;
-      step += 1;
-    }
-    return 0;
-  }
-
-  // 尝试对 word 修改每一个字符，看看能否落在 endVisited 中，扩展得到的新的 word 添加到 nextLevelVisited 里
-  private boolean changeWordEveryOneLetter(
-      String word,
-      Set<String> endVisited,
-      Set<String> visited,
-      Set<String> wordSet,
-      Set<String> nextLevelVisited) {
-    char[] chs = word.toCharArray();
-    for (int i = 0; i < word.length(); i++) {
-      char originCh = chs[i];
-      for (char curCh = 'a'; curCh <= 'z'; curCh++) {
-        if (originCh == curCh) continue;
-        chs[i] = curCh;
-        String nextWord = String.valueOf(chs);
-        if (wordSet.contains(nextWord)) continue;
-        if (endVisited.contains(nextWord)) return true;
-        if (visited.contains(nextWord)) continue;
-        visited.add(nextWord);
-        nextLevelVisited.add(nextWord);
-      }
-      chs[i] = originCh; // 恢复，下次再用
-    }
-    return false;
   }
 }
 
@@ -1539,8 +1542,20 @@ abstract class DefaultSString extends DefaultArray {
     }
   }
 
-  protected int firstNotBlank(char[] chs, int start) {
+  protected int frontNoBlank(char[] chs, int start) {
     while (start < chs.length && chs[start] == ' ') start += 1;
+    return start;
+  }
+
+  /**
+   * 前导零
+   *
+   * @param chs
+   * @param start
+   * @return
+   */
+  protected int frontNoZero(char[] chs, int start) {
+    while (start < chs.length && chs[start] == '0') start += 1;
     return start;
   }
 }

@@ -13,24 +13,26 @@ public class OOthers {
   /**
    * 加油站，求最大子序和的起始位
    *
+   * <p>贪心，局部最优，当前累加和小于 0 则更新起始位置与累加和，并重新计算
+   *
    * @param gas the gas
    * @param cost the cost
    * @return int int
    */
   public int canCompleteCircuit(int[] gas, int[] cost) {
-    // 将问题转化为找最大子串的起始位置
-    int startIdx = 0, sumGas = 0, leftGas = 0;
+    // sum 用于判断能否到达终点
+    int preSum = 0, start = 0, sum = 0;
     for (int i = 0; i < gas.length; i++) {
-      int left = gas[i] - cost[i]; // 剩余
-      leftGas += left;
-      if (sumGas > 0) {
-        sumGas += left;
+      int n = gas[i] - cost[i]; // 当前站需要消耗的，即当前元素的值
+      sum += n;
+      if (preSum > 0) {
+        preSum += n;
       } else {
-        sumGas = left;
-        startIdx = i;
+        preSum = n;
+        start = i;
       }
     }
-    return leftGas < 0 ? -1 : startIdx;
+    return sum < 0 ? -1 : start;
   }
 
   /**
@@ -40,17 +42,13 @@ public class OOthers {
    * @return boolean boolean
    */
   public boolean canJump(int[] nums) {
-    // 前 n-1 个元素能够跳到的最远距离
-    int furthest = 0;
-    for (int i = 0; i <= furthest; i++) {
-      // 第 i 个元素能够跳到的最远距离
-      int curFurthest = i + nums[i];
-      // 更新最远距离
-      furthest = Math.max(furthest, curFurthest);
+    // 前 n-1 个元素能够跳到的最远索引
+    int maxIdx = 0;
+    for (int i = 0; i <= maxIdx; i++) {
+      // 第 i 个元素能够跳到的最远索引
+      maxIdx = Math.max(maxIdx, i + nums[i]);
       // 如果最远距离已经大于或等于最后一个元素的下标，则说明能跳过去，结束
-      if (furthest >= nums.length - 1) {
-        return true;
-      }
+      if (maxIdx >= nums.length - 1) return true;
     }
     // 最远距离 k 不再改变，且没有到末尾元素
     return false;
@@ -66,17 +64,40 @@ public class OOthers {
    */
   public int jump(int[] nums) {
     int step = 0;
-    int curLo = 0, curHi = 0;
-    while (curHi < nums.length - 1) {
-      int tmp = 0;
-      for (int i = curLo; i <= curHi; i++) {
-        tmp = Math.max(nums[i] + i, tmp);
+    int lo = 0, hi = 0;
+    while (hi < nums.length - 1) {
+      int len = 0;
+      for (int i = lo; i <= hi; i++) {
+        len = Math.max(nums[i] + i, len);
       }
-      curLo = curHi + 1;
-      curHi = tmp;
+      lo = hi + 1;
+      hi = len;
       step += 1;
     }
     return step;
+  }
+
+  /**
+   * 航班预订统计，贪心
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/corporate-flight-bookings/solution/5118_hang-ban-yu-ding-tong-ji-by-user9081a/
+   *
+   * @param bookings
+   * @param n
+   * @return
+   */
+  public int[] corpFlightBookings(int[][] bookings, int n) {
+    int[] counter = new int[n];
+    for (int[] b : bookings) {
+      int first = b[0], last = b[1], seat = b[2];
+      counter[first - 1] += seat;
+      if (last < n) counter[last] -= seat;
+    }
+    for (int i = 1; i < n; i++) {
+      counter[i] += counter[i - 1];
+    }
+    return counter;
   }
 
   /**
@@ -146,29 +167,6 @@ public class OOthers {
   }
 
   /**
-   * 航班预订统计，贪心
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/corporate-flight-bookings/solution/5118_hang-ban-yu-ding-tong-ji-by-user9081a/
-   *
-   * @param bookings
-   * @param n
-   * @return
-   */
-  public int[] corpFlightBookings(int[][] bookings, int n) {
-    int[] counters = new int[n];
-    for (int[] booking : bookings) {
-      int first = booking[0], last = booking[1], seat = booking[2];
-      counters[first - 1] += seat;
-      if (last < n) counters[last] -= seat;
-    }
-    for (int i = 1; i < n; i++) {
-      counters[i] += counters[i - 1];
-    }
-    return counters;
-  }
-
-  /**
    * 排名百分比，根据成绩获取，要求 O(n) for time
    *
    * <p>counts 类似 bitmap，对 score 排序。
@@ -181,19 +179,13 @@ public class OOthers {
   public double[] countScore(int[] scores) {
     final int MaxScore = 100; // 题设分数的上界
     // 以分数维度，前后两个循环共用一个数组，分别对应 equal count & lte count
-    int[] counts = new int[MaxScore + 1];
-    for (int s : scores) {
-      counts[s] += 1;
-    }
-    for (int s = 1; s < MaxScore; s++) {
-      counts[s] += counts[s - 1];
-    }
+    int[] cnts = new int[MaxScore + 1];
+    for (int s : scores) cnts[s] += 1;
+    for (int s = 1; s < MaxScore; s++) cnts[s] += cnts[s - 1];
     // 以学生维度
-    int count = scores.length;
-    double[] pcts = new double[count];
-    for (int i = 0; i < count; i++) {
-      pcts[i] = 100.0 * counts[scores[i]] / count;
-    }
+    int cnt = scores.length;
+    double[] pcts = new double[cnt];
+    for (int i = 0; i < cnt; i++) pcts[i] = 100.0 * cnts[scores[i]] / cnt;
     return pcts;
   }
 
@@ -283,7 +275,7 @@ public class OOthers {
 /** 构建新数据结构 */
 class DData {
   /**
-   * LRU缓存机制 addToHead, moveToHead, removeTail, removeTail
+   * LRU缓存机制 addToHead, moveToHead, removeTail, removeNode
    *
    * <p>hash 保证 O(1) 寻址 & 链表保证 DML 有序，双向保证将一个节点移到双向链表的头部，可以分成「删除该节点」&「在双向链表的头部添加节点」两步操作都 O(1)
    *
@@ -422,27 +414,21 @@ class DData {
     }
 
     /**
-     * En queue boolean.
+     * Is empty boolean.
      *
-     * @param value the value
      * @return the boolean
      */
-    public boolean enQueue(int value) {
-      if (isFull()) return false;
-      data[rear] = value; // CAS
-      rear = (rear + 1) % CAPACITY; // CAS
-      return true;
+    public boolean isEmpty() {
+      return front == rear;
     }
 
     /**
-     * De queue boolean.
+     * Is full boolean.
      *
      * @return the boolean
      */
-    public boolean deQueue() {
-      if (isEmpty()) return false;
-      front = (front + 1) % CAPACITY;
-      return true;
+    public boolean isFull() {
+      return (rear + 1) % CAPACITY == front;
     }
 
     /**
@@ -464,21 +450,27 @@ class DData {
     }
 
     /**
-     * Is empty boolean.
+     * En queue boolean.
      *
+     * @param value the value
      * @return the boolean
      */
-    public boolean isEmpty() {
-      return front == rear;
+    public boolean enQueue(int value) {
+      if (isFull()) return false;
+      data[rear] = value; // CAS
+      rear = (rear + 1) % CAPACITY; // CAS
+      return true;
     }
 
     /**
-     * Is full boolean.
+     * De queue boolean.
      *
      * @return the boolean
      */
-    public boolean isFull() {
-      return (rear + 1) % CAPACITY == front;
+    public boolean deQueue() {
+      if (isEmpty()) return false;
+      front = (front + 1) % CAPACITY;
+      return true;
     }
   }
 
@@ -787,7 +779,7 @@ class DData {
   }
 }
 
-/** 计算 */
+/** 计算相关 */
 class MMath {
   /**
    * rand7生成rand10 即[1,10]，等同进制转换的思路
@@ -841,21 +833,21 @@ class MMath {
    * @return int int
    */
   public int countDigitOne(int n) {
-    int count = 0;
+    int cnt = 0;
     int high = n / 10, cur = n % 10, low = 0, digit = 1;
     while (high > 0 || cur > 0) {
       // 状态
-      count += high * digit;
-      //      if (cur == 0) count += 0;
-      if (cur == 1) count += low + 1;
-      if (cur > 1) count += digit;
+      cnt += high * digit;
+      //      if (cur == 0) cnt += 0;
+      if (cur == 1) cnt += low + 1;
+      if (cur > 1) cnt += digit;
       // 递推
       low += cur * digit;
       cur = high % 10;
       high /= 10;
       digit *= 10;
     }
-    return count;
+    return cnt;
   }
 
   /**
@@ -969,9 +961,8 @@ class MMath {
       if (mul(mid, b) <= a) lo = mid;
       else hi = mid - 1;
     }
-    long res = isNeg ? -lo : lo;
-    if (res > Integer.MAX_VALUE || res < Integer.MIN_VALUE) return Integer.MAX_VALUE;
-    return (int) res;
+    long n = isNeg ? -lo : lo;
+    return n > Integer.MAX_VALUE || n < Integer.MIN_VALUE ? Integer.MAX_VALUE : (int) n;
   }
 
   private long mul(long a, long k) {
@@ -985,7 +976,7 @@ class MMath {
   }
 
   /**
-   * 第N位数字 / 第n个数字
+   * 第N位数字/第n个数字
    *
    * <p>k 位数共有 9*10^(k-1) 个数字，迭代试减 n 以确定 k 所在的整个数字
    *
@@ -1038,49 +1029,6 @@ class MMath {
   }
 
   /**
-   * 平方数之和
-   *
-   * @param c the c
-   * @return boolean boolean
-   */
-  public boolean judgeSquareSum(int c) {
-    long n1 = 0, n2 = (long) Math.sqrt(c);
-    while (n1 <= n2) {
-      long cur = n1 * n1 + n2 * n2;
-      if (cur < c) n1 += 1;
-      else if (cur == c) return true;
-      else if (c < cur) n2 -= 1;
-    }
-    return false;
-  }
-
-  /**
-   * 多数元素，摩尔投票，类比 Raft
-   *
-   * <p>尽管不通用，但对于本题方便理解和记忆
-   *
-   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int majorityElement(int[] nums) {
-    // 当前遍历的元素即 candidate 及其个数即 votes
-    int num = nums[0], count = 1;
-    for (int i = 1; i < nums.length; ++i) {
-      if (count == 0) {
-        num = nums[i];
-        count = 1;
-      } else if (nums[i] == num) {
-        count += 1;
-      } else {
-        count -= 1;
-      }
-    }
-    return num;
-  }
-
-  /**
    * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
    *
    * <p>记住公式即可 res=(res+m)%i
@@ -1095,6 +1043,49 @@ class MMath {
       leftIdx = (leftIdx + m) % i;
     }
     return leftIdx;
+  }
+
+  /**
+   * 多数元素，摩尔投票，类比 Raft
+   *
+   * <p>尽管不通用，但对于本题方便理解和记忆
+   *
+   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int majorityElement(int[] nums) {
+    // 当前遍历的元素即 candidate 及其个数即 votes
+    int candidate = nums[0], cnt = 0;
+    for (int n : nums) {
+      if (cnt == 0) {
+        candidate = n;
+        cnt = 1;
+      } else if (n == candidate) {
+        cnt += 1;
+      } else {
+        cnt -= 1;
+      }
+    }
+    return candidate;
+  }
+
+  /**
+   * 平方数之和
+   *
+   * @param c the c
+   * @return boolean boolean
+   */
+  public boolean judgeSquareSum(int c) {
+    long n1 = 0, n2 = (long) Math.sqrt(c);
+    while (n1 <= n2) {
+      long cur = n1 * n1 + n2 * n2;
+      if (cur < c) n1 += 1;
+      if (cur == c) return true;
+      if (cur > c) n2 -= 1;
+    }
+    return false;
   }
 
   /**
@@ -1128,88 +1119,14 @@ class MMath {
  * <p>求两点之间的权值最小的路径
  */
 class GGraph {
-  private int diameter = 0; // 「N叉树的直径」结果
-
-  // 分为存图与算法两步
-  // 存图分为两种
-  private void learn() {
-    // 点数与边数
-    int points, edges;
-
-    // 1.邻接矩阵，适合边数较多的稠密图
-    // int[][] matrix = new int[points][points];
-    // 增加一条 a->b 权重为 c 的边
-    // matrix[a][b] = c;
-
-    // 2.邻接表，适合稀疏图，类似数组头插存储单链表
-    //    int[] he = new int[points], // he 存储是某个节点所对应的边的集合（链表）的头结点
-    //        e = new int[edges], // e 由于访问某一条边指向的节点
-    //        ne = new int[edges], // ne 由于是以链表的形式进行存边，该数组就是用于找到下一条边
-    //        w = new int[edges]; // w 记录某边的权重
-  }
-
   /**
-   * N叉树的直径
+   * 课程表/检测循环依赖，返回是否 DAG，拓扑排序/Kahn 算法
    *
-   * <p>TODO 参考 https://www.nowcoder.com/questionTerminal/a77b4f3d84bf4a7891519ffee9376df3
+   * <p>拓扑排序有两种模式，从入度思考，即从前往后排序，采用 BFS，入度为 0 的节点在拓扑排序中一定排在前面, 然后删除和该节点对应的边, 迭代寻找入度为 0 的节点
    *
-   * @param n the n
-   * @param Edges the tree edge
-   * @param EdgeValues the edge value
-   * @return int int
-   */
-  public int diameterOfTree(int n, Interval[] Edges, int[] EdgeValues) {
-    List<Edge>[] graph = new List[n];
-    for (int i = 0; i < n; i++) {
-      graph[i] = new ArrayList<>();
-    }
-    // 建图
-    for (int i = 0; i < Edges.length; i++) {
-      Interval interval = Edges[i];
-      int value = EdgeValues[i];
-      // 由于是无向图，所有每条边都是双向的
-      graph[interval.start].add(new Edge(interval.end, value));
-      graph[interval.end].add(new Edge(interval.start, value));
-    }
-    // 随机从一个节点开始 dfs，这里选择 0
-    dfs13(graph, -1, 0);
-    return diameter;
-  }
-
-  // 返回值为从 node 节点开始的最长深度
-  private int dfs13(List<Edge>[] graph, int from, int to) {
-    // 从节点开始的最大与第二深度
-    int maxDepth = 0, secondMaxDepth = 0;
-    for (Edge edge : graph[to]) {
-      int neighbor = edge.to;
-      if (neighbor == from) continue; // 防止返回访问父节点
-      int depth = edge.weight + dfs13(graph, to, neighbor);
-      if (depth > maxDepth) {
-        secondMaxDepth = maxDepth;
-        maxDepth = depth;
-      } else if (depth > secondMaxDepth) {
-        secondMaxDepth = depth;
-      }
-    }
-    // maxDepth+secondMaxDepth 为以此节点为中心的直径
-    diameter = Math.max(diameter, maxDepth + secondMaxDepth);
-    return maxDepth;
-  }
-
-  /**
-   * 课程表/检测循环依赖，返回是否 DAG，拓扑排序 Kahn 算法
+   * <p>从出度思考，即从后往前排序，采用 DFS，出度为 0 的节点在拓扑排序中一定排在后面, 然后删除和该节点对应的边, 迭代寻找出度为 0 的节点。
    *
    * <p>参考 https://mp.weixin.qq.com/s/pCRscwKqQdYYN7M1Sia7xA
-   *
-   * <p>原理是对 DAG 的顶点进行排序，使得对每一条有向边 (u, v)，均有 u（在排序记录中）比 v 先出现。亦可理解为对某点 v 而言，只有当 v 的所有源点均出现了，v 才能出现
-   *
-   * <p>因此，需要入度数组 & 图 & 遍历队列三种数据结构，步骤如下
-   *
-   * <p>1.建图并记录入度
-   *
-   * <p>2.收集入度为 0 的点
-   *
-   * <p>3.拓扑排序，遍历队列，出队处理，并收集其入度为 0 的邻接点
    *
    * @param numCourses the num courses
    * @param prerequisites the prerequisites
@@ -1220,25 +1137,24 @@ class GGraph {
     // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
     int[] indegrees = new int[V];
     int[][] matrix = new int[V][V];
-    buildAdjacencyMatrix(prerequisites, matrix, indegrees);
+    buildMatrix(prerequisites, matrix, indegrees);
+    // 收集入度 0 的节点
     Queue<Integer> queue = new LinkedList<>();
-    // courseID range 0 from N-1 incrementally
     for (int i = 0; i < V; i++) {
-      if (indegrees[i] == 0) queue.add(i);
+      if (indegrees[i] == 0) queue.offer(i);
     }
     // BFS TopSort
     while (!queue.isEmpty()) {
-      int pre = queue.poll();
       V -= 1;
-      for (int adj : matrix[pre]) {
+      for (int adj : matrix[queue.poll()]) {
         indegrees[adj] -= 1;
-        if (indegrees[adj] == 0) queue.add(adj);
+        if (indegrees[adj] == 0) queue.offer(adj);
       }
     }
     return V == 0;
   }
 
-  private void buildAdjacencyMatrix(int[][] prerequisites, int[][] matrix, int[] indegrees) {
+  private void buildMatrix(int[][] prerequisites, int[][] matrix, int[] indegrees) {
     for (int[] cp : prerequisites) {
       int to = cp[0], from = cp[1];
       indegrees[to] += 1;
@@ -1258,33 +1174,28 @@ class GGraph {
    * @return int [ ]
    */
   public int[] findOrder(int numCourses, int[][] prerequisites) {
-    int[] paths = new int[numCourses], indegrees = new int[numCourses];
-    List<List<Integer>> graph = new ArrayList<>(numCourses);
-    for (int i = 0; i < numCourses; i++) {
-      graph.add(new ArrayList<>());
-    }
+    int V = numCourses;
+    int[] indegrees = new int[V];
+    int[][] matrix = new int[V][V];
+    buildMatrix(prerequisites, matrix, indegrees);
     Queue<Integer> queue = new LinkedList<>();
-    for (int[] cp : prerequisites) {
-      int toID = cp[0], fromID = cp[1];
-      indegrees[toID] += 1;
-      graph.get(fromID).add(toID);
-    }
-    for (int i = 0; i < numCourses; i++) {
+    for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.add(i);
     }
     // 当前结果集的元素个数，正好可作为下标
-    int count = 0;
+    int cnt = 0;
+    int[] paths = new int[numCourses];
     while (!queue.isEmpty()) {
-      int pre = queue.poll();
-      paths[count] = pre;
-      count += 1;
-      for (int n : graph.get(pre)) {
+      int v = queue.poll();
+      paths[cnt] = v;
+      cnt += 1;
+      for (int n : matrix[v]) {
         indegrees[n] -= 1;
         if (indegrees[n] == 0) queue.add(n);
       }
     }
     // 如果结果集中的数量不等于结点的数量，就不能完成课程任务，这一点是拓扑排序的结论
-    return count == numCourses ? paths : new int[0];
+    return cnt == numCourses ? paths : new int[0];
   }
 
   /**
@@ -1306,53 +1217,49 @@ class GGraph {
     // weights[i] 第 i 边权重
     // next[i] 第 i 边的起点存储的某个邻接节点，由于是以链表的形式进行存边，该数组就是用于找到下一条边
     int[] tos = new int[E], weights = new int[E], nexts = new int[E];
-    buildAdjacencyTable(ts, heads, tos, weights, nexts);
-    // 最短路
-    int[] dists = dijkstra(V, k, heads, tos, weights, nexts);
-    // 遍历答案
-    int dist = 0;
-    for (int i = 1; i <= n; i++) {
-      dist = Math.max(dist, dists[i]);
+    buildTable(ts, heads, tos, weights, nexts);
+    // 遍历最短路
+    int maxDist = 0;
+    for (int d : dijkstra(V, k, heads, tos, weights, nexts)) {
+      maxDist = Math.max(maxDist, d);
     }
-    return dist > Integer.MAX_VALUE / 2 ? -1 : dist;
+    return maxDist > Integer.MAX_VALUE / 2 ? -1 : maxDist;
   }
 
-  private void buildAdjacencyTable(int[][] ts, int[] heads, int[] tos, int[] weights, int[] nexts) {
+  private void buildTable(int[][] ts, int[] heads, int[] tos, int[] weights, int[] nexts) {
     Arrays.fill(heads, -1); // 初始化链表头
     int idx = 0;
     for (int[] t : ts) {
-      int from = t[0], to = t[1], weight = t[2];
+      int from = t[0], to = t[1], w = t[2];
       tos[idx] = to;
       nexts[idx] = heads[from];
-      weights[idx] = weight;
+      weights[idx] = w;
       heads[from] = idx;
       idx += 1;
     }
   }
 
   private int[] dijkstra(int V, int k, int[] heads, int[] tos, int[] weights, int[] nexts) {
-    // 记录哪些点已经被更新过
-    boolean[] visited = new boolean[V];
-    Arrays.fill(visited, false);
     // dist[x] = y 代表从「源点/起点」到 x 的最短距离为 y
     int[] dists = new int[V];
     Arrays.fill(dists, Integer.MAX_VALUE);
-    // 只有起点最短距离为 0
-    dists[k] = 0;
-    // 通过优先队列存储所有可用于更新的点，以 (点编号, 到起点的距离) 进行存储，优先弹出「最短距离」较小的点
+    dists[k] = 0; // 只有起点最短距离为 0
+    dists[0] = 0; // 题设 ID 始于 1
+    // 小根堆存储所有可用于更新的点，以 (点编号, 到起点的距离) 进行存储，优先弹出「最短距离」较小的点
     PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[1] - b[1]);
-    pq.add(new int[] {k, 0});
+    pq.offer(new int[] {k, 0});
+    // 记录已经被更新过
+    boolean[] visited = new boolean[V];
     while (!pq.isEmpty()) {
-      int[] poll = pq.poll();
-      int node = poll[0], step = poll[1];
-      if (visited[node]) continue;
+      int v = pq.poll()[0];
+      if (visited[v]) continue;
       // 标记该点「已更新」，并使用该点更新其他点的「最短距离」
-      visited[node] = true;
-      for (int i = heads[node]; i != -1; i = nexts[i]) {
-        int adj = tos[i];
-        if (dists[adj] <= dists[node] + weights[i]) continue;
-        dists[adj] = dists[node] + weights[i];
-        pq.add(new int[] {adj, dists[adj]});
+      visited[v] = true;
+      for (int i = heads[v]; i != -1; i = nexts[i]) {
+        int adj = tos[i], d = dists[v] + weights[i];
+        if (dists[adj] <= d) continue;
+        dists[adj] = d;
+        pq.offer(new int[] {adj, dists[adj]});
       }
     }
     return dists;
@@ -1441,6 +1348,56 @@ class GGraph {
     }
     colors[v] = 2; // black
     return true;
+  }
+
+  private int diameter = 0; // 「N叉树的直径」结果
+
+  /**
+   * N叉树的直径
+   *
+   * <p>TODO 参考 https://www.nowcoder.com/questionTerminal/a77b4f3d84bf4a7891519ffee9376df3
+   *
+   * @param n the n
+   * @param Edges the tree edge
+   * @param EdgeValues the edge value
+   * @return int int
+   */
+  public int diameterOfTree(int n, Interval[] Edges, int[] EdgeValues) {
+    List<Edge>[] graph = new List[n];
+    for (int i = 0; i < n; i++) {
+      graph[i] = new ArrayList<>();
+    }
+    // 建图
+    for (int i = 0; i < Edges.length; i++) {
+      Interval interval = Edges[i];
+      int value = EdgeValues[i];
+      // 由于是无向图，所有每条边都是双向的
+      graph[interval.start].add(new Edge(interval.end, value));
+      graph[interval.end].add(new Edge(interval.start, value));
+    }
+    // 随机从一个节点开始 dfs，这里选择 0
+    dfs13(graph, -1, 0);
+    return diameter;
+  }
+
+  // 返回值为从 node 节点开始的最长深度
+  private int dfs13(List<Edge>[] graph, int from, int to) {
+    // 从节点开始的最大与第二深度
+    int maxDepth = 0, secondMaxDepth = 0;
+    for (Edge edge : graph[to]) {
+      int neighbor = edge.to;
+      if (neighbor == from) continue; // 防止返回访问父节点
+      int depth = edge.weight + dfs13(graph, to, neighbor);
+      if (depth > maxDepth) {
+        secondMaxDepth = maxDepth;
+        maxDepth = depth;
+      } else if (depth > secondMaxDepth) {
+        secondMaxDepth = depth;
+      }
+    }
+    // maxDepth+secondMaxDepth 为以此节点为中心的直径
+    diameter = Math.max(diameter, maxDepth + secondMaxDepth);
+    return maxDepth;
   }
 
   // 「克隆图」
