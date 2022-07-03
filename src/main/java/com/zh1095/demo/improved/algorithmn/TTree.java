@@ -191,9 +191,7 @@ class Build {
    */
   public TreeNode buildTree(int[] preorder, int[] inorder) {
     Map<Integer, Integer> v2i = new HashMap<>(); // 节点值唯一，因此可以存储二者间的映射
-    for (int i = 0; i < preorder.length; i++) {
-      v2i.put(inorder[i], i);
-    }
+    for (int i = 0; i < preorder.length; i++) v2i.put(inorder[i], i);
     return buildTree1(preorder, 0, preorder.length - 1, v2i, 0);
   }
 
@@ -202,9 +200,9 @@ class Build {
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo) {
     if (preLo > preHi) return null;
     TreeNode root = new TreeNode(preorder[preLo]);
-    int idx = v2i.get(preorder[preLo]), countLeft = idx - inLo;
-    root.left = buildTree1(preorder, preLo + 1, preLo + countLeft, v2i, inLo);
-    root.right = buildTree1(preorder, preLo + countLeft + 1, preHi, v2i, idx + 1);
+    int idx = v2i.get(preorder[preLo]), cntL = idx - inLo;
+    root.left = buildTree1(preorder, preLo + 1, preLo + cntL, v2i, inLo);
+    root.right = buildTree1(preorder, preLo + cntL + 1, preHi, v2i, idx + 1);
     return root;
   }
 
@@ -213,9 +211,9 @@ class Build {
       int[] postrorder, int postLo, int postHi, Map<Integer, Integer> v2i, int inLo) {
     if (postLo > postHi) return null;
     TreeNode root = new TreeNode(postrorder[postHi]);
-    int idx = v2i.get(postrorder[postHi]), countLeft = idx - inLo;
-    root.left = buildTree2(postrorder, postLo, postLo + countLeft - 1, v2i, inLo);
-    root.right = buildTree2(postrorder, postLo + countLeft, postHi - 1, v2i, idx + 1);
+    int idx = v2i.get(postrorder[postHi]), cntL = idx - inLo;
+    root.left = buildTree2(postrorder, postLo, postLo + cntL - 1, v2i, inLo);
+    root.right = buildTree2(postrorder, postLo + cntL, postHi - 1, v2i, idx + 1);
     return root;
   }
 
@@ -236,9 +234,9 @@ class Build {
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo, int[] postorder) {
     if (preLo > preHi) return;
     int root = preorder[preLo];
-    int idx = v2i.get(root), countLeft = idx - inLo;
-    getPostorder(preorder, preLo + 1, preLo + countLeft, v2i, inLo, postorder);
-    getPostorder(preorder, preLo + countLeft + 1, preHi, v2i, idx + 1, postorder);
+    int idx = v2i.get(root), cntL = idx - inLo;
+    getPostorder(preorder, preLo + 1, preLo + cntL, v2i, inLo, postorder);
+    getPostorder(preorder, preLo + cntL + 1, preHi, v2i, idx + 1, postorder);
     postorder[postIdx] = root;
     postIdx += 1;
   }
@@ -249,7 +247,7 @@ class Build {
    * <p>扩展1，N 叉树，记录子树个数，参考 https://zhuanlan.zhihu.com/p/109521420
    */
   public class Codec {
-    private int idx;
+    private int idx; // 反序列化
 
     /**
      * Serialize string.
@@ -286,16 +284,16 @@ class Build {
     }
 
     private TreeNode traverse(String[] nodes) {
-      if (idx >= nodes.length) return null;
-      String val = nodes[idx];
+      if (idx > nodes.length - 1) return null;
+      String v = nodes[idx];
       idx += 1;
-      //      String count = vals[idx++];
-      if ("null".equals(val)) return null;
-      TreeNode root = new TreeNode(Integer.parseInt(val));
+      //      String cnt = vals[idx++];
+      if ("null".equals(v)) return null;
+      TreeNode root = new TreeNode(Integer.parseInt(v));
       root.left = traverse(nodes);
       root.right = traverse(nodes);
-      //      root.children = new TreeNode[count];
-      //      for (int i = 0; i < count; i++) {
+      //      root.children = new TreeNode[cnt];
+      //      for (int i = 0; i < cnt; i++) {
       //        root.children[i] = traversal(vals);
       //      }
       return root;
@@ -328,7 +326,7 @@ class DDFS {
    *
    * <p>node.val:从该点出发满足的路径总数，则任两点不会有重复的路径
    *
-   * <p>TODO 扩展1，打印路径，参考「二叉树中的最大路径和」follow-up
+   * <p>扩展1，打印路径，参考「二叉树中的最大路径和」follow-up
    *
    * @param root the root
    * @param targetSum the target sum
@@ -417,11 +415,11 @@ class DDFS {
    * @return int int
    */
   public int longestIncreasingPath(int[][] matrix) {
-    int rows = matrix.length, cols = matrix[0].length;
-    int[][] lens = new int[rows][cols];
+    int ROW = matrix.length, COL = matrix[0].length;
+    int[][] lens = new int[ROW][COL];
     int maxLen = 0;
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
+    for (int r = 0; r < ROW; r++) {
+      for (int c = 0; c < COL; c++) {
         maxLen = Math.max(maxLen, dfs3(matrix, r, c, lens));
       }
     }
@@ -451,14 +449,14 @@ class DDFS {
    * @return list list
    */
   public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    List<Integer> nodes = new ArrayList<>();
-    if (root == null) return nodes;
+    List<Integer> vers = new ArrayList<>();
+    if (root == null) return vers;
     // 题设节点数有限，值互异，且 O(1) 查找采用 Map
     Map<Integer, TreeNode> parents = new HashMap<>(500);
     collectParents(root, parents);
     // 为避免重复，递归时传入来源，在递归前比较目标结点是否与来源结点相同
-    dfs17(target, null, k, parents, nodes);
-    return nodes;
+    dfs17(target, null, k, parents, vers);
+    return vers;
   }
 
   private void collectParents(TreeNode node, Map<Integer, TreeNode> parents) {
@@ -473,15 +471,15 @@ class DDFS {
   }
 
   private void dfs17(
-      TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> nodes) {
+      TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
     if (n == null) return;
     if (dist == 0) {
-      nodes.add(n.val);
+      vers.add(n.val);
       return;
     }
-    if (n.left != from) dfs17(n.left, n, dist - 1, parents, nodes);
-    if (n.right != from) dfs17(n.right, n, dist - 1, parents, nodes);
-    if (parents.get(n.val) != from) dfs17(parents.get(n.val), n, dist - 1, parents, nodes);
+    if (n.left != from) dfs17(n.left, n, dist - 1, parents, vers);
+    if (n.right != from) dfs17(n.right, n, dist - 1, parents, vers);
+    if (parents.get(n.val) != from) dfs17(parents.get(n.val), n, dist - 1, parents, vers);
   }
 
   /**
@@ -508,9 +506,7 @@ class DDFS {
     grid[x][y] = 0; // mark it
     path.append(x - preX); // 分别记录相对的横纵坐标
     path.append(y - preY);
-    for (int[] dir : DIRECTIONS) {
-      dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
-    }
+    for (int[] dir : DIRECTIONS) dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
   }
 
   /**
@@ -522,22 +518,22 @@ class DDFS {
    * @param board
    */
   public void solve(char[][] board) {
-    int row = board.length, col = board[0].length;
-    for (int r = 0; r < row; r++) {
-      for (int c = 0; c < col; c++) {
-        if (board[r][c] == 'O' && (r == 0 || c == 0 || r == row - 1 || c == col - 1))
+    int ROW = board.length, COL = board[0].length;
+    for (int r = 0; r < ROW; r++) {
+      for (int c = 0; c < COL; c++) {
+        if (board[r][c] == 'O' && (r == 0 || c == 0 || r == ROW - 1 || c == COL - 1))
           dfs16(board, r, c);
       }
     }
-    for (int r = 0; r < row; r++) {
-      for (int c = 0; c < col; c++) {
+    for (int r = 0; r < ROW; r++) {
+      for (int c = 0; c < COL; c++) {
         if (board[r][c] == 'O') board[r][c] = 'X';
         if (board[r][c] == '#') board[r][c] = 'O';
       }
     }
   }
 
-  public void dfs16(char[][] board, int r, int c) {
+  private void dfs16(char[][] board, int r, int c) {
     if (!inArea(board, r, c) || board[r][c] != 'O') return;
     board[r][c] = '#';
     for (int[] dir : DIRECTIONS) {
@@ -546,17 +542,28 @@ class DDFS {
   }
 
   /**
-   * 最长相同值路径，找到任意起点的一条路径，所有结点值一致
+   * 最长同值路径，找到任意起点的一条路径，所有结点值一致
    *
    * @param root
    * @return
    */
   public int longestUnivaluePath(TreeNode root) {
-    if (root == null) return 0;
-    int both = dfs15(root.left, root.val) + dfs15(root.right, root.val),
-        l = longestUnivaluePath(root.left),
-        r = longestUnivaluePath(root.right);
-    return Math.max(both, Math.max(l, r));
+    dfs15(root);
+    return cnt;
+  }
+
+  private int cnt = 0; // 「最长同值路径」
+
+  private int dfs15(TreeNode node) {
+    if (node == null) return 0;
+    // 如果存在左子节点和根节点同值，更新左最长路径，否则左最长路径为 0
+    int l = dfs15(node.left), r = dfs15(node.right);
+    if (node.left != null && node.left.val == node.val) l = dfs15(node.left) + 1;
+    else l = 0;
+    if (node.right != null && node.right.val == node.val) r = dfs15(node.right) + 1;
+    else r = 0;
+    cnt = Math.max(cnt, l + r);
+    return Math.max(l, r);
   }
 
   private int dfs15(TreeNode root, int from) {
@@ -599,9 +606,9 @@ class BBSTInorder {
   }
 
   /**
-   * 二叉搜索树中的第k大的元素，右中左，对 k 做减法
+   * 二叉搜索树中的第k小的元素，左中右，对 k 做减法
    *
-   * <p>扩展1，二叉搜索树中的第k小的元素，左中右，参下 annotate
+   * <p>扩展1，二叉搜索树中的第k大的元素，右中左，参下 annotate
    *
    * <p>扩展2，常数空间，Morris
    *
@@ -610,18 +617,18 @@ class BBSTInorder {
    * @return int int
    */
   public int kthSmallest(TreeNode root, int k) {
-    int count = k;
+    int cnt = k;
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
-        cur = cur.right;
+        cur = cur.left; // right
       }
       cur = stack.pollLast();
-      count -= 1;
-      if (count == 0) return cur.val;
-      cur = cur.left;
+      cnt -= 1;
+      if (cnt == 0) return cur.val;
+      cur = cur.right; // left
     }
     return -1; // impossible
   }
@@ -735,9 +742,6 @@ class BBSTInorder {
 
 /** 二叉搜索树，深搜为主 */
 class BBSTDFS {
-  // 「二叉搜索树与双向链表」中序中当前遍历的上个节点 & 链表头节点，后者不变。
-  private TreeNode pre, head;
-
   /**
    * 二叉搜索树中的插入操作，比当前小，则入左，否则入右
    *
@@ -832,6 +836,9 @@ class BBSTDFS {
     return root;
   }
 
+  // 「二叉搜索树与双向链表」中序中当前遍历的上个节点 & 链表头节点，后者不变。
+  private TreeNode head, pre;
+
   /**
    * 二叉搜索树与双向链表，生成正序双向链表，即补充叶节点的指针，中序
    *
@@ -849,7 +856,7 @@ class BBSTDFS {
     return head;
   }
 
-  // 每次只处理前驱即左子树，即尾插
+  // 左中右，每次只处理前驱即左子树，即尾插
   private void dfs7(TreeNode root) {
     if (root == null) return;
     dfs7(root.left);
@@ -919,6 +926,7 @@ class Postorder {
    */
   public int maxPathSum(TreeNode root) {
     singleSide1(root);
+    //    singleSide3(root);
     return maxSum;
   }
 
@@ -929,9 +937,9 @@ class Postorder {
     return Math.max(l, r) + root.val; // return solo
   }
 
-  private CntAndPath _singleSide1(TreeNode root) {
+  private CntAndPath singleSide3(TreeNode root) {
     if (root == null) return new CntAndPath();
-    CntAndPath l = _singleSide1(root.left), r = _singleSide1(root.right);
+    CntAndPath l = singleSide3(root.left), r = singleSide3(root.right);
     if (l.cnt <= 0) {
       l.cnt = 0;
       l.path = "";
@@ -962,7 +970,7 @@ class Postorder {
   }
 
   /**
-   * 二叉树的直径，后序遍历，模板与「二叉树的最大路径和」近乎一致
+   * 二叉树的直径，后序，类似「二叉树的最大路径和」
    *
    * <p>扩展1，N 叉树，即无向图求最长路径，参考「N叉树的直径」
    *
@@ -976,9 +984,9 @@ class Postorder {
 
   private int singleSide2(TreeNode root) {
     if (root == null) return 0;
-    int left = Math.max(0, singleSide2(root.left)), right = Math.max(0, singleSide2(root.right));
-    diameter = Math.max(diameter, left + right + 1);
-    return Math.max(left, right) + 1;
+    int l = Math.max(0, singleSide2(root.left)), r = Math.max(0, singleSide2(root.right));
+    diameter = Math.max(diameter, l + r + 1);
+    return Math.max(l, r) + 1;
   }
 
   /**
@@ -1123,16 +1131,16 @@ class BBFS {
   }
 
   /**
-   * 二叉树的完全性校验，是否完全二叉树
+   * 二叉树的完全性校验，是否完全二叉树，类似「验证二叉搜索树」
    *
    * @param root the root
    * @return boolean boolean
    */
   public boolean isCompleteTree(TreeNode root) {
     if (root == null) return true;
+    boolean preNull = false;
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
-    boolean preNull = false;
     while (!queue.isEmpty()) {
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
@@ -1531,15 +1539,16 @@ class BacktrackingSearch extends DDFS {
   }
 
   private void backtracking0(
-      TreeNode root, Deque<Integer> path, List<List<Integer>> paths, int targetSum) {
+      TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {
     if (root == null) return;
     path.offerLast(root.val);
-    if (root.left == null && root.right == null && targetSum - root.val == 0) {
-      paths.add(new ArrayList<>(path));
-    } else {
-      backtracking0(root.left, path, paths, targetSum - root.val);
-      backtracking0(root.right, path, paths, targetSum - root.val);
+    int nxt = target - root.val;
+    if (nxt == 0 && root.left == null && root.right == null) {
+      res.add(new ArrayList<>(path));
+      return;
     }
+    backtracking0(root.left, path, res, nxt);
+    backtracking0(root.right, path, res, nxt);
     path.pollLast();
   }
 
@@ -1665,10 +1674,6 @@ class BacktrackingSearch extends DDFS {
 
 /** The type Backtracking else. */
 class BacktrackingElse extends DDFS {
-  private final String[] LetterMap = {
-    " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
-  }; // 「电话号码的字母组合」
-
   /**
    * 复原IP地址
    *
@@ -1796,6 +1801,10 @@ class BacktrackingElse extends DDFS {
     backtracking13(digits, new StringBuilder(), res, 0);
     return res;
   }
+
+  private final String[] LetterMap = {
+    " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
+  }; // 「电话号码的字母组合」
 
   private void backtracking13(String str, StringBuilder path, List<String> res, int idx) {
     if (idx == str.length()) {

@@ -2,14 +2,15 @@ package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
 
+// 状态压缩基于滚动数组，尽量用具体含义，如 buy & sell 而非 dp1 & dp2
+// 区分「以 nums[i] 结尾」&「在 [0,i-1] 区间」的 dp 定义差异
+// 二维中画图的路径通常包括
+// 对角，最长公共子序列，最小路径和，不同路径，最大正方形，圆环回原点
+// 多路，编辑距离
+// 徘徊，最长上升子序列，最长重复子数组，最长回文子序列，单词拆分
+
 /**
  * 收集 DP 相关，根据题设划分，而非解法
- *
- * <p>以下均为右闭期间
- *
- * <p>状态压缩基于滚动数组，尽量用具体含义，如 buy & sell 而非 dp1 & dp2
- *
- * <p>区分「以 nums[i] 结尾」&「在 [0,i-1] 区间」的 dp 定义差异
  *
  * @author cenghui
  */
@@ -22,7 +23,7 @@ public class DDP {}
  */
 class OptimalSubSequence extends DefaultArray {
   /**
-   * 最长递增子序列 / 最长上升子序列，基于贪心
+   * 最长递增子序列/最长上升子序列，基于贪心
    *
    * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
    *
@@ -47,7 +48,7 @@ class OptimalSubSequence extends DefaultArray {
         tails[end] = n;
         // dp[i] = hi + 1;
       } else {
-        int lo = smallmostBound(tails, 0, end, n);
+        int lo = lowerBound(tails, 0, end, n);
         tails[lo] = n;
         // dp[i] = lo + 1;
       }
@@ -65,49 +66,14 @@ class OptimalSubSequence extends DefaultArray {
   // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
   private int[] getPath(int[] nums, int[] dp, int len) {
     int[] path = new int[len];
-    int count = len;
-    for (int i = nums.length - 1; i > -1 && count > -1; i--) {
-      if (dp[i] != count) continue;
-      count -= 1;
-      path[count] = nums[i];
+    int cnt = len;
+    for (int i = nums.length - 1; i > -1; i--) {
+      if (cnt < 0) break;
+      if (dp[i] != cnt) continue;
+      cnt -= 1;
+      path[cnt] = nums[i];
     }
     return path;
-  }
-
-  /**
-   * 最长公共子序列
-   *
-   * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的 LCS
-   *
-   * <p>扩展1，求最长公共子串的长度，参上「最长连续序列」
-   *
-   * <p>扩展2，输出该子序列，即求路径，参下 annotate
-   *
-   * @param text1 the text 1
-   * @param text2 the text 2
-   * @return int int
-   */
-  public int longestCommonSubsequence(String text1, String text2) {
-    int l1 = text1.length(), l2 = text2.length();
-    int[][] dp = new int[l1 + 1][l2 + 1];
-    //    int[] from = new int[l1 * l2];
-    for (int p1 = 1; p1 <= l1; p1++) {
-      for (int p2 = 1; p2 <= l2; p2++) {
-        if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) {
-          dp[p1][p2] = dp[p1 - 1][p2 - 1] + 1;
-          //          from[encoding(p1, p2)] = encoding(p1 - 1, p2 - 1);
-        } else {
-          if (dp[p1 - 1][p2] > dp[p1][p2 - 1]) {
-            dp[p1][p2] = dp[p1 - 1][p2];
-            //            from[encoding(p1, p2)] = encoding(p1 - 1, p2);
-          } else {
-            dp[p1][p2] = dp[p1][p2 - 1];
-            //            from[encoding(p1, p2)] = encoding(p1, p2 - 1);
-          }
-        }
-      }
-    }
-    return dp[l1][l2];
   }
 
   /**
@@ -138,6 +104,43 @@ class OptimalSubSequence extends DefaultArray {
   }
 
   /**
+   * 最长公共子序列
+   *
+   * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的 LCS
+   *
+   * <p>扩展1，求最长公共子串的长度，参上「最长连续序列」
+   *
+   * <p>扩展2，输出该子序列，即求路径，参下 annotate
+   *
+   * @param text1 the text 1
+   * @param text2 the text 2
+   * @return int int
+   */
+  public int longestCommonSubsequence(String text1, String text2) {
+    int l1 = text1.length(), l2 = text2.length();
+    int[][] dp = new int[l1 + 1][l2 + 1];
+    //    int[] from = new int[l1 * l2];
+    for (int p1 = 1; p1 <= l1; p1++) {
+      for (int p2 = 1; p2 <= l2; p2++) {
+        if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) {
+          dp[p1][p2] = dp[p1 - 1][p2 - 1] + 1;
+          //          from[encoding(p1, p2)] = encoding(p1 - 1, p2 - 1);
+        } else {
+          // dp[p1][p2] = max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
+          if (dp[p1 - 1][p2] > dp[p1][p2 - 1]) {
+            dp[p1][p2] = dp[p1 - 1][p2];
+            //            from[encoding(p1, p2)] = encoding(p1 - 1, p2);
+          } else {
+            dp[p1][p2] = dp[p1][p2 - 1];
+            //            from[encoding(p1, p2)] = encoding(p1, p2 - 1);
+          }
+        }
+      }
+    }
+    return dp[l1][l2];
+  }
+
+  /**
    * 编辑距离 & 两个字符串的删除操作，均是 LCS 最长公共子序列的问题
    *
    * <p>与「最长公共子序列」模板一致，[1,m] & [1,n]
@@ -150,26 +153,19 @@ class OptimalSubSequence extends DefaultArray {
     return editDistance(word1, word2);
   }
 
-  // 编辑距离，画图即可，遍历的方向分别代表操作
+  // 编辑距离，画图即可，遍历的方向分别代表操作，框架类似「最长公共子序列」
   // dp[i][j] 表示由 A[0:i] 转移为 B[0:j] 的最少步数
   // 递推 1+min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
   // 扩展1，操作带权重，参考 https://www.nowcoder.com/questionTerminal/05fed41805ae4394ab6607d0d745c8e4
   private int editDistance(String word1, String word2) {
     int l1 = word1.length(), l2 = word2.length();
     int[][] dp = new int[l1 + 1][l2 + 1];
-    for (int i = 0; i <= l1; i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= l2; j++) {
-      dp[0][j] = j;
-    }
+    for (int i = 0; i <= l1; i++) dp[i][0] = i;
+    for (int j = 0; j <= l2; j++) dp[0][j] = j;
     for (int i = 1; i <= l1; i++) {
       for (int j = 1; j <= l2; j++) {
-        if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
-          dp[i][j] = dp[i - 1][j - 1];
-        } else {
-          dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
-        }
+        if (word1.charAt(i - 1) == word2.charAt(j - 1)) dp[i][j] = dp[i - 1][j - 1];
+        else dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
       }
     }
     return dp[l1][l2];
@@ -200,6 +196,16 @@ class OptimalSubSequence extends DefaultArray {
     return dp[n1][n2];
   }
 
+  /**
+   * 编辑距离，带权重
+   *
+   * @param s1
+   * @param s2
+   * @param ic
+   * @param dc
+   * @param rc
+   * @return
+   */
   public int minEditCost(String s1, String s2, int ic, int dc, int rc) {
     // write code here
     int l1 = s1.length(), l2 = s2.length();
@@ -266,29 +272,29 @@ class OptimalSubSequence extends DefaultArray {
    */
   public int findNumberOfLIS(int[] nums) {
     int len = nums.length, maxLen = 1;
-    int[] dp = new int[len], counts = new int[len];
+    int[] dp = new int[len], cnts = new int[len];
     for (int i = 0; i < len; i++) {
-      dp[i] = counts[i] = 1;
+      dp[i] = cnts[i] = 1;
       for (int j = 0; j < i; j++) {
         if (nums[j] >= nums[i]) continue;
         if (dp[i] < dp[j] + 1) {
           dp[i] = dp[j] + 1;
-          counts[i] = counts[j];
+          cnts[i] = cnts[j];
         } else if (dp[i] == dp[j] + 1) {
-          counts[i] += counts[j];
+          cnts[i] += cnts[j];
         }
       }
       maxLen = Math.max(maxLen, dp[i]);
     }
     int count = 0;
     for (int i = 0; i < len; i++) {
-      if (dp[i] == maxLen) count += counts[i];
+      if (dp[i] == maxLen) count += cnts[i];
     }
     return count;
   }
 
   /**
-   * 正则表达式匹配 / 通配符匹配，以下均基于 p 判定，类似「通配符匹配」
+   * 正则表达式匹配/通配符匹配，以下均基于 p 判定，类似「通配符匹配」
    *
    * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
    *
@@ -368,7 +374,7 @@ class OptimalSubSequence extends DefaultArray {
  */
 class OptimalSubArray {
   /**
-   * 最长重复子数组/最长公共子串，区别于子序列的代码
+   * 最长重复子数组/最长公共子串，与「最长公共子序列」的路径有出入
    *
    * <p>dp[i][j] 表示 A[0:i-1] & B[0:j-1] 的最长公共前缀
    *
@@ -405,18 +411,14 @@ class OptimalSubArray {
    */
   public int longestConsecutive(int[] nums) {
     Set<Integer> set = new HashSet<>();
-    for (int n : nums) {
-      set.add(n);
-    }
+    for (int n : nums) set.add(n);
     int maxLen = 0;
     for (int n : set) {
       if (set.contains(n - 1)) continue; // indicates that the number has been traversed
-      int hiNum = n;
+      int upper = n;
       // go up downing the number
-      while (set.contains(hiNum + 1)) {
-        hiNum += 1;
-      }
-      maxLen = Math.max(maxLen, hiNum - n + 1);
+      while (set.contains(upper + 1)) upper += 1;
+      maxLen = Math.max(maxLen, upper - n + 1);
     }
     return maxLen;
   }
@@ -471,13 +473,12 @@ class OptimalSubArray {
    */
   public int findTargetSumWays(int[] nums, int target) {
     int sum = 0;
-    for (int n : nums) {
-      sum += n;
-    }
-    // 特判
+    for (int n : nums) sum += n;
     if ((target + sum) % 2 != 0) return 0;
+
     int maxCapacity = (target + sum) / 2;
     if (maxCapacity < 0) maxCapacity *= -1;
+
     int[] dp = new int[maxCapacity + 1];
     dp[0] = 1;
     for (int volume : nums) {
@@ -515,19 +516,19 @@ class OptimalPath {
    * @return int int
    */
   public int minPathSum(int[][] grid) {
-    int len = grid[0].length;
-    int[] dp = new int[len];
+    int COL = grid[0].length;
+    int[] dp = new int[COL];
     dp[0] = grid[0][0];
-    for (int i = 1; i < len; i++) {
+    for (int i = 1; i < COL; i++) {
       dp[i] = dp[i - 1] + grid[0][i];
     }
     for (int i = 1; i < grid.length; i++) {
       dp[0] += grid[i][0];
-      for (int j = 1; j < len; j++) {
+      for (int j = 1; j < COL; j++) {
         dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
       }
     }
-    return dp[len - 1];
+    return dp[COL - 1];
     //    int rows = grid.length, cols = grid[0].length;
     //    int[][] dp = new int[rows][cols];
     //    int[] from = new int[rows * cols];
@@ -677,7 +678,7 @@ class OptimalPath {
    */
   public boolean wordBreak(String s, List<String> wordDict) {
     int len = s.length(), maxLen = 0;
-    Set<String> wordSet = new HashSet(); // 仅用于 O(1) 匹配
+    Set<String> wordSet = new HashSet(); // 仅用于 O(1) 查找
     for (String w : wordDict) {
       wordSet.add(w);
       // 下方 [j:i-1] 过长，无法用单词补足，可 curing

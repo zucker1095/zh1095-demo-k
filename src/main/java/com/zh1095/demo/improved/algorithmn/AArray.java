@@ -588,9 +588,7 @@ class MMerge extends DefaultArray {
   }
 
   private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
-    if (end > start) {
-      System.arraycopy(nums, start, tmp, start, end - start + 1);
-    }
+    if (end > start) System.arraycopy(nums, start, tmp, start, end - start + 1);
     int count = 0, p1 = start, p2 = mid + 1;
     for (int i = start; i <= end; i++) {
       if (p1 == mid + 1) {
@@ -698,13 +696,12 @@ class DichotomyClassic extends DefaultArray {
    */
   public double findMedianSortedArrays(int[] nums1, int[] nums2) {
     int l1 = nums1.length, l2 = nums2.length;
-    int ranking = (l1 + l2 + 1) / 2, rankingMore = (l1 + l2 + 2) / 2;
+    int top = (l1 + l2 + 1) / 2, topMore = (l1 + l2 + 2) / 2;
+    return (getLargestElement(nums1, nums2, top) + getLargestElement(nums1, nums2, topMore)) * 0.5;
     // 将偶数和奇数的情况合并，奇数则求两次同样的 k
-    //    return (getkSmallElement(nums1, 0, n - 1, nums2, 0, m - 1, ranking)
-    //            + getkSmallElement(nums1, 0, n - 1, nums2, 0, m - 1, rankingMore))
+    //    return (getkSmallElement(nums1, 0, l1 - 1, nums2, 0, l2 - 1, top)
+    //            + getkSmallElement(nums1, 0, l1 - 1, nums2, 0, l2 - 1, topMore))
     //        * 0.5;
-    return (getLargestElement(nums1, nums2, ranking) + getLargestElement(nums1, nums2, rankingMore))
-        * 0.5;
   }
 
   // 扩展1，求第 k 小参下 annotate
@@ -712,7 +709,7 @@ class DichotomyClassic extends DefaultArray {
     int l1 = nums1.length, l2 = nums2.length;
     int p1 = l1 - 1, p2 = l2 - 1, ranking = k;
     //    int p1 = 0, p2 = 0, ranking = k;
-    while (p1 > -1 && p2 > -1 && ranking > 1) {
+    while (p1 > -1 && p2 > -1 && ranking > 1) { // 其一遍历完毕可直接定位
       //    while (p1 < l1 && p2 < l2 && ranking > 1) {
       int half = ranking / 2,
           newP1 = Math.max(p1 - half, -1) + 1,
@@ -771,11 +768,10 @@ class DichotomyClassic extends DefaultArray {
    * @return int [ ]
    */
   public int[] searchRange(int[] nums, int target) {
-    if (target < nums[0] || nums[nums.length - 1] < target) return new int[] {-1, -1};
-    int smallmost = smallmostBound(nums, 0, nums.length - 1, target);
-    if (smallmost == -1) return new int[] {-1, -1};
-    int bigmost = bigmostBound(nums, target, smallmost);
-    return new int[] {smallmost, bigmost};
+    int len = nums.length;
+    if (len < 1 || target < nums[0] || nums[len - 1] < target) return new int[] {-1, -1};
+    int lower = lowerBound(nums, 0, len - 1, target);
+    return lower == -1 ? new int[] {-1, -1} : new int[] {lower, upperBound(nums, target, lower)};
   }
 
   /**
@@ -929,7 +925,7 @@ class DichotomyElse extends DefaultArray {
     if (matrix[row][0] == target) return true;
     if (matrix[row][0] > target) return false;
     // 从所在行中定位到列，找到最后一个满足 matrix[row][x] <= t 的列
-    col = bigmostBound(matrix[row], target, 0);
+    col = upperBound(matrix[row], target, 0);
     return col == -1 ? false : matrix[row][col] == target;
     // II
     //    for (int row = 0; row < matrix.length; row++) {
@@ -1866,17 +1862,17 @@ class DicOrder extends DefaultSString {
    * @param nums the nums
    */
   public void nextPermutation(int[] nums) {
-    int peak = nums.length - 1; // nums.length - 2
+    int len = nums.length, peak = nums.length - 1; // nums.length - 2
     while (peak > 0) {
       // 1.find the first peak and sort from its idx to end
-      if (nums[peak] > nums[peak - 1]) {
-        Arrays.sort(nums, peak, nums.length);
+      if (nums[peak - 1] < nums[peak]) {
+        Arrays.sort(nums, peak, len);
         break;
       }
       peak -= 1;
     }
     // 2.find the second peak larger than IDX-1 and swap them
-    for (int i = peak; i < nums.length; i++) {
+    for (int i = peak; i < len; i++) {
       if (nums[i] <= nums[peak - 1]) continue;
       swap(nums, peak - 1, i);
       return;
@@ -1907,7 +1903,7 @@ class DicOrder extends DefaultSString {
       swap(chs, peak, i);
       break;
     }
-    reverseChs(chs, peak + 1, chs.length - 1);
+    reverseChs(chs, peak + 1, len - 1);
     long res = 0;
     for (int i = 0; i < len; i++) {
       res = res * 10 + (chs[i] - '0');
@@ -2134,7 +2130,7 @@ class DicOrder extends DefaultSString {
 
 /** 提供一些数组的通用方法 */
 abstract class DefaultArray {
-  protected int smallmostBound(int[] nums, int start, int end, int target) {
+  protected int lowerBound(int[] nums, int start, int end, int target) {
     int lo = start, hi = end;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
@@ -2145,10 +2141,10 @@ abstract class DefaultArray {
     return nums[lo] == target ? lo : -1;
   }
 
-  protected int bigmostBound(int[] nums, int target, int start) {
+  protected int upperBound(int[] nums, int target, int start) {
     int lo = start, hi = nums.length - 1;
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2 + 1; // 需要右开区间
+      int mid = lo + (hi - lo + 1) / 2; // 需要右开区间
       // 下一轮搜索区间是 [lo..mid - 1]
       if (nums[mid] <= target) lo = mid;
       else hi = mid - 1;

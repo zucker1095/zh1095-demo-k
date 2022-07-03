@@ -487,7 +487,7 @@ class SStack {
   }
 
   /**
-   * 有效的括号字符串，贪心
+   * 有效的括号字符串，贪心，或模拟
    *
    * <p>维护未匹配的左括号数量可能的上下界，尽可能保证其合法，遍历结束时，所有的左括号都应和右括号匹配即下界为 0
    *
@@ -513,8 +513,8 @@ class SStack {
         minCnt -= 1;
         maxCnt += 1;
       }
-      minCnt = Math.max(minCnt, 0);
-      if (maxCnt < 0) return false;
+      if (minCnt < 0) minCnt = 0;
+      if (minCnt > maxCnt) return false;
     }
     return minCnt == 0;
   }
@@ -528,27 +528,27 @@ class SStack {
    * @return string string
    */
   public String decodeString(String s) {
-    int curCnt = 0;
-    StringBuilder curStr = new StringBuilder();
+    int cnt = 0;
+    StringBuilder str = new StringBuilder();
     Deque<Integer> cntStack = new ArrayDeque<>();
     Deque<String> strStack = new ArrayDeque<>();
     for (char ch : s.toCharArray()) {
       if (ch == '[') {
-        cntStack.offerLast(curCnt);
-        strStack.offerLast(curStr.toString());
-        curCnt = 0;
-        curStr = new StringBuilder();
+        cntStack.offerLast(cnt);
+        strStack.offerLast(str.toString());
+        cnt = 0;
+        str = new StringBuilder();
       } else if (ch == ']') {
-        int preCount = cntStack.pollLast();
+        int preCnt = cntStack.pollLast();
         String preStr = strStack.pollLast();
-        curStr = new StringBuilder(preStr + curStr.toString().repeat(preCount));
+        str = new StringBuilder(preStr + str.toString().repeat(preCnt));
       } else if (ch >= '0' && ch <= '9') {
-        curCnt = curCnt * 10 + (ch - '0');
+        cnt = cnt * 10 + (ch - '0');
       } else {
-        curStr.append(ch);
+        str.append(ch);
       }
     }
-    return curStr.toString();
+    return str.toString();
   }
 
   /**
@@ -585,25 +585,24 @@ class SStack {
    * @return boolean
    */
   public boolean isSame(String s1, String s2) {
-    int[] counter1 = countLetter(s1), counter2 = countLetter(s2);
+    int[] counter1 = countLetter(s1.toCharArray()), counter2 = countLetter(s2.toCharArray());
     for (int i = 0; i < 26; i++) {
       if (counter1[i] != counter2[i]) return false;
     }
     return true;
   }
 
-  private int[] countLetter(String s) {
+  private int[] countLetter(char[] chs) {
     int[] counter = new int[26];
     int sign = 1;
     Deque<Integer> opStack = new ArrayDeque<>();
     opStack.offerLast(sign);
-    for (int i = 0; i < s.length(); i++) {
-      char ch = Character.toLowerCase(s.charAt(i));
+    for (char ch : chs) {
       if (ch == '(') opStack.offerLast(sign);
-      else if (ch == ')') opStack.pollLast();
-      else if (ch == '+') sign = opStack.peekLast();
-      else if (ch == '-') sign = -opStack.peekLast();
-      else if ('a' <= ch && ch <= 'z') counter[ch - 'a'] += sign;
+      if (ch == ')') opStack.pollLast();
+      if (ch == '+') sign = opStack.peekLast();
+      if (ch == '-') sign = -opStack.peekLast();
+      if ('a' <= ch && ch <= 'z') counter[ch - 'a'] += sign;
       // 基本计算器
       //      else {
       //        long num = 0;
@@ -720,7 +719,7 @@ class SStack {
    * @return boolean
    */
   public boolean validateStackSequences(int[] pushed, int[] popped) {
-    int stTop = 0, popIdx = 0;
+    int stTop = 0, popIdx = 0; // 两个数组遍历的索引
     //    for (int add = 0; i < N; i++) {
     for (int add : pushed) {
       pushed[stTop] = add; // 入栈

@@ -1132,26 +1132,23 @@ class GGraph {
    * @param prerequisites the prerequisites
    * @return boolean boolean
    */
-  public boolean canFinish(int numCourses, int[][] prerequisites) {
-    int V = numCourses;
-    // 每个点的入度 & 邻接表存储图结构 & BFS 遍历
+  public boolean canFinish(int V, int[][] prerequisites) {
     int[] indegrees = new int[V];
     int[][] matrix = new int[V][V];
     buildMatrix(prerequisites, matrix, indegrees);
-    // 收集入度 0 的节点
     Queue<Integer> queue = new LinkedList<>();
     for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.offer(i);
     }
-    // BFS TopSort
+    int cnt = 0;
     while (!queue.isEmpty()) {
-      V -= 1;
+      cnt += 1;
       for (int adj : matrix[queue.poll()]) {
         indegrees[adj] -= 1;
         if (indegrees[adj] == 0) queue.offer(adj);
       }
     }
-    return V == 0;
+    return cnt == V;
   }
 
   private void buildMatrix(int[][] prerequisites, int[][] matrix, int[] indegrees) {
@@ -1163,7 +1160,7 @@ class GGraph {
   }
 
   /**
-   * 课程表II，上方新增记录即可
+   * 课程表II，比 I 新增记录即可
    *
    * <p>若存在循环依赖则返回空，否则返回可行的编译顺序
    *
@@ -1173,29 +1170,26 @@ class GGraph {
    * @param prerequisites the prerequisites
    * @return int [ ]
    */
-  public int[] findOrder(int numCourses, int[][] prerequisites) {
-    int V = numCourses;
+  public int[] findOrder(int V, int[][] prerequisites) {
     int[] indegrees = new int[V];
     int[][] matrix = new int[V][V];
     buildMatrix(prerequisites, matrix, indegrees);
     Queue<Integer> queue = new LinkedList<>();
     for (int i = 0; i < V; i++) {
-      if (indegrees[i] == 0) queue.add(i);
+      if (indegrees[i] == 0) queue.offer(i);
     }
-    // 当前结果集的元素个数，正好可作为下标
     int cnt = 0;
-    int[] paths = new int[numCourses];
+    int[] paths = new int[V];
     while (!queue.isEmpty()) {
-      int v = queue.poll();
-      paths[cnt] = v;
+      int ver = queue.poll();
+      paths[cnt] = ver;
       cnt += 1;
-      for (int n : matrix[v]) {
-        indegrees[n] -= 1;
-        if (indegrees[n] == 0) queue.add(n);
+      for (int adj : matrix[ver]) {
+        indegrees[adj] -= 1;
+        if (indegrees[adj] == 0) queue.offer(adj);
       }
     }
-    // 如果结果集中的数量不等于结点的数量，就不能完成课程任务，这一点是拓扑排序的结论
-    return cnt == numCourses ? paths : new int[0];
+    return cnt == V ? paths : new int[0];
   }
 
   /**
@@ -1220,9 +1214,8 @@ class GGraph {
     buildTable(ts, heads, tos, weights, nexts);
     // 遍历最短路
     int maxDist = 0;
-    for (int d : dijkstra(V, k, heads, tos, weights, nexts)) {
-      maxDist = Math.max(maxDist, d);
-    }
+    int[] dists = dijkstra(V, k, heads, tos, weights, nexts);
+    for (int d : dists) maxDist = Math.max(maxDist, d);
     return maxDist > Integer.MAX_VALUE / 2 ? -1 : maxDist;
   }
 
