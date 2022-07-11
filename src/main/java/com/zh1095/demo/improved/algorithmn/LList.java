@@ -106,7 +106,8 @@ public class LList {
    * @return list node
    */
   public ListNode middleNode(ListNode head) {
-    ListNode lo = head, hi = head;
+    if (head == null || head.next == null) return head;
+    ListNode lo = head, hi = head.next.next;
     while (hi != null && hi.next != null) {
       lo = lo.next;
       hi = hi.next.next;
@@ -446,14 +447,9 @@ class ReorderList extends LList {
    */
   public ListNode sortList(ListNode head) {
     if (head == null || head.next == null) return head;
-    ListNode lo = head, hi = head.next;
-    while (hi != null && hi.next != null) {
-      lo = lo.next;
-      hi = hi.next.next;
-    }
-    ListNode l2 = lo.next;
-    lo.next = null;
-    return mergeTwoLists(sortList(head), sortList(l2));
+    ListNode mid = middleNode(head), head2 = mid.next;
+    mid.next = null;
+    return mergeTwoLists(sortList(head), sortList(head2));
     //    ListNode dummy = new ListNode();
     //    dummy.next = head;
     //    // 1.count length
@@ -525,10 +521,8 @@ class ReorderList extends LList {
     // 偶数个节点返回前一个
     ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
     mid.next = null;
-    // 翻转
-    l2 = reverseList(l2);
-    // 逐个尾插
-    while (l1 != null && l2 != null) {
+    l2 = reverseList(l2); // 翻转
+    while (l1 != null && l2 != null) { // 逐个尾插
       ListNode l1Nxt = l1.next, l2Nxt = l2.next;
       l1.next = l2;
       l1 = l1Nxt;

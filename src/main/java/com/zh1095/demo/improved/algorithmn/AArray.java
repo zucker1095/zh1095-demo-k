@@ -1,3 +1,45 @@
+// 打乱数组 每次选一个元素与末尾交换
+// 快排 三路，lt & gt & cur
+// 数组中的第k个最大元素 heapify 与 sink
+// 最接近原点的k个点 小根堆排序
+// 数组中的逆序对 引入 tmp 四种情况，依次判断边界与大小
+// 合并区间 排序，再分别比对上界与下界
+
+// 寻找两个有序数组的中位数 分别求 top len/2
+// 在排序数组中查找元素的第一个和最后一个位置 两次经典二分
+// 搜索旋转排序数组 四个分支，依次判断中点与下界，target与边界对比
+// 寻找旋转排序数组中的最小值 二分的比对改为中点与上界比
+// 寻找峰值 二分的比对改为中点与其右侧比对
+
+// 搜索二维矩阵 行间不重叠则两次二分，否则列方向需要线性
+// 有序矩阵中第k小的元素 条件同上，但需要计数
+
+// 三数之和 内外循环 O(n^2)
+// 最接近的三数之和 三数之和在比对前更新结果即可
+// 有效三角形的个数 类似三数之和，但从上界开始累加
+
+// 最大子序和 前缀和，超过则累加，否则重置，并更新最大值
+// 和为k的子数组 前缀和引入 hash 计数，取 preSum-k 放 preSum
+// 和至少为k的最短子数组 引入单调队列，出队，再更新结果，最后入队
+// 和可被k整除的子数组 前缀和引入 hash 计数，取余数放余数
+
+// 寻找重复数 类似环形链表
+// 缺失的第一个正数 原地哈希，取负
+// 数组中重复的数字 原地哈希，swap 两个元素
+
+// 删除排序数组中的重复项 相同则跳过
+// 删除字符串中的所有相邻重复项 原地建栈
+
+// 轮转数组 三次翻转
+// 旋转矩阵 依次沿右下斜对角线与垂直中线翻转
+// 螺旋矩阵 记住顺序即可
+
+// 下一个排列 两次找峰，第一次找到后要排序，都找不到就返回排序
+// 下一个更大元素III 都是找两次，但多两步，翻转与取前 len 个
+// 最大数 排序返回就好，但 Java 要转换数据结构两次
+// 最大交换
+// 字典序的第k小数字
+
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
@@ -185,7 +227,7 @@ public class AArray extends DefaultArray {
   }
 
   /**
-   * 打乱数组，Shuffle 洗牌算法即可
+   * 打乱数组，Shuffle
    *
    * @author cenghui
    */
@@ -389,6 +431,35 @@ class HHeap extends DefaultArray {
   }
 
   /**
+   * 最接近原点的k个点，大根堆排序
+   *
+   * @param points
+   * @param K
+   * @return
+   */
+  public int[][] kClosest(int[][] points, int K) {
+    int[][] nodes = new int[K][2];
+    PriorityQueue<int[]> pq =
+        new PriorityQueue<>(
+            K, (p1, p2) -> p2[0] * p2[0] + p2[1] * p2[1] - p1[0] * p1[0] - p1[1] * p1[1]);
+    for (int[] p : points) {
+      if (pq.size() < K) {
+        pq.offer(p);
+        continue;
+      }
+      // 判断当前点的距离是否小于堆中的最大距离
+      if (pq.comparator().compare(p, pq.peek()) > 0) {
+        pq.poll();
+        pq.offer(p);
+      }
+    }
+    for (int i = 0; i < K; i++) {
+      nodes[i] = pq.poll();
+    }
+    return nodes;
+  }
+
+  /**
    * 字符串出现次数 topk，小根堆 nlogk
    *
    * <p>先按次数排，相同则按字典序排
@@ -424,35 +495,6 @@ class HHeap extends DefaultArray {
   }
 
   /**
-   * 最接近原点的k个点，大根堆排序
-   *
-   * @param points
-   * @param K
-   * @return
-   */
-  public int[][] kClosest(int[][] points, int K) {
-    int[][] nodes = new int[K][2];
-    PriorityQueue<int[]> pq =
-        new PriorityQueue<>(
-            K, (p1, p2) -> p2[0] * p2[0] + p2[1] * p2[1] - p1[0] * p1[0] - p1[1] * p1[1]);
-    for (int[] p : points) {
-      if (pq.size() < K) {
-        pq.offer(p);
-        continue;
-      }
-      // 判断当前点的距离是否小于堆中的最大距离
-      if (pq.comparator().compare(p, pq.peek()) > 0) {
-        pq.poll();
-        pq.offer(p);
-      }
-    }
-    for (int i = 0; i < K; i++) {
-      nodes[i] = pq.poll();
-    }
-    return nodes;
-  }
-
-  /**
    * 会议室II，返回最少重叠数，抽象成「上下车」问题。
    *
    * <p>满足最繁忙的时间点即可，因此区间有交集则暂存，否则移除末端最小的，因此使用小根堆。
@@ -465,15 +507,15 @@ class HHeap extends DefaultArray {
   public int minMeetingRooms(int[][] intervals) {
     Arrays.sort(intervals, (v1, v2) -> (v1[0] - v2[0]));
     PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-    int count = 0;
+    int cnt = 0;
     for (int[] itv : intervals) {
       while (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) {
         minHeap.poll();
       }
       minHeap.add(itv[1]);
-      count = Math.max(count, minHeap.size());
+      cnt = Math.max(cnt, minHeap.size());
     }
-    return count;
+    return cnt;
   }
 
   /**
@@ -525,9 +567,7 @@ class HHeap extends DefaultArray {
     public KthLargest(int k, int[] nums) {
       minheap = new int[k];
       ranking = k;
-      for (int i = 0; i < nums.length; i++) {
-        add(nums[i]);
-      }
+      for (int i = 0; i < nums.length; i++) add(nums[i]);
     }
 
     public int add(int val) {
@@ -589,7 +629,7 @@ class MMerge extends DefaultArray {
 
   private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
     if (end > start) System.arraycopy(nums, start, tmp, start, end - start + 1);
-    int count = 0, p1 = start, p2 = mid + 1;
+    int curCnt = 0, p1 = start, p2 = mid + 1;
     for (int i = start; i <= end; i++) {
       if (p1 == mid + 1) {
         nums[i] = tmp[p2];
@@ -603,10 +643,10 @@ class MMerge extends DefaultArray {
       } else if (tmp[p1] > tmp[p2]) {
         nums[i] = tmp[p2];
         p2 += 1;
-        count += mid - p1 + 1; // 统计逆序的数目
+        curCnt += mid - p1 + 1; // 统计逆序的数目
       }
     }
-    return count;
+    return curCnt;
   }
 
   /**
@@ -784,11 +824,11 @@ class DichotomyClassic extends DefaultArray {
    * @return
    */
   public List<Integer> findDuplicatesK(int[] nums, int k) {
-    List<Integer> res = new ArrayList<>();
+    List<Integer> seqs = new ArrayList<>();
     int[] pos = searchRange(nums, nums[nums.length / 2]);
     List<Integer> p1 = findDuplicatesK(Arrays.copyOfRange(nums, 0, pos[0]), k),
         p2 = findDuplicatesK(Arrays.copyOfRange(nums, pos[1], nums.length), k);
-    return res;
+    return seqs;
   }
 
   /**
@@ -810,11 +850,11 @@ class DichotomyClassic extends DefaultArray {
       int mid = lo + (hi - lo + 1) / 2; // 向上取整
       if (nums[mid] < nums[hi]) {
         // target 落在 [mid, hi]
-        if (nums[mid] <= target && target <= nums[hi]) lo = mid;
+        if (nums[mid] <= target && nums[hi] >= target) lo = mid;
         else hi = mid - 1;
       } else {
         // target 落在 [lo, mid-1]
-        if (nums[lo] <= target && target <= nums[mid - 1]) hi = mid - 1;
+        if (nums[lo] <= target && nums[mid - 1] >= target) hi = mid - 1;
         else lo = mid;
       }
     }
@@ -903,8 +943,6 @@ class DichotomyElse extends DefaultArray {
   /**
    * 搜索二维矩阵，确保每行的首个大于前一行的最后一个
    *
-   * <p>行内有序，行间不重叠。否则，参考「有序矩阵中第k小的元素」
-   *
    * <p>模拟 BST 以右上角作根开始遍历则 I & II 通用
    *
    * <p>扩展1，II 不确保「每行的首个大于前一行的最后一个」，因此无法两次二分，只能遍历行/列，再对列/行进行二分
@@ -914,25 +952,24 @@ class DichotomyElse extends DefaultArray {
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
-    // 定位到所在行，找到最后一个满足 matrix[x]][0] <= t 的行
+    // II 只能逐行对列二分
+    //    for (int row = 0; row < matrix.length; row++) {
+    //      int col = upperBound(matrix[row], target, 0);
+    //      if (col != -1 && matrix[row][col] == target) return true;
+    //    }
+    // I 则可以先二分找到最后一个满足 matrix[x]][0] <= t 的行
     int lo = 0, hi = matrix.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo + 1) / 2;
       if (matrix[mid][0] <= target) lo = mid;
       else hi = mid - 1;
     }
-    int row = hi, col;
-    if (matrix[row][0] == target) return true;
-    if (matrix[row][0] > target) return false;
+    int r = hi;
+    if (matrix[r][0] == target) return true;
+    if (matrix[r][0] > target) return false;
     // 从所在行中定位到列，找到最后一个满足 matrix[row][x] <= t 的列
-    col = upperBound(matrix[row], target, 0);
-    return col == -1 ? false : matrix[row][col] == target;
-    // II
-    //    for (int row = 0; row < matrix.length; row++) {
-    //    int col = bigmostBound(matrix[row], target, 0);
-    //    if (col != -1 && matrix[row][col] == target) return true;
-    //    }
-    //    return false;
+    int c = upperBound(matrix[r], target, 0);
+    return c == -1 ? false : matrix[r][c] == target;
   }
 
   /**
@@ -951,8 +988,8 @@ class DichotomyElse extends DefaultArray {
     // 左上角与右下角即数值的上下界
     int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
       // 找二维矩阵中 <=mid 的元素总个数，判断目标分别在 [lo,mid] or [mid+1,hi]
+      int mid = lo + (hi - lo) / 2;
       if (countLte(matrix, mid) < k) lo = mid + 1;
       else hi = mid;
     }
@@ -961,18 +998,18 @@ class DichotomyElse extends DefaultArray {
 
   // 从左下角开始遍历，找每列最后一个 <=target 的数即知道每一列有多少个数 <=target
   private int countLte(int[][] matrix, int target) {
-    int count = 0, x = 0, y = matrix.length - 1;
+    int cnt = 0, x = 0, y = matrix.length - 1;
     while (-1 < y && x < matrix[0].length) {
       if (matrix[y][x] <= target) {
         // 第 j 列有 i+1 个元素 <= mid
-        count += y + 1;
+        cnt += y + 1;
         x += 1;
       } else {
         // 第 j 列目前的数大于 mid，需要继续在当前列往上找
         y -= 1;
       }
     }
-    return count;
+    return cnt;
   }
 
   /**
@@ -1083,9 +1120,9 @@ class SSum extends DefaultArray {
    * @return list list
    */
   public List<List<Integer>> threeSum(int[] nums) {
-    List<List<Integer>> sums = new ArrayList();
     int target = 0;
     Arrays.sort(nums);
+    List<List<Integer>> sums = new ArrayList();
     for (int i = 0; i < nums.length; i++) {
       int pivot = nums[i];
       if (pivot > target) break;
@@ -1323,13 +1360,13 @@ class PreSum {
     int preSum = 0, cnt = 0;
     HashMap<Integer, Integer> remainder2Cnt = new HashMap<>();
     remainder2Cnt.put(0, 1);
-    for (int num : nums) {
-      preSum += num;
-      // 当前 presum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
-      int remainder = (preSum % k + k) % k, curCount = remainder2Cnt.getOrDefault(remainder, 0);
+    for (int n : nums) {
+      preSum += n;
+      // 当前 preSum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
+      int remainder = (preSum % k + k) % k, curCnt = remainder2Cnt.getOrDefault(remainder, 0);
       // 余数的次数
-      cnt += curCount;
-      remainder2Cnt.put(remainder, curCount + 1);
+      cnt += curCnt;
+      remainder2Cnt.put(remainder, curCnt + 1);
     }
     return cnt;
   }
@@ -1373,7 +1410,7 @@ class PreSum {
   /**
    * 和至少为k的最短子数组，返回长度，和至少，前缀和数组 & 单调队列
    *
-   * <p>此处入队索引而「滑动窗口的最大值」则是值
+   * <p>此处入队索引，而「滑动窗口的最大值」是值
    *
    * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
    *
@@ -1392,15 +1429,12 @@ class PreSum {
     for (int i = 0; i < len; i++) {
       preSum[i + 1] = preSum[i] + nums[i];
     }
-    Deque<Integer> mq = new LinkedList<>();
+    Deque<Integer> mq = new ArrayDeque<>();
     for (int i = 0; i < preSum.length; i++) {
       long sum = preSum[i];
-      while (!mq.isEmpty() && preSum[mq.peekLast()] >= sum) {
-        mq.pollLast();
-      }
-      while (!mq.isEmpty() && preSum[mq.peekFirst()] + k <= sum) {
+      while (!mq.isEmpty() && sum <= preSum[mq.peekLast()]) mq.pollLast();
+      while (!mq.isEmpty() && sum >= preSum[mq.peekFirst()] + k)
         minLen = Math.min(minLen, i - mq.pollFirst());
-      }
       mq.offerLast(i);
     }
     return minLen == len + 1 ? -1 : minLen;
@@ -1477,7 +1511,7 @@ class PreSum {
 /** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，无序找首个，快慢指针，等同根「环形链表II」
+   * 寻找重复数，仅一个数重复，快慢指针，等同根「环形链表II」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1505,7 +1539,7 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
-   * 数组中重复的数据，返回所有重复数，每个数字至多出现两次，区间 [1,n]
+   * 数组中重复的数据，多个数重复，至多两次，返回所有重复数，区间 [1,n]
    *
    * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
    *
@@ -1523,7 +1557,7 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
-   * 数组中重复的数字，返回任意一个重复的数字，区间 [0,nums.length-1]
+   * 数组中重复的数字，多个数重复，返回任意一个，区间 [0,nums.length-1]
    *
    * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
    *
@@ -1626,29 +1660,6 @@ class Delete extends DefaultArray {
   }
 
   /**
-   * 删除排序数组中的重复项，保留 k 位，I & II 通用
-   *
-   * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
-   *
-   * <p>扩展1，参考删除字符串中的所有相邻重复项
-   *
-   * @param nums the nums
-   * @return the int
-   */
-  public int removeDuplicates(int[] nums) {
-    final int k = 0;
-    // final int target = nums[last - k];
-    int write = 0;
-    for (int read = 0; read < nums.length; read++) {
-      int num = nums[read];
-      if (write >= k && nums[write - k] == num) continue;
-      nums[write] = num;
-      write += 1;
-    }
-    return write;
-  }
-
-  /**
    * 删除字符串中的所有相邻重复项，毫无保留，原地模拟栈
    *
    * <p>类似「有效的括号」即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
@@ -1675,6 +1686,29 @@ class Delete extends DefaultArray {
       }
     }
     return String.valueOf(chs, 0, top + 1);
+  }
+
+  /**
+   * 删除排序数组中的重复项，保留 k 位，I & II 通用
+   *
+   * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
+   *
+   * <p>扩展1，参考删除字符串中的所有相邻重复项
+   *
+   * @param nums the nums
+   * @return the int
+   */
+  public int removeDuplicates(int[] nums) {
+    final int k = 0;
+    // final int target = nums[last - k];
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
+      int num = nums[read];
+      if (write >= k && nums[write - k] == num) continue;
+      nums[write] = num;
+      write += 1;
+    }
+    return write;
   }
 }
 
@@ -1710,9 +1744,7 @@ class Traversal extends DefaultArray {
         matrix[x][y] = tmp;
       }
     }
-    for (int i = 0; i < len; i++) {
-      reverse(matrix[i], 0, len - 1);
-    }
+    for (int i = 0; i < len; i++) reverse(matrix[i], 0, len - 1);
   }
 
   /**
@@ -1862,7 +1894,7 @@ class DicOrder extends DefaultSString {
    * @param nums the nums
    */
   public void nextPermutation(int[] nums) {
-    int len = nums.length, peak = nums.length - 1; // nums.length - 2
+    int len = nums.length, peak = len - 1; // nums.length - 2
     while (peak > 0) {
       // 1.find the first peak and sort from its idx to end
       if (nums[peak - 1] < nums[peak]) {
@@ -1892,51 +1924,25 @@ class DicOrder extends DefaultSString {
    */
   public int nextGreaterElement(int n) {
     char[] chs = String.valueOf(n).toCharArray();
+    // 1.找首个
     int len = chs.length, peak = len - 2;
-    while (peak >= 0) {
+    while (peak > -1) {
       if (chs[peak] < chs[peak + 1]) break;
       peak -= 1;
     }
     if (peak == -1) return -1;
+    // 2.找首个
     for (int i = len - 1; i > peak; i--) {
       if (chs[i] <= chs[peak]) continue;
       swap(chs, peak, i);
       break;
     }
+    // 3.翻转
     reverseChs(chs, peak + 1, len - 1);
+    // 4.返回前 len 个即可
     long res = 0;
-    for (int i = 0; i < len; i++) {
-      res = res * 10 + (chs[i] - '0');
-    }
+    for (int i = 0; i < len; i++) res = res * 10 + (chs[i] - '0');
     return res > Integer.MAX_VALUE ? -1 : (int) (res);
-  }
-
-  /**
-   * 最大交换，只交换一次任意两位的数，使其结果的数值是所有方案中最大的
-   *
-   * <p>贪心，将较高位的 n 与后面 m 交换，需满足 m>n 且 m 尽可能靠后
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
-   *
-   * @param num
-   * @return
-   */
-  public int maximumSwap(int num) {
-    char[] chs = Integer.toString(num).toCharArray();
-    int[] lastIdxes = new int[10]; // 每个数字最后出现的索引
-    for (int i = 0; i < chs.length; i++) {
-      lastIdxes[chs[i] - '0'] = i;
-    }
-    // 查找首个值更大、位更高的数字
-    for (int i = 0; i < chs.length; i++) { // 自高位顺序遍历
-      for (int d = 9; d > chs[i] - '0'; d--) { // 值
-        if (lastIdxes[d] <= i) continue; // 位
-        swap(chs, i, lastIdxes[d]);
-        return Integer.parseInt(chs.toString());
-      }
-    }
-    return num;
   }
 
   /**
@@ -1958,15 +1964,11 @@ class DicOrder extends DefaultSString {
    * @return
    */
   public String largestNumber(int[] nums) {
-    StringBuilder maxNum = new StringBuilder();
     List<String> strs = new ArrayList<>(nums.length);
-    for (int n : nums) {
-      strs.add(String.valueOf(n));
-    }
+    for (int n : nums) strs.add(String.valueOf(n));
     strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
-    for (String n : strs) {
-      maxNum.append(n);
-    }
+    StringBuilder maxNum = new StringBuilder();
+    for (String n : strs) maxNum.append(n);
     return maxNum.toString();
     // 「最小数」需要去除前导零，因为可能有 02>20
     //    int start = 0;
@@ -1974,6 +1976,33 @@ class DicOrder extends DefaultSString {
     //      start += 1;
     //    }
     //    return res.substring(start);
+  }
+
+  /**
+   * 最大交换，只交换一次任意两位的数，使其结果的数值是所有方案中最大的
+   *
+   * <p>贪心，将较高位的 n 与后面 m 交换，需满足 m>n 且 m 尽可能靠后
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
+   *
+   * @param num
+   * @return
+   */
+  public int maximumSwap(int num) {
+    char[] chs = Integer.toString(num).toCharArray();
+    int[] lastIdxes = new int[10]; // 每个数字最后出现的索引
+    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - '0'] = i;
+    // 查找首个值更大、位更高的数字
+    for (int i = 0; i < chs.length; i++) { // 自高位顺序遍历
+      int cur = chs[i] - '0';
+      for (int d = 9; d > cur; d--) { // 值
+        if (lastIdxes[d] <= i) continue; // 位
+        swap(chs, i, lastIdxes[d]);
+        return Integer.parseInt(chs.toString());
+      }
+    }
+    return num;
   }
 
   /**

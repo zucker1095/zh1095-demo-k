@@ -1,3 +1,20 @@
+// 加油站 最大子序列和增加 start
+// 跳跃游戏 加个索引标识当前可达的上界
+// 划分字母区间 收集每个字母的最后索引，并在遍历时更新当前片段的右边界
+// 把数字翻译成字符串 注意 9 与 26 两个阈值
+
+// LRU addToHead & moveToHead & moveTail & moveNode
+// 实现 Trie 实现 Lookup
+// 设计循环队列 注意尾占据一个哑节点
+
+// rand7 randA to randB 四种情况 (randX-1)*Y+randY() 生成等概率 [1,X*Y]
+// x 的平方根 牛顿迭代 new=(old+num/old)*0.5
+// Pow(x,n)
+// 圆圈中最后剩下的数字
+// 第N位数字
+
+// 课程表 拓扑排序，构建邻接矩阵并收集入度
+
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
@@ -78,6 +95,51 @@ public class OOthers {
   }
 
   /**
+   * 划分字母区间，返回可划分的子串上限，同一种字母只能在一个子串内
+   *
+   * <p>贪心，类似「跳跃游戏」参考
+   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
+   */
+  public List<Integer> partitionLabels(String s) {
+    int[] lastIdxes = new int[26];
+    char[] chs = s.toCharArray();
+    // 统计每个字母最终的节点，题设均 lowercase
+    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - 'a'] = i;
+    List<Integer> lens = new ArrayList<>();
+    int lo = 0, hi = 0; // 当前片段的首尾
+    for (int i = 0; i < chs.length; i++) {
+      // 根据遍历的字母更新当前片段的右边界
+      hi = Math.max(hi, lastIdxes[chs[i] - 'a']);
+      // 未到达当前片段的右边界，即仍有部分字母在边界右侧
+      if (i != hi) continue;
+      lens.add(hi - lo + 1);
+      lo = hi + 1;
+    }
+    return lens;
+  }
+
+  /**
+   * 把数字翻译成字符串，返回方案数
+   *
+   * <p>以 xyzcba 为例，先取最后两位 即 ba，如果 ba>=26 必然不能分解成 f(xyzcb)+f(xyzc)，此时只能分解成 f(xyzcb)
+   *
+   * <p>但还有一种情况 ba<=9 即十位为 0 也不能分解
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/ba-shu-zi-fan-yi-cheng-zi-fu-chuan-lcof/solution/di-gui-qiu-jie-shuang-bai-by-xiang-shang-de-gua-ni/
+   *
+   * @param num
+   * @return
+   */
+  public int translateNum(int num) {
+    if (num <= 9) return 1;
+    int ba = num % 100; // xyzcba
+    return ba > 9 && ba < 26
+        ? translateNum(num / 10) + translateNum(num / 100)
+        : translateNum(num / 10);
+  }
+
+  /**
    * 航班预订统计，贪心
    *
    * <p>TODO 参考
@@ -90,13 +152,11 @@ public class OOthers {
   public int[] corpFlightBookings(int[][] bookings, int n) {
     int[] counter = new int[n];
     for (int[] b : bookings) {
-      int first = b[0], last = b[1], seat = b[2];
-      counter[first - 1] += seat;
-      if (last < n) counter[last] -= seat;
+      int lo = b[0], hi = b[1], w = b[2];
+      counter[lo - 1] += w;
+      if (hi < n) counter[hi] -= w;
     }
-    for (int i = 1; i < n; i++) {
-      counter[i] += counter[i - 1];
-    }
+    for (int i = 1; i < n; i++) counter[i] += counter[i - 1];
     return counter;
   }
 
@@ -120,50 +180,6 @@ public class OOthers {
       minY = Math.min(minY, op[1]);
     }
     return minX * minY;
-  }
-
-  /**
-   * 把数字翻译成字符串，返回方案数
-   *
-   * <p>以 xyzcba 为例，先取最后两位 即 ba，如果ba>=26，必然不能分解成 f(xyzcb)+f(xyzc)，此时只能分解成 f(xyzcb)
-   *
-   * <p>但还有一种情况 ba<=9 即也就是该数十位上为 0，也不能分解
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/ba-shu-zi-fan-yi-cheng-zi-fu-chuan-lcof/solution/di-gui-qiu-jie-shuang-bai-by-xiang-shang-de-gua-ni/
-   *
-   * @param num
-   * @return
-   */
-  public int translateNum(int num) {
-    if (num <= 9) return 1;
-    int ba = num % 100; // xyzcba
-    return ba <= 9 || ba >= 26
-        ? translateNum(num / 10)
-        : translateNum(num / 10) + translateNum(num / 100);
-  }
-
-  /**
-   * 划分字母区间，类似「跳跃游戏」
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
-   */
-  public List<Integer> partitionLabels(String s) {
-    int[] lastIdxes = new int[26];
-    char[] chs = s.toCharArray();
-    for (int i = 0; i < chs.length; i++) {
-      lastIdxes[chs[i] - 'a'] = i; // 题设均 lowercase
-    }
-    List<Integer> lens = new ArrayList<>();
-    int lo = 0, hi = 0; // 当前片段的首尾
-    for (int i = 0; i < chs.length; i++) {
-      hi = Math.max(lastIdxes[chs[i] - 'a'], hi);
-      if (i != hi) continue;
-      lens.add(hi - lo + 1);
-      lo = hi + 1;
-    }
-    return lens;
   }
 
   /**
@@ -393,6 +409,10 @@ class DData {
    * 设计循环队列，三种实现方式，冗余一个元素/边界标记/计数器，此处选用前者
    *
    * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即元素入队的位置
+   *
+   * <p>首尾碰撞为空，间隔一为满
+   *
+   * <p>取尾需要 (rear - 1 + CAPACITY) % CAPACITY
    *
    * <p>扩展1，并发安全，单个 push 多个 pop，采用 CAS 或参考 Disruptor
    */
@@ -782,13 +802,13 @@ class DData {
 /** 计算相关 */
 class MMath {
   /**
-   * rand7生成rand10 即[1,10]，等同进制转换的思路
+   * rand7生成rand10 即[1,10]，类似进制转换
    *
    * <p>参考
    * https://leetcode-cn.com/problems/implement-rand10-using-rand7/solution/cong-pao-ying-bi-kai-shi-xun-xu-jian-jin-ba-zhe-da/
    * https://www.cnblogs.com/ymjyqsx/p/9561443.html
    *
-   * <p>数学推论，记住即可 (randX-1)*Y+randY() -> 等概率[1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
+   * <p>数学推论 (randX-1)*Y+randY() 生成等概率 [1,X*Y]，只要 rand_N() 中 N 是 2 的倍数，就都可以用来实现 rand2()
    *
    * <p>扩展1，比如 randX to randY，有如下情况，本质均是找平方与倍数
    *
@@ -818,39 +838,6 @@ class MMath {
   }
 
   /**
-   * 1~n整数中1出现的次数 / 数字1的个数，如 1～12 这些整数中包含 1 的数字有 1、10、11、12 共 5 个
-   *
-   * <p>因此，将 1~n 的个位、十位、百位...1 出现次数相加，即为所求
-   *
-   * <p>将 x 位数的 n 分为 nx...ni...n1，则记 nx...ni+1 为 high，ni 为 cur，剩余为 low，10^i 为 digit
-   *
-   * <p>cur 分三种情况讨论，1 由高低一起决定，0 & else 则出现次数由高位决定
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int countDigitOne(int n) {
-    int cnt = 0;
-    int high = n / 10, cur = n % 10, low = 0, digit = 1;
-    while (high > 0 || cur > 0) {
-      // 状态
-      cnt += high * digit;
-      //      if (cur == 0) cnt += 0;
-      if (cur == 1) cnt += low + 1;
-      if (cur > 1) cnt += digit;
-      // 递推
-      low += cur * digit;
-      cur = high % 10;
-      high /= 10;
-      digit *= 10;
-    }
-    return cnt;
-  }
-
-  /**
    * x的平方根，建议采用牛顿迭代，二分只能精确至后二位
    *
    * <p>记忆即可，new=(old+num/old)*0.5
@@ -867,14 +854,14 @@ class MMath {
    */
   public int mySqrt(int x) {
     if (x == 0) return 0;
-    double pre = x, cur;
+    double n = x;
     while (true) {
-      cur = (pre + x / pre) * 0.5;
-      // 后 n 位 1e-n
-      if (Math.abs(pre - cur) < 1e-7) break;
-      pre = cur;
+      double cur = (n + x / n) * 0.5;
+      // 后 n 位 1e^(-n)
+      if (Math.abs(n - cur) < 1e-7) break;
+      n = cur;
     }
-    return (int) pre;
+    return (int) n;
   }
 
   /**
@@ -893,6 +880,52 @@ class MMath {
     if (n == 0) return 1;
     double y = quickMulti(x, n / 2);
     return y * y * (((n & 1) == 0) ? 1 : x);
+  }
+
+  /**
+   * 圆圈中最后剩下的数字，约瑟夫环，记住公式 res=(res+m)%i
+   *
+   * @param n the n
+   * @param m the m
+   * @return the int
+   */
+  public int lastRemaining(int n, int m) {
+    int leftIdx = 0;
+    for (int i = 2; i <= n; i++) leftIdx = (leftIdx + m) % i;
+    return leftIdx;
+  }
+
+  /**
+   * 第N位数字/第N个数字
+   *
+   * <p>k 位数共有 9*10^(k-1) 个数字，迭代试减 n 以确定 k 所在的整个数字
+   *
+   * <p>基于规律 [100, 999] 有 3*90*100 个数字 即 3*9*10^2
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/nth-digit/solution/gong-shui-san-xie-jian-dan-mo-ni-ti-by-a-w5wl/
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int findNthDigit(int n) {
+    // 分别表示当前的位数 & 还剩下要找的位数
+    int len = 1, left = n;
+    // 找到 n 所在的位数区间
+    while (true) {
+      // len 位数共有 9*len*10^(len-1) 个完整的数字
+      double cnt = 9 * len * Math.pow(10, len - 1);
+      if (cnt >= left) break;
+      left -= cnt;
+      len += 1;
+    }
+    // 此时 left 所在完整的数字的值上下界是 [10^(len-1),10^len-1]
+    // 可推出目标所在的数字 (target−min+1)*len >= left
+    double minNum = Math.pow(10, len - 1), targetNum = (minNum + left / len - 1);
+    // 相较于 min 需要取的完整的数字
+    int count = left - len * (left / len);
+    // cur==0 表示答案为目标数字的最后一位，否则是其从左到右的第 left 位。
+    return (int) (count == 0 ? targetNum % 10 : (targetNum + 1) / Math.pow(10, len - count) % 10);
   }
 
   /**
@@ -976,36 +1009,6 @@ class MMath {
   }
 
   /**
-   * 第N位数字/第n个数字
-   *
-   * <p>k 位数共有 9*10^(k-1) 个数字，迭代试减 n 以确定 k 所在的整个数字
-   *
-   * <p>基于规律 [100, 999] 有 3*90*100 个数字 即 3*9*10^2
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/nth-digit/solution/gong-shui-san-xie-jian-dan-mo-ni-ti-by-a-w5wl/
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int findNthDigit(int n) {
-    // 分别表示当前的位数 & 还剩下要找的位数。
-    int len = 1, left = n;
-    // 找到 n 所在的位数区间，len 位数共有 9*len*10^(len-1) 个完整的数字。
-    while (9 * len * Math.pow(10, len - 1) < left) {
-      left -= 9 * len * Math.pow(10, len - 1);
-      len += 1;
-    }
-    // 此时 left 所在完整的数字的值上下界是 [10^(len-1),10^len-1]
-    // 可推出目标所在的数字 (target−min+1)*len >= left
-    double minNum = Math.pow(10, len - 1), targetNum = (minNum + left / len - 1);
-    // 相较于 min 需要取的完整的数字
-    int count = left - len * (left / len);
-    // cur==0 表示答案为目标数字的最后一位，否则是其从左到右的第 left 位。
-    return (int) (count == 0 ? targetNum % 10 : (targetNum + 1) / Math.pow(10, len - count) % 10);
-  }
-
-  /**
    * 回文数
    *
    * <p>0.特判负数与十的倍数
@@ -1029,20 +1032,36 @@ class MMath {
   }
 
   /**
-   * 圆圈中最后剩下的数字，约瑟夫环 Josephus Problem
+   * 1~n整数中1出现的次数·/数字1的个数，如 1～12 这些整数中包含 1 的数字有 1、10、11、12 共 5 个
    *
-   * <p>记住公式即可 res=(res+m)%i
+   * <p>因此，将 1~n 的个位、十位、百位...1 出现次数相加，即为所求
+   *
+   * <p>将 x 位数的 n 分为 nx...ni...n1，则记 nx...ni+1 为 high，ni 为 cur，剩余为 low，10^i 为 digit
+   *
+   * <p>cur 分三种情况讨论，1 由高低一起决定，0 & else 则出现次数由高位决定
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/
    *
    * @param n the n
-   * @param m the m
-   * @return the int
+   * @return int int
    */
-  public int lastRemaining(int n, int m) {
-    int leftIdx = 0;
-    for (int i = 2; i <= n; i++) {
-      leftIdx = (leftIdx + m) % i;
+  public int countDigitOne(int n) {
+    int cnt = 0;
+    int high = n / 10, cur = n % 10, low = 0, digit = 1;
+    while (high > 0 || cur > 0) {
+      // 状态
+      cnt += high * digit;
+      //      if (cur == 0) cnt += 0;
+      if (cur == 1) cnt += low + 1;
+      if (cur > 1) cnt += digit;
+      // 递推
+      low += cur * digit;
+      cur = high % 10;
+      high /= 10;
+      digit *= 10;
     }
-    return leftIdx;
+    return cnt;
   }
 
   /**
@@ -1137,6 +1156,7 @@ class GGraph {
     int[][] matrix = new int[V][V];
     buildMatrix(prerequisites, matrix, indegrees);
     Queue<Integer> queue = new LinkedList<>();
+    //
     for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.offer(i);
     }
@@ -1268,53 +1288,47 @@ class GGraph {
    * @return int
    */
   public int shortestPathLength(int[][] graph) {
-    int n = graph.length, mask = 1 << n, INF = Integer.MAX_VALUE;
+    int V = graph.length, MASK = 1 << V, INF = Integer.MAX_VALUE;
     // Floyd 求两点的最短路径
-    int[][] dist = new int[n][n];
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
+    int[][] dist = new int[V][V];
+    for (int i = 0; i < V; i++) {
+      for (int j = 0; j < V; j++) {
         dist[i][j] = INF;
       }
     }
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < V; i++) {
       for (int j : graph[i]) {
         dist[i][j] = 1;
       }
     }
-    for (int k = 0; k < n; k++) {
-      for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
+    for (int k = 0; k < V; k++) {
+      for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
           dist[i][j] = Math.min(dist[i][j], dist[i][k] + dist[k][j]);
         }
       }
     }
-
     // DP 过程，如果从 i 能够到 j 的话，使用 i 到 j 的最短距离（步长）来转移
-    int[][] f = new int[mask][n];
+    int[][] f = new int[MASK][V];
     // 起始时，让所有状态的最短距离（步长）为正无穷
-    for (int i = 0; i < mask; i++) {
-      Arrays.fill(f[i], INF);
-    }
+    for (int i = 0; i < MASK; i++) Arrays.fill(f[i], INF);
     // 由于可以将任意点作为起点出发，可以将这些起点的最短距离（步长）设置为 0
-    for (int i = 0; i < n; i++) f[1 << i][i] = 0;
-
+    for (int i = 0; i < V; i++) f[1 << i][i] = 0;
     // 枚举所有的 state
-    for (int state = 0; state < mask; state++) {
+    for (int s = 0; s < MASK; s++) {
       // 枚举 state 中已经被访问过的点
-      for (int i = 0; i < n; i++) {
-        if (((state >> i) & 1) == 0) continue;
+      for (int i = 0; i < V; i++) {
+        if (((s >> i) & 1) == 0) continue;
         // 枚举 state 中尚未被访问过的点
-        for (int j = 0; j < n; j++) {
-          if (((state >> j) & 1) == 1) continue;
-          f[state | (1 << j)][j] = Math.min(f[state | (1 << j)][j], f[state][i] + dist[i][j]);
+        for (int j = 0; j < V; j++) {
+          if (((s >> j) & 1) == 1) continue;
+          f[s | (1 << j)][j] = Math.min(f[s | (1 << j)][j], f[s][i] + dist[i][j]);
         }
       }
     }
-    int ans = INF;
-    for (int i = 0; i < n; i++) {
-      ans = Math.min(ans, f[mask - 1][i]);
-    }
-    return ans;
+    int minLen = INF;
+    for (int i = 0; i < V; i++) minLen = Math.min(minLen, f[MASK - 1][i]);
+    return minLen;
   }
 
   /**
@@ -1327,8 +1341,8 @@ class GGraph {
     int V = graph.length;
     int[] colors = new int[V]; // white
     List<Integer> vtxs = new ArrayList<>();
-    for (int i = 0; i < V; i++) {
-      if (isCyclic(graph, colors, i)) vtxs.add(i);
+    for (int vtx = 0; vtx < V; vtx++) {
+      if (isCyclic(graph, colors, vtx)) vtxs.add(vtx);
     }
     return vtxs;
   }
@@ -1336,8 +1350,8 @@ class GGraph {
   private boolean isCyclic(int[][] graph, int[] colors, int v) {
     if (colors[v] > 0) return colors[v] == 2; // black
     colors[v] = 1; // grey
-    for (int node : graph[v]) { // 邻接矩阵
-      if (!isCyclic(graph, colors, node)) return false;
+    for (int adj : graph[v]) { // 邻接矩阵
+      if (!isCyclic(graph, colors, adj)) return false;
     }
     colors[v] = 2; // black
     return true;
@@ -1394,7 +1408,7 @@ class GGraph {
   }
 
   // 「克隆图」
-  private final Map<Node, Node> visited = new HashMap<>();
+  private final Map<Node, Node> recStack = new HashMap<>();
 
   /**
    * 克隆图，deep clone undirected connected graph，DFS
@@ -1404,14 +1418,12 @@ class GGraph {
    */
   public Node cloneGraph(Node node) {
     if (node == null) return node;
-    if (visited.containsKey(node)) return visited.get(node);
+    if (recStack.containsKey(node)) return recStack.get(node);
     // 为深拷贝我们不会克隆它的邻居的列表
     Node cloneNode = new Node(node.val, new ArrayList());
-    visited.put(node, cloneNode);
+    recStack.put(node, cloneNode);
     // 遍历该节点的邻居并更新克隆节点的邻居列表
-    for (Node nbh : node.neighbors) {
-      cloneNode.neighbors.add(cloneGraph(nbh));
-    }
+    for (Node nbh : node.neighbors) cloneNode.neighbors.add(cloneGraph(nbh));
     return cloneNode;
   }
 
@@ -1506,7 +1518,7 @@ class BBit {
   }
 
   /**
-   * 只出现一次的数字，II 参下，此 III，一个一次，其余三次。
+   * 只出现一次的数字，此 III，II 参下，一个一次，其余三次。
    *
    * <p>使用一个 32 长的数组记录所有数值的每一位出现 1 的次数，再对数组的每一位进行 mod，重新拼凑出只出现一次的数
    *

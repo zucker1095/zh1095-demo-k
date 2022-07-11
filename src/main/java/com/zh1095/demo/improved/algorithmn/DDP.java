@@ -1,3 +1,34 @@
+// 最长递增子序列 贪心，留一个 tails 数组记录
+// 最长回文子序列 徘徊，二维
+// 最长公共子序列 对角，二维
+// 编辑距离 多路，二维
+// 正则表达式匹配 多路，二维
+
+// 最长公共子串 徘徊，一维
+// 最长连续序列 通过 set 去重，每找到一个就向右遍历
+// 乘积最大子数组 留两个状态
+// 单词拆分 徘徊，记录最长单词，将串分为两段分别匹配 dp[j] 与 s[j:i] 并利用最长的长度剪枝
+
+// 最小路径和 对角，二维
+// 三角形的最小路径和 对角，二维
+// 打家劫舍 记录取或不取当前节点两个状态
+
+// 买卖股票的最佳时机 以天维度分别记录买与卖
+// 接雨水 漏桶效应，双指针聚拢更新
+// 最长有效括号 左括号则需要计入前部分
+// 零钱兑换 外 coin 内 amount
+// 分发糖果 分别从左右遍历一次
+// 整数拆分 不拆与拆
+
+// 不同路径
+// 圆环回原点 走 s-1 步到 1 与走 s-1 步到 v-1
+// 解码方法
+// 不同的二叉搜索树
+
+// 最大正方形
+// 最大矩形
+// 柱状图中最大的矩形
+
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
@@ -6,7 +37,7 @@ import java.util.*;
 // 区分「以 nums[i] 结尾」&「在 [0,i-1] 区间」的 dp 定义差异
 // 二维中画图的路径通常包括
 // 对角，最长公共子序列，最小路径和，不同路径，最大正方形，圆环回原点
-// 多路，编辑距离
+// 多路，编辑距离，正则表达式匹配，通配符匹配
 // 徘徊，最长上升子序列，最长重复子数组，最长回文子序列，单词拆分
 
 /**
@@ -37,7 +68,7 @@ class OptimalSubSequence extends DefaultArray {
   public int lengthOfLIS(int[] nums) {
     // 最后一个已经赋值的元素的索引
     int len = nums.length, end = 0;
-    // dp[i] 表示以 i 结尾的 LIS
+    // dp[i] 表示以 i 结尾的 LIS 用于求路径
     // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
     int[] tails = new int[len], dp = new int[len];
     tails[0] = nums[0];
@@ -312,45 +343,42 @@ class OptimalSubSequence extends DefaultArray {
     int l1 = sChs.length, l2 = pChs.length;
     boolean[][] dp = new boolean[l1 + 1][l2 + 1];
     dp[0][0] = true;
-    for (int i = 0; i < l2; i++) {
-      dp[0][i + 1] = pChs[i] == '*' && dp[0][i - 1];
+    for (int j = 1; j <= l2; j++) {
+      if (pChs[j - 1] == '*') dp[0][j] = dp[0][j - 2];
     }
-    // 以下均基于 p 判定
-    for (int i = 0; i < l1; i++) {
-      for (int j = 0; j < l2; j++) {
-        // 如果是任意元素 or 是对于元素匹配
-        if (pChs[j] == '.' || pChs[j] == sChs[i]) dp[i + 1][j + 1] = dp[i][j];
-        if (pChs[j] != '*') continue;
-        /*
-        如果前一个元素不匹配且不为任意元素
-        dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
-        or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
-        or dp[i][j] = dp[i][j-2] // 没有匹配的情况
-         */
-        dp[i + 1][j + 1] =
-            (pChs[j - 1] == sChs[i] || pChs[j - 1] == '.')
-                ? dp[i + 1][j] || dp[i][j + 1] || dp[i + 1][j - 1]
-                : dp[i + 1][j - 1];
+    // 填格子
+    for (int i = 1; i <= l1; i++) {
+      for (int j = 1; j <= l2; j++) {
+        char s = sChs[i - 1], p = pChs[j - 1];
+        if (s == p || p == '.') {
+          dp[i][j] = dp[i - 1][j - 1]; // 能匹配
+        } else if (p == '*') {
+          /*
+           如果前一个元素不匹配且不为任意元素
+           dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
+           or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
+           or dp[i][j] = dp[i][j-2] // 没有匹配的情况
+          */
+          if (s == pChs[j - 2] || pChs[j - 2] == '.') dp[i][j] = dp[i][j - 2] || dp[i - 1][j];
+          else dp[i][j] = dp[i][j - 2];
+        }
       }
     }
-    return dp[l1][l2];
+    return dp[sChs.length][pChs.length];
   }
 
   private boolean wildcard(char[] sChs, char[] pChs) {
     int l1 = sChs.length, l2 = pChs.length;
     boolean[][] dp = new boolean[l1 + 1][l2 + 1];
     dp[0][0] = true;
-    for (int i = 1; i <= l2; i++) {
-      if (pChs[i - 1] != '*') break;
-      dp[0][i] = true;
+    for (int j = 1; j <= l2; j++) {
+      if (pChs[j - 1] != '*') break;
+      dp[0][j] = true;
     }
     for (int i = 1; i <= l1; ++i) {
       for (int j = 1; j <= l2; ++j) {
-        if (pChs[j - 1] == '*') {
-          dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
-        } else if (pChs[j - 1] == '?' || sChs[i - 1] == pChs[j - 1]) {
-          dp[i][j] = dp[i - 1][j - 1];
-        }
+        if (pChs[j - 1] == '*') dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
+        else if (pChs[j - 1] == '?' || pChs[j - 1] == sChs[i - 1]) dp[i][j] = dp[i - 1][j - 1];
       }
     }
     return dp[l1][l2];
@@ -454,6 +482,43 @@ class OptimalSubArray {
   }
 
   /**
+   * 单词拆分，wordDict 是否可组合为 s，可重复使用
+   *
+   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 至少其一匹配，比如 wordDict=["apple", "pen", "code"]
+   *
+   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
+   *
+   * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
+   *
+   * @param s the s
+   * @param wordDict the word dict
+   * @return boolean boolean
+   */
+  public boolean wordBreak(String s, List<String> wordDict) {
+    // 记录最长的单词，下方 [j:i-1] 过长，无法用单词补足，可 curing
+    int len = s.length(), maxLen = 0;
+    Set<String> wordSet = new HashSet();
+    for (String w : wordDict) {
+      wordSet.add(w);
+      maxLen = Math.max(maxLen, w.length());
+    }
+    boolean[] dp = new boolean[len + 1];
+    dp[0] = true;
+    for (int i = 1; i < len + 1; i++) {
+      // O(n^2) 判断 [0:i-1] 是否能被匹配，即分别判断 [0:j-1] & [j:i-1]
+      for (int j = i; j > -1; j--) {
+        if (j + maxLen < i) break;
+        // 二者均可被匹配，即 s[0:i-1] 可被匹配，进入下一个区间即 s[0:i]
+        if (dp[j] && wordSet.contains(s.substring(j, i))) {
+          dp[i] = true;
+          break;
+        }
+      }
+    }
+    return dp[len];
+  }
+
+  /**
    * 目标和，找到 nums 一个正子集与一个负子集，使其总和等于 target，统计这种可能性的总数
    *
    * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和 + 序列总和，即 01 背包，参考 https://zhuanlan.zhihu.com/p/93857890
@@ -519,14 +584,10 @@ class OptimalPath {
     int COL = grid[0].length;
     int[] dp = new int[COL];
     dp[0] = grid[0][0];
-    for (int i = 1; i < COL; i++) {
-      dp[i] = dp[i - 1] + grid[0][i];
-    }
+    for (int i = 1; i < COL; i++) dp[i] = dp[i - 1] + grid[0][i];
     for (int i = 1; i < grid.length; i++) {
       dp[0] += grid[i][0];
-      for (int j = 1; j < COL; j++) {
-        dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
-      }
+      for (int j = 1; j < COL; j++) dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
     }
     return dp[COL - 1];
     //    int rows = grid.length, cols = grid[0].length;
@@ -664,44 +725,6 @@ class OptimalPath {
   }
 
   /**
-   * 单词拆分，wordDict 是否可组合为 s，可重复使用
-   *
-   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 至少其一匹配，比如 wordDict=["apple", "pen", "code"]
-   *
-   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
-   *
-   * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
-   *
-   * @param s the s
-   * @param wordDict the word dict
-   * @return boolean boolean
-   */
-  public boolean wordBreak(String s, List<String> wordDict) {
-    int len = s.length(), maxLen = 0;
-    Set<String> wordSet = new HashSet(); // 仅用于 O(1) 查找
-    for (String w : wordDict) {
-      wordSet.add(w);
-      // 下方 [j:i-1] 过长，无法用单词补足，可 curing
-      maxLen = Math.max(maxLen, w.length());
-    }
-    boolean[] dp = new boolean[len + 1];
-    dp[0] = true;
-    for (int i = 1; i < len + 1; i++) {
-      // O(n^2) 判断 [0:i-1] 是否能被匹配，即分别判断 [0:j-1] & [j:i-1]
-      for (int j = i; j > -1; j--) {
-        if (j + maxLen < i) break;
-        String word = s.substring(j, i);
-        // 二者均可被匹配，即 s[0:i-1] 可被匹配，进入下一个区间即 s[0:i]
-        if (dp[j] && wordSet.contains(word)) {
-          dp[i] = true;
-          break;
-        }
-      }
-    }
-    return dp[len];
-  }
-
-  /**
    * 交错字符串，每次只能向右或下，画图可知即滚动数组
    *
    * <p>dp[i][j] 代表 s1[0:i+1] 个字符与 s2[0:j+1] 个字符拼接成 s3 任意 i+j 个字符，即存在目标路径能够到达 (i,j)
@@ -756,15 +779,15 @@ class OptimalElse {
   // 有限次
   private int maxProfitI(int[] prices) {
     //    int[] buys = new int[k + 1], sells = new int[k + 1];
+    // BASE CASE buys[1] = max(buys[1], -p) & sells[1] = max(sells[1], buys[1]+p)
     //    for (int p : prices) {
     //      for (int i = 1; i <= k; ++i) {
-    // BASE CASE buys[1] = max(buys[1], -p) & sells[1] = max(sells[1], buys[1]+p)
     //        buys[i] = Math.max(buys[i], sells[i - 1] - p); // 卖了买
     //        sells[i] = Math.max(sells[i], buys[i] + p); // 买了卖
     //      }
     //    }
     //    return sells[k];
-    // 如限定交易 2 次，则定义 2 组 buy & sell
+    // 以限两次为例
     int buy1 = Integer.MIN_VALUE, sell1 = 0, buy2 = Integer.MIN_VALUE, sell2 = 0;
     for (int p : prices) {
       buy1 = Math.max(buy1, -p); // max(不买，买了) 第一次买
@@ -777,8 +800,7 @@ class OptimalElse {
 
   // 无限次
   // 扩展1，含手续费，参下 annotate
-  // 扩展2，限定 n 次，参下 maxProfitIII
-  // 扩展3，含冷冻期，参下 annotate
+  // 扩展2，含冷冻期，参下 annotate
   private int maxProfitII(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
     //    int lock = 0; // 表示无法交易的时候
@@ -790,6 +812,7 @@ class OptimalElse {
       //      lock = preSell;
       // 因为能够多次买卖，所以每天都要尝试能否更优解
       buy = Math.max(buy, sell - p);
+      // 手续费
       //      buy = Math.max(buy, sell - p - fee);
       sell = Math.max(sell, buy + p);
     }
@@ -845,9 +868,9 @@ class OptimalElse {
   /**
    * 最长有效括号，考虑上一个成对的括号区间
    *
-   * <p>括号相关的参考「括号生成」与「有效的括号」
-   *
    * <p>dp[i] 表示 s[0,i-1] 的最长有效括号
+   *
+   * <p>括号相关的参考「括号生成」与「有效的括号」
    *
    * @param s the s
    * @return int int
@@ -869,7 +892,7 @@ class OptimalElse {
   }
 
   /**
-   * 零钱兑换，硬币可重复，类似「排列总和I」，与下方 II 保持外 coin 内 amount
+   * 零钱兑换，硬币可重复，类似「全排列」，与下方 II 保持外 coin 内 amount
    *
    * <p>dp[i] 表示凑成 i 元需要的最少的硬币数
    *
@@ -879,15 +902,15 @@ class OptimalElse {
    */
   public int coinChange(int[] coins, int amount) {
     int[] dp = new int[amount + 1];
-    // 因为要比较的是最小值
+    // 比较最小值
     Arrays.fill(dp, amount + 1);
     // 单独一枚硬币如果能够凑出面值，符合最优子结构
     dp[0] = 0;
     Arrays.sort(coins);
-    for (int coin : coins) {
-      for (int i = coin; i <= amount; i++) {
-        if (i < coin) break;
-        dp[i] = Math.min(dp[i], dp[i - coin] + 1);
+    for (int c : coins) {
+      for (int i = c; i <= amount; i++) {
+        if (i < c) break;
+        dp[i] = Math.min(dp[i], dp[i - c] + 1);
       }
     }
     return (dp[amount] == amount + 1) ? -1 : dp[amount];
@@ -923,7 +946,7 @@ class OptimalElse {
    * @return the int
    */
   public int candy(int[] ratings) {
-    int len = ratings.length, minCount = 0;
+    int len = ratings.length;
     int[] left = new int[len];
     for (int i = 0; i < len; i++) {
       //      if (i == 0 && ratings[0] > ratings[len - 1]) {
@@ -932,16 +955,16 @@ class OptimalElse {
       //      }
       left[i] = i > 0 && ratings[i] > ratings[i - 1] ? left[i - 1] + 1 : 1;
     }
-    int right = 0;
+    int right = 0, minCnt = 0;
     for (int i = len - 1; i > -1; i--) {
       //      if (i == len - 1 && ratings[0] < ratings[i]) {
       //        right += 1;
       //        continue;
       //      }
       right = i < len - 1 && ratings[i] > ratings[i + 1] ? right + 1 : 1;
-      minCount += Math.max(left[i], right);
+      minCnt += Math.max(left[i], right);
     }
-    return minCount;
+    return minCnt;
   }
 
   /**
@@ -992,9 +1015,9 @@ class OptimalElse {
   public int integerBreak(int n) {
     int[] dp = new int[n + 1];
     dp[1] = 1;
+    // max(dp[i], j*(i-j), j*dp[i-j]) 后二分别对应不拆与拆
     for (int i = 2; i <= n; i++) {
       for (int j = 1; j <= i - 1; j++) {
-        // max(dp[i], j*(i-j), j*dp[i-j])  后二者分别对应不拆与拆
         dp[i] = Math.max(dp[i], Math.max(j * (i - j), j * dp[i - j]));
       }
     }
@@ -1146,23 +1169,23 @@ class CCount {
    *
    * <p>dp[i][j] 表示从 0 出发走 i 步到达 j 点的方案，即排列数
    *
-   * <p>递推，走 n 步到 0 的方案数 = 走 n-1 步到 1 的方案数 + 走 n-1 步到 m-1 的方案数
+   * <p>递推，走 s 步到 0 的方案数 = 走 s-1 步到 1 的方案数 + 走 s-1 步到 v-1 的方案数
    *
-   * @param m 点数
-   * @param n 步数
+   * @param v 点数
+   * @param s 步数
    * @return int int
    */
-  public int backToOrigin(int m, int n) {
-    int[][] dp = new int[m][n + 1]; // 便于从 1 开始递推
+  public int backToOrigin(int v, int s) {
+    int[][] dp = new int[v][s + 1]; // 便于从 1 开始递推
     dp[0][0] = 1;
-    // j+1 与 j-1 可能越界 [0, m-1] 因此取余
-    for (int step = 1; step < n + 1; step++) {
-      for (int idx = 0; idx < m; idx++) {
-        int idxNxt = (idx + 1) % m, idxTail = (idx - 1 + m) % m;
+    // j+1 与 j-1 可能越界 [0, v-1] 因此取余
+    for (int step = 1; step < s + 1; step++) {
+      for (int idx = 0; idx < v; idx++) {
+        int idxNxt = (idx + 1) % v, idxTail = (idx - 1 + v) % v;
         dp[step][idx] = dp[step - 1][idxNxt] + dp[step - 1][idxTail];
       }
     }
-    return dp[n][0];
+    return dp[s][0];
   }
 
   /**
@@ -1190,25 +1213,6 @@ class CCount {
   }
 
   /**
-   * 不同的二叉搜索树，卡特兰数公式，记忆即可
-   *
-   * <p>dp[i] 表示假设 i 个节点存在二叉排序树的个数
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int numTrees(int n) {
-    int[] dp = new int[n + 1];
-    dp[0] = dp[1] = 1;
-    for (int i = 2; i < n + 1; i++) {
-      for (int j = 1; j < i + 1; j++) {
-        dp[i] += dp[j - 1] * dp[i - j];
-      }
-    }
-    return dp[n];
-  }
-
-  /**
    * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
    *
    * <p>参考
@@ -1226,21 +1230,38 @@ class CCount {
   public int numDecodings(String s) {
     if (s.charAt(0) == '0') return 0;
     // dp[-1]=dp[0]=1
-    int pre = 1, cur = 1;
+    int preCnt = 1, cnt = 1;
     for (int i = 1; i < s.length(); i++) {
-      char curCh = s.charAt(i), preCh = s.charAt(i - 1);
-      int tmp = cur;
-      if (curCh == '0') {
-        if (preCh != '1' && preCh != '2') {
-          return 0;
-        }
-        cur = pre;
-      } else if (preCh == '1' || (preCh == '2' && curCh >= '1' && curCh <= '6')) {
-        cur += pre;
+      char cur = s.charAt(i), pre = s.charAt(i - 1);
+      int tmp = cnt;
+      if (cur == '0') {
+        if (pre != '1' && pre != '2') return 0;
+        cnt = preCnt;
+      } else if (pre == '1' || (pre == '2' && cur >= '1' && cur <= '6')) {
+        cnt += preCnt;
       }
-      pre = tmp;
+      preCnt = tmp;
     }
-    return cur;
+    return cnt;
+  }
+
+  /**
+   * 不同的二叉搜索树，卡特兰数公式，记忆即可
+   *
+   * <p>dp[i] 表示假设 i 个节点存在二叉排序树的个数
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int numTrees(int n) {
+    int[] dp = new int[n + 1];
+    dp[0] = dp[1] = 1;
+    for (int i = 2; i < n + 1; i++) {
+      for (int j = 1; j < i + 1; j++) {
+        dp[i] += dp[j - 1] * dp[i - j];
+      }
+    }
+    return dp[n];
   }
 }
 
@@ -1263,22 +1284,49 @@ class OptimalRectangle {
     int maxSide = 0;
     // 首行首列均 0
     int[] dp = new int[matrix[0].length + 1];
-    for (int row = 0; row < matrix.length; row++) {
+    for (int r = 0; r < matrix.length; r++) {
       int topLeft = 0;
-      for (int col = 0; col < matrix[0].length; col++) {
-        int nxt = dp[col + 1];
-        if (matrix[row][col] == '1') {
+      for (int c = 0; c < matrix[0].length; c++) {
+        int nxt = dp[c + 1];
+        if (matrix[r][c] == '1') {
           // 类似木桶短边 matrix[i][j] 为右下角组成的最大面积受限于左上，上边与左侧的 0
-          dp[col + 1] = 1 + Math.min(topLeft, Math.min(dp[col], dp[col + 1]));
+          dp[c + 1] = 1 + Math.min(topLeft, Math.min(dp[c], dp[c + 1]));
           // maxSide = max(maxSide, dp[row+1][col+1]);
-          maxSide = Math.max(maxSide, dp[col + 1]);
+          maxSide = Math.max(maxSide, dp[c + 1]);
         } else {
-          dp[col + 1] = 0;
+          dp[c + 1] = 0;
         }
         topLeft = nxt;
       }
     }
     return maxSide * maxSide;
+  }
+
+  /**
+   * 最大矩形，遍历每行的高度，通过栈
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalRectangle(char[][] matrix) {
+    int maxArea = 0, ROW = matrix.length, COL = matrix[0].length;
+    int[] heights = new int[COL + 2]; // 每列垂直方向上的最大高度
+    for (int i = 0; i < ROW; i++) {
+      Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
+      for (int j = 0; j < COL + 2; j++) {
+        // 有差异
+        if (j > 0 && j < COL + 1) heights[j] = matrix[i][j - 1] == '1' ? heights[j] + 1 : 0;
+        while (!ms.isEmpty() && heights[ms.peekLast()] > heights[i]) {
+          int cur = ms.pollLast(), pre = ms.peekLast();
+          maxArea = Math.max(maxArea, (j - pre - 1) * heights[cur]);
+        }
+        ms.offerLast(j);
+      }
+    }
+    return maxArea;
   }
 
   /**
@@ -1292,43 +1340,15 @@ class OptimalRectangle {
    */
   public int largestRectangleArea(int[] heights) {
     int maxArea = 0, len = heights.length;
-    Deque<Integer> ms = new ArrayDeque<>();
     int[] newHeights = new int[len + 2];
-    for (int i = 1; i < len + 1; i++) {
-      newHeights[i] = heights[i - 1];
-    }
+    for (int i = 1; i < len + 1; i++) newHeights[i] = heights[i - 1];
+    Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
     for (int i = 0; i < newHeights.length; i++) {
       while (!ms.isEmpty() && newHeights[ms.peekLast()] > newHeights[i]) {
         int cur = ms.pollLast(), pre = ms.peekLast();
         maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
       }
       ms.offerLast(i);
-    }
-    return maxArea;
-  }
-
-  /**
-   * 最大矩形
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
-   *
-   * @param matrix
-   * @return
-   */
-  public int maximalRectangle(char[][] matrix) {
-    int maxArea = 0, row = matrix.length, col = matrix[0].length;
-    int[] newHeights = new int[col + 2];
-    for (int i = 0; i < row; i++) {
-      Deque<Integer> ms = new ArrayDeque<>();
-      for (int j = 0; j < col + 2; j++) {
-        if (j >= 1 && j <= col) newHeights[j] = matrix[i][j - 1] == '1' ? newHeights[j] + 1 : 0;
-        while (!ms.isEmpty() && newHeights[ms.peekLast()] > newHeights[i]) {
-          int cur = ms.pollLast(), pre = ms.peekLast();
-          maxArea = Math.max(maxArea, (j - pre - 1) * newHeights[cur]);
-        }
-        ms.offerLast(j);
-      }
     }
     return maxArea;
   }
