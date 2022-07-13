@@ -1152,14 +1152,16 @@ class GGraph {
    * @return boolean boolean
    */
   public boolean canFinish(int V, int[][] prerequisites) {
+    // 构造邻接矩阵并统计入度
     int[] indegrees = new int[V];
     int[][] matrix = new int[V][V];
     buildMatrix(prerequisites, matrix, indegrees);
     Queue<Integer> queue = new LinkedList<>();
-    //
+    // 收集起点
     for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.offer(i);
     }
+    // 遍历起点的邻接点
     int cnt = 0;
     while (!queue.isEmpty()) {
       cnt += 1;
@@ -1339,21 +1341,23 @@ class GGraph {
    */
   public List<Integer> eventualSafeNodes(int[][] graph) {
     int V = graph.length;
-    int[] colors = new int[V]; // white
+    int[] colors = new int[V]; // initial with WHITE
     List<Integer> vtxs = new ArrayList<>();
     for (int vtx = 0; vtx < V; vtx++) {
-      if (isCyclic(graph, colors, vtx)) vtxs.add(vtx);
+      if (dfs20(graph, colors, vtx)) vtxs.add(vtx);
     }
     return vtxs;
   }
 
-  private boolean isCyclic(int[][] graph, int[] colors, int v) {
-    if (colors[v] > 0) return colors[v] == 2; // black
-    colors[v] = 1; // grey
+  private final int WHILE = 0, GREY = 1, BLACK = 2;
+
+  private boolean dfs20(int[][] graph, int[] colors, int v) {
+    if (colors[v] > WHILE) return colors[v] == BLACK;
+    colors[v] = GREY;
     for (int adj : graph[v]) { // 邻接矩阵
-      if (!isCyclic(graph, colors, adj)) return false;
+      if (!dfs20(graph, colors, adj)) return false;
     }
-    colors[v] = 2; // black
+    colors[v] = BLACK;
     return true;
   }
 

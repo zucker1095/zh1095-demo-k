@@ -26,8 +26,12 @@
 // 压缩字符串 读写双指针，读则加个内循环，然后逐位写入数字
 // 翻转字符串里的单词 两次翻转，最终再移除首尾与单词间多余的空格
 
+// 整数转罗马数字 从低位开始匹多大的字符
+
 // 移掉k位数字 单调递减栈，记录值，并避免前导零，最终截取
 // 下一个更大元素II 单调递减栈，记录索引
+// 最大矩形
+// 柱状图中最大的矩形
 
 package com.zh1095.demo.improved.algorithmn;
 
@@ -1304,7 +1308,7 @@ class CConvert extends DefaultSString {
   /**
    * 整数转罗马数字，贪心，匹最大的字符
    *
-   * <p>扩展1，阿拉伯数字转汉字，数字先一一对应建映射，逢位加十百千万标识
+   * <p>扩展1，阿拉伯数字转中文，参考 https://www.nowcoder.com/practice/6eec992558164276a51d86d71678b300
    *
    * @param num the num
    * @return string string
@@ -1316,8 +1320,8 @@ class CConvert extends DefaultSString {
     StringBuilder roman = new StringBuilder();
     int cur = num;
     for (int i = 0; i < NUMs.length; i++) {
-      int n = NUMs[i];
-      String ch = ROMANs[i]; // 贪心，数字能匹配的最大罗马字符
+      int n = NUMs[i]; // 贪心，数字能匹配的最大值及其对应的罗马字符
+      String ch = ROMANs[i];
       while (cur >= n) { // 一直匹配当前罗马字符，直到取下一个
         roman.append(ch);
         cur -= n;
@@ -1536,6 +1540,61 @@ class MonotonicStack {
       ms.offerLast(i % len);
     }
     return elms;
+  }
+
+  /**
+   * 柱状图中最大的矩形
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
+   *
+   * @param heights
+   * @return
+   */
+  public int largestRectangleArea(int[] heights) {
+    int maxArea = 0, len = heights.length;
+    // 整体向右移位，且首尾添加哨兵，下方不用判断边界
+    int[] hs = new int[len + 2];
+    System.arraycopy(heights, 0, hs, 1, len);
+    Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
+    for (int i = 0; i < hs.length; i++) {
+      maxArea = pushAndReturn(hs, i, maxArea, ms);
+    }
+    return maxArea;
+  }
+
+  /**
+   * 最大矩形，遍历每行的高度，通过栈
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalRectangle(char[][] matrix) {
+    int maxArea = 0, len = matrix[0].length;
+    int[] hs = new int[len + 2];
+    for (char[] rows : matrix) {
+      Deque<Integer> ms = new ArrayDeque<>();
+      for (int i = 0; i < hs.length; i++) {
+        if (i > 0 && i < len + 1) { // 哨兵内
+          if (rows[i - 1] == '1') hs[i] += 1;
+          else hs[i] = 0;
+        }
+        maxArea = pushAndReturn(hs, i, maxArea, ms);
+      }
+    }
+    return maxArea;
+  }
+
+  private int pushAndReturn(int[] hs, int i, int maxArea, Deque<Integer> ms) {
+    while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
+      int cur = ms.pollLast(), pre = ms.peekLast();
+      maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
+    }
+    ms.offerLast(i);
+    return maxArea;
   }
 
   /**

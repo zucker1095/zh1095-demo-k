@@ -113,6 +113,10 @@ public class TTree {
    * @return boolean boolean
    */
   public boolean hasPathSum(TreeNode root, int sum) {
+    //    if (root == null) return false;
+    //    int v = root.val;
+    //    if (root.left == null && root.right == null) return v == sum;
+    //    return hasPathSum(root.left, sum - v) || hasPathSum(root.right, sum - v);
     if (root == null) return false;
     Queue<TreeNode> nodeQueue = new LinkedList<>();
     Queue<Integer> numQueue = new LinkedList<>();
@@ -1658,13 +1662,13 @@ class BacktrackingSearch extends DDFS {
       TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {
     if (root == null) return;
     path.offerLast(root.val);
-    int nxt = target - root.val;
-    if (nxt == 0 && root.left == null && root.right == null) {
+    int sum = target - root.val;
+    if (sum == 0 && root.left == null && root.right == null) {
       res.add(new ArrayList<>(path));
       return;
     }
-    backtracking0(root.left, path, res, nxt);
-    backtracking0(root.right, path, res, nxt);
+    backtracking0(root.left, path, res, sum);
+    backtracking0(root.right, path, res, sum);
     path.pollLast();
   }
 

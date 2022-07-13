@@ -5,9 +5,11 @@
 // 正则表达式匹配 多路，二维
 
 // 最长公共子串 徘徊，一维
-// 最长连续序列 通过 set 去重，每找到一个就向右遍历
-// 乘积最大子数组 留两个状态
 // 单词拆分 徘徊，记录最长单词，将串分为两段分别匹配 dp[j] 与 s[j:i] 并利用最长的长度剪枝
+// 最长连续递增序列 类似「最大子序和」
+// 最长连续序列 通过 set 去重，若存在左邻接则跳过，否则向右遍历，更新长度
+// 乘积最大子数组 留两个状态
+// 最长递增子序列的个数
 
 // 最小路径和 对角，二维
 // 三角形的最小路径和 对角，二维
@@ -18,16 +20,15 @@
 // 最长有效括号 左括号则需要计入前部分
 // 零钱兑换 外 coin 内 amount
 // 分发糖果 分别从左右遍历一次
+// 最大正方形
+// 完全平方数
 // 整数拆分 不拆与拆
+// 鸡蛋掉落
 
 // 不同路径
 // 圆环回原点 走 s-1 步到 1 与走 s-1 步到 v-1
-// 解码方法
+// 解码方法 成对判断高低位
 // 不同的二叉搜索树
-
-// 最大正方形
-// 最大矩形
-// 柱状图中最大的矩形
 
 package com.zh1095.demo.improved.algorithmn;
 
@@ -35,10 +36,9 @@ import java.util.*;
 
 // 状态压缩基于滚动数组，尽量用具体含义，如 buy & sell 而非 dp1 & dp2
 // 区分「以 nums[i] 结尾」&「在 [0,i-1] 区间」的 dp 定义差异
-// 二维中画图的路径通常包括
-// 对角，最长公共子序列，最小路径和，不同路径，最大正方形，圆环回原点
-// 多路，编辑距离，正则表达式匹配，通配符匹配
-// 徘徊，最长上升子序列，最长重复子数组，最长回文子序列，单词拆分
+// 二维 dp 画图的路径通常包括
+// 右下
+// 徘徊或相向 最长回文子序，最长重复子数组，单词拆分，三角形的最小路径和，不同的二叉搜索树，完全平方数，整数拆分
 
 /**
  * 收集 DP 相关，根据题设划分，而非解法
@@ -108,6 +108,37 @@ class OptimalSubSequence extends DefaultArray {
   }
 
   /**
+   * 最长递增子序列的个数
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
+   *
+   * @param nums
+   * @return
+   */
+  public int findNumberOfLIS(int[] nums) {
+    int len = nums.length, maxLen = 1;
+    int[] dp = new int[len], cnts = new int[len];
+    for (int i = 0; i < len; i++) {
+      dp[i] = cnts[i] = 1;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] >= nums[i]) continue;
+        if (dp[i] == dp[j] + 1) cnts[i] += cnts[j];
+        if (dp[i] < dp[j] + 1) {
+          dp[i] = dp[j] + 1;
+          cnts[i] = cnts[j];
+        }
+      }
+      maxLen = Math.max(maxLen, dp[i]);
+    }
+    int cnt = 0;
+    for (int i = 0; i < len; i++) {
+      if (dp[i] == maxLen) cnt += cnts[i];
+    }
+    return cnt;
+  }
+
+  /**
    * 最长回文子序列
    *
    * <p>dp[i][j] indicted s[i:j] 内的 LPS
@@ -123,11 +154,10 @@ class OptimalSubSequence extends DefaultArray {
     int[][] dp = new int[len][len];
     for (int i = len - 1; i > -1; i--) {
       dp[i][i] = 1;
-      char ch = s.charAt(i);
       // [i+1:len-1]
       for (int j = i + 1; j < len; j++) {
         // s[i] 是否匹配 s[j] 否则 s[i:j]'s LPS depends on prev and next
-        if (ch == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
+        if (s.charAt(i) == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
         else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
       }
     }
@@ -293,38 +323,6 @@ class OptimalSubSequence extends DefaultArray {
   }
 
   /**
-   * 最长递增子序列的个数
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
-   *
-   * @param nums
-   * @return
-   */
-  public int findNumberOfLIS(int[] nums) {
-    int len = nums.length, maxLen = 1;
-    int[] dp = new int[len], cnts = new int[len];
-    for (int i = 0; i < len; i++) {
-      dp[i] = cnts[i] = 1;
-      for (int j = 0; j < i; j++) {
-        if (nums[j] >= nums[i]) continue;
-        if (dp[i] < dp[j] + 1) {
-          dp[i] = dp[j] + 1;
-          cnts[i] = cnts[j];
-        } else if (dp[i] == dp[j] + 1) {
-          cnts[i] += cnts[j];
-        }
-      }
-      maxLen = Math.max(maxLen, dp[i]);
-    }
-    int count = 0;
-    for (int i = 0; i < len; i++) {
-      if (dp[i] == maxLen) count += cnts[i];
-    }
-    return count;
-  }
-
-  /**
    * 正则表达式匹配/通配符匹配，以下均基于 p 判定，类似「通配符匹配」
    *
    * <p>dp[i][j] 表示 s[0,i-1] 能否被 p[0,j-1] 匹配
@@ -427,6 +425,23 @@ class OptimalSubArray {
   }
 
   /**
+   * 最长连续递增序列，即最长递增子数组，贪心，类似「最大子序和」
+   *
+   * @param nums
+   * @return
+   */
+  public int findLengthOfLCIS(int[] nums) {
+    int len = nums.length, maxLen = 1, cnt = 1;
+    if (len < 2) return len;
+    for (int i = 0; i < len - 1; i++) {
+      if (nums[i + 1] > nums[i]) cnt += 1;
+      else cnt = 1;
+      maxLen = Math.max(maxLen, cnt);
+    }
+    return maxLen;
+  }
+
+  /**
    * 最长连续序列，逐个数字递增查找
    *
    * <p>仅当该数是连续序列的首个数，才会进入内循环匹配连续序列中的数，因此数组中的每个数只会进入内层循环一次，即线性时间复杂度
@@ -442,11 +457,12 @@ class OptimalSubArray {
     for (int n : nums) set.add(n);
     int maxLen = 0;
     for (int n : set) {
-      if (set.contains(n - 1)) continue; // indicates that the number has been traversed
-      int upper = n;
+      // indicates that the number has been traversed
+      if (set.contains(n - 1)) continue;
+      int hi = n;
       // go up downing the number
-      while (set.contains(upper + 1)) upper += 1;
-      maxLen = Math.max(maxLen, upper - n + 1);
+      while (set.contains(hi + 1)) hi += 1;
+      maxLen = Math.max(maxLen, hi - n + 1);
     }
     return maxLen;
   }
@@ -504,8 +520,8 @@ class OptimalSubArray {
     }
     boolean[] dp = new boolean[len + 1];
     dp[0] = true;
+    // O(n^2) 判断 [0:i-1] 是否能被匹配，即分别判断 [0:j-1] & [j:i-1]
     for (int i = 1; i < len + 1; i++) {
-      // O(n^2) 判断 [0:i-1] 是否能被匹配，即分别判断 [0:j-1] & [j:i-1]
       for (int j = i; j > -1; j--) {
         if (j + maxLen < i) break;
         // 二者均可被匹配，即 s[0:i-1] 可被匹配，进入下一个区间即 s[0:i]
@@ -584,8 +600,10 @@ class OptimalPath {
     int COL = grid[0].length;
     int[] dp = new int[COL];
     dp[0] = grid[0][0];
+    // 首行只能由左侧递推
     for (int i = 1; i < COL; i++) dp[i] = dp[i - 1] + grid[0][i];
     for (int i = 1; i < grid.length; i++) {
+      // 首列只能由上侧递推
       dp[0] += grid[i][0];
       for (int j = 1; j < COL; j++) dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
     }
@@ -673,7 +691,7 @@ class OptimalPath {
   }
 
   // https://blog.csdn.net/Chenguanxixixi/article/details/119540929
-  private int[] getIndexArray(int[] nums) {
+  private int[] getIndexArr(int[] nums) {
     int len = nums.length;
     int[] dp = new int[len], path = new int[len];
     if (len == 1) {
@@ -892,6 +910,40 @@ class OptimalElse {
   }
 
   /**
+   * 最大正方形，找到只包含 1 的最大正方形
+   *
+   * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
+   *
+   * <p>递推 dp[i+1][j+1]=1+min(dp[i+1][j], dp[i][j+1], dp[i][j]))
+   *
+   * <p>只需关注当前格子的周边，故可二维降一维优化，参考
+   * https://leetcode-cn.com/problems/maximal-square/solution/li-jie-san-zhe-qu-zui-xiao-1-by-lzhlyle/
+   *
+   * @param matrix the matrix
+   * @return int int
+   */
+  public int maximalSquare(char[][] matrix) {
+    int maxSide = 0, ROW = matrix.length, COL = matrix[0].length;
+    int[] dp = new int[COL + 1]; // 首行首列均 0
+    for (int r = 0; r < ROW; r++) {
+      int topLeft = 0;
+      for (int c = 0; c < COL; c++) {
+        int nxt = dp[c + 1];
+        if (matrix[r][c] == '1') {
+          // 类似木桶短边 matrix[i][j] 为右下角组成的最大面积受限于左上，上边与左侧的 0
+          dp[c + 1] = 1 + Math.min(topLeft, Math.min(dp[c], dp[c + 1]));
+          // maxSide = max(maxSide, dp[row+1][col+1]);
+          maxSide = Math.max(maxSide, dp[c + 1]);
+        } else {
+          dp[c + 1] = 0;
+        }
+        topLeft = nxt;
+      }
+    }
+    return maxSide * maxSide;
+  }
+
+  /**
    * 零钱兑换，硬币可重复，类似「全排列」，与下方 II 保持外 coin 内 amount
    *
    * <p>dp[i] 表示凑成 i 元需要的最少的硬币数
@@ -968,37 +1020,29 @@ class OptimalElse {
   }
 
   /**
-   * 使序列递增的最小交换次数
-   *
-   * <p>对于位置 i 至少满足以下两种情况之一
-   *
-   * <p>A[i]>A[i-1] && B[i]>B[i-1] 与 A[i]>B[i-1] && B[i]>A[i-1]
+   * 鸡蛋掉落
    *
    * <p>TODO 参考
-   * https://leetcode-cn.com/problems/minimum-swaps-to-make-sequences-increasing/solution/leetcode-801-wo-gan-jio-ying-gai-jiang-de-hen-tou-/
+   * https://leetcode-cn.com/problems/super-egg-drop/solution/ji-ben-dong-tai-gui-hua-jie-fa-by-labuladong/
    *
-   * @param nums1
-   * @param nums2
+   * @param K
+   * @param N
    * @return
    */
-  public int minSwap(int[] nums1, int[] nums2) {
-    // 不交换与交换的最小操作次数
-    int keep = 0, swap = 1;
-    for (int i = 1; i < nums1.length; i++) {
-      if (nums1[i - 1] < nums1[i] && nums2[i - 1] < nums2[i]) {
-        if (nums1[i - 1] < nums2[i] && nums2[i - 1] < nums1[i]) {
-          keep = Math.min(keep, swap);
-          swap = keep + 1;
-        } else {
-          swap += 1;
-        }
-      } else {
-        int pre = keep;
-        keep = swap;
-        swap = pre + 1;
+  public int superEggDrop(int K, int N) {
+    // m 最多不会超过 N 次（线性扫描）
+    int[][] dp = new int[K + 1][N + 1];
+    // base case
+    // dp[0][..] = 0
+    // dp[..][0] = 0
+    int celling = 0;
+    while (dp[K][celling] < N) {
+      celling += 1;
+      for (int k = 1; k <= K; k++) {
+        dp[k][celling] = dp[k][celling - 1] + dp[k - 1][celling - 1] + 1;
       }
     }
-    return Math.min(keep, swap);
+    return celling;
   }
 
   /**
@@ -1048,29 +1092,37 @@ class OptimalElse {
   }
 
   /**
-   * 鸡蛋掉落
+   * 使序列递增的最小交换次数
+   *
+   * <p>对于位置 i 至少满足以下两种情况之一
+   *
+   * <p>A[i]>A[i-1] && B[i]>B[i-1] 与 A[i]>B[i-1] && B[i]>A[i-1]
    *
    * <p>TODO 参考
-   * https://leetcode-cn.com/problems/super-egg-drop/solution/ji-ben-dong-tai-gui-hua-jie-fa-by-labuladong/
+   * https://leetcode-cn.com/problems/minimum-swaps-to-make-sequences-increasing/solution/leetcode-801-wo-gan-jio-ying-gai-jiang-de-hen-tou-/
    *
-   * @param K
-   * @param N
+   * @param nums1
+   * @param nums2
    * @return
    */
-  public int superEggDrop(int K, int N) {
-    // m 最多不会超过 N 次（线性扫描）
-    int[][] dp = new int[K + 1][N + 1];
-    // base case
-    // dp[0][..] = 0
-    // dp[..][0] = 0
-    int celling = 0;
-    while (dp[K][celling] < N) {
-      celling += 1;
-      for (int k = 1; k <= K; k++) {
-        dp[k][celling] = dp[k][celling - 1] + dp[k - 1][celling - 1] + 1;
+  public int minSwap(int[] nums1, int[] nums2) {
+    // 不交换与交换的最小操作次数
+    int keep = 0, swap = 1;
+    for (int i = 1; i < nums1.length; i++) {
+      if (nums1[i - 1] < nums1[i] && nums2[i - 1] < nums2[i]) {
+        if (nums1[i - 1] < nums2[i] && nums2[i - 1] < nums1[i]) {
+          keep = Math.min(keep, swap);
+          swap = keep + 1;
+        } else {
+          swap += 1;
+        }
+      } else {
+        int pre = keep;
+        keep = swap;
+        swap = pre + 1;
       }
     }
-    return celling;
+    return Math.min(keep, swap);
   }
 }
 
@@ -1111,10 +1163,10 @@ class CCount {
     int[] dp = new int[len];
     // 起点可能有障碍物
     dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
-    for (int[] rows : obstacleGrid) {
-      for (int i = 0; i < len; i++) {
-        if (rows[i] == 1) dp[i] = 0;
-        if (rows[i] == 0 && i > 0) dp[i] += dp[i - 1];
+    for (int i = 0; i < obstacleGrid.length; i++) {
+      for (int j = 0; j < len; j++) {
+        if (obstacleGrid[i][j] == 1) dp[j] = 0;
+        if (obstacleGrid[i][j] == 0 && j > 0) dp[j] += dp[j - 1];
       }
     }
     return dp[len - 1];
@@ -1229,15 +1281,18 @@ class CCount {
    */
   public int numDecodings(String s) {
     if (s.charAt(0) == '0') return 0;
-    // dp[-1]=dp[0]=1
+    // dp[-1] = dp[0] = 1
     int preCnt = 1, cnt = 1;
     for (int i = 1; i < s.length(); i++) {
-      char cur = s.charAt(i), pre = s.charAt(i - 1);
+      // 滑窗，成对判断高低位
+      char hi = s.charAt(i - 1), lo = s.charAt(i);
       int tmp = cnt;
-      if (cur == '0') {
-        if (pre != '1' && pre != '2') return 0;
+      if (lo == '0') {
+        // 低位若 0 则高位只能 1 或 2
+        if (hi != '1' && hi != '2') return 0;
         cnt = preCnt;
-      } else if (pre == '1' || (pre == '2' && cur >= '1' && cur <= '6')) {
+      } else if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) {
+        // 低位非零，则高位为 1 均可，若后者为 2 则前者只能 1 至 6
         cnt += preCnt;
       }
       preCnt = tmp;
@@ -1262,94 +1317,5 @@ class CCount {
       }
     }
     return dp[n];
-  }
-}
-
-/** 收集矩形相关，矩阵参考路径 */
-class OptimalRectangle {
-  /**
-   * 最大正方形，找到只包含 1 的最大正方形
-   *
-   * <p>dp[i][j] 表示以 matrix[i-1][j-1] 为右下角的最大正方形的边长
-   *
-   * <p>递推 dp[i+1][j+1]=1+min(dp[i+1][j], dp[i][j+1], dp[i][j]))
-   *
-   * <p>只需关注当前格子的周边，故可二维降一维优化，参考
-   * https://leetcode-cn.com/problems/maximal-square/solution/li-jie-san-zhe-qu-zui-xiao-1-by-lzhlyle/
-   *
-   * @param matrix the matrix
-   * @return int int
-   */
-  public int maximalSquare(char[][] matrix) {
-    int maxSide = 0;
-    // 首行首列均 0
-    int[] dp = new int[matrix[0].length + 1];
-    for (int r = 0; r < matrix.length; r++) {
-      int topLeft = 0;
-      for (int c = 0; c < matrix[0].length; c++) {
-        int nxt = dp[c + 1];
-        if (matrix[r][c] == '1') {
-          // 类似木桶短边 matrix[i][j] 为右下角组成的最大面积受限于左上，上边与左侧的 0
-          dp[c + 1] = 1 + Math.min(topLeft, Math.min(dp[c], dp[c + 1]));
-          // maxSide = max(maxSide, dp[row+1][col+1]);
-          maxSide = Math.max(maxSide, dp[c + 1]);
-        } else {
-          dp[c + 1] = 0;
-        }
-        topLeft = nxt;
-      }
-    }
-    return maxSide * maxSide;
-  }
-
-  /**
-   * 最大矩形，遍历每行的高度，通过栈
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
-   *
-   * @param matrix
-   * @return
-   */
-  public int maximalRectangle(char[][] matrix) {
-    int maxArea = 0, ROW = matrix.length, COL = matrix[0].length;
-    int[] heights = new int[COL + 2]; // 每列垂直方向上的最大高度
-    for (int i = 0; i < ROW; i++) {
-      Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
-      for (int j = 0; j < COL + 2; j++) {
-        // 有差异
-        if (j > 0 && j < COL + 1) heights[j] = matrix[i][j - 1] == '1' ? heights[j] + 1 : 0;
-        while (!ms.isEmpty() && heights[ms.peekLast()] > heights[i]) {
-          int cur = ms.pollLast(), pre = ms.peekLast();
-          maxArea = Math.max(maxArea, (j - pre - 1) * heights[cur]);
-        }
-        ms.offerLast(j);
-      }
-    }
-    return maxArea;
-  }
-
-  /**
-   * 柱状图中最大的矩形
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
-   *
-   * @param heights
-   * @return
-   */
-  public int largestRectangleArea(int[] heights) {
-    int maxArea = 0, len = heights.length;
-    int[] newHeights = new int[len + 2];
-    for (int i = 1; i < len + 1; i++) newHeights[i] = heights[i - 1];
-    Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
-    for (int i = 0; i < newHeights.length; i++) {
-      while (!ms.isEmpty() && newHeights[ms.peekLast()] > newHeights[i]) {
-        int cur = ms.pollLast(), pre = ms.peekLast();
-        maxArea = Math.max(maxArea, (i - pre - 1) * newHeights[cur]);
-      }
-      ms.offerLast(i);
-    }
-    return maxArea;
   }
 }
