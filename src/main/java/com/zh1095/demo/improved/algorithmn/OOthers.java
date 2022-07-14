@@ -12,6 +12,8 @@
 // Pow(x,n)
 // 圆圈中最后剩下的数字
 // 第N位数字
+// 多数元素
+// 分数到小数
 
 // 课程表 拓扑排序，构建邻接矩阵并收集入度
 
@@ -896,6 +898,32 @@ class MMath {
   }
 
   /**
+   * 多数元素，摩尔投票，类比 Raft
+   *
+   * <p>尽管不通用，但对于本题方便理解和记忆
+   *
+   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int majorityElement(int[] nums) {
+    // 当前遍历的元素即 candidate 及其个数即 votes
+    int candidate = nums[0], cnt = 0;
+    for (int n : nums) {
+      if (cnt == 0) {
+        candidate = n;
+        cnt = 1;
+      } else if (n == candidate) {
+        cnt += 1;
+      } else {
+        cnt -= 1;
+      }
+    }
+    return candidate;
+  }
+
+  /**
    * 第N位数字/第N个数字
    *
    * <p>k 位数共有 9*10^(k-1) 个数字，迭代试减 n 以确定 k 所在的整个数字
@@ -972,6 +1000,47 @@ class MMath {
   }
 
   /**
+   * 回文数
+   *
+   * <p>0.特判负数与十的倍数
+   *
+   * <p>1.为取出 x 的左右部分，每次进行取余操作取出最低的数字，并加到取出数的末尾
+   *
+   * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
+   *
+   * @param x the x
+   * @return boolean boolean
+   */
+  public boolean isPalindrome(int x) {
+    if (x < 0 || (x % 10 == 0 && x != 0)) return false;
+    // 高低位
+    int lo = 0, hi = x;
+    while (lo < hi) {
+      lo = lo * 10 + hi % 10;
+      hi /= 10;
+    }
+    return hi == lo || hi == lo / 10;
+  }
+
+  /**
+   * 阶乘后的零，求出一个数的阶乘末尾零的个数，如 5!=120 即 1
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int trailingZeroes(int n) {
+    int count = 0;
+    while (n > 0) {
+      n /= 5;
+      count += n;
+    }
+    return count;
+  }
+
+  /**
    * 两数相除
    *
    * <p>实现一个「倍增乘法」，然后利用对于 x/y 必然落在区间 [0:x] 的规律进行二分
@@ -1009,30 +1078,24 @@ class MMath {
   }
 
   /**
-   * 回文数
+   * 平方数之和
    *
-   * <p>0.特判负数与十的倍数
-   *
-   * <p>1.为取出 x 的左右部分，每次进行取余操作取出最低的数字，并加到取出数的末尾
-   *
-   * <p>2.判断左右部分是否数值相等 or 位数为奇数时右部分去最高位
-   *
-   * @param x the x
+   * @param c the c
    * @return boolean boolean
    */
-  public boolean isPalindrome(int x) {
-    if (x < 0 || (x % 10 == 0 && x != 0)) return false;
-    // 高低位
-    int lo = 0, hi = x;
-    while (lo < hi) {
-      lo = lo * 10 + hi % 10;
-      hi /= 10;
+  public boolean judgeSquareSum(int c) {
+    long n1 = 0, n2 = (long) Math.sqrt(c);
+    while (n1 <= n2) {
+      long cur = n1 * n1 + n2 * n2;
+      if (cur < c) n1 += 1;
+      if (cur == c) return true;
+      if (cur > c) n2 -= 1;
     }
-    return hi == lo || hi == lo / 10;
+    return false;
   }
 
   /**
-   * 1~n整数中1出现的次数·/数字1的个数，如 1～12 这些整数中包含 1 的数字有 1、10、11、12 共 5 个
+   * 1~n整数中1出现的次数/数字1的个数，如 1～12 这些整数中包含 1 的数字有 1、10、11、12 共 5 个
    *
    * <p>因此，将 1~n 的个位、十位、百位...1 出现次数相加，即为所求
    *
@@ -1062,67 +1125,6 @@ class MMath {
       digit *= 10;
     }
     return cnt;
-  }
-
-  /**
-   * 多数元素，摩尔投票，类比 Raft
-   *
-   * <p>尽管不通用，但对于本题方便理解和记忆
-   *
-   * <p>如果候选人是 maj , 则 maj 会支持自己，其他候选人会反对，当其为众数时其票数会过半，所以 maj 一定会成功当选
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int majorityElement(int[] nums) {
-    // 当前遍历的元素即 candidate 及其个数即 votes
-    int candidate = nums[0], cnt = 0;
-    for (int n : nums) {
-      if (cnt == 0) {
-        candidate = n;
-        cnt = 1;
-      } else if (n == candidate) {
-        cnt += 1;
-      } else {
-        cnt -= 1;
-      }
-    }
-    return candidate;
-  }
-
-  /**
-   * 平方数之和
-   *
-   * @param c the c
-   * @return boolean boolean
-   */
-  public boolean judgeSquareSum(int c) {
-    long n1 = 0, n2 = (long) Math.sqrt(c);
-    while (n1 <= n2) {
-      long cur = n1 * n1 + n2 * n2;
-      if (cur < c) n1 += 1;
-      if (cur == c) return true;
-      if (cur > c) n2 -= 1;
-    }
-    return false;
-  }
-
-  /**
-   * 阶乘后的零，求出一个数的阶乘末尾零的个数，如 5!=120 即 1
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/factorial-trailing-zeroes/solution/xiang-xi-tong-su-de-si-lu-fen-xi-by-windliang-3/
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int trailingZeroes(int n) {
-    int count = 0;
-    while (n > 0) {
-      n /= 5;
-      count += n;
-    }
-    return count;
   }
 }
 
@@ -1294,14 +1296,8 @@ class GGraph {
     // Floyd 求两点的最短路径
     int[][] dist = new int[V][V];
     for (int i = 0; i < V; i++) {
-      for (int j = 0; j < V; j++) {
-        dist[i][j] = INF;
-      }
-    }
-    for (int i = 0; i < V; i++) {
-      for (int j : graph[i]) {
-        dist[i][j] = 1;
-      }
+      for (int j = 0; j < V; j++) dist[i][j] = INF;
+      for (int j : graph[i]) dist[i][j] = 1;
     }
     for (int k = 0; k < V; k++) {
       for (int i = 0; i < V; i++) {

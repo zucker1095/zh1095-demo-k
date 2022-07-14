@@ -342,26 +342,26 @@ class OptimalSubSequence extends DefaultArray {
     boolean[][] dp = new boolean[l1 + 1][l2 + 1];
     dp[0][0] = true;
     for (int j = 1; j <= l2; j++) {
-      if (pChs[j - 1] == '*') dp[0][j] = dp[0][j - 2];
+      dp[0][j] = pChs[j - 1] == '*' && dp[0][j - 2];
     }
-    // 填格子
     for (int i = 1; i <= l1; i++) {
       for (int j = 1; j <= l2; j++) {
         char s = sChs[i - 1], p = pChs[j - 1];
-        if (s == p || p == '.') {
-          dp[i][j] = dp[i - 1][j - 1]; // 能匹配
-        } else if (p == '*') {
-          /*
-           如果前一个元素不匹配且不为任意元素
-           dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
-           or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
-           or dp[i][j] = dp[i][j-2] // 没有匹配的情况
-          */
-          if (s == pChs[j - 2] || pChs[j - 2] == '.') dp[i][j] = dp[i][j - 2] || dp[i - 1][j];
-          else dp[i][j] = dp[i][j - 2];
-        }
+        // 能匹配
+        if (s == p || p == '.') dp[i][j] = dp[i - 1][j - 1];
+        if (p == '*')
+          dp[i][j] =
+              (s == pChs[j - 2] || pChs[j - 2] == '.')
+                  ? dp[i][j - 2] || dp[i - 1][j]
+                  : dp[i][j - 2];
       }
     }
+    /*
+     如果前一个元素不匹配且不为任意元素
+     dp[i][j] = dp[i-1][j] // 多个字符匹配的情况
+     or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
+     or dp[i][j] = dp[i][j-2] // 没有匹配的情况
+    */
     return dp[sChs.length][pChs.length];
   }
 
@@ -425,23 +425,6 @@ class OptimalSubArray {
   }
 
   /**
-   * 最长连续递增序列，即最长递增子数组，贪心，类似「最大子序和」
-   *
-   * @param nums
-   * @return
-   */
-  public int findLengthOfLCIS(int[] nums) {
-    int len = nums.length, maxLen = 1, cnt = 1;
-    if (len < 2) return len;
-    for (int i = 0; i < len - 1; i++) {
-      if (nums[i + 1] > nums[i]) cnt += 1;
-      else cnt = 1;
-      maxLen = Math.max(maxLen, cnt);
-    }
-    return maxLen;
-  }
-
-  /**
    * 最长连续序列，逐个数字递增查找
    *
    * <p>仅当该数是连续序列的首个数，才会进入内循环匹配连续序列中的数，因此数组中的每个数只会进入内层循环一次，即线性时间复杂度
@@ -463,6 +446,23 @@ class OptimalSubArray {
       // go up downing the number
       while (set.contains(hi + 1)) hi += 1;
       maxLen = Math.max(maxLen, hi - n + 1);
+    }
+    return maxLen;
+  }
+
+  /**
+   * 最长连续递增序列，即最长递增子数组，贪心，类似「最大子序和」
+   *
+   * @param nums
+   * @return
+   */
+  public int findLengthOfLCIS(int[] nums) {
+    int len = nums.length, maxLen = 1, curLen = 1;
+    if (len < 2) return len;
+    for (int i = 0; i < len - 1; i++) {
+      if (nums[i + 1] > nums[i]) curLen += 1;
+      else curLen = 1;
+      maxLen = Math.max(maxLen, curLen);
     }
     return maxLen;
   }
@@ -901,9 +901,9 @@ class OptimalElse {
       if (chs[i] == '(') continue;
       // 0...preIdx(...)) 其中 i 是最后一个括号
       int preIdx = i - dp[i - 1];
-      if (chs[i - 1] == '(') dp[i] = 2 + (i < 2 ? 0 : dp[i - 2]);
-      else if (preIdx > 0 && chs[preIdx - 1] == '(')
+      if (preIdx > 0 && chs[preIdx - 1] == '(')
         dp[i] = 2 + dp[i - 1] + (preIdx < 2 ? 0 : dp[preIdx - 2]);
+      else if (chs[i - 1] == '(') dp[i] = 2 + (i < 2 ? 0 : dp[i - 2]);
       maxLen = Math.max(maxLen, dp[i]);
     }
     return maxLen;
@@ -999,22 +999,22 @@ class OptimalElse {
    */
   public int candy(int[] ratings) {
     int len = ratings.length;
-    int[] left = new int[len];
+    int[] l = new int[len];
     for (int i = 0; i < len; i++) {
       //      if (i == 0 && ratings[0] > ratings[len - 1]) {
       //        left[i] = left[len - 1] + 1;
       //        continue;
       //      }
-      left[i] = i > 0 && ratings[i] > ratings[i - 1] ? left[i - 1] + 1 : 1;
+      l[i] = i > 0 && ratings[i] > ratings[i - 1] ? l[i - 1] + 1 : 1;
     }
-    int right = 0, minCnt = 0;
+    int r = 0, minCnt = 0;
     for (int i = len - 1; i > -1; i--) {
       //      if (i == len - 1 && ratings[0] < ratings[i]) {
       //        right += 1;
       //        continue;
       //      }
-      right = i < len - 1 && ratings[i] > ratings[i + 1] ? right + 1 : 1;
-      minCnt += Math.max(left[i], right);
+      r = i < len - 1 && ratings[i] > ratings[i + 1] ? r + 1 : 1;
+      minCnt += Math.max(l[i], r);
     }
     return minCnt;
   }

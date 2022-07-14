@@ -177,19 +177,14 @@ class ReverseList extends LList {
       //      for (int i = 0; i < k && cur.next != null; i++) {
       //        cur = cur.next;
       //      }
-      for (int i = 0; i < k && cur != null; i++) {
-        cur = cur.next;
-      }
+      for (int i = 0; i < k && cur != null; i++) cur = cur.next;
       if (cur == null) break;
       // 此时 cur 为区间尾，暂存
-      ListNode start = pre.next, nxt = cur.next;
-      // 变向
+      ListNode curStart = pre.next, nxtStart = cur.next;
       cur.next = null;
-      pre.next = reverseList(start);
-      start.next = nxt;
-      // 步进
-      pre = start;
-      cur = start;
+      pre.next = reverseList(curStart);
+      curStart.next = nxtStart;
+      pre = cur = curStart;
     }
     return dummy.next;
   }
@@ -641,9 +636,7 @@ class DeleteList extends LList {
     ListNode dummy = new ListNode();
     dummy.next = head;
     ListNode lo = dummy, hi = head;
-    for (int i = 0; i < n; i++) {
-      hi = hi.next;
-    }
+    for (int i = 0; i < n; i++) hi = hi.next;
     while (hi != null) {
       hi = hi.next;
       lo = lo.next;

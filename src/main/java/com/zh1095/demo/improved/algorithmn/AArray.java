@@ -197,7 +197,7 @@ public class AArray extends DefaultArray {
     Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
     int[][] res = new int[intervals.length][2];
     // 按照区间起始位置排序
-    int idx = 0;
+    int idx = -1;
     for (int[] itv : intervals) {
       if (idx == -1 || itv[0] > res[idx][1]) {
         idx += 1;
@@ -211,8 +211,6 @@ public class AArray extends DefaultArray {
 
   /**
    * 会议室，判断是否有交集即可，即某个会议开始时，上一个会议是否结束。
-   *
-   * <p>「会议室II」参上
    *
    * @param intervals
    * @return
@@ -238,10 +236,9 @@ public class AArray extends DefaultArray {
   public int minMeetingRooms(int[][] intervals) {
     Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
     PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-    minHeap.offer(intervals[0][1]);
-    for (int i = 1; i < intervals.length; i++) {
-      if (minHeap.peek() <= intervals[i][0]) minHeap.poll();
-      minHeap.offer(intervals[i][1]);
+    for (int[] itv : intervals) {
+      if (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) minHeap.poll();
+      minHeap.offer(itv[1]);
     }
     return minHeap.size();
   }
@@ -615,6 +612,38 @@ class HHeap extends DefaultArray {
     }
     return res;
   }
+
+  /**
+   * 查找和最小的k对数字
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/find-k-pairs-with-smallest-sums/solution/cha-zhao-he-zui-xiao-de-kdui-shu-zi-by-l-z526/
+   *
+   * @param nums1
+   * @param nums2
+   * @param k
+   * @return
+   */
+  //  public List<List<Integer>> kSmallestPairs(int[] nums1, int[] nums2, int k) {
+  //    PriorityQueue<int[]> pq =
+  //        new PriorityQueue<>(
+  //            k,
+  //            (o1, o2) -> {
+  //              return nums1[o1[0]] + nums2[o1[1]] - nums1[o2[0]] - nums2[o2[1]];
+  //            });
+  //    for (int i = 0; i < Math.min(nums1.length, k); i++) pq.offer(new int[] {i, 0});
+  //    List<List<Integer>> res = new ArrayList<>();
+  //    for (int i = k; i > 0; i--) {
+  //      if (pq.isEmpty()) break;
+  //      int[] pair = pq.poll();
+  //      List<Integer> list = new ArrayList<>();
+  //      list.add(nums1[pair[0]]);
+  //      list.add(nums2[pair[1]]);
+  //      res.add(list);
+  //      if (pair[1] < nums2.length - 1) pq.offer(new int[] {pair[0], pair[1] + 1});
+  //    }
+  //    return res;
+  //  }
 }
 
 /** 分治相关，归并排序 */
