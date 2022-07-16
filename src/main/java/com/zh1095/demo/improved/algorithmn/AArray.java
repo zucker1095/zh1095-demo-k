@@ -21,8 +21,10 @@
 
 // 最大子序和 前缀和，超过则累加，否则重置，并更新最大值
 // 和为k的子数组 前缀和引入 hash 计数，取 preSum-k 放 preSum
-// 和至少为k的最短子数组 引入单调队列，出队，再更新结果，最后入队
+// 连续数组
 // 和可被k整除的子数组 前缀和引入 hash 计数，取余数放余数
+// 和至少为k的最短子数组 引入单调队列，出队，再更新结果，最后入队
+// 连续的子数组和
 
 // 寻找重复数 类似环形链表
 // 缺失的第一个正数 原地哈希，取负
@@ -1302,9 +1304,8 @@ class PreSum {
     int preSum = 0, maxSum = Integer.MIN_VALUE;
     // int start = 0, end = 0;
     for (int n : nums) {
-      if (preSum + n > n) {
-        preSum += n;
-      } else {
+      if (preSum + n > n) preSum += n;
+      else {
         preSum = n;
         //        start = i;
       }
@@ -1339,8 +1340,9 @@ class PreSum {
     sum2Cnt.put(0, 1);
     for (int n : nums) {
       preSum += n;
-      if (sum2Cnt.containsKey(preSum - k)) cnt += sum2Cnt.get(preSum - k);
-      sum2Cnt.put(preSum, sum2Cnt.getOrDefault(preSum, 0) + 1);
+      // 实际运行改用 getOrDefault
+      cnt += sum2Cnt.get(preSum - k);
+      sum2Cnt.put(preSum, 1 + sum2Cnt.get(preSum));
     }
     return cnt;
   }
@@ -1348,7 +1350,7 @@ class PreSum {
   /**
    * 连续数组，严格相等，最长，找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
    *
-   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录「某个前缀和出现的首个右边界」
+   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录某个前缀和出现的首个下标
    *
    * <p>参考
    * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
@@ -1358,15 +1360,15 @@ class PreSum {
    */
   public int findMaxLength(int[] nums) {
     int preSum = 0, maxLen = 0;
-    Map<Integer, Integer> sum2FirstHi = new HashMap<>();
-    sum2FirstHi.put(0, -1); // 可能存在前缀和刚好满足条件的情况
+    Map<Integer, Integer> sum2FirstIdx = new HashMap<>();
+    sum2FirstIdx.put(0, -1); // 可能存在前缀和刚好满足条件的情况
     for (int i = 0; i < nums.length; i++) {
       // 将 0 作为 -1
       preSum += nums[i] == 0 ? -1 : 1;
-      // 画图可知 i - map[preSum] 即和为 0 的数组的长度
-      if (sum2FirstHi.containsKey(preSum)) maxLen = Math.max(maxLen, i - sum2FirstHi.get(preSum));
       // 仍未遍历到和为 0 的子数组，更新即可
-      else sum2FirstHi.put(preSum, i);
+      if (!sum2FirstIdx.containsKey(preSum)) sum2FirstIdx.put(preSum, i);
+      // 画图可知 i - map[preSum] 即和为 0 的数组的长度
+      else maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
     }
     return maxLen;
   }
@@ -1388,49 +1390,17 @@ class PreSum {
     for (int n : nums) {
       preSum += n;
       // 当前 preSum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
-      int remainder = (preSum % k + k) % k, curCnt = remainder2Cnt.getOrDefault(remainder, 0);
+      int remainder = (preSum % k + k) % k;
+      // 实际运行改用 getOrDefault
+      int curCnt = remainder2Cnt.get(remainder);
+      remainder2Cnt.put(remainder, curCnt + 1);
       // 余数的次数
       cnt += curCnt;
-      remainder2Cnt.put(remainder, curCnt + 1);
     }
     return cnt;
   }
 
   // 以下均需要区间和，因此前缀和为数组。
-
-  /**
-   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素，严格相等
-   *
-   * <p>只需要枚举右端点 j，然后在枚举右端点 j 时检查之前是否出现过左端点 i，使得 sum[j] & sum[i - 1] 对 k 取余相同
-   *
-   * <p>扩展1，方案数参考
-   * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
-   *
-   * @param nums the nums
-   * @param target the target
-   * @return boolean
-   */
-  public boolean checkSubarraySum(int[] nums, int target) {
-    int len = nums.length;
-    int[] preSum = new int[len + 1]; // 哑元素，因此下方始于 2
-    for (int i = 1; i <= len; i++) {
-      preSum[i] = preSum[i - 1] + nums[i - 1];
-    }
-    Set<Integer> visted = new HashSet<>();
-    for (int i = 2; i <= len; i++) {
-      visted.add(preSum[i - 2] % target);
-      if (visted.contains(preSum[i] % target)) return true;
-    }
-    return false;
-    // 方案数
-    //    int cnt = 0;
-    //    remainder2Cnt.put(0, 1);
-    //    for (int i = 1; i <= nums.length; i++) {
-    //      int mod = preSum[i] % target;
-    //      remainder2Cnt.put(mod, remainder2Cnt.getOrDefault(mod, 0) + 1);
-    //      if (remainder2Cnt.containsKey(mod)) cnt += remainder2Cnt.get(mod);
-    //    }
-  }
 
   /**
    * 和至少为k的最短子数组，返回长度，和至少，前缀和数组 & 单调队列
@@ -1451,18 +1421,94 @@ class PreSum {
   public int shortestSubarray(int[] nums, int k) {
     int len = nums.length, minLen = len + 1;
     long[] preSum = new long[len + 1];
-    for (int i = 0; i < len; i++) {
-      preSum[i + 1] = preSum[i] + nums[i];
-    }
+    for (int i = 0; i < len; i++) preSum[i + 1] = preSum[i] + nums[i];
     Deque<Integer> mq = new ArrayDeque<>();
-    for (int i = 0; i < preSum.length; i++) {
+    for (int i = 0; i < len + 1; i++) {
       long sum = preSum[i];
       while (!mq.isEmpty() && sum <= preSum[mq.peekLast()]) mq.pollLast();
-      while (!mq.isEmpty() && sum >= preSum[mq.peekFirst()] + k)
+      while (!mq.isEmpty() && sum >= k + preSum[mq.peekFirst()])
         minLen = Math.min(minLen, i - mq.pollFirst());
       mq.offerLast(i);
     }
     return minLen == len + 1 ? -1 : minLen;
+  }
+
+  /**
+   * 连续的子数组和，返回是否存在子数组满足总和为 k 的倍数，且至少有两个元素，严格相等
+   *
+   * <p>只需要枚举右端点 j，然后在枚举右端点 j 时检查之前是否出现过左端点 i，使得 sum[j] & sum[i - 1] 对 k 取余相同
+   *
+   * <p>扩展1，方案数参考
+   * https://leetcode-cn.com/problems/continuous-subarray-sum/solution/gong-shui-san-xie-tuo-zhan-wei-qiu-fang-1juse/
+   *
+   * @param nums the nums
+   * @param target the target
+   * @return boolean
+   */
+  public boolean checkSubarraySum(int[] nums, int target) {
+    int len = nums.length;
+    int[] preSum = new int[len + 1]; // 哑元素，因此下方始于 2
+    for (int i = 1; i <= len; i++) preSum[i] = preSum[i - 1] + nums[i - 1];
+    Set<Integer> visted = new HashSet<>();
+    for (int i = 2; i <= len; i++) {
+      visted.add(preSum[i - 2] % target);
+      if (visted.contains(preSum[i] % target)) return true;
+    }
+    return false;
+    // 方案数
+    //    int cnt = 0;
+    //    remainder2Cnt.put(0, 1);
+    //    for (int i = 1; i <= nums.length; i++) {
+    //      int mod = preSum[i] % target;
+    //      remainder2Cnt.put(mod, remainder2Cnt.getOrDefault(mod, 0) + 1);
+    //      if (remainder2Cnt.containsKey(mod)) cnt += remainder2Cnt.get(mod);
+    //    }
+  }
+
+  /**
+   * 最大子矩阵，元素和最大，类似「最大子数组和」
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/max-submatrix-lcci/solution/zhe-yao-cong-zui-da-zi-xu-he-shuo-qi-you-jian-dao-/
+   *
+   * @param matrix the matrix
+   * @return int [ ]
+   */
+  public int[] getMaxMatrix(int[][] matrix) {
+    // 相当于dp[i],dp_i，最大值，左上角，相当于 start
+    int ROW = matrix.length,
+        COL = matrix[0].length,
+        sum = 0,
+        maxSum = Integer.MIN_VALUE,
+        bestr1 = 0,
+        bestc1 = 0;
+    // 保存最大子矩阵的左上角和右下角的行列坐标 & 记录当前 i~j 行组成大矩阵的每一列的和，将二维转化为一维
+    int[] res = new int[4], preSum = new int[COL];
+    for (int i = 0; i < ROW; i++) { // 以i为上边，从上而下扫描
+      // 每次更换子矩形上边，就要清空b，重新计算每列的和
+      for (int t = 0; t < COL; t++) preSum[t] = 0;
+      // 子矩阵的下边，从 i 到 N-1，不断增加子矩阵的高，相当于求一次最大子序列和
+      for (int j = i; j < ROW; j++) {
+        sum = 0; // 从头开始求dp
+        for (int k = 0; k < COL; k++) {
+          preSum[k] += matrix[j][k];
+          // 我们只是不断增加其高，也就是下移矩阵下边，所有这个矩阵每列的和只需要加上新加的哪一行的元素
+          // 因为我们求dp[i]的时候只需要dp[i-1]和nums[i],所有在我们不断更新b数组时就可以求出当前位置的dp_i
+          if (sum > 0) {
+            sum += preSum[k];
+          } else {
+            sum = preSum[k];
+            bestr1 = i; // 自立门户，暂时保存其左上角
+            bestc1 = k;
+          }
+          if (sum > maxSum) {
+            maxSum = sum;
+            res = new int[] {bestr1, bestc1, j, k};
+          }
+        }
+      }
+    }
+    return res;
   }
 
   /**
@@ -1487,49 +1533,6 @@ class PreSum {
       counter[cntOdd] += 1;
     }
     return cnt;
-  }
-
-  /**
-   * 最大子矩阵，元素和最大，类似「最大子数组和」
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/max-submatrix-lcci/solution/zhe-yao-cong-zui-da-zi-xu-he-shuo-qi-you-jian-dao-/
-   *
-   * @param matrix the matrix
-   * @return int [ ]
-   */
-  public int[] getMaxMatrix(int[][] matrix) {
-    int row = matrix.length, col = matrix[0].length;
-    // 保存最大子矩阵的左上角和右下角的行列坐标 & 记录当前 i~j 行组成大矩阵的每一列的和，将二维转化为一维
-    int[] coordinates = new int[4], preSum = new int[col];
-    int sum = 0, maxSum = Integer.MIN_VALUE; // 相当于dp[i],dp_i 与最大值
-    int bestr1 = 0, bestc1 = 0; // 暂时记录左上角，相当于 start
-    for (int i = 0; i < row; i++) { // 以i为上边，从上而下扫描
-      for (int t = 0; t < col; t++) {
-        preSum[t] = 0; // 每次更换子矩形上边，就要清空b，重新计算每列的和
-      }
-      for (int j = i; j < row; j++) {
-        // 子矩阵的下边，从i到N-1，不断增加子矩阵的高，相当于求一次最大子序列和
-        sum = 0; // 从头开始求dp
-        for (int k = 0; k < col; k++) {
-          preSum[k] += matrix[j][k];
-          // 我们只是不断增加其高，也就是下移矩阵下边，所有这个矩阵每列的和只需要加上新加的哪一行的元素
-          // 因为我们求dp[i]的时候只需要dp[i-1]和nums[i],所有在我们不断更新b数组时就可以求出当前位置的dp_i
-          if (sum > 0) {
-            sum += preSum[k];
-          } else {
-            sum = preSum[k];
-            bestr1 = i; // 自立门户，暂时保存其左上角
-            bestc1 = k;
-          }
-          if (sum > maxSum) {
-            maxSum = sum;
-            coordinates = new int[] {bestr1, bestc1, j, k};
-          }
-        }
-      }
-    }
-    return coordinates;
   }
 }
 
@@ -1667,24 +1670,6 @@ class Delete extends DefaultArray {
   }
 
   /**
-   * 移除字符串中指定字符
-   *
-   * @param str
-   * @param target
-   * @return
-   */
-  public String moveChars(String str, char target) {
-    char[] chs = str.toCharArray();
-    int write = 0;
-    for (int read = 0; read < chs.length; read++) {
-      if (target == chs[read]) continue;
-      swap(chs, write, read);
-      write += 1;
-    }
-    return String.valueOf(Arrays.copyOfRange(chs, 0, write));
-  }
-
-  /**
    * 删除字符串中的所有相邻重复项，毫无保留，原地模拟栈
    *
    * <p>类似「有效的括号」即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
@@ -1727,13 +1712,29 @@ class Delete extends DefaultArray {
     final int k = 0;
     // final int target = nums[last - k];
     int write = 0;
-    for (int read = 0; read < nums.length; read++) {
-      int num = nums[read];
-      if (write >= k && nums[write - k] == num) continue;
-      nums[write] = num;
-      write += 1;
+    for (int n : nums) {
+      if (write >= k && nums[write - k] == n) continue;
+      nums[write++] = n;
     }
     return write;
+  }
+
+  /**
+   * 移除字符串中指定字符
+   *
+   * @param str
+   * @param target
+   * @return
+   */
+  public String moveChars(String str, char target) {
+    char[] chs = str.toCharArray();
+    int write = 0;
+    for (int read = 0; read < chs.length; read++) {
+      if (target == chs[read]) continue;
+      swap(chs, write, read);
+      write += 1;
+    }
+    return String.valueOf(Arrays.copyOfRange(chs, 0, write));
   }
 }
 
@@ -1930,7 +1931,7 @@ class DicOrder extends DefaultSString {
     }
     // 2.find the second peak larger than IDX-1 and swap them
     for (int i = peak; i < len; i++) {
-      if (nums[i] <= nums[peak - 1]) continue;
+      if (nums[peak - 1] >= nums[i]) continue;
       swap(nums, peak - 1, i);
       return;
     }
@@ -1958,16 +1959,16 @@ class DicOrder extends DefaultSString {
     if (peak == -1) return -1;
     // 2.找首个
     for (int i = len - 1; i > peak; i--) {
-      if (chs[i] <= chs[peak]) continue;
+      if (chs[peak] >= chs[i]) continue;
       swap(chs, peak, i);
       break;
     }
     // 3.翻转
     reverseChs(chs, peak + 1, len - 1);
-    // 4.返回前 len 个即可
-    long res = 0;
-    for (int i = 0; i < len; i++) res = res * 10 + (chs[i] - '0');
-    return res > Integer.MAX_VALUE ? -1 : (int) (res);
+    // 返回结果，将 char[] 转为 int
+    long res = Integer.valueOf(chs.toString());
+    //    for (int i = 0; i < len; i++) res = res * 10 + (chs[i] - '0');
+    return res >= Integer.MAX_VALUE ? -1 : (int) (res);
   }
 
   /**
@@ -2031,51 +2032,6 @@ class DicOrder extends DefaultSString {
   }
 
   /**
-   * TODO 给定一个与一组正数，求由 A 中元素组成的小于 n 的最大数，如 {2,4,9} 小于 23121 的最大数为 22999
-   *
-   * <p>从最高位向最低位构造目标数，用 A 中尽量大的元素（但要小于等于 n 的相应位数字）。
-   *
-   * <p>一旦目标数中有一位数字小于 n 相应位的数字，剩余低位可用 A 中最大元素填充。
-   *
-   * <p>可能构造出等于 n 的数，需判断后重新构造。
-   *
-   * <p>若 A 中没有小于等于 n 最高位数字的元素，则可直接用 A 中最大元素填充低
-   *
-   * @param target
-   * @param nums
-   * @return
-   */
-  public int maxLessNumber(int target, int[] nums) {
-    char[] digits = String.valueOf(target).toCharArray();
-    Arrays.sort(nums);
-    int[] resNums = new int[digits.length];
-    int write = 0;
-    for (char d : digits) {
-      // 找到刚好小于 d 的数
-      int lessNum = -1;
-      int lo = 0, hi = nums.length - 1;
-      while (lo < hi) {
-        int mid = lo + (hi - lo) / 2, cur = nums[mid];
-        if (mid > 0 && nums[mid - 1] < d && cur >= d) {
-          lessNum = cur;
-          break;
-        }
-        if (cur < d) lo = mid + 1;
-        else hi = mid;
-      }
-      if (lessNum > -1) {
-        resNums[write] = lessNum;
-        resNums[write + 1] = nums[nums.length - 1];
-      }
-      write += 1;
-    }
-    // 比如 2 & {2} 无解，需要统计，且去除前导零。
-    int num = 0;
-    for (int n : resNums) num += num * 10 + n;
-    return num;
-  }
-
-  /**
    * 字典序的第k小数字，找到 [1,n] 内，前序
    *
    * @param n the n
@@ -2101,13 +2057,13 @@ class DicOrder extends DefaultSString {
   private int count(int lo, int hi) {
     // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出
     long cur = lo, nxt = cur + 1;
-    int count = 0;
+    int cnt = 0;
     while (cur <= hi) { // 逐层
-      count += Math.min(hi + 1, nxt) - cur;
+      cnt += Math.min(hi + 1, nxt) - cur;
       cur *= 10;
       nxt *= 10;
     }
-    return count;
+    return cnt;
   }
 
   /**
@@ -2167,6 +2123,51 @@ class DicOrder extends DefaultSString {
       }
     }
     return permutation.toString();
+  }
+
+  /**
+   * TODO 给定一个与一组正数，求由 A 中元素组成的小于 n 的最大数，如 {2,4,9} 小于 23121 的最大数为 22999
+   *
+   * <p>从最高位向最低位构造目标数，用 A 中尽量大的元素（但要小于等于 n 的相应位数字）。
+   *
+   * <p>一旦目标数中有一位数字小于 n 相应位的数字，剩余低位可用 A 中最大元素填充。
+   *
+   * <p>可能构造出等于 n 的数，需判断后重新构造。
+   *
+   * <p>若 A 中没有小于等于 n 最高位数字的元素，则可直接用 A 中最大元素填充低
+   *
+   * @param target
+   * @param nums
+   * @return
+   */
+  public int maxLessNumber(int target, int[] nums) {
+    char[] digits = String.valueOf(target).toCharArray();
+    Arrays.sort(nums);
+    int[] resNums = new int[digits.length];
+    int write = 0;
+    for (char d : digits) {
+      // 找到刚好小于 d 的数
+      int lessNum = -1;
+      int lo = 0, hi = nums.length - 1;
+      while (lo < hi) {
+        int mid = lo + (hi - lo) / 2, cur = nums[mid];
+        if (mid > 0 && nums[mid - 1] < d && cur >= d) {
+          lessNum = cur;
+          break;
+        }
+        if (cur < d) lo = mid + 1;
+        else hi = mid;
+      }
+      if (lessNum > -1) {
+        resNums[write] = lessNum;
+        resNums[write + 1] = nums[nums.length - 1];
+      }
+      write += 1;
+    }
+    // 比如 2 & {2} 无解，需要统计，且去除前导零。
+    int num = 0;
+    for (int n : resNums) num += num * 10 + n;
+    return num;
   }
 
   /**

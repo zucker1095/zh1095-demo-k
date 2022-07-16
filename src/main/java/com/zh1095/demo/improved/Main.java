@@ -345,6 +345,167 @@ class AArray {
 
     public double findMedian() {}
   }
+
+  String removeDuplicates(String s) {
+    int top = -1;
+    for (char ch : chs) {
+      if (top > -1 && chs[top] == ch) top -= 1;
+      else {
+        top += 1;
+        chs[top] = ch;
+      }
+    }
+    return String.valueOf(chs, 0, top + 1);
+  }
+
+  int removeDuplicates(int[] nums) {
+    int write = 0;
+    for (int n : nums) {
+      if (write >= k && nums[write - k] == n) continue;
+      nums[write++] = n;
+    }
+    return write;
+  }
+
+  /****************************前缀和***************************/
+
+  int maxSubArray(int[] nums) {
+    for (int n : nums) {
+      if (preSum + n > n) {
+        preSum += n;
+      } else {
+        preSum = n;
+      }
+      maxSum = Math.max(maxSum, preSum);
+    }
+    return maxSum;
+  }
+
+  int subarraySum(int[] nums, int k) {
+    Map<Integer, Integer> sum2Cnt = new HashMap<>();
+    sum2Cnt.put(0, 1);
+    for (int n : nums) {
+      preSum += n;
+      cnt += sum2Cnt.get(preSum - k);
+      sum2Cnt.put(preSum, 1 + sum2Cnt.get(preSum));
+    }
+    return cnt;
+  }
+
+  int findMaxLength(int[] nums) {
+    Map<Integer, Integer> sum2FirstIdx = new HashMap<>();
+    for (int i = 0; i < nums.length; i++) {
+      preSum += nums[i] == 0 ? -1 : 1;
+      if (!sum2FirstIdx.containsKey(preSum)) sum2FirstIdx.put(preSum, i);
+      maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
+    }
+    return maxLen;
+  }
+
+  int subarraysDivByK(int[] nums, int k) {
+    HashMap<Integer, Integer> remainder2Cnt = new HashMap<>();
+    remainder2Cnt.put(0, 1);
+    for (int n : nums) {
+      preSum += n;
+      int remainder = (preSum % k + k) % k;
+      int curCnt = remainder2Cnt.get(remainder);
+      remainder2Cnt.put(remainder, curCnt + 1);
+      // 余数的次数
+      cnt += curCnt;
+    }
+    return cnt;
+  }
+
+  int shortestSubarray(int[] nums, int k) {
+    for (int i = 0; i < preSum.length; i++) {
+      long sum = preSum[i];
+      while (!mq.isEmpty() && sum <= preSum[mq.peekLast()]) mq.pollLast();
+      while (!mq.isEmpty() && sum >= k + preSum[mq.peekFirst()])
+        minLen = Math.min(minLen, i - mq.pollFirst());
+      mq.offerLast(i);
+    }
+  }
+
+  boolean checkSubarraySum(int[] nums, int target) {
+    Set<Integer> visted = new HashSet<>();
+    for (int i = 2; i <= len; i++) {
+      visted.add(preSum[i - 2] % target);
+      if (visted.contains(preSum[i] % target)) return true;
+    }
+  }
+
+  /****************************字典序***************************/
+
+  void nextPermutation(int[] nums) {
+    while (peak > 0) {
+      if (nums[peak - 1] < nums[peak]) {
+        Arrays.sort(nums, peak, len);
+        break;
+      }
+      peak -= 1;
+    }
+    for (int i = peak; i < len; i++) {
+      if (nums[peak - 1] >= nums[i]) continue;
+      swap(nums, peak - 1, i);
+      return;
+    }
+    Arrays.sort(nums);
+  }
+
+  int nextGreaterElement(int n) {
+    while (peak > -1) {
+      if (chs[peak] < chs[peak - 1]) break;
+      peak -= 1;
+    }
+    if (peak == -1) return -1;
+    for (int i = len - 1; i > peak; i--) {
+      if (chs[peak - 1] >= chs[i]) continue;
+      swap(chs, peak, i);
+      break;
+    }
+    revserse(chs, peak + 1, len - 1);
+  }
+
+  String largestNumber(int[] nums) {
+    // nums -> String[]
+    strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
+    // String[] -> String
+  }
+
+  int maximumSwap(int num) {
+    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - '0'] = i;
+    for (int i = 0; i < chs.length; i++) {
+      for (int d = 9; d > chs[i] - '0'; d--) {
+        if (lastIdxes[d] <= i) continue; // 位
+        swap(chs, i, lastIdxes[d]);
+        return Integer.parseInt(chs.toString());
+      }
+    }
+    return num;
+  }
+
+  public int findKthNumber(int n, int k) {
+    while (cnt < k) {
+      int curCnt = count(prefix, n);
+      if (cnt + curCnt >= k) {
+        prefix *= 10;
+        cnt += 1;
+      } else {
+        prefix += 1;
+        cnt += curCnt;
+      }
+    }
+    return prefix;
+  }
+
+  int count(int lo, int hi) {
+    long cur = lo, nxt = lo + 1;
+    while (cur <= hi) {
+      cnt += Math.min(hi + 1, nxt) - cur;
+      cur *= 10;
+      nxt *= 10;
+    }
+  }
 }
 
 class SString {
