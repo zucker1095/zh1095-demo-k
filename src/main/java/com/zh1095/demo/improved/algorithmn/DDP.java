@@ -535,6 +535,32 @@ class OptimalSubArray {
   }
 
   /**
+   * 分割等和子集，01 背包
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/partition-equal-subset-sum/solution/0-1-bei-bao-wen-ti-xiang-jie-zhen-dui-ben-ti-de-yo/
+   *
+   * @param nums
+   * @return
+   */
+  public boolean canPartition(int[] nums) {
+    int sum = 0;
+    for (int n : nums) sum += n;
+    if ((sum & 1) == 1) return false;
+    int maxCapacity = sum / 2;
+    boolean[] dp = new boolean[maxCapacity + 1];
+    dp[0] = true;
+    if (nums[0] <= maxCapacity) dp[nums[0]] = true;
+    for (int i = 1; i < nums.length; i++) {
+      for (int j = maxCapacity; nums[i] <= j; j--) {
+        if (dp[maxCapacity]) return true;
+        dp[j] = dp[j] || dp[j - nums[i]];
+      }
+    }
+    return dp[maxCapacity];
+  }
+
+  /**
    * 目标和，找到 nums 一个正子集与一个负子集，使其总和等于 target，统计这种可能性的总数
    *
    * <p>公式推出，找到一个正数集 P，其和的两倍，等于目标和 + 序列总和，即 01 背包，参考 https://zhuanlan.zhihu.com/p/93857890
@@ -556,10 +582,8 @@ class OptimalSubArray {
     int sum = 0;
     for (int n : nums) sum += n;
     if ((target + sum) % 2 != 0) return 0;
-
     int maxCapacity = (target + sum) / 2;
     if (maxCapacity < 0) maxCapacity *= -1;
-
     int[] dp = new int[maxCapacity + 1];
     dp[0] = 1;
     for (int volume : nums) {
@@ -1287,13 +1311,10 @@ class CCount {
       // 滑窗，成对判断高低位
       char hi = s.charAt(i - 1), lo = s.charAt(i);
       int tmp = cnt;
-      if (lo == '0') {
-        // 低位若 0 则高位只能 1 或 2
+      if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) cnt += preCnt;
+      else if (lo == '0') {
         if (hi != '1' && hi != '2') return 0;
         cnt = preCnt;
-      } else if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) {
-        // 低位非零，则高位为 1 均可，若后者为 2 则前者只能 1 至 6
-        cnt += preCnt;
       }
       preCnt = tmp;
     }

@@ -2009,7 +2009,7 @@ class DicOrder extends DefaultSString {
    *
    * <p>贪心，将较高位的 n 与后面 m 交换，需满足 m>n 且 m 尽可能靠后
    *
-   * <p>TODO 参考
+   * <p>TODO 类似「划分字母区间」参考
    * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
    *
    * @param num

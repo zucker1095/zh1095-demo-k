@@ -67,7 +67,7 @@ public class TTree {
   private int res3 = 0; // 「求根节点到叶节点数字之和」
 
   /**
-   * 中序遍历，迭代，区分遍历 & 处理
+   * 中序遍历，前中后依次为 入（结果集）左右 左入右 入右左
    *
    * <p>模板参考
    * https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/zhuan-ti-jiang-jie-er-cha-shu-qian-zhong-hou-xu-2/
@@ -394,10 +394,11 @@ class DDFS {
     sum += root.val;
     //    path.add(root.val);
     //    if (cur == target) res.add(new ArrayList(path));
-    int cnt = preSum2Cnt.getOrDefault(sum - target, 0);
-    preSum2Cnt.put(sum, preSum2Cnt.getOrDefault(sum, 0) + 1);
+    // 实际运行改用 getOrDefault
+    int cnt = preSum2Cnt.get(sum - target);
+    preSum2Cnt.put(sum, preSum2Cnt.get(sum) + 1);
     cnt += dfs14(root.left, preSum2Cnt, sum, target) + dfs14(root.right, preSum2Cnt, sum, target);
-    preSum2Cnt.put(sum, preSum2Cnt.getOrDefault(sum, 0) - 1);
+    preSum2Cnt.put(sum, preSum2Cnt.get(sum) - 1);
     return cnt;
   }
 
@@ -528,9 +529,11 @@ class DDFS {
       vers.add(n.val);
       return;
     }
-    if (n.left != from) dfs17(n.left, n, dist - 1, parents, vers);
-    if (n.right != from) dfs17(n.right, n, dist - 1, parents, vers);
-    if (parents.get(n.val) != from) dfs17(parents.get(n.val), n, dist - 1, parents, vers);
+    dist -= 1;
+    TreeNode parent = parents.get(n.val);
+    if (n.left != from) dfs17(n.left, n, dist, parents, vers);
+    if (n.right != from) dfs17(n.right, n, dist, parents, vers);
+    if (parent != from) dfs17(parent, n, dist, parents, vers);
   }
 
   /**
@@ -835,7 +838,7 @@ class BBSTDFS {
   private TreeNode head, pre;
 
   /**
-   * 二叉搜索树与双向链表，生成正序双向链表，即补充叶节点的指针，中序
+   * 二叉搜索树与双向链表，双向链表，即补充叶节点的指针，中序
    *
    * <p>扩展1，逆序，则右中左
    *
@@ -1091,7 +1094,7 @@ class Postorder {
   }
 
   /**
-   * 二叉树展开为链表，后序遍历，但以前序的次序连接
+   * 二叉树展开为链表，单向链表，后序遍历，但以前序的次序连接
    *
    * @param root the root
    */
@@ -1322,35 +1325,6 @@ class BBFS {
   }
 
   /**
-   * 二叉树最大宽度，原地修改，或引入 hash 记录，如 key=level+value
-   *
-   * @param root the root
-   * @return int int
-   */
-  public int widthOfBinaryTree(TreeNode root) {
-    if (root == null) return 0;
-    int maxWidth = 0;
-    Deque<TreeNode> queue = new LinkedList<>();
-    root.val = 0;
-    queue.offer(root);
-    while (!queue.isEmpty()) {
-      maxWidth = Math.max(maxWidth, queue.peekLast().val - queue.peekFirst().val + 1);
-      for (int i = queue.size(); i > 0; i--) {
-        TreeNode n = queue.poll();
-        if (n.left != null) {
-          queue.offer(n.left);
-          n.left.val = n.val * 2 + 1;
-        }
-        if (n.right != null) {
-          queue.offer(n.right);
-          n.right.val = n.val * 2 + 2;
-        }
-      }
-    }
-    return maxWidth;
-  }
-
-  /**
    * 二叉树的最大深度，后序
    *
    * <p>扩展1，n 叉树，参考「N叉树的最大深度」，下方改为遍历所有子结点即可
@@ -1375,6 +1349,35 @@ class BBFS {
       maxDepth += 1;
     }
     return maxDepth;
+  }
+
+  /**
+   * 二叉树最大宽度，原地修改，或引入 hash 记录，如 key=level+value
+   *
+   * @param root the root
+   * @return int int
+   */
+  public int widthOfBinaryTree(TreeNode root) {
+    if (root == null) return 0;
+    root.val = 0;
+    int maxWidth = 0;
+    Deque<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+      maxWidth = Math.max(maxWidth, queue.peekLast().val - queue.peekFirst().val + 1);
+      for (int i = queue.size(); i > 0; i--) {
+        TreeNode n = queue.poll();
+        if (n.left != null) {
+          queue.offer(n.left);
+          n.left.val = n.val * 2 + 1;
+        }
+        if (n.right != null) {
+          queue.offer(n.right);
+          n.right.val = n.val * 2 + 2;
+        }
+      }
+    }
+    return maxWidth;
   }
 }
 
@@ -1429,19 +1432,53 @@ class MultiTrees {
   }
 
   /**
+   * 合并二叉树，将 r2 合并至 r1
+   *
+   * @param r1 the r 1
+   * @param r2 the r 2
+   * @return tree node
+   */
+  public TreeNode mergeTrees(TreeNode r1, TreeNode r2) {
+    if (r1 == null || r2 == null) return r1 == null ? r2 : r1;
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(r1);
+    queue.offer(r2);
+    while (!queue.isEmpty()) {
+      TreeNode n1 = queue.poll(), n2 = queue.poll();
+      // 合并当前节点的值
+      n1.val += n2.val;
+      // 依次判断 r1 的左右子树
+      // 若二者左都不为空，则均需要遍历二者左的子节点，因此入队
+      if (n1.left != null && n2.left != null) {
+        queue.offer(n1.left);
+        queue.offer(n2.left);
+      }
+      // 若 r1 左空，就把 r2 左挂为前者左，即仅遍历 r2 左的子节点，否则 r1 左无改动
+      if (n1.left == null) n1.left = n2.left;
+      // r1 右同理
+      if (n1.right != null && n2.right != null) {
+        queue.offer(n1.right);
+        queue.offer(n2.right);
+      }
+      if (n1.right == null) n1.right = n2.right;
+    }
+    return r1;
+  }
+
+  /**
    * 相同的树，前序，迭代选用 bfs
    *
-   * @param p the p
-   * @param q the q
+   * @param r1 the p
+   * @param r2 the q
    * @return boolean boolean
    */
-  public boolean isSameTree(TreeNode p, TreeNode q) {
+  public boolean isSameTree(TreeNode r1, TreeNode r2) {
     //    if (p == null && q == null) return true;
     //    else if (p == null || q == null) return false;
     //    return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(p);
-    queue.offer(q);
+    queue.offer(r1);
+    queue.offer(r2);
     while (!queue.isEmpty()) {
       TreeNode n1 = queue.poll(), n2 = queue.poll();
       if (n1 == null && n2 == null) continue;
@@ -1480,40 +1517,6 @@ class MultiTrees {
       if (node.right != null) queue.offer(node.right);
     }
     return false;
-  }
-
-  /**
-   * 合并二叉树，将 r2 合并至 r1
-   *
-   * @param r1 the r 1
-   * @param r2 the r 2
-   * @return tree node
-   */
-  public TreeNode mergeTrees(TreeNode r1, TreeNode r2) {
-    if (r1 == null || r2 == null) return r1 == null ? r2 : r1;
-    Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(r1);
-    queue.offer(r2);
-    while (queue.size() > 0) {
-      TreeNode n1 = queue.poll(), n2 = queue.poll();
-      // 合并当前节点的值
-      n1.val += n2.val;
-      // 依次判断 r1 的左右子树
-      // 若二者左都不为空，则均需要遍历二者左的子节点，因此入队
-      if (n1.left != null && n2.left != null) {
-        queue.offer(n1.left);
-        queue.offer(n2.left);
-      }
-      // 若 r1 左空，就把 r2 左挂为前者左，即仅遍历 r2 左的子节点，否则 r1 左无改动
-      if (n1.left == null) n1.left = n2.left;
-      // r1 右同理
-      if (n1.right != null && n2.right != null) {
-        queue.offer(n1.right);
-        queue.offer(n2.right);
-      }
-      if (n1.right == null) n1.right = n2.right;
-    }
-    return r1;
   }
 
   /**
@@ -1731,9 +1734,7 @@ class BacktrackingSearch extends DDFS {
       int nX = r + dir[0], nY = c + dir[1];
       if (!recStack[nX][nY]
           && inArea(board, nX, nY)
-          && backtracking8(board, nX, nY, word, start + 1, recStack)) {
-        return true;
-      }
+          && backtracking8(board, nX, nY, word, start + 1, recStack)) return true;
     }
     recStack[r][c] = false;
     return false;
@@ -1748,20 +1749,20 @@ class BacktrackingSearch extends DDFS {
    * @return list list
    */
   public List<String> binaryTreePaths(TreeNode root) {
-    List<String> res = new ArrayList<>();
-    backtracking12(root, "", res);
-    return res;
+    List<String> paths = new ArrayList<>();
+    backtracking12(root, new StringBuilder(), paths);
+    return paths;
   }
 
-  private void backtracking12(TreeNode root, String path, List<String> res) {
+  private void backtracking12(TreeNode root, StringBuilder path, List<String> paths) {
     if (root == null) return;
-    if (root.left == null && root.right == null) {
-      res.add(path + root.val);
-      return;
-    }
-    String cur = path + root.val + "->";
-    backtracking12(root.left, cur, res);
-    backtracking12(root.right, cur, res);
+    String add = (path.length() == 0 ? "" : "->") + String.valueOf(root.val);
+    path.append(add);
+    if (root.left == null && root.right == null) paths.add(path.toString());
+    backtracking12(root.left, path, paths);
+    backtracking12(root.right, path, paths);
+    int addCnt = add.length(), len = path.length();
+    path.delete(len - addCnt, len);
   }
 
   /**
@@ -1804,23 +1805,25 @@ class BacktrackingElse extends DDFS {
    * @return list list
    */
   public List<String> restoreIpAddresses(String s) {
-    if (s.length() > 12 || s.length() < 4) return new ArrayList<>(); // 特判
+    if (s.length() < 4 || s.length() > 12) return new ArrayList<>(); // 特判
     List<String> ips = new ArrayList<>();
-    backtracking6(s, new ArrayDeque<>(4), ips, 0, 4);
+    backtracking6(s, new ArrayDeque<>(4), ips, 0, 0);
     return ips;
   }
 
-  private void backtracking6(String s, Deque<String> path, List<String> res, int start, int seg) {
-    if (start == s.length()) {
-      if (seg == 0) res.add(String.join(".", path));
+  private void backtracking6(
+      String s, Deque<String> path, List<String> res, int start, int segCnt) {
+    int len = s.length();
+    if (start == len) {
+      if (segCnt == 4) res.add(String.join(".", path));
       return;
     }
-    // only truncate 3 digits per segment
-    for (int i = start; i < start + 3 && i < s.length(); i++) {
-      // 当前段分配的位数不够，或分配的位数过多，或数字过大
-      if (seg * 3 < s.length() - i || !isValidIP(s, start, i)) continue;
+    // 依次以 s[i+1] & s[i:i+2] & s[i:i+3] 作为一个段回溯
+    for (int i = start; i < len; i++) {
+      // s[start:i] 的数字串非法，或当前段已分配三位数，或剩余数字即使每个段分配三个字符也无法填满
+      if (!isValidIP(s, start, i) || i == start + 3 || len - i > segCnt * 3) continue;
       path.offerLast(s.substring(start, i + 1));
-      backtracking6(s, path, res, i + 1, seg - 1);
+      backtracking6(s, path, res, i + 1, segCnt + 1);
       path.pollLast();
     }
   }
@@ -1839,7 +1842,8 @@ class BacktrackingElse extends DDFS {
    * @return list
    */
   public List<String> letterCombinations(String digits) {
-    if (digits == null || digits.length() == 0) return new ArrayList<>();
+    // 需要特判
+    if (digits.length() == 0) return new ArrayList<>();
     List<String> res = new ArrayList<>();
     backtracking13(digits, new StringBuilder(), res, 0);
     return res;
@@ -1854,8 +1858,7 @@ class BacktrackingElse extends DDFS {
       res.add(path.toString());
       return;
     }
-    char[] letters = LetterMap[str.charAt(start) - '0'].toCharArray();
-    for (char ch : letters) {
+    for (char ch : LetterMap[str.charAt(start) - '0'].toCharArray()) {
       path.append(ch);
       backtracking13(str, path, res, start + 1);
       path.deleteCharAt(path.length() - 1);
@@ -1877,34 +1880,34 @@ class BacktrackingElse extends DDFS {
     List<List<String>> paths = new ArrayList<>();
     int len = s.length();
     // isPalindrome[i][j] 表示 s[i][j] 是否回文
-    boolean[][] isPalindrome = new boolean[len][len];
+    boolean[][] isPld = new boolean[len][len];
     for (int i = 0; i < len; i++) {
-      collect(s, i, i, isPalindrome);
-      collect(s, i, i + 1, isPalindrome);
+      collect(s, i, i, isPld);
+      collect(s, i, i + 1, isPld);
     }
-    backtracking11(s, new ArrayDeque<>(), paths, 0, isPalindrome);
+    backtracking11(s, new ArrayDeque<>(), paths, 0, isPld);
     return paths;
   }
 
   // 中心扩展，记录所有回文子串的始末点
-  private void collect(String s, int lo, int hi, boolean[][] isPalindrome) {
+  private void collect(String s, int lo, int hi, boolean[][] isPld) {
     while (lo > -1 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
-      isPalindrome[lo][hi] = true;
+      isPld[lo][hi] = true;
       lo -= 1;
       hi += 1;
     }
   }
 
   private void backtracking11(
-      String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPalindrome) {
+      String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
     if (start == s.length()) {
       res.add(new ArrayList<>(path));
       return;
     }
     for (int i = start; i < s.length(); i++) {
-      if (!isPalindrome[start][i]) continue; // [start:i] 区间非回文
+      if (!isPld[start][i]) continue; // [start:i] 区间非回文
       path.offerLast(s.substring(start, i + 1));
-      backtracking11(s, path, res, i + 1, isPalindrome);
+      backtracking11(s, path, res, i + 1, isPld);
       path.pollLast();
     }
   }
@@ -2007,12 +2010,12 @@ class BacktrackingElse extends DDFS {
     if (segs.length != 4) return nt;
     for (String s : segs) {
       if (s.length() > 3) return nt;
-      int val = 0;
+      int num = 0;
       for (char ch : s.toCharArray()) {
         if (!Character.isDigit(ch)) return nt;
-        val = val * 10 + ch - '0';
+        num = num * 10 + (ch - '0');
       }
-      if (val > 255 || (s.charAt(0) == '0' && s.length() > 1)) return nt;
+      if (num > 255 || (s.charAt(0) == '0' && s.length() > 1)) return nt;
     }
     return "IPv4";
   }

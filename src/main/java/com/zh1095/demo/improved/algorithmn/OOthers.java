@@ -1,3 +1,4 @@
+// Z字形变换
 // 加油站 最大子序列和增加 start
 // 跳跃游戏 加个索引标识当前可达的上界
 // 划分字母区间 收集每个字母的最后索引，并在遍历时更新当前片段的右边界
@@ -11,7 +12,7 @@
 // x 的平方根 牛顿迭代 new=(old+num/old)*0.5
 // Pow(x,n)
 // 圆圈中最后剩下的数字
-// 第N位数字
+// 第N个数字
 // 多数元素
 // 分数到小数
 
@@ -30,6 +31,30 @@ import java.util.*;
  */
 public class OOthers {
   /**
+   * Z字形变换
+   *
+   * <p>参考 https://leetcode.cn/problems/zigzag-conversion/solution/zzi-xing-bian-huan-by-jyd/
+   *
+   * @param s
+   * @param numRows
+   * @return
+   */
+  public String convert(String s, int numRows) {
+    if (numRows < 2) return s;
+    StringBuilder[] rows = new StringBuilder[numRows];
+    for (int i = 0; i < numRows; i++) rows[i] = new StringBuilder();
+    int r = 0, isForward = -1;
+    for (char ch : s.toCharArray()) {
+      rows[r].append(ch);
+      if (r == 0 || r == numRows - 1) isForward *= -1;
+      r += isForward;
+    }
+    StringBuilder res = new StringBuilder();
+    for (StringBuilder i : rows) res.append(i);
+    return res.toString();
+  }
+
+  /**
    * 加油站，求最大子序和的起始位
    *
    * <p>贪心，局部最优，当前累加和小于 0 则更新起始位置与累加和，并重新计算
@@ -42,9 +67,9 @@ public class OOthers {
     // sum 用于判断能否到达终点
     int preSum = 0, start = 0, sum = 0;
     for (int i = 0; i < gas.length; i++) {
-      int n = gas[i] - cost[i]; // 当前站需要消耗的，即当前元素的值
+      int n = gas[i] - cost[i]; // 当前站还剩下的，即当前元素的值
       sum += n;
-      if (preSum > 0) {
+      if (preSum + n > n) {
         preSum += n;
       } else {
         preSum = n;
@@ -99,13 +124,13 @@ public class OOthers {
   /**
    * 划分字母区间，返回可划分的子串上限，同一种字母只能在一个子串内
    *
-   * <p>贪心，类似「跳跃游戏」参考
+   * <p>贪心，类似「最大交换」参考
    * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
    */
   public List<Integer> partitionLabels(String s) {
-    int[] lastIdxes = new int[26];
     char[] chs = s.toCharArray();
     // 统计每个字母最终的节点，题设均 lowercase
+    int[] lastIdxes = new int[26];
     for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - 'a'] = i;
     List<Integer> lens = new ArrayList<>();
     int lo = 0, hi = 0; // 当前片段的首尾
@@ -113,7 +138,7 @@ public class OOthers {
       // 根据遍历的字母更新当前片段的右边界
       hi = Math.max(hi, lastIdxes[chs[i] - 'a']);
       // 未到达当前片段的右边界，即仍有部分字母在边界右侧
-      if (i != hi) continue;
+      if (i > hi) continue;
       lens.add(hi - lo + 1);
       lo = hi + 1;
     }
@@ -135,10 +160,8 @@ public class OOthers {
    */
   public int translateNum(int num) {
     if (num <= 9) return 1;
-    int ba = num % 100; // xyzcba
-    return ba > 9 && ba < 26
-        ? translateNum(num / 10) + translateNum(num / 100)
-        : translateNum(num / 10);
+    int ba = num % 100, res = translateNum(num / 10); // xyzcba
+    return ba > 9 && ba < 26 ? res + translateNum(num / 100) : res;
   }
 
   /**
@@ -508,58 +531,39 @@ class DData {
    * @author cenghui
    */
   public class MinStack {
-    private final Deque<Integer> stack = new ArrayDeque<>();
-    private int min, max;
+    private long min = Long.MAX_VALUE;
+    private final Deque<Long> stack = new ArrayDeque<>();
 
-    /**
-     * 存差 & 更新
-     *
-     * @param x the x
-     */
     public void push(int x) {
-      if (stack.isEmpty()) min = x;
-      stack.push(x - min);
-      if (x < min) min = x;
+      long gap = stack.isEmpty() ? 0L : x - min;
+      stack.push(gap);
+      min = Math.min(min, x);
+      // 实际运行改用下方代码
+      //      if (stack.isEmpty()) {
+      //        stack.push(0l);
+      //        min = x;
+      //      } else {
+      //        stack.push(x - min);
+      //        if (x < min) min = x;
+      //      }
     }
 
-    /**
-     * top < 0 ? min-=top
-     *
-     * <p>top > 0 ? max-=top
-     */
     public void pop() {
       if (stack.isEmpty()) return;
-      int pop = stack.pop();
+      long pop = stack.pollLast();
+      // 弹出的是负值，要更新 min
       if (pop < 0) min -= pop;
     }
 
-    /**
-     * Top int.
-     *
-     * @return the int
-     */
     public int top() {
-      int top = stack.peek();
-      // 负数则出栈的值保存在 min 中，出栈元素加上最小值即可
-      return top < 0 ? min : top + min;
+      long top = stack.peekLast();
+      // 负数的话，出栈的值保存在 min 中
+      // 出栈元素加上最小值即可
+      return (int) (top < 0 ? min : top + min);
     }
 
-    /**
-     * Gets min.
-     *
-     * @return the min
-     */
     public int getMin() {
-      return min;
-    }
-
-    /**
-     * Gets max.
-     *
-     * @return the max
-     */
-    public int getMax() {
-      return max;
+      return (int) min;
     }
   }
 
@@ -937,23 +941,15 @@ class MMath {
    * @return int int
    */
   public int findNthDigit(int n) {
-    // 分别表示当前的位数 & 还剩下要找的位数
-    int len = 1, left = n;
-    // 找到 n 所在的位数区间
-    while (true) {
-      // len 位数共有 9*len*10^(len-1) 个完整的数字
-      double cnt = 9 * len * Math.pow(10, len - 1);
-      if (cnt >= left) break;
-      left -= cnt;
+    int len = 1, base = 1;
+    while (n > (long) len * 9 * base) {
+      n -= len * 9 * base;
       len += 1;
+      base *= 10;
     }
-    // 此时 left 所在完整的数字的值上下界是 [10^(len-1),10^len-1]
-    // 可推出目标所在的数字 (target−min+1)*len >= left
-    double minNum = Math.pow(10, len - 1), targetNum = (minNum + left / len - 1);
-    // 相较于 min 需要取的完整的数字
-    int count = left - len * (left / len);
-    // cur==0 表示答案为目标数字的最后一位，否则是其从左到右的第 left 位。
-    return (int) (count == 0 ? targetNum % 10 : (targetNum + 1) / Math.pow(10, len - count) % 10);
+    int idx = n - 1, digit = idx % len;
+    double num = Math.pow(10, len - 1) + idx / len;
+    return (int) (num / Math.pow(10, len - digit - 1) % 10);
   }
 
   /**
@@ -964,39 +960,30 @@ class MMath {
    * <p>TODO 参考
    * https://leetcode.cn/problems/fraction-to-recurring-decimal/solution/pythonjavajavascript-gao-jing-du-chu-fa-44td5/
    *
-   * @param numerator 分子
-   * @param denominator 分母
+   * @param num 分子
+   * @param de 分母
    * @return
    */
-  public String fractionToDecimal(int numerator, int denominator) {
-    // 1.判断正负
-    int flag = (numerator > 0 && denominator > 0) || (numerator < 0 && denominator < 0) ? 1 : -1;
-    long a = Math.abs((long) numerator), b = Math.abs((long) denominator);
-    // 2.取出余数
-    long quotient = a / b, remainder = a % b;
-    if (remainder == 0) return String.valueOf(quotient * flag); // 整除
-    StringBuilder num = new StringBuilder(String.valueOf(quotient)); // 先插入整数部分
-    if (flag == -1) num.insert(0, '-'); // 正负
-    num.append('.');
-    // 小数之外的长度 & 精度可控
-    final int PRECISSION = 10000, len = num.length();
-    // 3.保存某个被除数与原除数的结果
-    Map<Long, Integer> quotients = new HashMap<>();
-    for (int i = 0; i < PRECISSION; i++) {
-      a = remainder * 10;
-      quotient = a / b;
-      remainder = a % b;
-      // 4.该被除数已出现过，在该区间首末插入括号即可
-      if (quotients.containsKey(a)) {
-        num.insert(quotients.get(a).intValue(), '(');
-        num.append(')');
+  public String fractionToDecimal(int num, int de) {
+    if (num * de < 0) return '-' + fractionToDecimal(Math.abs(num), Math.abs(de));
+    StringBuilder res = new StringBuilder();
+    res.append(num / de);
+    res.append(".");
+    Map<Long, Integer> de2Idx = new HashMap<>();
+    for (long n = num % de; n != 0; n %= de) {
+      // 出现过相同的余数说明开始出现循环小数
+      if (de2Idx.containsKey(n)) {
+        res.insert(de2Idx.get(n), "(");
+        res.append(")");
         break;
       }
-      num.append(quotient);
-      quotients.put(a, i + len); // 该除数所得结果的左边界
-      if (remainder == 0) break; // 入迭代前非整除
+      // 记录每一个余数对应到结果中的位置
+      de2Idx.put(n, res.length());
+      // 模拟除法的过程
+      n *= 10;
+      res.append(n / de);
     }
-    return num.toString();
+    return res.toString();
   }
 
   /**

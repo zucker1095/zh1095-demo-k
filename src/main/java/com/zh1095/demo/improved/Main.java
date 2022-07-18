@@ -1,4 +1,4 @@
-package com.zh1095.demo.improved;
+import com.zh1095.demo.improved.algorithmn.TreeNode;
 
 import java.util.*;
 
@@ -39,6 +39,99 @@ public class Main {
       pre = cur = curStart;
     }
     return dummy.next;
+  }
+
+  public String convert(String s, int numRows) {
+    int r = 0, isForward = -1;
+    for (char ch : s.toCharArray()) {
+      rows[r].append(ch);
+      if (r == 0 || r == numRows - 1) isForward *= -1;
+      r += isForward;
+    }
+    for (StringBuilder i : rows) res.append(i);
+    return res.toString();
+  }
+
+  List<Integer> partitionLabels(String s) {
+    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - 'a'] = i;
+    int lo, hi;
+    for (int i = 0; i < chs.length; i++) {
+      hi = Math.max(hi, lastIdxes[chs[i] - 'a']);
+      if (i > hi) continue;
+      lens.add(hi - lo + 1);
+      lo = hi + 1;
+    }
+    return lens;
+  }
+
+  int mySqrt(int x) {
+    while (true) {
+      double cur = (n + x / n) * 0.5;
+      if (Math.abs(n - cur) < 1e-7) break;
+      n = cur;
+    }
+    return (int) n;
+  }
+
+  double myPow(double x, int n) {
+    return n < 0 ? 1.0 / quickMulti(x, -n) : quickMulti(x, n);
+  }
+
+  double quickMulti(double x, int n) {
+    if (n == 0) return 1;
+    double y = quickMulti(x, n / 2);
+    return y * y * (((n & 1) == 0) ? 1 : x);
+  }
+
+  int translateNum(int num) {
+    if (num <= 9) return 1;
+    int ba = num % 100, res = translateNum(num / 10); // xyzcba
+    return ba > 9 && ba < 26 ? res + translateNum(num / 100) : res;
+  }
+
+  int majorityElement(int[] nums) {
+    for (int n : nums) {
+      if (cnt == 0) {
+        can = n;
+        cnt = 1;
+      } else if (n == cnt) {
+        cnt += 1;
+      } else {
+        cnt -= 1;
+      }
+    }
+    return can;
+  }
+
+  int findNthDigit(int n) {
+    while (n > (long) len * 9 * base) {
+      n -= len * 9 * base;
+      len += 1;
+      base *= 10;
+    }
+    int idx = n - 1, digit = idx % len;
+    double num = Math.pow(10, len - 1) + idx / len;
+    return (int) (num / Math.pow(10, len - digit - 1) % 10);
+  }
+
+  int lastRemaining(int n, int m) {
+    int leftIdx = 0;
+    for (int i = 2; i <= n; i++) leftIdx = (leftIdx + m) % i;
+    return leftIdx;
+  }
+
+  String fractionToDecimal(int num, int de) {
+    for (long n = num % de; n != 0; n %= de) {
+      if (de2Idx.containsKey(n)) {
+        res.insert(de2Idx.get(n), "(");
+        res.append(")");
+        break;
+      }
+      de2Idx.put(n, res.length());
+      n *= 10;
+      res.append(n / de);
+    }
+    return res.toString();
   }
 }
 
@@ -131,6 +224,7 @@ class DP {
   }
 
   int numTrees(int n) {
+    dp[0] = dp[1] = 1;
     for (int i = 2; i < n + 1; i++) {
       for (int j = 1; j < i + 1; j++) {
         dp[i] += dp[j - 1] * dp[i - j];
@@ -255,7 +349,17 @@ class DP {
   }
 
   int numDecodings(String s) {
-    for (int i = 1; i < s.length(); i++) {}
+    int preCnt = 1, cnt = 1;
+    for (int i = 1; i < s.length(); i++) {
+      char hi = s.charAt(i - 1), lo = s.charAt(i);
+      int tmp = cnt;
+      if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) cnt += preCnt;
+      else if (lo == '0') {
+        if (hi != '1' && hi != '2') return 0;
+        cnt = preCnt;
+      }
+      preCnt = tmp;
+    }
   }
 
   int candy(int[] ratings) {
@@ -283,6 +387,163 @@ class TTree {
   }
 
   void bt1(TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {}
+
+  int pathSumIII(TreeNode root, int targetSum) {
+    return dfs1(root, preSum2Cnt, 0, targetSum);
+  }
+
+  int dfs1(TreeNode root, Map<Long, Integer> preSum2Cnt, long sum, int target) {
+    int cnt = preSum2Cnt.get(sum - target);
+    preSum2Cnt.put(sum, preSum2Cnt.get(sum) + 1);
+    cnt += dfs14(root.left, preSum2Cnt, sum, target) + dfs14(root.right, preSum2Cnt, sum, target);
+    preSum2Cnt.put(sum, preSum2Cnt.get(sum) - 1);
+    return cnt;
+  }
+
+  int longestIncreasingPath(int[][] matrix) {
+    for (int r = 0; r < matrix.length; r++) {
+      for (int c = 0; c < matrix[0].length; c++) {
+        maxLen = Math.max(maxLen, dfs2(matrix, r, c, lens));
+      }
+    }
+    return maxLen;
+  }
+
+  int dfs2(int[][] matrix, int r, int c, int[][] lens) {
+    if (lens[r][c] != 0) return lens[r][c];
+    lens[r][c] += 1;
+    for (int[] dir : DIRECTIONS) {
+      int nr = r + dir[0], nc = c + dir[1];
+      if (!inArea(matrix, nr, nc) || matrix[nr][nc] <= matrix[r][c]) continue;
+      lens[r][c] = Math.max(lens[r][c], dfs3(matrix, nr, nc, lens) + 1);
+    }
+    return lens[r][c];
+  }
+
+  TreeNode mergeTrees(TreeNode r1, TreeNode r2) {
+    while (queue.size() > 0) {
+      TreeNode n1 = queue.poll(), n2 = queue.poll();
+      n1.val += n2.val;
+      if (n1.left != null && n2.left != null) {
+        queue.offer(n1.left);
+        queue.offer(n2.left);
+      }
+      if (n1.left == null) n1.left = n2.left;
+    }
+    return r1;
+  }
+
+  boolean flipEquiv(TreeNode r1, TreeNode r2) {
+    if (r1 == null && r2 == null) return true;
+    if (r1 == null || r2 == null || r1.val != r2.val) return false;
+    return (flipEquiv(r1.left, r2.left) && flipEquiv(r1.right, r2.right))
+        || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
+  }
+
+  List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
+    collect(root, parents);
+    dfs3(root, null, k, parents, vers);
+  }
+
+  void collect(TreeNode node, Map<Integer, TreeNode> parents) {
+    if (node.left != null) {
+      parents.put(node.left.val, node);
+      collectParents(node.left, parents);
+    }
+    //    if (node.right != null) {}
+  }
+
+  void dfs3(
+      TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
+    if (n == null) return;
+    if (dist == 0) {
+      vers.add(n.val);
+      return;
+    }
+    dist -= 1;
+    TreeNode parent = parents.get(n.val);
+    if (n.left != from) dfs17(n.left, n, dist, parents, vers);
+    if (n.right != from) dfs17(n.right, n, dist, parents, vers);
+    if (parent != from) dfs17(parent, n, dist, parents, vers);
+  }
+
+  List<String> restoreIpAddresses(String s) {
+    bt6(s, new ArrayDeque<>(4), ips, 0, 0);
+  }
+
+  void bt6(String s, Deque<String> path, List<String> res, int start, int segCnt) {
+    if (start == len) {
+      if (segCnt == 4) res.add(String.join(".", path));
+      return;
+    }
+    for (int i = start; i < len; i++) {
+      if (!isValidIP(s, start, i) || i = start || len - i > segCnt * 3) continue;
+      path.offerLast(s.substring(start, i + 1));
+      backtracking6(s, path, res, i + 1, segCnt + 1);
+      path.pollLast();
+    }
+  }
+
+  List<String> letterCombinations(String digits) {
+    bt13(digits, new StringBuilder(), res, 0);
+  }
+
+  void bt13(String str, StringBuilder path, List<String> res, int start) {
+    for (char ch : LetterMap[str.charAt(start) - '0'].toCharArray()) {
+      backtracking13(str, path, res, start + 1);
+    }
+  }
+
+  List<List<String>> partition(String s) {
+    boolean[][] isPalindrome = new boolean[len][len];
+    for (int i = 0; i < len; i++) {
+      collect(s, i, i, isPalindrome);
+      collect(s, i, i + 1, isPalindrome);
+    }
+    bt11(s, new ArrayDeque<>(), paths, 0, isPalindrome);
+  }
+
+  void collect(String s, int lo, int hi, boolean[][] isPalindrome) {}
+
+  void backtracking11(
+      String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
+    for (int i = start; i < s.length(); i++) {
+      if (!isPld[start][i]) continue;
+      path.offerLast(s.substring(start, i + 1));
+    }
+  }
+
+  boolean exist(char[][] board, String word) {
+    for (int r = 0; r < ROW; r++) {
+      for (int c = 0; c < COL; c++) {
+        if (bt8(board, r, c, chs, 0, recStack)) return true;
+      }
+    }
+    return false;
+  }
+
+  boolean bt8(char[][] board, int r, int c, char[] word, int start, boolean[][] recStack) {
+    if (start == word.length - 1) return board[r][c] == word[start];
+    if (board[r][c] != word[start]) return false;
+    recStack[r][c] = true;
+    for (int[] dir : DIRECTIONS) {
+      int nX = r + dir[0], nY = c + dir[1];
+      if (!recStack[nX][nY]
+          && inArea(board, nX, nY)
+          && backtracking8(board, nX, nY, word, start + 1, recStack)) return true;
+    }
+    recStack[r][c] = false;
+    return false;
+  }
+
+  List<String> binaryTreePaths(TreeNode root) {}
+
+  void bt12(TreeNode root, StringBuilder path, List<String> paths) {
+    if (root == null) return;
+    String add = (path.length() == 0 ? "" : "->") + String.valueOf(root.val);
+    if (root.left == null && root.right == null) paths.add(path.toString());
+    path.delete(len - addCnt, len);
+  }
 }
 
 class AArray {
