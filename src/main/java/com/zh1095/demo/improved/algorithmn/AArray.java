@@ -82,6 +82,10 @@ public class AArray extends DefaultArray {
   /**
    * 二分查找，下方 FFind 统一该写法，参考 https://www.zhihu.com/question/36132386
    *
+   * <p>lo = mid+1(hi = mid) 经典 左边界 寻找旋转排序数组中的最小值 寻找峰值 搜索旋转排序数组
+   *
+   * <p>lo = mid(hi = mid-1) 右边界
+   *
    * <p>思想是基于比较点，不断剔除「不合格区域」，但不能保证「最后幸存的 l=r 区域是合格的」，因此最后应判定 l 的值是否正确
    *
    * <p>扩展1，重复，改为 nextIdx
@@ -505,7 +509,7 @@ class HHeap extends DefaultArray {
 
     public void addNum(int n) {
       if (maxHeap.size() > minHeap.size()) {
-        if (maxHeap.peek() > n) {
+        if (n < maxHeap.peek()) {
           minHeap.add(maxHeap.poll());
           maxHeap.add(n);
         } else {
@@ -590,10 +594,6 @@ class HHeap extends DefaultArray {
    * @return string字符串二维数组
    */
   public String[][] topKstrings(String[] strings, int k) {
-    Map<String, Integer> counter = new HashMap<>();
-    for (String s : strings) {
-      counter.put(s, counter.getOrDefault(s, 0) + 1);
-    }
     PriorityQueue<String[]> pq =
         new PriorityQueue<>(
             k + 1,
@@ -602,6 +602,9 @@ class HHeap extends DefaultArray {
                   ? o2[0].compareTo(o1[0])
                   : Integer.parseInt(o1[1]) - Integer.parseInt(o2[1]);
             });
+    Map<String, Integer> counter = new HashMap<>();
+    // 实际运行改用 getOrDefault
+    for (String s : strings) counter.put(s, counter.get(s) + 1);
     for (String str : counter.keySet()) {
       pq.offer(new String[] {str, counter.get(str).toString()});
       if (pq.size() > k) pq.poll();
@@ -780,8 +783,8 @@ class DichotomyClassic extends DefaultArray {
     while (p1 > -1 && p2 > -1 && ranking > 1) {
       //    while (p1 < l1 && p2 < l2 && ranking > 1) {
       int half = ranking / 2,
-          newP1 = Math.max(p1 - half, -1) + 1,
-          newP2 = Math.max(p2 - half, -1) + 1;
+          newP1 = 1 + Math.max(p1 - half, -1),
+          newP2 = 1 + Math.max(p2 - half, -1);
       //          newP1 = Math.min(p1 + half, l1) - 1,
       //          newP2 = Math.min(p2 + half, l2) - 1;
       if (nums1[newP1] >= nums2[newP2]) {
@@ -857,15 +860,15 @@ class DichotomyClassic extends DefaultArray {
   public int search(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
-      int mid = lo + (hi - lo + 1) / 2; // 向上取整
-      if (nums[mid] >= nums[hi]) {
-        // target 落在 [lo, mid-1]
-        if (nums[lo] <= target && nums[mid - 1] >= target) hi = mid - 1;
-        else lo = mid;
+      int mid = lo + (hi - lo) / 2; // 向上取整
+      if (nums[mid] < nums[hi]) {
+        // target 落在 [mid+1, hi]
+        if (nums[mid + 1] <= target && target <= nums[hi]) lo = mid + 1;
+        else hi = mid;
       } else {
-        // target 落在 [mid, hi]
-        if (nums[mid] <= target && nums[hi] >= target) lo = mid;
-        else hi = mid - 1;
+        // target 落在 [lo, mid]
+        if (nums[lo] <= target && target <= nums[mid]) hi = mid;
+        else lo = mid + 1;
       }
     }
     return nums[lo] == target ? lo : -1;
@@ -1102,8 +1105,8 @@ class DichotomyElse extends DefaultArray {
    * @return
    */
   public int splitArray(int[] nums, int m) {
-    int max = 0, sum = 0;
     // 计算子数组各自和的最大值的上下界
+    int max = 0, sum = 0;
     for (int n : nums) {
       max = Math.max(max, n);
       sum += n;
@@ -1111,27 +1114,27 @@ class DichotomyElse extends DefaultArray {
     // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
     int lo = max, hi = sum;
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2, splits = split(nums, mid);
+      int mid = lo + (hi - lo) / 2, cnt = split(nums, mid);
       // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要调大该值
-      if (splits > m) lo = mid + 1; // 下一轮搜索的区间是 [mid + 1, right]
+      if (cnt > m) lo = mid + 1; // 下一轮搜索的区间是 [mid + 1, right]
       else hi = mid;
     }
     return lo;
   }
 
   // 满足不超过「子数组各自的和的最大值」的分割数
-  private int split(int[] nums, int maxIntervalSum) {
+  private int split(int[] nums, int maxSum) {
     // 至少是一个分割 & 当前区间的和
-    int splits = 1, curIntervalSum = 0;
+    int cnt = 1, intervalSum = 0;
     for (int n : nums) {
       // 尝试加上当前遍历的这个数，如果加上去超过了「子数组各自的和的最大值」，就不加这个数，另起炉灶
-      if (curIntervalSum + n > maxIntervalSum) {
-        curIntervalSum = 0;
-        splits += 1;
+      if (intervalSum + n > maxSum) {
+        intervalSum = 0;
+        cnt += 1;
       }
-      curIntervalSum += n;
+      intervalSum += n;
     }
-    return splits;
+    return cnt;
   }
 }
 
@@ -1182,20 +1185,20 @@ class SSum extends DefaultArray {
    */
   public int threeSumClosest(int[] nums, int target) {
     Arrays.sort(nums);
-    int closestSum = nums[0] + nums[1] + nums[2]; // 题设至少三位
+    int cSum = nums[0] + nums[1] + nums[2]; // 题设至少三位
     for (int i = 0; i < nums.length; i++) {
-      int pivot = nums[i];
-      if (pivot > target) break;
+      int p = nums[i];
+      if (p > target) break;
       int lo = i + 1, hi = nums.length - 1;
       while (lo < hi) {
-        int sum = pivot + nums[lo] + nums[hi];
-        if (Math.abs(target - sum) < Math.abs(target - closestSum)) closestSum = sum;
+        int sum = p + nums[lo] + nums[hi];
+        if (Math.abs(target - sum) < Math.abs(target - cSum)) cSum = sum;
         if (sum < target) lo += 1;
-        if (sum == target) return closestSum;
+        if (sum == target) return cSum;
         if (sum > target) hi -= 1;
       }
     }
-    return closestSum;
+    return cSum;
   }
 
   /**
@@ -1390,9 +1393,8 @@ class PreSum {
     for (int n : nums) {
       preSum += n;
       // 当前 preSum 与 K 的关系，余数是几，当被除数为负数时取模结果为负数，需要纠正
-      int remainder = (preSum % k + k) % k;
       // 实际运行改用 getOrDefault
-      int curCnt = remainder2Cnt.get(remainder);
+      int remainder = (preSum % k + k) % k, curCnt = remainder2Cnt.get(remainder);
       remainder2Cnt.put(remainder, curCnt + 1);
       // 余数的次数
       cnt += curCnt;

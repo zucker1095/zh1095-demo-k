@@ -1,5 +1,3 @@
-import com.zh1095.demo.improved.algorithmn.TreeNode;
-
 import java.util.*;
 
 public class Main {
@@ -135,244 +133,311 @@ public class Main {
   }
 }
 
-class DP {
-  int lengthOfLIS(int[] nums) {
-    int end = 0;
-    int[] tails = new int[len];
-    tails[0] = nums[0];
-    for (int n : nums) {
-      if (n > tails[end]) {
-        end += 1;
-        tails[end] = n;
-      } else {
-        int lo = lowerBound(nums, 0, end, n);
-        tails[lo] = n;
-      }
-    }
-    return end + 1;
-  }
-
-  int findNumberOfLIS(int[] nums) {
-    for (int i = 0; i < len; i++) {
-      dp[i] = cnts[i] = 1;
-      for (int j = 0; j < i; j++) {
-        if (nums[j] >= nums[i]) continue;
-        if (dp[i] == dp[j] + 1) cnts[i] += cnts[j];
-        if (dp[i] < dp[j] + 1) {
-          dp[i] = dp[j] + 1;
-          cnts[i] = cnts[j];
-        }
-      }
-      maxLen = Math.max(maxLen, dp[i]);
-    }
-  }
-
-  int longestPalindromeSubseq(String s) {
-    for (int i = len - 1; i > -1; i--) {
-      dp[i][i] = 1;
-      for (int j = i + 1; j < len; j++) {
-        dp[i][j] = s[i] == s[j] ? dp[i + 1][j - 1] + 2 : Math.max(dp[i + 1][j], dp[i][j - 1]);
-      }
-    }
-    return dp[0][len - 1];
-  }
-
-  int findLength(int[] nums1, int[] nums2) {
-    for (int p1 = 1; p1 <= l1; p1++) {
-      for (int p2 = l2; p2 >= 1; p2--) {
-        dp[p2] = nums1[p1 - 1] == nums2[p2 - 1] ? dp[p2 - 1] + 1 : 0;
-        maxLen = Math.max(maxLen, dp[p2]);
-      }
-    }
-    return maxLen;
-  }
-
-  boolean workBreak(String s, List<String> wordDict) {
-    for (int i = 1; i < len + 1; i++) {
-      for (int j = i; j > -1; j--) {
-        if (j + maxLen < i) break;
-        if (dp[j] & wordSet.contains(s.substring(j, i))) {
-          dp[i] = true;
-          break;
-        }
-      }
-    }
-    return dp[len];
-  }
-
-  int minimumTotal(int[][] triangle) {
-    for (int i = len - 1; i >= 0; i--) {
-      for (int j = 0; j <= i; j++) dp[j] = triangle[i][j] + Math.min(dp[j], dp[j + 1]);
-    }
-  }
-
-  int integerBreak(int n) {
-    for (int i = 2; i <= n; i++) {
-      for (int j = 1; j <= i - 1; j++) {
-        dp[i] = Math.max(dp[i], j * (i - j), j * dp[i - j]);
-      }
-    }
-  }
-
-  int numSquares(int n) {
-    for (int i = 1; i <= n; i++) {
-      dp[i] = i;
-      for (int j = 1; j * j <= i; j++) {
-        dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
-      }
-    }
-  }
-
-  int numTrees(int n) {
-    dp[0] = dp[1] = 1;
-    for (int i = 2; i < n + 1; i++) {
-      for (int j = 1; j < i + 1; j++) {
-        dp[i] += dp[j - 1] * dp[i - j];
-      }
-    }
-  }
-
-  /*****************************divider*******************************/
-
-  int longestCommonSubsequence(String text1, String text2) {
-    for (int p1 = 1; p1 <= l1; p1++) {
-      for (int p2 = 1; p2 <= l2; p2++) {
-        dp[p1][p2] =
-            text1[p1] == text2[p2]
-                ? dp[p1 - 1][p2 - 1] + 1
-                : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
-      }
-    }
-    return dp[l1][l2];
-  }
-
-  int editDistance(String word1, String word2) {
-    for (int i = 0; i <= l1; i++) dp[i][0] = i;
-    for (int j = 0; j <= l2; j++) dp[0][j] = j;
-    for (int i = 1; i <= l1; i++) {
-      for (int j = 1; j <= l2; j++) {
-        dp[i][j] =
-            word1[i - 1] == word2[j - 1]
-                ? dp[i - 1][j - 1]
-                : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
-      }
-    }
-    return dp[l1][l2];
-  }
-
-  int regularMatching(String s, String p) {
-    for (int i = 1; i <= l1; i++) {
-      for (int j = 1; j <= l2; j++) {}
-    }
-  }
-
-  int minPathSum(int[][] grid) {
-    for (int i = 1; i < grid.length; i++) {
-      dp[0] += grid[i][0];
-      for (int j = 1; j < COL; j++) dp[j] = Math.min(dp[j - 1], dp[j]);
-    }
-    return dp[COL - 1];
-  }
-
-  int uniquePaths(int m, int n) {
-    for (int i = 1; i < m; i++) {
-      for (int j = 1; j < n; j++) {
-        dp[j] += dp[j - 1];
-      }
-    }
-  }
-
-  int uniquePathsWithObstacles(int[][] obstacleGrid) {
-    for (int i = 0; i < obstacleGrid.length; i++) {
-      for (int j = 0; j < len; j++) {
-        if (obstacleGrid[i][j] == 1) dp[j] = 0;
-        if (obstacleGrid[i][j] == 0 && j > 0) dp[j] += dp[j - 1];
-      }
-    }
-  }
-
-  int maximalSquare(char[][] matrix) {
-    for (int r = 0; r < ROW; r++) {
-      int topLeft = 0;
-      for (int c = 0; c < COL; c++) {
-        int nxt = dp[c + 1];
-        if (matrix[r][c] == '1') {
-          dp[c + 1] = 1 + Math.min(topLeft, dp[c], dp[c + 1]);
-          maxSide = Math.max(maxSide, dp[c + 1]);
-        } else {
-          dp[c + 1] = 0;
-        }
-        topLeft = nxt;
-      }
-    }
-    return maxSide * maxSide;
-  }
-
-  int backToOrigin(int v, int s) {
-    for (int step = 1; step < s + 1; step++) {
-      for (int idx = 0; idx < v; idx++) {
-        int nxt = (idx + 1) % v, tail = (idx - 1 + v) % v;
-        dp[step][idx] = dp[step - 1][nxt] + dp[step - 1][tail];
-      }
-    }
-  }
-
-  /*****************************others*******************************/
-
-  int longestValidParentheses(String s) {
-    for (int i = 1; i < chs.length; i++) {
-      if (chs[i] == '(') continue;
-      int preIdx = i - dp[i - 1];
-      if (preIdx > 0 && chs[preIdx - 1] == '(')
-        dp[i] = 2 + dp[i - 1] + (preIdx < 2 ? 0 : dp[preIdx - 2]);
-      else if (chs[i - 1] == '(') dp[i] = 2 + (i < 2 ? 0 : dp[i - 2]);
-    }
-    return maxLen;
-  }
-
-  int longestConsecutive(int[] nums) {
-    for (int n : nums) set.add(n);
-    int maxLen = 0;
-    for (int n : set) {
-      if (set.contains(n - 1)) continue;
-      int upper = n;
-      while (set.contains(upper + 1)) upper += 1;
-      maxLen = Math.max(maxLen, upper - n + 1);
-    }
-    return maxLen;
-  }
-
-  int coinChange(int[] coins, int amount) {
-    for (int c : coins) {
-      for (int i = c; i <= amount; i++) {}
-    }
-  }
-
-  int numDecodings(String s) {
-    int preCnt = 1, cnt = 1;
-    for (int i = 1; i < s.length(); i++) {
-      char hi = s.charAt(i - 1), lo = s.charAt(i);
-      int tmp = cnt;
-      if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) cnt += preCnt;
-      else if (lo == '0') {
-        if (hi != '1' && hi != '2') return 0;
-        cnt = preCnt;
-      }
-      preCnt = tmp;
-    }
-  }
-
-  int candy(int[] ratings) {
-    for (int i = 0; i < len; i++) l[i] = i > 0 && ratings[i] > ratings[i - 1] ? l[i - 1] + 1 : 1;
-    for (int i = len - 1; i > -1; i--) {
-      r = i < len - 1 && ratings[i] > ratings[i + 1] ? r + 1 : 1;
-      minCnt += Math.max(l[i], r);
-    }
-    return minCnt;
-  }
-}
+//class DP {
+//  int lengthOfLIS(int[] nums) {
+//    int end = 0;
+//    int[] tails = new int[len];
+//    tails[0] = nums[0];
+//    for (int n : nums) {
+//      if (n > tails[end]) {
+//        end += 1;
+//        tails[end] = n;
+//      } else {
+//        int lo = lowerBound(nums, 0, end, n);
+//        tails[lo] = n;
+//      }
+//    }
+//    return end + 1;
+//  }
+//
+//  int findNumberOfLIS(int[] nums) {
+//    for (int i = 0; i < len; i++) {
+//      dp[i] = cnts[i] = 1;
+//      for (int j = 0; j < i; j++) {
+//        if (nums[j] >= nums[i]) continue;
+//        if (dp[i] == dp[j] + 1) cnts[i] += cnts[j];
+//        if (dp[i] < dp[j] + 1) {
+//          dp[i] = dp[j] + 1;
+//          cnts[i] = cnts[j];
+//        }
+//      }
+//      maxLen = Math.max(maxLen, dp[i]);
+//    }
+//    int cnt = 0;
+//    for (int i = 0; i < len; i++) {
+//      if (dp[i] == maxLen) cnt += cnts[i];
+//    }
+//  }
+//
+//  int longestPalindromeSubseq(String s) {
+//    for (int i = len - 1; i > -1; i--) {
+//      dp[i][i] = 1;
+//      for (int j = i + 1; j < len; j++) {
+//        dp[i][j] = s[i] == s[j] ? dp[i + 1][j - 1] + 2 : Math.max(dp[i + 1][j], dp[i][j - 1]);
+//      }
+//    }
+//    return dp[0][len - 1];
+//  }
+//
+//  int findLength(int[] nums1, int[] nums2) {
+//    for (int p1 = 1; p1 <= l1; p1++) {
+//      for (int p2 = l2; p2 >= 1; p2--) {
+//        dp[p2] = nums1[p1 - 1] == nums2[p2 - 1] ? dp[p2 - 1] + 1 : 0;
+//        maxLen = Math.max(maxLen, dp[p2]);
+//      }
+//    }
+//    return maxLen;
+//  }
+//
+//  boolean workBreak(String s, List<String> wordDict) {
+//    for (int i = 1; i < len + 1; i++) {
+//      for (int j = i; j > -1; j--) {
+//        if (j + maxLen < i) break;
+//        if (dp[j] & wordSet.contains(s.substring(j, i))) {
+//          dp[i] = true;
+//          break;
+//        }
+//      }
+//    }
+//    return dp[len];
+//  }
+//
+//  int minimumTotal(int[][] triangle) {
+//    for (int i = len - 1; i >= 0; i--) {
+//      for (int j = 0; j <= i; j++) dp[j] = triangle[i][j] + Math.min(dp[j], dp[j + 1]);
+//    }
+//  }
+//
+//  int integerBreak(int n) {
+//    for (int i = 2; i <= n; i++) {
+//      for (int j = 1; j <= i - 1; j++) {
+//        dp[i] = Math.max(dp[i], j * (i - j), j * dp[i - j]);
+//      }
+//    }
+//  }
+//
+//  int numSquares(int n) {
+//    for (int i = 1; i <= n; i++) {
+//      dp[i] = i;
+//      for (int j = 1; j * j <= i; j++) {
+//        dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
+//      }
+//    }
+//  }
+//
+//  int numTrees(int n) {
+//    dp[0] = dp[1] = 1;
+//    for (int i = 2; i < n + 1; i++) {
+//      for (int j = 1; j < i + 1; j++) {
+//        dp[i] += dp[j - 1] * dp[i - j];
+//      }
+//    }
+//  }
+//
+//  /*****************************divider*******************************/
+//
+//  int longestCommonSubsequence(String text1, String text2) {
+//    for (int p1 = 1; p1 <= l1; p1++) {
+//      for (int p2 = 1; p2 <= l2; p2++) {
+//        dp[p1][p2] =
+//            text1[p1] == text2[p2]
+//                ? dp[p1 - 1][p2 - 1] + 1
+//                : Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
+//      }
+//    }
+//    return dp[l1][l2];
+//  }
+//
+//  int editDistance(String word1, String word2) {
+//    for (int i = 0; i <= l1; i++) dp[i][0] = i;
+//    for (int j = 0; j <= l2; j++) dp[0][j] = j;
+//    for (int i = 1; i <= l1; i++) {
+//      for (int j = 1; j <= l2; j++) {
+//        dp[i][j] =
+//            word1[i - 1] == word2[j - 1]
+//                ? dp[i - 1][j - 1]
+//                : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+//      }
+//    }
+//    return dp[l1][l2];
+//  }
+//
+//  int regularMatching(String s, String p) {
+//    dp[0][0] = true;
+//    for (int j = 1; j <= l2; j++) dp[0][j] = pChs[j - 1] == '*' && dp[0][j - 2];
+//    for (int i = 1; i <= l1; i++) {
+//      for (int j = 1; j <= l2; j++) {
+//        char s = sChs[i - 1], p = pChs[j - 1];
+//        if (p == s || p == '.') dp[i][j] = dp[i - 1][j - 1];
+//        if (p == '*') {
+//          char pre = pChs[j - 2];
+//          if (pre == s || pre == '.') dp[i][j] = dp[i][j - 2] || dp[i - 1][j];
+//          else dp[i][j] = dp[i][j - 2];
+//        }
+//      }
+//    }
+//  }
+//
+//  int minPathSum(int[][] grid) {
+//    for (int i = 1; i < grid.length; i++) {
+//      dp[0] += grid[i][0];
+//      for (int j = 1; j < COL; j++) dp[j] = Math.min(dp[j - 1], dp[j]);
+//    }
+//    return dp[COL - 1];
+//  }
+//
+//  int uniquePaths(int m, int n) {
+//    for (int i = 1; i < m; i++) {
+//      for (int j = 1; j < n; j++) {
+//        dp[j] += dp[j - 1];
+//      }
+//    }
+//  }
+//
+//  int uniquePathsWithObstacles(int[][] obstacleGrid) {
+//    for (int i = 0; i < obstacleGrid.length; i++) {
+//      for (int j = 0; j < len; j++) {
+//        if (obstacleGrid[i][j] == 1) dp[j] = 0;
+//        if (obstacleGrid[i][j] == 0 && j > 0) dp[j] += dp[j - 1];
+//      }
+//    }
+//  }
+//
+//  int maximalSquare(char[][] matrix) {
+//    for (int r = 0; r < ROW; r++) {
+//      int topLeft = 0;
+//      for (int c = 0; c < COL; c++) {
+//        int nxt = dp[c + 1];
+//        if (matrix[r][c] == '1') {
+//          dp[c + 1] = 1 + Math.min(topLeft, dp[c], dp[c + 1]);
+//          maxSide = Math.max(maxSide, dp[c + 1]);
+//        } else dp[c + 1] = 0;
+//        topLeft = nxt;
+//      }
+//    }
+//    return maxSide * maxSide;
+//  }
+//
+//  int backToOrigin(int v, int s) {
+//    for (int step = 1; step < s + 1; step++) {
+//      for (int idx = 0; idx < v; idx++) {
+//        int nxt = (idx + 1) % v, tail = (idx - 1 + v) % v;
+//        dp[step][idx] = dp[step - 1][nxt] + dp[step - 1][tail];
+//      }
+//    }
+//  }
+//
+//  /*****************************others*******************************/
+//  int maxProfit(int[] prices) {
+////    buys[1] = max(buys[1], -p) & sells[1] = max(sells[1], buys[1]+p)
+//    for (int p : prices) {
+//      for (int i = 1; i <= k; ++i) {
+//        buys[i] = Math.max(buys[i], sells[i - 1] - p); // 卖了买
+//        sells[i] = Math.max(sells[i], buys[i] + p); // 买了卖
+//      }
+//    }
+//    return sells[k];
+//  }
+//
+//  int findLengthOfLCIS(int[] nums) {
+//    int len = nums.length, maxLen = 1, curLen = 1;
+//    if (len < 2) return len;
+//    for (int i = 0; i < len - 1; i++) {
+//      if (nums[i + 1] > nums[i]) curLen += 1;
+//      else curLen = 1;
+//      maxLen = Math.max(maxLen, curLen);
+//    }
+//    return maxLen;
+//  }
+//
+//  int maxProduct(int[] nums) {
+//    for (int n : nums) {
+//      if (n < 0) {
+//        int tmp = proMax;
+//        proMax = proMin;
+//        proMin = tmp;
+//      }
+//      proMax = Math.max(proMax * n, n);
+//      proMin = Math.min(proMin * n, n);
+//      maxPro = Math.max(maxPro, proMax);
+//    }
+//  }
+//
+//  int longestValidParentheses(String s) {
+//    for (int i = 1; i < chs.length; i++) {
+//      if (chs[i] == '(') continue;
+//      int preIdx = i - dp[i - 1];
+//      if (preIdx > 0 && chs[preIdx - 1] == '(')
+//        dp[i] = 2 + dp[i - 1] + (preIdx < 2 ? 0 : dp[preIdx - 2]);
+//      else if (chs[i - 1] == '(') dp[i] = 2 + (i < 2 ? 0 : dp[i - 2]);
+//    }
+//    return maxLen;
+//  }
+//
+//  int longestConsecutive(int[] nums) {
+//    for (int n : nums) set.add(n);
+//    int maxLen = 0;
+//    for (int n : set) {
+//      if (set.contains(n - 1)) continue;
+//      int upper = n;
+//      while (set.contains(upper + 1)) upper += 1;
+//      maxLen = Math.max(maxLen, upper - n + 1);
+//    }
+//    return maxLen;
+//  }
+//
+//  int coinChange(int[] coins, int amount) {
+//    for (int c : coins) {
+//      for (int i = c; i <= amount; i++) {}
+//    }
+//  }
+//
+//  int numDecodings(String s) {
+//    int preCnt = 1, cnt = 1;
+//    for (int i = 1; i < s.length(); i++) {
+//      char hi = s.charAt(i - 1), lo = s.charAt(i);
+//      int tmp = cnt;
+//      if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) cnt += preCnt;
+//      else if (lo == '0') {
+//        if (hi != '1' && hi != '2') return 0;
+//        cnt = preCnt;
+//      }
+//      preCnt = tmp;
+//    }
+//  }
+//
+//  int candy(int[] ratings) {
+//    for (int i = 0; i < len; i++) l[i] = i > 0 && ratings[i] > ratings[i - 1] ? l[i - 1] + 1 : 1;
+//    for (int i = len - 1; i > -1; i--) {
+//      r = i < len - 1 && ratings[i] > ratings[i + 1] ? r + 1 : 1;
+//      minCnt += Math.max(l[i], r);
+//    }
+//    return minCnt;
+//  }
+//
+//  int superEggDrop(int K, int N) {
+//    int[][] dp = new int[K + 1][N + 1];
+//    int celling = 0;
+//    while (dp[K][celling] < N) {
+//      celling += 1;
+//      for (int k = 1; k <= K; k++)
+//        dp[k][celling] = dp[k][celling - 1] + dp[k - 1][celling - 1] + 1;
+//    }
+//    return celling;
+//  }
+//}
 
 class TTree {
+  TreeNode buildTree(
+          int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo) {
+    if (preLo > preHi) return null;
+    TreeNode root = new TreeNode(preorder[preLo]);
+    int idx = v2i.get(preorder[preLo]), cntL = idx - inLo;
+    root.left = buildTree1(preorder, preLo + 1, preLo + cntL, v2i, inLo);
+    root.right = buildTree1(preorder, preLo + cntL + 1, preHi, v2i, idx + 1);
+    return root;
+  }
+
   boolean hasPathSum(TreeNode root, int sum) {
     if (root == null) return false;
     int v = root.val;
@@ -420,6 +485,51 @@ class TTree {
     return lens[r][c];
   }
 
+  TreeNode treeToDoublyList(TreeNode root) {
+    dfs7(root);
+    pre.right = head;
+    head.left = pre;
+  }
+
+  void dfs7(TreeNode root) {
+    dfs7(root.left);
+    if (pre == null) head = root;
+    else pre.right = root;
+    root.left = pre;
+    pre = root;
+    dfs7(root.right);
+  }
+
+  void recoverTree(TreeNode root) {
+    while (...) {
+      // ...
+      cur = stack.pollLast();
+      if (pre.val > cur.val && n1 == null) n1 = pre;
+      if (pre.val > cur.val && n1 != null) n2 = cur;
+      pre = cur;
+      // ...
+    }
+  }
+
+  TreeNode insertIntoBST(TreeNode root, int val) {
+    while (cur != null) {
+      if (val > cur.val) {
+        if (cur.right == null) {
+          cur.right = new TreeNode(val);
+          break;
+        }
+        cur = cur.right;
+      } else {
+        if (cur.left == null) {
+          cur.left = new TreeNode(val);
+          break;
+        }
+        cur = cur.left;
+      }
+    }
+    return root;
+  }
+
   TreeNode mergeTrees(TreeNode r1, TreeNode r2) {
     while (queue.size() > 0) {
       TreeNode n1 = queue.poll(), n2 = queue.poll();
@@ -437,7 +547,7 @@ class TTree {
     if (r1 == null && r2 == null) return true;
     if (r1 == null || r2 == null || r1.val != r2.val) return false;
     return (flipEquiv(r1.left, r2.left) && flipEquiv(r1.right, r2.right))
-        || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
+            || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
   }
 
   List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
@@ -454,7 +564,7 @@ class TTree {
   }
 
   void dfs3(
-      TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
+          TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
     if (n == null) return;
     if (dist == 0) {
       vers.add(n.val);
@@ -506,7 +616,7 @@ class TTree {
   void collect(String s, int lo, int hi, boolean[][] isPalindrome) {}
 
   void backtracking11(
-      String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
+          String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
     for (int i = start; i < s.length(); i++) {
       if (!isPld[start][i]) continue;
       path.offerLast(s.substring(start, i + 1));
@@ -529,8 +639,8 @@ class TTree {
     for (int[] dir : DIRECTIONS) {
       int nX = r + dir[0], nY = c + dir[1];
       if (!recStack[nX][nY]
-          && inArea(board, nX, nY)
-          && backtracking8(board, nX, nY, word, start + 1, recStack)) return true;
+              && inArea(board, nX, nY)
+              && backtracking8(board, nX, nY, word, start + 1, recStack)) return true;
     }
     recStack[r][c] = false;
     return false;
@@ -547,6 +657,26 @@ class TTree {
 }
 
 class AArray {
+  int[] sortedSquares(int[] nums) {
+    for (int i = len - 1; i > -1; i--) {
+      int a = nums[lo] * nums[lo], b = nums[hi] * nums[hi];
+      if (a <= b) {
+        res[i] = b;
+        hi -= 1;
+      } else {
+        res[i] = a;
+        lo += 1;
+      }
+    }
+  }
+
+  int minMeetingRooms(int[][] intervals) {
+    for (int[] itv : intervals) {
+      if (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) minHeap.poll();
+      minHeap.offer(itv[1]);
+    }
+  }
+
   void quickSort(int[] nums, int lo, int hi) {
     if (lo >= hi) return;
     int pivotIdx = lo + new Random().nextInt(hi - lo + 1);
@@ -580,31 +710,72 @@ class AArray {
   }
 
   void heapSort(int[] nums) {
-    heapify(nums, nums.length - 1);
-    for (int i = nums.length - 1; i > 0; i++) {
+    heapify(nums, len - 1);
+    for (int i = len - 1; i > 0; i--) {
       swap(nums, 0, i);
       sink(nums, 0, i - 1);
     }
   }
 
-  int minMeetingRooms(int[][] intervals) {
-    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-    Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
-    minHeap.offer(intervals[0][1]);
-    for (int i = 1; i < intervals.length; i++) {
-      if (minHeap.peek() <= intervals[i][0]) minHeap.poll();
-      minHeap.offer(intervals[i][1]);
-    }
-    return minHeap.size();
-  }
-
   class MedianFinder {
     private final PriorityQueue<Integer> minHeap = new PriorityQueue<>((a, b) -> a - b),
-        maxHeap = new PriorityQueue<>((a, b) -> b - a);
+            maxHeap = new PriorityQueue<>((a, b) -> b - a);
 
-    public void addNum(int num) {}
+    public void addNum(int n) {
+      if (maxHeap.size() > minHeap.size()) {
+        if (n < maxHeap.peek()) {
+          minHeap.add(maxHeap.poll());
+          maxHeap.add(n);
+        } else {
+          minHeap.add(n);
+        }
+      } else {
+        if (!minHeap.isEmpty() && n > minHeap.peek()) {
+          maxHeap.add(minHeap.poll());
+          minHeap.add(n);
+        } else {
+          maxHeap.add(n);
+        }
+      }
+    }
 
-    public double findMedian() {}
+    public double findMedian() {
+      return maxHeap.size() > minHeap.size() ? maxHeap.peek() : (maxHeap.peek() + minHeap.peek()) / 2.0;
+    }
+  }
+
+  private void divideAndCount(int[] nums, int[] tmp, int start, int end) {
+    if (start >= end) return;
+    int mid = start + (end - start) / 2;
+    divideAndCount(nums, tmp, start, mid);
+    divideAndCount(nums, tmp, mid + 1, end);
+    if (nums[mid] <= nums[mid + 1]) return;
+    cnt += mergeAndCount(nums, tmp, start, mid, end);
+  }
+
+  private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
+    if (end > start) System.arraycopy(nums, start, tmp, start, end - start + 1);
+    int curCnt = 0, p1 = start, p2 = mid + 1;
+    for (int i = start; i <= end; i++) {
+      if (p1 == mid + 1) {
+        nums[i] = tmp[p2];
+        p2 += 1;
+      } else if (p2 == end + 1) {
+        nums[i] = tmp[p1];
+        p1 += 1;
+      } else if (tmp[p1] <= tmp[p2]) {
+        nums[i] = tmp[p1];
+        p1 += 1;
+      } else if (tmp[p1] > tmp[p2]) {
+        nums[i] = tmp[p2];
+        p2 += 1;
+        curCnt += mid - p1 + 1;
+      }
+    }
+  }
+
+  double findMedianSortedArrays(int[] nums1, int[] nums2) {
+    return (getLargestElement(nums1, nums2, top) + getLargestElement(nums1, nums2, topMore)) * 0.5;
   }
 
   String removeDuplicates(String s) {
@@ -626,6 +797,81 @@ class AArray {
       nums[write++] = n;
     }
     return write;
+  }
+
+  /****************************二分***************************/
+  int getLargestElement(int[] nums1, int[] nums2, int k) {
+    while (p1 > -1 && p2 > -1 && ranking > 1) {
+      int half = ranking /2,
+              newP1 = Math.max(p1 - half, -1) +1,
+      if (nums1[newP1] >= nums2[newP2]) {
+        ranking -= (p1 - newP1 + 1);
+        p1 = newP1 - 1;
+      } else {}
+    }
+    if (p1 == l1) return nums2[p2 - ranking + 1];
+    return Math.max(nums1[p1], nums2[p2]);
+  }
+
+  int search(int[] nums, int target) {
+    while (lo < hi) {
+      if (nums[mid] < nums[hi]) {
+        if (nums[mid + 1] <= target && target <= nums[hi]) lo = mid + 1;
+        else hi = mid;
+      } else {
+        if (nums[lo] <= target && target <= nums[mid]) hi = mid;
+        else lo = mid + 1;
+      }
+    }
+  }
+
+  int findMin(int[] nums) {
+    while (lo < hi) {
+      if (nums[mid] >= nums[hi]) lo = mid + 1;
+      else hi = mid;
+    }
+  }
+
+  int findPeakElement(int[] nums) {
+    while (lo < hi) {
+      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
+      else hi = mid;
+    }
+  }
+
+  boolean searchMatrix(int[][] matrix, int target) {
+    while (lo < hi) {
+      int mid = lo + (hi - lo + 1) / 2;
+      if (matrix[mid][0] <= target) lo = mid;
+      else hi = mid - 1;
+    }
+    int[] row = matrix[hi];
+    if (row[0] == target) return true;
+    if (row[0] > target) return false;
+    int c = upperBound(row, target, 0);
+    return c == -1 ? false : row[c] == target;
+  }
+
+  int kthSmallest(int[][] matrix, int k) {
+    int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      if (countLte(matrix, mid) < k) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  int countLte(int[][] matrix, int target) {
+    int c = 0, r = matrix.length - 1;
+    while (-1 < r && c < matrix[0].length) {
+      if (matrix[r][c] <= target) {
+        cnt += r + 1;
+        c += 1;
+      } else {
+        r -= 1;
+      }
+    }
   }
 
   /****************************前缀和***************************/
@@ -671,7 +917,6 @@ class AArray {
       int remainder = (preSum % k + k) % k;
       int curCnt = remainder2Cnt.get(remainder);
       remainder2Cnt.put(remainder, curCnt + 1);
-      // 余数的次数
       cnt += curCnt;
     }
     return cnt;
@@ -770,6 +1015,89 @@ class AArray {
 }
 
 class SString {
+  String addStrings(String num1, String num2) {
+    while (p1 > -1 || p2 > -1 || carry != 0) {
+      int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
+              n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
+              tmp = n1 + n2 + carry;
+      sum.append(getChar(tmp % BASE));
+      carry = tmp / BASE;
+      p1 -= 1;
+      p2 -= 1;
+    }
+    return sum.reverse().toString();
+  }
+
+  String multiply(String num1, String num2) {
+    for (int p1 = l1 - 1; p1 > -1; p1--) {
+      int n1 = num1.charAt(p1) - '0';
+      for (int p2 = l2 - 1; p2 > -1; p2--) {
+        int n2 = num2.charAt(p2) - '0', sum = product[p1 + p2 + 1] + n1 * n2;
+        product[p1 + p2 + 1] = sum % BASE;
+        product[p1 + p2] += sum / BASE;
+      }
+    }
+    int idx = product[0] == 0 ? 1 : 0;
+    StringBuilder res = new StringBuilder();
+    while (idx < product.length) {
+      res.append(product[idx]);
+      idx += 1;
+    }
+  }
+
+  int compareVersion(String v1, String v2) {
+    while (p1 < l1 || p2 < l2) {
+      int n1 = 0, n2 = 0;
+      while (p1 < l1 && v1.charAt(p1) != '.') {
+        n1 = n1 * 10 + v1.charAt(p1) - '0';
+        p1 += 1;
+      }
+      p1 += 1;
+      if (n1 != n2) return n1 > n2 ? 1 : -1;
+    }
+  }
+
+  int longestOnes(int[] nums, int k) {
+    while (hi < nums.length) {
+      if (nums[hi] == 0) k -= 1;
+      while (k < 0) {
+        if (nums[lo] == 0) k += 1;
+        lo += 1;
+      }
+      maxLen = Math.max(maxLen, hi - lo + 1);
+      hi += 1;
+    }
+  }
+
+  int[] maxSlidingWindow(int[] nums, int k) {
+    for (int i = 0; i < nums.length; i++) {
+      while (mq.size() > 0 && mq.peekLast() < n) mq.pollLast();
+      mq.offerLast(n);
+      if (i < k - 1) continue;
+      int outIdx = i - k + 1, winMax = mq.peekFirst();
+      winMaxes[outIdx] = winMax;
+      if (mq.size() > 0 && nums[outIdx] == winMax) mq.pollFirst();
+    }
+  }
+
+  int longestSubarray(int[] nums, int limit) {
+    while (hi < nums.length) {
+      int add = nums[hi];
+      hi += 1;
+      while (maxMQ.size() > 0 && add > maxMQ.peekLast()) maxMQ.pollLast();
+      maxMQ.offerLast(add);
+      while (minMQ.size() > 0 && add < minMQ.peekLast()) minMQ.pollLast();
+      minMQ.offerLast(add);
+      while (maxMQ.peekFirst() - minMQ.peekFirst() > limit) {
+        int out = nums[lo];
+        lo += 1;
+        if (maxMQ.peekFirst() == out) maxMQ.pollFirst();
+        if (minMQ.peekFirst() == out) minMQ.pollFirst();
+      }
+      maxLen = Math.max(maxLen, hi - lo);
+    }
+  }
+
   boolean isValid(String s) {
     for (char ch : s.toCharArray()) {
       if (!pairs.containsKey(ch)) {
@@ -812,6 +1140,56 @@ class SString {
       }
     }
     return str.toString();
+  }
+
+  int calculate(String s) {
+    char op = '+';
+    for (int i = 0; i < len; i++) {
+      char ch = chs[i];
+      if (Character.isDigit(ch)) n = n * 10 + (ch - '0');
+      if ((!Character.isDigit(ch) && ch != ' ') || i == len - 1) {
+        if (op == '+') numStack.offerLast(n);
+        if (op == '-') numStack.offerLast(-n);
+        if (op == '*') numStack.offerLast(numStack.pollLast() * n);
+        if (op == '/') numStack.offerLast(numStack.pollLast() / n);
+        n = 0;
+        op = ch;
+      }
+    }
+    int sum = 0;
+    for (int num : numStack) sum += num;
+  }
+
+  int[] countLetter(char[] chs) {
+    opStack.offerLast(sign);
+    for (int i = 0; i < chs.length; i++) {
+      char ch = chs[i];
+      if (ch == '(') opStack.offerLast(sign);
+      if (ch == ')') opStack.pollLast();
+      if (ch == '+') sign = opStack.peekLast();
+      if (ch == '-') sign = -opStack.peekLast();
+      if (ch >= '0' && ch <= '9') {
+        long num = 0;
+        while (i < chs.length && Character.isDigit(chs[i])) {
+          num = num * 10 + chs[i] - '0';
+          i += 1;
+        }
+        i -= 1;
+        res += sign * num;
+      }
+    }
+  }
+
+  boolean validateStackSequences(int[] pushed, int[] popped) {
+    for (int add : pushed) {
+      pushed[stTop] = add;
+      stTop += 1;
+      while (stTop != 0 && pushed[stTop - 1] == popped[popIdx]) {
+        stTop -= 1;
+        popIdx += 1;
+      }
+    }
+    return stTop == 0;
   }
 
   String longestCommonPrefix(String[] strs) {
@@ -920,6 +1298,24 @@ class SString {
     return roman.toString();
   }
 
+  int romanToInt(String s) {
+    for (int i = 0; i < chs.length; i++) {
+      int add = mapping.get(chs[i]);
+      // IV 与 VI 否则常规的做法是累加即可
+      if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) sum -= add;
+      else sum += add;
+    }
+  }
+
+  String convertToTitle(int cn) {
+    int cur = cn - 1;
+    while (cur > 0) {
+      res.append((char) (cur % 26 + 'A'));
+      cur = cur / 26 - 1;
+    }
+    return res.reverse().toString();
+  }
+
   int[] dailyTemperatures(int[] temperatures) {
     for (int i = 0; i < temperatures.length; i++) {
       while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
@@ -938,5 +1334,35 @@ class SString {
       ms.offerLast(i % len);
     }
     return new int[] {};
+  }
+
+  String removeKdigits(String num, int k) {
+    for (char ch : num.toCharArray()) {
+      while (k > 0 && ms.length() > 0 && ms.charAt(ms.length() - 1) > ch) {
+        ms.deleteCharAt(ms.length() - 1);
+        k -= 1;
+      }
+      if (ch == '0' && ms.length() == 0) continue; // 避免前导零
+      ms.append(ch);
+    }
+    String str = ms.substring(0, Math.max(ms.length() - k, 0));
+  }
+
+  int maximalRectangle(char[][] matrix) {
+    int[] hs = new int[len + 2];
+    for (char[] rows : matrix) {
+      for (int i = 0; i < hs.length; i++) {
+        if (i > 0 && i < len + 1) { // 哨兵内
+          if (rows[i - 1] == '1') hs[i] += 1;
+          else hs[i] = 0;
+        }
+        while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
+          int cur = ms.pollLast(), pre = ms.peekLast();
+          maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
+        }
+        ms.offerLast(i);
+      }
+    }
+    return maxArea;
   }
 }

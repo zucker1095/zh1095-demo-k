@@ -593,51 +593,6 @@ class DDFS {
     for (int[] dir : DIRECTIONS) dfs16(board, r + dir[0], c + dir[1]);
   }
 
-  //  /**
-  //   * 移除无效的括号
-  //   *
-  //   * <p>TODO 参考
-  //   *
-  // https://leetcode.cn/problems/remove-invalid-parentheses/solution/gong-shui-san-xie-jiang-gua-hao-de-shi-f-asu8/
-  //   *
-  //   * @param s
-  //   * @return
-  //   */
-  //  public List<String> removeInvalidParentheses(String s) {
-  //    int l = 0, r = 0, c1 = 0, c2 = 0;
-  //    for (char ch : s.toCharArray()) {
-  //      if (ch == '(') {
-  //        l += 1;
-  //        c1 += 1;
-  //      }
-  //      if (ch == ')') {
-  //        c2 += 1;
-  //        if (l == 0) r += 1;
-  //        else l -= 1;
-  //      }
-  //    }
-  //    int len = s.length() - l - r, max = Math.min(c1, c2);
-  //    Set<String> res = new HashSet<>();
-  //    dfs19(0, "", l, r, 0);
-  //    return new ArrayList<>(res);
-  //  }
-  //
-  //  private void dfs19(int idx, String path, int l, int r, int score) {
-  //    if (l < 0 || r < 0 || score < 0 || score > max) return;
-  //    if (l == 0 && r == 0 && path.length() == len) res.add(path);
-  //    if (idx == n) return;
-  //    char ch = s.charAt(idx);
-  //    if (ch == '(') {
-  //      dfs19(idx + 1, path + String.valueOf(ch), l, r, score + 1);
-  //      dfs19(idx + 1, path, l - 1, r, score);
-  //    } else if (ch == ')') {
-  //      dfs19(idx + 1, path + String.valueOf(ch), l, r, score - 1);
-  //      dfs19(idx + 1, path, l, r - 1, score);
-  //    } else {
-  //      dfs19(idx + 1, path + String.valueOf(ch), l, r, score);
-  //    }
-  //  }
-
   /**
    * 最长同值路径，找到任意起点的一条路径，所有结点值一致
    *
@@ -849,8 +804,8 @@ class BBSTDFS {
     if (root == null) return null;
     dfs7(root);
     // 此时 pre 指向尾，连接首尾
-    pre.right = head;
     head.left = pre;
+    pre.right = head;
     return head;
   }
 
@@ -977,7 +932,7 @@ class BBSTDFS {
    */
   public TreeNode sortedListToBST(ListNode head) {
     if (head == null) return null;
-    else if (head.next == null) return new TreeNode(head.val);
+    if (head.next == null) return new TreeNode(head.val);
     ListNode pre = null, lo = head, hi = head;
     while (hi != null && hi.next != null) {
       pre = lo;
@@ -1556,17 +1511,17 @@ class BacktrackingCombinatorics {
   public List<List<Integer>> subsets(int[] nums) {
     List<List<Integer>> res = new ArrayList<>();
     if (nums.length == 0) return res; // 需要特判
-    backtracking1(nums, new ArrayDeque<>(), res, 0);
+    bt1(nums, new ArrayDeque<>(), res, 0);
     return res;
   }
 
-  private void backtracking1(int[] nums, Deque<Integer> path, List<List<Integer>> res, int start) {
+  private void bt1(int[] nums, Deque<Integer> path, List<List<Integer>> res, int start) {
     res.add(new ArrayList<>(path));
     // 另起一条路径
     for (int i = start; i < nums.length; i++) {
       path.offerLast(nums[i]);
       // 不可选重复，则当前路径下一步选下一个元素
-      backtracking1(nums, path, res, i + 1);
+      bt1(nums, path, res, i + 1);
       path.pollLast();
     }
   }
@@ -1584,11 +1539,11 @@ class BacktrackingCombinatorics {
     List<List<Integer>> res = new ArrayList<>();
     if (candidates.length == 0) return res;
     Arrays.sort(candidates);
-    backtracking2(candidates, new ArrayDeque<>(), res, 0, target);
+    bt2(candidates, new ArrayDeque<>(), res, 0, target);
     return res;
   }
 
-  private void backtracking2(
+  private void bt2(
       int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
     if (target == 0) res.add(new ArrayList<>(path));
     for (int i = start; i < candidates.length; i++) {
@@ -1597,9 +1552,9 @@ class BacktrackingCombinatorics {
       //      if (i > start && candidates[i - 1] == candidates[i]) continue;
       path.offerLast(candidates[i]);
       // 可选重复，则当前路径下一步选当前元素
-      backtracking2(candidates, path, res, i, target - candidates[i]);
+      bt2(candidates, path, res, i, target - candidates[i]);
       // 不可选重复，则当前路径下一步选下一个元素
-      //      backtracking2(candidates, path, res, i + 1, target - candidates[i]);
+      //      bt2(candidates, path, res, i + 1, target - candidates[i]);
       path.pollLast();
     }
   }
@@ -1620,13 +1575,12 @@ class BacktrackingCombinatorics {
     List<List<Integer>> res = new ArrayList<>();
     if (nums.length == 0) return res;
     //    Arrays.sort(nums);
-    backtracking4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
+    bt4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
     //    return res.toArray(new String[0]);
     return res;
   }
 
-  private void backtracking4(
-      int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] recStack) {
+  private void bt4(int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] recStack) {
     if (path.size() == nums.length) {
       res.add(new ArrayList<>(path));
       return;
@@ -1637,7 +1591,7 @@ class BacktrackingCombinatorics {
       //      if (recStack[i] || (i > 0 && nums[i] == nums[i - 1] && !recStack[i - 1])) continue;
       recStack[i] = true;
       path.offerLast(nums[i]);
-      backtracking4(nums, path, res, recStack);
+      bt4(nums, path, res, recStack);
       path.pollLast();
       recStack[i] = false;
     }
@@ -1657,12 +1611,11 @@ class BacktrackingSearch extends DDFS {
    */
   public List<List<Integer>> pathSum(TreeNode root, int targetSum) {
     List<List<Integer>> paths = new ArrayList<>();
-    backtracking0(root, new ArrayDeque<>(), paths, targetSum);
+    bt0(root, new ArrayDeque<>(), paths, targetSum);
     return paths;
   }
 
-  private void backtracking0(
-      TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {
+  private void bt0(TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {
     if (root == null) return;
     path.offerLast(root.val);
     int sum = target - root.val;
@@ -1670,8 +1623,8 @@ class BacktrackingSearch extends DDFS {
       res.add(new ArrayList<>(path));
       return;
     }
-    backtracking0(root.left, path, res, sum);
-    backtracking0(root.right, path, res, sum);
+    bt0(root.left, path, res, sum);
+    bt0(root.right, path, res, sum);
     path.pollLast();
   }
 
@@ -1683,12 +1636,12 @@ class BacktrackingSearch extends DDFS {
    */
   public List<String> generateParenthesis(int n) {
     List<String> pts = new ArrayList<>();
-    if (n > 0) backtracking7(n, n, new StringBuilder(), pts); // 需要特判
+    if (n > 0) bt7(n, n, new StringBuilder(), pts); // 需要特判
     return pts;
   }
 
   // 可选集为左右括号的剩余量
-  private void backtracking7(int l, int r, StringBuilder path, List<String> res) {
+  private void bt7(int l, int r, StringBuilder path, List<String> res) {
     if (l == 0 && r == 0) {
       res.add(path.toString());
       return;
@@ -1696,12 +1649,12 @@ class BacktrackingSearch extends DDFS {
     if (l > r) return;
     if (l > 0) {
       path.append('(');
-      backtracking7(l - 1, r, path, res);
+      bt7(l - 1, r, path, res);
       path.deleteCharAt(path.length() - 1);
     }
     if (r > 0) {
       path.append(')');
-      backtracking7(l, r - 1, path, res);
+      bt7(l, r - 1, path, res);
       path.deleteCharAt(path.length() - 1);
     }
   }
@@ -1719,14 +1672,13 @@ class BacktrackingSearch extends DDFS {
     boolean[][] recStack = new boolean[ROW][COL];
     for (int r = 0; r < ROW; r++) {
       for (int c = 0; c < COL; c++) {
-        if (backtracking8(board, r, c, chs, 0, recStack)) return true;
+        if (bt8(board, r, c, chs, 0, recStack)) return true;
       }
     }
     return false;
   }
 
-  private boolean backtracking8(
-      char[][] board, int r, int c, char[] word, int start, boolean[][] recStack) {
+  private boolean bt8(char[][] board, int r, int c, char[] word, int start, boolean[][] recStack) {
     if (start == word.length - 1) return board[r][c] == word[start];
     if (board[r][c] != word[start]) return false;
     recStack[r][c] = true;
@@ -1734,7 +1686,7 @@ class BacktrackingSearch extends DDFS {
       int nX = r + dir[0], nY = c + dir[1];
       if (!recStack[nX][nY]
           && inArea(board, nX, nY)
-          && backtracking8(board, nX, nY, word, start + 1, recStack)) return true;
+          && bt8(board, nX, nY, word, start + 1, recStack)) return true;
     }
     recStack[r][c] = false;
     return false;
@@ -1750,17 +1702,17 @@ class BacktrackingSearch extends DDFS {
    */
   public List<String> binaryTreePaths(TreeNode root) {
     List<String> paths = new ArrayList<>();
-    backtracking12(root, new StringBuilder(), paths);
+    bt12(root, new StringBuilder(), paths);
     return paths;
   }
 
-  private void backtracking12(TreeNode root, StringBuilder path, List<String> paths) {
+  private void bt12(TreeNode root, StringBuilder path, List<String> paths) {
     if (root == null) return;
     String add = (path.length() == 0 ? "" : "->") + String.valueOf(root.val);
     path.append(add);
     if (root.left == null && root.right == null) paths.add(path.toString());
-    backtracking12(root.left, path, paths);
-    backtracking12(root.right, path, paths);
+    bt12(root.left, path, paths);
+    bt12(root.right, path, paths);
     int addCnt = add.length(), len = path.length();
     path.delete(len - addCnt, len);
   }
@@ -1775,19 +1727,18 @@ class BacktrackingSearch extends DDFS {
     List<List<Integer>> paths = new ArrayList<>();
     Deque<Integer> path = new ArrayDeque<>();
     path.offerLast(0);
-    backtracking3(graph, 0, path, paths);
+    bt3(graph, 0, path, paths);
     return paths;
   }
 
-  private void backtracking3(
-      int[][] graph, int start, Deque<Integer> path, List<List<Integer>> paths) {
+  private void bt3(int[][] graph, int start, Deque<Integer> path, List<List<Integer>> paths) {
     if (start == graph.length - 1) {
       paths.add(new ArrayList<>(path));
       return;
     }
     for (int nxt : graph[start]) {
       path.offerLast(nxt);
-      backtracking3(graph, nxt, path, paths);
+      bt3(graph, nxt, path, paths);
       path.pollLast();
     }
   }
@@ -1807,12 +1758,11 @@ class BacktrackingElse extends DDFS {
   public List<String> restoreIpAddresses(String s) {
     if (s.length() < 4 || s.length() > 12) return new ArrayList<>(); // 特判
     List<String> ips = new ArrayList<>();
-    backtracking6(s, new ArrayDeque<>(4), ips, 0, 0);
+    bt6(s, new ArrayDeque<>(4), ips, 0, 0);
     return ips;
   }
 
-  private void backtracking6(
-      String s, Deque<String> path, List<String> res, int start, int segCnt) {
+  private void bt6(String s, Deque<String> path, List<String> res, int start, int segCnt) {
     int len = s.length();
     if (start == len) {
       if (segCnt == 4) res.add(String.join(".", path));
@@ -1823,7 +1773,7 @@ class BacktrackingElse extends DDFS {
       // s[start:i] 的数字串非法，或当前段已分配三位数，或剩余数字即使每个段分配三个字符也无法填满
       if (!isValidIP(s, start, i) || i == start + 3 || len - i > segCnt * 3) continue;
       path.offerLast(s.substring(start, i + 1));
-      backtracking6(s, path, res, i + 1, segCnt + 1);
+      bt6(s, path, res, i + 1, segCnt + 1);
       path.pollLast();
     }
   }
@@ -1845,7 +1795,7 @@ class BacktrackingElse extends DDFS {
     // 需要特判
     if (digits.length() == 0) return new ArrayList<>();
     List<String> res = new ArrayList<>();
-    backtracking13(digits, new StringBuilder(), res, 0);
+    bt13(digits, new StringBuilder(), res, 0);
     return res;
   }
 
@@ -1853,16 +1803,103 @@ class BacktrackingElse extends DDFS {
     " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
   }; // 「电话号码的字母组合」
 
-  private void backtracking13(String str, StringBuilder path, List<String> res, int start) {
+  private void bt13(String str, StringBuilder path, List<String> res, int start) {
     if (start == str.length()) {
       res.add(path.toString());
       return;
     }
     for (char ch : LetterMap[str.charAt(start) - '0'].toCharArray()) {
       path.append(ch);
-      backtracking13(str, path, res, start + 1);
+      bt13(str, path, res, start + 1);
       path.deleteCharAt(path.length() - 1);
     }
+  }
+
+  /**
+   * 删除无效的括号
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/remove-invalid-parentheses/solution/gong-shui-san-xie-jiang-gua-hao-de-shi-f-asu8/
+   *
+   * @param s
+   * @return
+   */
+  public List<String> removeInvalidParentheses(String s) {
+    char[] chs = s.toCharArray();
+    int[] counter = countParentheses(chs);
+    Set<String> res = new HashSet<>();
+    bt14(chs, 0, res, "", counter[0], counter[1], 0);
+    return new ArrayList<>(res);
+  }
+
+  private int[] countParentheses(char[] chs) {
+    int l = 0, r = 0, leftToDelete = 0, rightToDelete = 0;
+    for (char ch : chs) {
+      if (ch == '(') {
+        leftToDelete += 1;
+        l += 1;
+      }
+      if (ch == ')') {
+        rightToDelete += 1;
+        if (l != 0) l -= 1;
+        else r += 1;
+      }
+    }
+    needLen = chs.length - l - r;
+    maxLen = Math.min(leftToDelete, rightToDelete);
+    return new int[] {l, r};
+  }
+
+  private int maxLen, needLen; // 「删除无效的括号」
+
+  private void bt14(char[] chs, int start, Set<String> res, String path, int l, int r, int cnt) {
+    if (start == chs.length || l < 0 || r < 0 || cnt < 0 || cnt > maxLen) return;
+    if (l == 0 && r == 0 && path.length() == needLen) res.add(path);
+    int nxt = start + 1;
+    char ch = chs[start];
+    String nxtPath = path + String.valueOf(ch);
+    if (ch == '(') {
+      bt14(chs, nxt, res, nxtPath, l, r, cnt + 1);
+      bt14(chs, nxt, res, path, l - 1, r, cnt);
+    } else if (ch == ')') {
+      bt14(chs, nxt, res, nxtPath, l, r, cnt - 1);
+      bt14(chs, nxt, res, path, l, r - 1, cnt);
+    } else {
+      bt14(chs, nxt, res, nxtPath, l, r, cnt);
+    }
+  }
+
+  /**
+   * 划分为 k 个相等的子集
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/solution/javadai-fan-hui-zhi-de-hui-su-fa-by-caipengbo/
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public boolean canPartitionKSubsets(int[] nums, int k) {
+    int sum = 0, max = 0;
+    for (int n : nums) {
+      sum += n;
+      if (max < n) max = n;
+    }
+    int target = sum / k;
+    return sum % k == 0 && max <= target && bt15(nums, 0, k, target, 0, new boolean[nums.length]);
+  }
+
+  private boolean bt15(int[] nums, int start, int k, int target, int sum, boolean[] recStack) {
+    if (k == 0) return true;
+    if (sum == target) return bt15(nums, 0, k - 1, target, 0, recStack);
+    for (int i = start; i < nums.length; i++) {
+      int cur = sum + nums[i];
+      if (recStack[i] || cur > target) continue;
+      recStack[i] = true;
+      if (bt15(nums, i + 1, k, target, cur, recStack)) return true;
+      recStack[i] = false;
+    }
+    return false;
   }
 
   /**
@@ -1885,7 +1922,7 @@ class BacktrackingElse extends DDFS {
       collect(s, i, i, isPld);
       collect(s, i, i + 1, isPld);
     }
-    backtracking11(s, new ArrayDeque<>(), paths, 0, isPld);
+    bt11(s, new ArrayDeque<>(), paths, 0, isPld);
     return paths;
   }
 
@@ -1898,7 +1935,7 @@ class BacktrackingElse extends DDFS {
     }
   }
 
-  private void backtracking11(
+  private void bt11(
       String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
     if (start == s.length()) {
       res.add(new ArrayList<>(path));
@@ -1907,7 +1944,7 @@ class BacktrackingElse extends DDFS {
     for (int i = start; i < s.length(); i++) {
       if (!isPld[start][i]) continue; // [start:i] 区间非回文
       path.offerLast(s.substring(start, i + 1));
-      backtracking11(s, path, res, i + 1, isPld);
+      bt11(s, path, res, i + 1, isPld);
       path.pollLast();
     }
   }
@@ -1921,12 +1958,11 @@ class BacktrackingElse extends DDFS {
    */
   public List<List<Integer>> splitNumbers(String s, int K) {
     List<List<Integer>> paths = new ArrayList<>();
-    backtracking5(s, 0, new ArrayDeque<>(), paths, K);
+    bt5(s, 0, new ArrayDeque<>(), paths, K);
     return paths;
   }
 
-  private void backtracking5(
-      String s, int start, Deque<Integer> path, List<List<Integer>> res, int K) {
+  private void bt5(String s, int start, Deque<Integer> path, List<List<Integer>> res, int K) {
     if (start == s.length()) {
       res.add(new ArrayList<>(path));
       return;
@@ -1937,7 +1973,7 @@ class BacktrackingElse extends DDFS {
       n = n * 10 + (s.charAt(i) - '0');
       if (n > K) break;
       path.offerLast(n);
-      backtracking5(s, i + 1, path, res, K);
+      bt5(s, i + 1, path, res, K);
       path.pollLast();
     }
   }
@@ -1951,20 +1987,20 @@ class BacktrackingElse extends DDFS {
    * @param board the board
    */
   public void solveSudoku(char[][] board) {
-    backtracking10(board);
+    bt10(board);
   }
 
   // 1.跳过原始数字
   // 2.位置放 k 是否合适，是则，找到合适一组立刻返回
   // 3.九个数都试完，说明该棋盘无解
-  private boolean backtracking10(char[][] board) {
+  private boolean bt10(char[][] board) {
     for (int y = 0; y < 9; y++) {
       for (int x = 0; x < 9; x++) {
         if (board[y][x] != '.') continue;
         for (char k = '1'; k <= '9'; k++) {
           if (!isValidSudoku(y, x, k, board)) continue;
           board[y][x] = k;
-          if (backtracking10(board)) return true;
+          if (bt10(board)) return true;
           board[y][x] = '.';
         }
         return false;

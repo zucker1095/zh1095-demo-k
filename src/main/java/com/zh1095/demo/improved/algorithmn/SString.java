@@ -51,7 +51,7 @@ import java.util.*;
  *
  * @author cenghui
  */
-public class SString {
+public class SString extends DefaultSString {
   /**
    * 字符串相加，双指针同时遍历 & 比对 & 最后处理高位，模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
    *
@@ -94,7 +94,7 @@ public class SString {
    * @return
    */
   public String reduceStrings(String num1, String num2) {
-    final int BASE = 10, l1 = num1.length(), l2 = num2.length(); // 36 进制
+    final int BASE = 10, l1 = num1.length(), l2 = num2.length();
     StringBuilder diff = new StringBuilder();
     // 1.预处理下方大减小，并判断符号
     if ((l1 == l2 && Integer.parseInt(num1) < Integer.parseInt(num2)) || l1 < l2) {
@@ -117,13 +117,9 @@ public class SString {
       p1 -= 1;
       p2 -= 1;
     }
+    // 3.反转，移除前导零
     String str = diff.reverse().toString();
-    // 3.移除前导零
-    int idx = 0;
-    for (char ch : str.toCharArray()) {
-      if (ch != '0') break;
-      idx += 1;
-    }
+    int idx = frontNoBlank(str.toCharArray(), 0);
     return str.substring(idx, str.length());
   }
 
@@ -354,15 +350,15 @@ class WWindow {
   }
 
   /**
-   * 至多包含K个不同字符的最长子串，三步同上
+   * 至多包含K个不同字符的最长子串，类似「最小覆盖子串」
    *
    * @param s the s
    * @param k the k
    * @return int int
    */
   public int lengthOfLongestSubstringKDistinct(String s, int k) {
-    int lo = 0, hi = 0;
     int maxLen = 0, counter = k;
+    int lo = 0, hi = 0;
     int[] window = new int[128];
     char[] chs = s.toCharArray();
     while (hi < chs.length) {
@@ -614,11 +610,8 @@ class SStack {
         int preCnt = cntStack.pollLast();
         String preStr = strStack.pollLast();
         str = new StringBuilder(preStr + str.toString().repeat(preCnt));
-      } else if (ch >= '0' && ch <= '9') {
-        cnt = cnt * 10 + (ch - '0');
-      } else {
-        str.append(ch);
-      }
+      } else if (ch >= '0' && ch <= '9') cnt = cnt * 10 + (ch - '0');
+      else str.append(ch);
     }
     return str.toString();
   }
@@ -676,7 +669,7 @@ class SStack {
       }
     }
     int sum = 0;
-    while (!numStack.isEmpty()) sum += numStack.pop();
+    for (int num : numStack) sum += num;
     return sum;
   }
 
@@ -1283,9 +1276,7 @@ class CConvert extends DefaultSString {
    */
   public int titleToNumber(String ct) {
     int sum = 0;
-    for (char ch : ct.toCharArray()) {
-      sum = sum * 26 + (ch - 'A' + 1);
-    }
+    for (char ch : ct.toCharArray()) sum = sum * 26 + (ch - 'A' + 1);
     return sum;
   }
 
@@ -1361,16 +1352,16 @@ class CConvert extends DefaultSString {
   public String baseConvert(int num, int radix) {
     if (num == 0) return "0";
     StringBuilder res = new StringBuilder();
-    boolean negative = false;
+    boolean ngt = false;
     if (num < 0) {
-      negative = true;
+      ngt = true;
       num *= -1;
     }
     while (num != 0) {
       res.append(CHARS[num % radix]);
       num /= radix;
     }
-    if (negative) res.append("-");
+    if (ngt) res.append("-");
     return res.reverse().toString();
   }
 
@@ -1391,9 +1382,7 @@ class CConvert extends DefaultSString {
       str.append(num2Str(num / i) + num2str_large[j] + " ");
       num %= i;
     }
-    while (str.charAt(str.length() - 1) == ' ') {
-      str.deleteCharAt(str.length() - 1);
-    }
+    while (str.charAt(str.length() - 1) == ' ') str.deleteCharAt(str.length() - 1);
     return str.toString();
   }
 
@@ -1500,9 +1489,7 @@ class MonotonicStack {
     int[] hs = new int[len + 2];
     System.arraycopy(heights, 0, hs, 1, len);
     Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
-    for (int i = 0; i < hs.length; i++) {
-      maxArea = pushAndReturn(hs, i, maxArea, ms);
-    }
+    for (int i = 0; i < hs.length; i++) maxArea = pushAndReturn(hs, i, maxArea, ms);
     return maxArea;
   }
 

@@ -341,19 +341,17 @@ class OptimalSubSequence extends DefaultArray {
     int l1 = sChs.length, l2 = pChs.length;
     boolean[][] dp = new boolean[l1 + 1][l2 + 1];
     dp[0][0] = true;
-    for (int j = 1; j <= l2; j++) {
-      dp[0][j] = pChs[j - 1] == '*' && dp[0][j - 2];
-    }
+    for (int j = 1; j <= l2; j++) dp[0][j] = pChs[j - 1] == '*' && dp[0][j - 2];
     for (int i = 1; i <= l1; i++) {
       for (int j = 1; j <= l2; j++) {
         char s = sChs[i - 1], p = pChs[j - 1];
         // 能匹配
-        if (s == p || p == '.') dp[i][j] = dp[i - 1][j - 1];
-        if (p == '*')
-          dp[i][j] =
-              (s == pChs[j - 2] || pChs[j - 2] == '.')
-                  ? dp[i][j - 2] || dp[i - 1][j]
-                  : dp[i][j - 2];
+        if (p == s || p == '.') dp[i][j] = dp[i - 1][j - 1];
+        if (p == '*') {
+          char pre = pChs[j - 2];
+          if (pre == s || pre == '.') dp[i][j] = dp[i][j - 2] || dp[i - 1][j];
+          else dp[i][j] = dp[i][j - 2];
+        }
       }
     }
     /*
@@ -707,22 +705,20 @@ class OptimalPath {
   private int rob1(int[] nums) {
     int pre = 0, cur = 0;
     for (int n : nums) {
-      int tmp2 = Math.max(cur, pre + n);
+      int tmp = Math.max(cur, pre + n);
       pre = cur;
-      cur = tmp2;
+      cur = tmp;
     }
     return cur;
   }
 
   // https://blog.csdn.net/Chenguanxixixi/article/details/119540929
-  private int[] getIndexArr(int[] nums) {
+  private int[] getPath(int[] nums) {
     int len = nums.length;
     int[] dp = new int[len], path = new int[len];
-    if (len == 1) {
-      dp[0] = nums[0];
-    } else if (len == 2) {
-      dp[0] = Math.max(nums[0], nums[1]);
-    } else {
+    if (len == 1) dp[0] = nums[0];
+    else if (len == 2) dp[0] = Math.max(nums[0], nums[1]);
+    else {
       dp[0] = nums[0];
       dp[1] = Math.max(nums[0], nums[1]);
       for (int j = 2; j < len; j++) {
@@ -743,6 +739,7 @@ class OptimalPath {
   private int rob2(int[] nums) {
     int len = nums.length;
     if (len < 2) return nums[0];
+    // [0:len-1] & [1:len]
     return Math.max(
         rob1(Arrays.copyOfRange(nums, 0, len - 1)), rob1(Arrays.copyOfRange(nums, 1, len)));
   }
@@ -819,6 +816,7 @@ class OptimalElse {
   }
 
   // 有限次
+  // 扩展1，含手续费，参下 annotate
   private int maxProfitI(int[] prices) {
     //    int[] buys = new int[k + 1], sells = new int[k + 1];
     // BASE CASE buys[1] = max(buys[1], -p) & sells[1] = max(sells[1], buys[1]+p)
@@ -832,6 +830,8 @@ class OptimalElse {
     // 以限两次为例
     int buy1 = Integer.MIN_VALUE, sell1 = 0, buy2 = Integer.MIN_VALUE, sell2 = 0;
     for (int p : prices) {
+      // 手续费
+      //        buy = Math.max(buy, sell - p - fee);
       buy1 = Math.max(buy1, -p); // max(不买，买了) 第一次买
       sell1 = Math.max(sell1, buy1 + p); // max(不卖，卖了) 第一次卖
       buy2 = Math.max(buy2, sell1 - p); // 第一次卖了后现在买
@@ -841,8 +841,7 @@ class OptimalElse {
   }
 
   // 无限次
-  // 扩展1，含手续费，参下 annotate
-  // 扩展2，含冷冻期，参下 annotate
+  // 扩展1，含冷冻期，参下 annotate
   private int maxProfitII(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
     //    int lock = 0; // 表示无法交易的时候
@@ -854,8 +853,6 @@ class OptimalElse {
       //      lock = preSell;
       // 因为能够多次买卖，所以每天都要尝试能否更优解
       buy = Math.max(buy, sell - p);
-      // 手续费
-      //      buy = Math.max(buy, sell - p - fee);
       sell = Math.max(sell, buy + p);
     }
     return sell;
@@ -895,7 +892,7 @@ class OptimalElse {
     int maxVolume = 0;
     int lo = 0, hi = height.length - 1;
     while (lo < hi) {
-      int left = height[lo], right = height[hi], width = hi - lo;
+      int width = hi - lo, left = height[lo], right = height[hi];
       if (left <= right) {
         maxVolume = Math.max(maxVolume, left * width);
         lo += 1;
@@ -1044,6 +1041,29 @@ class OptimalElse {
   }
 
   /**
+   * 整数拆分，设 n=a+b+...+c 求 a*b*...*c 最大乘积的方案
+   *
+   * <p>dp[i] 表示 i 拆分的整数集的最大积
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/integer-break/solution/bao-li-sou-suo-ji-yi-hua-sou-suo-dong-tai-gui-hua-/
+   *
+   * @param n
+   * @return
+   */
+  public int integerBreak(int n) {
+    int[] dp = new int[n + 1];
+    dp[1] = 1;
+    // max(dp[i], j*(i-j), j*dp[i-j]) 后二分别对应不拆与拆
+    for (int i = 2; i <= n; i++) {
+      for (int j = 1; j <= i - 1; j++) {
+        dp[i] = Math.max(dp[i], Math.max(j * (i - j), j * dp[i - j]));
+      }
+    }
+    return dp[n];
+  }
+
+  /**
    * 鸡蛋掉落
    *
    * <p>TODO 参考
@@ -1067,29 +1087,6 @@ class OptimalElse {
       }
     }
     return celling;
-  }
-
-  /**
-   * 整数拆分，设 n=a+b+...+c 求 a*b*...*c 最大乘积的方案
-   *
-   * <p>dp[i] 表示 i 拆分的整数集的最大积
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/integer-break/solution/bao-li-sou-suo-ji-yi-hua-sou-suo-dong-tai-gui-hua-/
-   *
-   * @param n
-   * @return
-   */
-  public int integerBreak(int n) {
-    int[] dp = new int[n + 1];
-    dp[1] = 1;
-    // max(dp[i], j*(i-j), j*dp[i-j]) 后二分别对应不拆与拆
-    for (int i = 2; i <= n; i++) {
-      for (int j = 1; j <= i - 1; j++) {
-        dp[i] = Math.max(dp[i], Math.max(j * (i - j), j * dp[i - j]));
-      }
-    }
-    return dp[n];
   }
 
   /**
