@@ -1250,7 +1250,7 @@ class SSum extends DefaultArray {
   public int triangleNumber(int[] nums) {
     Arrays.sort(nums);
     int cnt = 0;
-    for (int i = nums.length - 1; i >= 2; i--) {
+    for (int i = nums.length - 1; i > 1; i--) {
       int pivot = nums[i], lo = 0, hi = i - 1;
       while (lo < hi) {
         if (nums[lo] + nums[hi] > pivot) {
@@ -1587,7 +1587,7 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
-   * 数组中重复的数字，多个数重复，返回任意一个，区间 [0,nums.length-1]
+   * 数组中重复的数字，多个数重复，返回任意一个，区间 [0,len-1]
    *
    * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
    *
@@ -1843,33 +1843,6 @@ class Traversal extends DefaultArray {
   }
 
   /**
-   * 字符的最短距离，返回 answer[i] 是 s[i] 与所有 s.chatAt(c) 的最小值
-   *
-   * <p>依次正序和逆序遍历，分别找出距离向左或者向右下一个字符 C 的距离，答案就是这两个值的较小值
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/shortest-distance-to-a-character/solution/zi-fu-de-zui-duan-ju-chi-by-leetcode/
-   *
-   * @param s
-   * @param c
-   * @return
-   */
-  public int[] shortestToChar(String s, char c) {
-    int len = s.length(), pre = Integer.MIN_VALUE / 2;
-    int[] misDists = new int[len];
-    for (int i = 0; i < len; i++) {
-      if (s.charAt(i) == c) pre = i;
-      misDists[i] = i - pre;
-    }
-    pre = Integer.MAX_VALUE / 2;
-    for (int i = len - 1; i >= 0; i--) {
-      if (s.charAt(i) == c) pre = i;
-      misDists[i] = Math.min(misDists[i], pre - i);
-    }
-    return misDists;
-  }
-
-  /**
    * 对角线遍历
    *
    * <p>扩展1，反对角线，调换下方的移动方向即可
@@ -1905,6 +1878,33 @@ class Traversal extends DefaultArray {
       }
     }
     return res;
+  }
+
+  /**
+   * 字符的最短距离，返回 answer[i] 是 s[i] 与所有 s.chatAt(c) 的最小值
+   *
+   * <p>依次正序和逆序遍历，分别找出距离向左或者向右下一个字符 C 的距离，答案就是这两个值的较小值
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/shortest-distance-to-a-character/solution/zi-fu-de-zui-duan-ju-chi-by-leetcode/
+   *
+   * @param s
+   * @param c
+   * @return
+   */
+  public int[] shortestToChar(String s, char c) {
+    int len = s.length(), pre = Integer.MIN_VALUE / 2;
+    int[] misDists = new int[len];
+    for (int i = 0; i < len; i++) {
+      if (s.charAt(i) == c) pre = i;
+      misDists[i] = i - pre;
+    }
+    pre = Integer.MAX_VALUE / 2;
+    for (int i = len - 1; i >= 0; i--) {
+      if (s.charAt(i) == c) pre = i;
+      misDists[i] = Math.min(misDists[i], pre - i);
+    }
+    return misDists;
   }
 }
 

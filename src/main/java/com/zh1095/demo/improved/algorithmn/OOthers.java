@@ -110,12 +110,10 @@ public class OOthers {
     int step = 0;
     int lo = 0, hi = 0;
     while (hi < nums.length - 1) {
-      int len = 0;
-      for (int i = lo; i <= hi; i++) {
-        len = Math.max(nums[i] + i, len);
-      }
+      int maxIdx = 0;
+      for (int i = lo; i <= hi; i++) maxIdx = Math.max(i + nums[i], maxIdx);
       lo = hi + 1;
-      hi = len;
+      hi = maxIdx;
       step += 1;
     }
     return step;
@@ -675,7 +673,7 @@ class DData {
      * @param x the x
      */
     public void push(int x) {
-      in.addLast(x);
+      in.offerLast(x);
     }
 
     /**
@@ -685,7 +683,7 @@ class DData {
      */
     public int pop() {
       peek(); // 仅为复用
-      return out.removeLast();
+      return out.pollLast();
     }
 
     /**
@@ -694,8 +692,10 @@ class DData {
      * @return the int
      */
     public int peek() {
-      if (out.isEmpty()) while (!in.isEmpty()) out.addLast(in.removeLast());
-      return out.getLast();
+      if (out.isEmpty()) {
+        while (!in.isEmpty()) out.addLast(in.pollLast());
+      }
+      return out.peekLast();
     }
 
     /**
@@ -705,6 +705,36 @@ class DData {
      */
     public boolean empty() {
       return out.isEmpty() && in.isEmpty();
+    }
+  }
+
+  /**
+   * 用队列实现栈 参考
+   * https://leetcode.cn/problems/implement-stack-using-queues/solution/wu-tu-guan-fang-tui-jian-ti-jie-yong-dui-63d4/
+   */
+  public class MyStack {
+    Queue<Integer> out = new LinkedList<>(), in = new LinkedList<>();
+
+    public MyStack() {}
+
+    public void push(int x) {
+      in.offer(x);
+      while (!out.isEmpty()) in.offer(out.poll());
+      Queue<Integer> tmp = out;
+      out = in;
+      in = tmp;
+    }
+
+    public int pop() {
+      return out.poll();
+    }
+
+    public int top() {
+      return out.peek();
+    }
+
+    public boolean empty() {
+      return out.isEmpty();
     }
   }
 
@@ -833,9 +863,9 @@ class MMath {
   public int rand10() {
     while (true) {
       // 等概率生成 [1,49] 范围的随机数
-      int num = (rand7() - 1) * 7 + rand7();
+      int n = (rand7() - 1) * 7 + rand7();
       // 拒绝采样，并返回 [1,10] 范围的随机数
-      if (num <= 40) return num % 10 + 1;
+      if (n <= 40) return n % 10 + 1;
     }
   }
 

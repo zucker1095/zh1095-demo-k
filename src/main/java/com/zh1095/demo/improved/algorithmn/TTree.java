@@ -268,6 +268,29 @@ class Build {
     return root;
   }
 
+  //  /**
+  //   * 根据前序和后序遍历构造二叉树
+  //   *
+  //   * @param preorder
+  //   * @param postorder
+  //   * @return
+  //   */
+  //  public TreeNode constructFromPrePost(int[] preorder, int[] postorder) {
+  //    Map<Integer, Integer> v2i = new HashMap<>();
+  //    for (int i = 0; i < postorder.length; i++) v2i.put(postorder[i], i);
+  //    return buildTree3(preorder, 0, postorder.length - 1, 0, preorder.length - 1, v2i);
+  //  }
+  //
+  //  private TreeNode buildTree3(
+  //      int[] preorder, int postLo, int postHi, int preLo, int preHi, Map<Integer, Integer> v2i) {
+  //    if (postLo > postHi || preLo > preHi) return null;
+  //    TreeNode root = new TreeNode(preorder[preLo]);
+  //    int idx = v2i.get(preorder[preLo + 1]), cntL = preLo + idx - postLo + 1;
+  //    root.left = buildTree3(preorder, postLo, idx, preLo + 1, cntL, v2i);
+  //    root.right = buildTree3(preorder, idx + 1, postHi - 1, cntL + 1, preHi, v2i);
+  //    return root;
+  //  }
+
   private int postIdx = 0; // 「输出后序」
 
   /**
@@ -403,7 +426,7 @@ class DDFS {
   }
 
   /**
-   * 岛屿数量，即求连通路总数，原地标记代替 visited
+   * 岛屿数量，即求连通路总数，原地标记代替 recStack
    *
    * <p>参考
    * https://leetcode-cn.com/problems/number-of-islands/solution/dao-yu-lei-wen-ti-de-tong-yong-jie-fa-dfs-bian-li-/
@@ -872,6 +895,28 @@ class BBSTDFS {
   }
 
   /**
+   * 有序链表转换二叉搜索树，同理「将有序数组转换为二叉搜索树」找中点作根，再分治左右子树
+   *
+   * @param head the head
+   * @return tree node
+   */
+  public TreeNode sortedListToBST(ListNode head) {
+    if (head == null) return null;
+    if (head.next == null) return new TreeNode(head.val);
+    ListNode pre = null, lo = head, hi = head;
+    while (hi != null && hi.next != null) {
+      pre = lo;
+      lo = lo.next;
+      hi = hi.next.next;
+    }
+    pre.next = null;
+    TreeNode root = new TreeNode(lo.val);
+    root.left = sortedListToBST(head);
+    root.right = sortedListToBST(lo.next);
+    return root;
+  }
+
+  /**
    * 二叉搜索树中的插入操作，比当前小，则入左，否则入右
    *
    * @param root the root
@@ -921,28 +966,6 @@ class BBSTDFS {
       cur.left = root.left;
       return root.right;
     }
-    return root;
-  }
-
-  /**
-   * 有序链表转换二叉搜索树，同理「将有序数组转换为二叉搜索树」找中点作根，再分治左右子树
-   *
-   * @param head the head
-   * @return tree node
-   */
-  public TreeNode sortedListToBST(ListNode head) {
-    if (head == null) return null;
-    if (head.next == null) return new TreeNode(head.val);
-    ListNode pre = null, lo = head, hi = head;
-    while (hi != null && hi.next != null) {
-      pre = lo;
-      lo = lo.next;
-      hi = hi.next.next;
-    }
-    pre.next = null;
-    TreeNode root = new TreeNode(lo.val);
-    root.left = sortedListToBST(head);
-    root.right = sortedListToBST(lo.next);
     return root;
   }
 }
@@ -1139,9 +1162,8 @@ class BBFS {
    */
   public List<List<Integer>> levelOrderBottom(TreeNode root) {
     List<List<Integer>> res = new ArrayList<>();
-    if (root == null) return res;
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(root);
+    if (root != null) queue.offer(root);
     while (!queue.isEmpty()) {
       List<Integer> curLevel = new ArrayList<>(queue.size());
       for (int i = queue.size(); i > 0; i--) {
@@ -1166,9 +1188,7 @@ class BBFS {
   public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
     List<List<Integer>> res = new ArrayList<>();
     Queue<TreeNode> queue = new LinkedList<>();
-    if (root != null) {
-      queue.add(root);
-    }
+    if (root != null) queue.offer(root);
     boolean isOdd = true;
     while (!queue.isEmpty()) {
       Deque<Integer> curLevel = new ArrayDeque<>(queue.size());
@@ -1176,8 +1196,9 @@ class BBFS {
         TreeNode cur = queue.poll();
         if (isOdd) curLevel.offerLast(cur.val);
         else curLevel.offerFirst(cur.val);
-        if (cur.left != null) queue.offer(cur.left);
-        if (cur.right != null) queue.offer(cur.right);
+        TreeNode l = cur.left, r = cur.right;
+        if (l != null) queue.offer(l);
+        if (r != null) queue.offer(r);
       }
       res.add(new ArrayList<>(curLevel));
       isOdd = !isOdd;
@@ -1193,15 +1214,15 @@ class BBFS {
    */
   public List<Integer> rightSideView(TreeNode root) {
     List<Integer> res = new ArrayList<>();
-    if (root == null) return res;
     Deque<TreeNode> queue = new LinkedList<>();
-    queue.offerLast(root);
+    if (root != null) queue.offerLast(root);
     while (!queue.isEmpty()) {
       res.add(queue.peekLast().val);
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.pollFirst();
-        if (cur.left != null) queue.offerLast(cur.left);
-        if (cur.right != null) queue.offerLast(cur.right);
+        TreeNode l = cur.left, r = cur.right;
+        if (l != null) queue.offerLast(l);
+        if (r != null) queue.offerLast(r);
       }
     }
     return res;
@@ -1214,10 +1235,9 @@ class BBFS {
    * @return boolean boolean
    */
   public boolean isCompleteTree(TreeNode root) {
-    if (root == null) return true;
     boolean preNull = false;
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(root);
+    if (root != null) queue.offer(root);
     while (!queue.isEmpty()) {
       for (int i = queue.size(); i > 0; i--) {
         TreeNode cur = queue.poll();
@@ -1756,33 +1776,30 @@ class BacktrackingElse extends DDFS {
    * @return list list
    */
   public List<String> restoreIpAddresses(String s) {
-    if (s.length() < 4 || s.length() > 12) return new ArrayList<>(); // 特判
     List<String> ips = new ArrayList<>();
-    bt6(s, new ArrayDeque<>(4), ips, 0, 0);
+    if (s.length() > 12 || s.length() < 4) return ips;
+    bt6(s, new ArrayDeque<>(4), ips, 0, 4);
     return ips;
   }
 
-  private void bt6(String s, Deque<String> path, List<String> res, int start, int segCnt) {
-    int len = s.length();
-    if (start == len) {
-      if (segCnt == 4) res.add(String.join(".", path));
+  private void bt6(String s, Deque<String> path, List<String> res, int start, int cnt) {
+    if (start == s.length()) {
+      if (cnt == 0) res.add(String.join(".", path));
       return;
     }
-    // 依次以 s[i+1] & s[i:i+2] & s[i:i+3] 作为一个段回溯
-    for (int i = start; i < len; i++) {
-      // s[start:i] 的数字串非法，或当前段已分配三位数，或剩余数字即使每个段分配三个字符也无法填满
-      if (!isValidIP(s, start, i) || i == start + 3 || len - i > segCnt * 3) continue;
-      path.offerLast(s.substring(start, i + 1));
-      bt6(s, path, res, i + 1, segCnt + 1);
-      path.pollLast();
+    for (int i = start; i < start + 3 && i < s.length(); i++) {
+      String cur = s.substring(start, i + 1);
+      if (!isValidIP(cur) || i == start + 3 || cnt * 3 < s.length() - i) continue;
+      path.addLast(cur);
+      bt6(s, path, res, i + 1, cnt - 1);
+      path.removeLast();
     }
   }
 
-  private boolean isValidIP(String s, int lo, int hi) {
-    int len = hi - lo + 1;
-    if (len > 1 && s.charAt(lo) == '0') return false;
-    int n = len <= 0 ? 0 : Integer.parseInt(s.substring(lo, hi + 1));
-    return n >= 0 && n <= 255;
+  private boolean isValidIP(String s) {
+    if (s.length() == 1) return true;
+    if (s.length() > 3 || s.charAt(0) == '0') return false;
+    return Integer.parseInt(s) <= 255;
   }
 
   /**
@@ -1819,53 +1836,60 @@ class BacktrackingElse extends DDFS {
    * 删除无效的括号
    *
    * <p>TODO 参考
-   * https://leetcode.cn/problems/remove-invalid-parentheses/solution/gong-shui-san-xie-jiang-gua-hao-de-shi-f-asu8/
+   * https://leetcode.cn/problems/remove-invalid-parentheses/solution/shan-chu-wu-xiao-de-gua-hao-by-leetcode-9w8au/
    *
    * @param s
    * @return
    */
   public List<String> removeInvalidParentheses(String s) {
     char[] chs = s.toCharArray();
-    int[] counter = countParentheses(chs);
-    Set<String> res = new HashSet<>();
-    bt14(chs, 0, res, "", counter[0], counter[1], 0);
+    // 确定删除最少的合法括号对数
+    int l = 0, r = 0;
+    for (char ch : chs) {
+      if (ch == '(') l += 1;
+      if (ch == ')') {
+        if (r < l) r += 1;
+        else maxRemR += 1; // 最多移除右括号数量
+      }
+    }
+    // 最大合法括号对数
+    maxPair = Math.min(l, r);
+    // 最多移除左括号数量
+    maxRemL = l > maxPair ? l - maxPair : 0;
+    bt14(chs, 0, 0, 0, 0, 0, new StringBuilder());
     return new ArrayList<>(res);
   }
 
-  private int[] countParentheses(char[] chs) {
-    int l = 0, r = 0, leftToDelete = 0, rightToDelete = 0;
-    for (char ch : chs) {
-      if (ch == '(') {
-        leftToDelete += 1;
-        l += 1;
-      }
-      if (ch == ')') {
-        rightToDelete += 1;
-        if (l != 0) l -= 1;
-        else r += 1;
-      }
+  private final Set<String> res = new HashSet<>();
+
+  // 最多移除左括号数量、最多移除右括号数量、最大合法括号对数
+  private int maxRemL, maxRemR, maxPair;
+
+  // 对每个位置字符，考虑加入和删除两种情况，记录当前位置左右括号对数，删除的括号对数
+  // 以下几种情况可以剪枝
+  // 1.非法 r>l
+  // 2.放入的括号数量>最大对数 l > maxPair || r > maxPair
+  // 3.删除的括号数量>最大删除数量 remL > maxRemL || remR > maxRemR
+  private void bt14(char[] chs, int start, int l, int r, int remL, int remR, StringBuilder path) {
+    if (r > l || l > maxPair || r > maxPair || remL > maxRemL || remR > maxRemR) return;
+    if (start == chs.length) {
+      res.add(path.toString());
+      return;
     }
-    needLen = chs.length - l - r;
-    maxLen = Math.min(leftToDelete, rightToDelete);
-    return new int[] {l, r};
-  }
-
-  private int maxLen, needLen; // 「删除无效的括号」
-
-  private void bt14(char[] chs, int start, Set<String> res, String path, int l, int r, int cnt) {
-    if (start == chs.length || l < 0 || r < 0 || cnt < 0 || cnt > maxLen) return;
-    if (l == 0 && r == 0 && path.length() == needLen) res.add(path);
-    int nxt = start + 1;
     char ch = chs[start];
-    String nxtPath = path + String.valueOf(ch);
+    path.append(ch);
+    int nxt = start + 1;
     if (ch == '(') {
-      bt14(chs, nxt, res, nxtPath, l, r, cnt + 1);
-      bt14(chs, nxt, res, path, l - 1, r, cnt);
+      bt14(chs, nxt, l + 1, r, remL, remR, path);
+      path.deleteCharAt(path.length() - 1);
+      bt14(chs, nxt, l, r, remL + 1, remR, path);
     } else if (ch == ')') {
-      bt14(chs, nxt, res, nxtPath, l, r, cnt - 1);
-      bt14(chs, nxt, res, path, l, r - 1, cnt);
+      bt14(chs, nxt, l, r + 1, remL, remR, path);
+      path.deleteCharAt(path.length() - 1);
+      bt14(chs, nxt, l, r, remL, remR + 1, path);
     } else {
-      bt14(chs, nxt, res, nxtPath, l, r, cnt);
+      bt14(chs, nxt, l, r, remL, remR, path);
+      path.deleteCharAt(path.length() - 1);
     }
   }
 
@@ -1885,18 +1909,20 @@ class BacktrackingElse extends DDFS {
       sum += n;
       if (max < n) max = n;
     }
-    int target = sum / k;
-    return sum % k == 0 && max <= target && bt15(nums, 0, k, target, 0, new boolean[nums.length]);
+    target = sum / k;
+    return sum % k == 0 && max <= target && bt15(nums, 0, k, 0, new boolean[nums.length]);
   }
 
-  private boolean bt15(int[] nums, int start, int k, int target, int sum, boolean[] recStack) {
+  private int target; // 「划分为 k 个相等的子集」
+
+  private boolean bt15(int[] nums, int start, int k, int sum, boolean[] recStack) {
     if (k == 0) return true;
-    if (sum == target) return bt15(nums, 0, k - 1, target, 0, recStack);
+    if (sum == target) return bt15(nums, 0, k - 1, 0, recStack);
     for (int i = start; i < nums.length; i++) {
       int cur = sum + nums[i];
       if (recStack[i] || cur > target) continue;
       recStack[i] = true;
-      if (bt15(nums, i + 1, k, target, cur, recStack)) return true;
+      if (bt15(nums, i + 1, k, cur, recStack)) return true;
       recStack[i] = false;
     }
     return false;
@@ -1979,6 +2005,49 @@ class BacktrackingElse extends DDFS {
   }
 
   /**
+   * 验证IP地址
+   *
+   * <p>TODO 参考 https://leetcode.cn/problems/validate-ip-address/solution/by-ac_oier-s217/
+   *
+   * @param ip
+   * @return
+   */
+  public String validIPAddress(String ip) {
+    String nt = "Neither";
+    return ip.contains(":") ? validIpv6(ip, nt) : validIpv4(ip, nt);
+  }
+
+  private String validIpv4(String ip, String nt) {
+    if (ip.startsWith(".") || ip.endsWith(".") || ip.contains("..")) return nt;
+    String[] segs = ip.split("\\.");
+    if (segs.length != 4) return nt;
+    for (String s : segs) {
+      if (s.length() > 3) return nt;
+      int num = 0;
+      for (char ch : s.toCharArray()) {
+        if (!Character.isDigit(ch)) return nt;
+        num = num * 10 + (ch - '0');
+      }
+      if (num > 255 || (s.charAt(0) == '0' && s.length() > 1)) return nt;
+    }
+    return "IPv4";
+  }
+
+  private String validIpv6(String ip, String nt) {
+    if (ip.startsWith(":") || ip.endsWith(":") || ip.contains("::")) return nt;
+    String[] segs = ip.split(":");
+    if (segs.length != 8) return nt;
+    for (String s : segs) {
+      if (s.length() == 0 || s.length() > 4) return nt;
+      for (char ch : s.toCharArray()) {
+        ch = Character.toLowerCase(ch);
+        if (!Character.isDigit(ch) && (ch < 'a' || ch > 'f')) return nt;
+      }
+    }
+    return "IPv6";
+  }
+
+  /**
    * 解数独，暴力回溯
    *
    * <p>TODO 参考
@@ -2025,48 +2094,5 @@ class BacktrackingElse extends DDFS {
       }
     }
     return true;
-  }
-
-  /**
-   * 验证IP地址
-   *
-   * <p>TODO 参考 https://leetcode.cn/problems/validate-ip-address/solution/by-ac_oier-s217/
-   *
-   * @param ip
-   * @return
-   */
-  public String validIPAddress(String ip) {
-    String nt = "Neither";
-    return ip.contains(":") ? validIpv6(ip, nt) : validIpv4(ip, nt);
-  }
-
-  private String validIpv4(String ip, String nt) {
-    if (ip.startsWith(".") || ip.endsWith(".") || ip.contains("..")) return nt;
-    String[] segs = ip.split("\\.");
-    if (segs.length != 4) return nt;
-    for (String s : segs) {
-      if (s.length() > 3) return nt;
-      int num = 0;
-      for (char ch : s.toCharArray()) {
-        if (!Character.isDigit(ch)) return nt;
-        num = num * 10 + (ch - '0');
-      }
-      if (num > 255 || (s.charAt(0) == '0' && s.length() > 1)) return nt;
-    }
-    return "IPv4";
-  }
-
-  private String validIpv6(String ip, String nt) {
-    if (ip.startsWith(":") || ip.endsWith(":") || ip.contains("::")) return nt;
-    String[] segs = ip.split(":");
-    if (segs.length != 8) return nt;
-    for (String s : segs) {
-      if (s.length() == 0 || s.length() > 4) return nt;
-      for (char ch : s.toCharArray()) {
-        ch = Character.toLowerCase(ch);
-        if (!Character.isDigit(ch) && (ch < 'a' || ch > 'f')) return nt;
-      }
-    }
-    return "IPv6";
   }
 }

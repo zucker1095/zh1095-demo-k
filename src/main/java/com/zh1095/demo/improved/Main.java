@@ -1,3 +1,5 @@
+import com.zh1095.demo.improved.algorithmn.TreeNode;
+
 import java.util.*;
 
 public class Main {
@@ -39,15 +41,58 @@ public class Main {
     return dummy.next;
   }
 
-  public String convert(String s, int numRows) {
+  String convert(String s, int numRows) {
     int r = 0, isForward = -1;
     for (char ch : s.toCharArray()) {
       rows[r].append(ch);
       if (r == 0 || r == numRows - 1) isForward *= -1;
       r += isForward;
     }
-    for (StringBuilder i : rows) res.append(i);
-    return res.toString();
+  }
+
+  int jump(int[] nums) {
+    while (hi < len - 1) {
+      int maxIdx = 0;
+      for (int i = lo; i <= hi; i++) maxIdx = Math.max(i + nums[i], maxIdx);
+      lo = hi + 1;
+      hi = maxIdx;
+      step += 1;
+    }
+  }
+
+  class MinStack {
+    void push(int x) {
+      long gap = stack.isEmpty() ? 0L : x - min;
+      stack.push(gap);
+      min = Math.min(min, x);
+    }
+    void pop() {
+      if (stack.isEmpty()) return;
+      long pop = stack.pollLast();
+      if (pop < 0) min -= pop;
+    }
+    int top() {
+      long top = stack.peekLast();
+      return (int) (top < 0 ? min : top + min);
+    }
+  }
+
+  class MyQueue {
+    int pop() {
+      peek(); return out.pollLast();
+    }
+    int peek() {
+      if (out.isEmpty()) while (!in.isEmpty()) out.addLast(in.pollLast());
+      return out.peekLast();
+    }
+  }
+
+  class MyStack {
+    void push(int x) {
+      in.offer(x);
+      while (!out.isEmpty()) in.offer(out.poll());
+      swap in and out
+    }
   }
 
   List<Integer> partitionLabels(String s) {
@@ -62,13 +107,25 @@ public class Main {
     return lens;
   }
 
+  int translateNum(int num) {
+    if (num <= 9) return 1;
+    int ba = num % 100, res = translateNum(num / 10); // xyzcba
+    return ba > 9 && ba < 26 ? res + translateNum(num / 100) : res;
+  }
+
+  int rand10() {
+    while (true) {
+      int num = (rand7() - 1) * 7 + rand7();
+      if (num <= 40) return num % 10 + 1;
+    }
+  }
+
   int mySqrt(int x) {
     while (true) {
       double cur = (n + x / n) * 0.5;
       if (Math.abs(n - cur) < 1e-7) break;
       n = cur;
     }
-    return (int) n;
   }
 
   double myPow(double x, int n) {
@@ -79,12 +136,6 @@ public class Main {
     if (n == 0) return 1;
     double y = quickMulti(x, n / 2);
     return y * y * (((n & 1) == 0) ? 1 : x);
-  }
-
-  int translateNum(int num) {
-    if (num <= 9) return 1;
-    int ba = num % 100, res = translateNum(num / 10); // xyzcba
-    return ba > 9 && ba < 26 ? res + translateNum(num / 100) : res;
   }
 
   int majorityElement(int[] nums) {
@@ -113,12 +164,12 @@ public class Main {
   }
 
   int lastRemaining(int n, int m) {
-    int leftIdx = 0;
     for (int i = 2; i <= n; i++) leftIdx = (leftIdx + m) % i;
-    return leftIdx;
   }
 
   String fractionToDecimal(int num, int de) {
+    res.append(num / de);
+    res.append(".");
     for (long n = num % de; n != 0; n %= de) {
       if (de2Idx.containsKey(n)) {
         res.insert(de2Idx.get(n), "(");
@@ -129,7 +180,20 @@ public class Main {
       n *= 10;
       res.append(n / de);
     }
-    return res.toString();
+  }
+
+  boolean canFinish(int V, int[][] prerequisites) {
+    buildMatrix(prerequisites, matrix, indegrees);
+    for (int i = 0; i < V; i++) {
+      if (indegrees[i] == 0) queue.offer(i);
+    }
+    while (!queue.isEmpty()) {
+      cnt += 1;
+      for (int adj : matrix[queue.poll()]) {
+        indegrees[adj] -= 1;
+        if (indegrees[adj] == 0) queue.offer(adj);
+      }
+    }
   }
 }
 
@@ -438,26 +502,14 @@ class TTree {
     return root;
   }
 
-  boolean hasPathSum(TreeNode root, int sum) {
-    if (root == null) return false;
-    int v = root.val;
-    if (root.left == null && root.right == null) return v == sum;
-    return hasPathSum(root.left, sum - v) || hasPathSum(root.right, sum - v);
-  }
-
-  List<List<Integer>> pathSum(TreeNode root, int targetSum) {
-    List<List<Integer>> paths = new ArrayList<>();
-    bt1(root, new ArrayDeque<>(), paths, targetSum);
-    return paths;
-  }
-
-  void bt1(TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {}
-
   int pathSumIII(TreeNode root, int targetSum) {
-    return dfs1(root, preSum2Cnt, 0, targetSum);
+    preSum2Cnt.put(0L, 1); // base case
+    return dfs14(root, preSum2Cnt, 0, targetSum);
   }
 
-  int dfs1(TreeNode root, Map<Long, Integer> preSum2Cnt, long sum, int target) {
+  int dfs14(TreeNode root, Map<Long, Integer> preSum2Cnt, long sum, int target) {
+    if (root == null) return 0;
+    sum += root.val;
     int cnt = preSum2Cnt.get(sum - target);
     preSum2Cnt.put(sum, preSum2Cnt.get(sum) + 1);
     cnt += dfs14(root.left, preSum2Cnt, sum, target) + dfs14(root.right, preSum2Cnt, sum, target);
@@ -471,7 +523,6 @@ class TTree {
         maxLen = Math.max(maxLen, dfs2(matrix, r, c, lens));
       }
     }
-    return maxLen;
   }
 
   int dfs2(int[][] matrix, int r, int c, int[][] lens) {
@@ -483,6 +534,65 @@ class TTree {
       lens[r][c] = Math.max(lens[r][c], dfs3(matrix, nr, nc, lens) + 1);
     }
     return lens[r][c];
+  }
+
+  List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
+    collect(root, parents);
+    dfs3(root, null, k, parents, vers);
+  }
+
+  void collect(TreeNode node, Map<Integer, TreeNode> parents) {
+    if (node.left != null) {
+      parents.put(node.left.val, node);
+      collectParents(node.left, parents);
+    }
+    //    if (node.right != null) {}
+  }
+
+  void dfs3(
+          TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
+    if (n == null) return;
+    if (dist == 0) {
+      vers.add(n.val);
+      return;
+    }
+    dist -= 1;
+    TreeNode parent = parents.get(n.val);
+    if (n.left != from) dfs17(n.left, n, dist, parents, vers);
+    if (n.right != from) dfs17(n.right, n, dist, parents, vers);
+    if (parent != from) dfs17(parent, n, dist, parents, vers);
+  }
+
+  void solve(char[][] board) {
+    for (int r = 0; r < ROW; r++) {
+      for (int c = 0; c < COL; c++) {
+        if (board[r][c] == 'O' && (r == 0 || c == 0 || r == ROW - 1 || c == COL - 1))
+          dfs16(board, r, c);
+      }
+    }
+    for (int r = 0; r < ROW; r++) {
+      for (int c = 0; c < COL; c++) {
+        if (board[r][c] == 'O') board[r][c] = 'X';
+        if (board[r][c] == '#') board[r][c] = 'O';
+      }
+    }
+  }
+
+  void dfs16(char[][] board, int r, int c) {
+    if (!inArea(board, r, c) || board[r][c] != 'O') return;
+    board[r][c] = '#';
+    for (int[] dir : DIRECTIONS) dfs16(board, r + dir[0], c + dir[1]);
+  }
+
+  void recoverTree(TreeNode root) {
+    while (...) {
+      // ...
+      cur = stack.pollLast();
+      if (pre.val > cur.val && n1 == null) n1 = pre;
+      if (pre.val > cur.val && n1 != null) n2 = cur;
+      pre = cur;
+      // ...
+    }
   }
 
   TreeNode treeToDoublyList(TreeNode root) {
@@ -500,15 +610,50 @@ class TTree {
     dfs7(root.right);
   }
 
-  void recoverTree(TreeNode root) {
-    while (...) {
-      // ...
-      cur = stack.pollLast();
-      if (pre.val > cur.val && n1 == null) n1 = pre;
-      if (pre.val > cur.val && n1 != null) n2 = cur;
-      pre = cur;
-      // ...
+  TreeNode sortedArrayToBST(int[] nums) {
+    return dfs6(nums, 0, nums.length - 1);
+  }
+
+  TreeNode dfs6(int[] nums, int lo, int hi) {
+    if (lo > hi) return null;
+    int mid = lo + (hi - lo) / 2;
+    TreeNode root = new TreeNode(nums[mid]);
+    root.left = dfs6(nums, lo, mid - 1);
+    root.right = dfs6(nums, mid + 1, hi);
+    return root;
+  }
+
+  boolean verifyPostorder(int[] postorder) {
+    int pre = Integer.MAX_VALUE;
+    for (int i = postorder.length - 1; i > -1; i--) {
+      int cur = postorder[i];
+      if (cur > pre) return false;
+      while (!ms.isEmpty() && cur < ms.peekLast()) pre = ms.pollLast();
+      ms.offerLast(cur);
     }
+  }
+
+  int maxPathSum(TreeNode root) {
+    singleSide1(root);
+  }
+
+  int singleSide1(TreeNode root) {
+    if (root == null) return 0;
+    int l = Math.max(0, singleSide1(root.left)), r = Math.max(0, singleSide1(root.right));
+    maxSum = Math.max(maxSum, l + r + root.val);
+    return Math.max(l, r) + root.val;
+  }
+
+  void flatten(TreeNode root) {
+    if (root == null) return;
+    flatten(root.left);
+    flatten(root.right);
+    TreeNode oldRight = root.right;
+    root.right = root.left;
+    root.left = null;
+    TreeNode tail = root;
+    while (tail.right != null) tail = tail.right;
+    tail.right = oldRight;
   }
 
   TreeNode insertIntoBST(TreeNode root, int val) {
@@ -550,77 +695,21 @@ class TTree {
             || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
   }
 
-  List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    collect(root, parents);
-    dfs3(root, null, k, parents, vers);
+  List<List<Integer>> pathSum(TreeNode root, int targetSum) {
+    bt0(root, new ArrayDeque<>(), paths, targetSum);
   }
 
-  void collect(TreeNode node, Map<Integer, TreeNode> parents) {
-    if (node.left != null) {
-      parents.put(node.left.val, node);
-      collectParents(node.left, parents);
-    }
-    //    if (node.right != null) {}
-  }
-
-  void dfs3(
-          TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
-    if (n == null) return;
-    if (dist == 0) {
-      vers.add(n.val);
+  void bt0(TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {
+    if (root == null) return;
+    path.offerLast(root.val);
+    int sum = target - root.val;
+    if (sum == 0 && root.left == null && root.right == null) {
+      res.add(new ArrayList<>(path));
       return;
     }
-    dist -= 1;
-    TreeNode parent = parents.get(n.val);
-    if (n.left != from) dfs17(n.left, n, dist, parents, vers);
-    if (n.right != from) dfs17(n.right, n, dist, parents, vers);
-    if (parent != from) dfs17(parent, n, dist, parents, vers);
-  }
-
-  List<String> restoreIpAddresses(String s) {
-    bt6(s, new ArrayDeque<>(4), ips, 0, 0);
-  }
-
-  void bt6(String s, Deque<String> path, List<String> res, int start, int segCnt) {
-    if (start == len) {
-      if (segCnt == 4) res.add(String.join(".", path));
-      return;
-    }
-    for (int i = start; i < len; i++) {
-      if (!isValidIP(s, start, i) || i = start || len - i > segCnt * 3) continue;
-      path.offerLast(s.substring(start, i + 1));
-      backtracking6(s, path, res, i + 1, segCnt + 1);
-      path.pollLast();
-    }
-  }
-
-  List<String> letterCombinations(String digits) {
-    bt13(digits, new StringBuilder(), res, 0);
-  }
-
-  void bt13(String str, StringBuilder path, List<String> res, int start) {
-    for (char ch : LetterMap[str.charAt(start) - '0'].toCharArray()) {
-      backtracking13(str, path, res, start + 1);
-    }
-  }
-
-  List<List<String>> partition(String s) {
-    boolean[][] isPalindrome = new boolean[len][len];
-    for (int i = 0; i < len; i++) {
-      collect(s, i, i, isPalindrome);
-      collect(s, i, i + 1, isPalindrome);
-    }
-    bt11(s, new ArrayDeque<>(), paths, 0, isPalindrome);
-  }
-
-  void collect(String s, int lo, int hi, boolean[][] isPalindrome) {}
-
-  void backtracking11(
-          String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
-    for (int i = start; i < s.length(); i++) {
-      if (!isPld[start][i]) continue;
-      path.offerLast(s.substring(start, i + 1));
-    }
+    bt0(root.left, path, res, sum);
+    bt0(root.right, path, res, sum);
+    path.pollLast();
   }
 
   boolean exist(char[][] board, String word) {
@@ -646,723 +735,910 @@ class TTree {
     return false;
   }
 
-  List<String> binaryTreePaths(TreeNode root) {}
+  List<String> binaryTreePaths(TreeNode root) {
+    bt12(root, new StringBuilder(), paths);
+  }
 
   void bt12(TreeNode root, StringBuilder path, List<String> paths) {
     if (root == null) return;
     String add = (path.length() == 0 ? "" : "->") + String.valueOf(root.val);
+    path.append(add);
     if (root.left == null && root.right == null) paths.add(path.toString());
+    bt12(root.left, path, paths);
+    bt12(root.right, path, paths);
+    int addCnt = add.length(), len = path.length();
     path.delete(len - addCnt, len);
   }
-}
 
-class AArray {
-  int[] sortedSquares(int[] nums) {
-    for (int i = len - 1; i > -1; i--) {
-      int a = nums[lo] * nums[lo], b = nums[hi] * nums[hi];
-      if (a <= b) {
-        res[i] = b;
-        hi -= 1;
-      } else {
-        res[i] = a;
-        lo += 1;
-      }
-    }
+  List<String> restoreIpAddresses(String s) {
+    if (s.length() > 12 || s.length() < 4) return ips;
+    bt6(s, new ArrayDeque<>(4), ips, 0, 4);
   }
 
-  int minMeetingRooms(int[][] intervals) {
-    for (int[] itv : intervals) {
-      if (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) minHeap.poll();
-      minHeap.offer(itv[1]);
-    }
-  }
-
-  void quickSort(int[] nums, int lo, int hi) {
-    if (lo >= hi) return;
-    int pivotIdx = lo + new Random().nextInt(hi - lo + 1);
-    int pivot = nums[pivotIdx];
-    swap(nums, pivotIdx, lo);
-    int lt = lo, cur = lt + 1, gt = hi + 1;
-    while (cur < gt) {
-      if (nums[cur] < pivot) {
-        lt += 1;
-        swap(nums, cur, lt);
-        cur += 1;
-      }
-      if (nums[cur] == pivot) cur += 1;
-      if (nums[cur] > pivot) {
-        gt -= 1;
-        swap(nums, cur, lt);
-      }
-    }
-    quickSort(nums, lo, lt - 1);
-    quickSort(nums, gt, hi);
-  }
-
-  int findKthLargest(int[] nums, int k) {
-    heapify(nums, k - 1);
-    for (int i = k; i < nums.length; i++) {
-      if (priorityThan(nums[i], nums[0])) continue;
-      swap(nums, 0, i);
-      sink(nums, 0, k - 1);
-    }
-    return nums[0];
-  }
-
-  void heapSort(int[] nums) {
-    heapify(nums, len - 1);
-    for (int i = len - 1; i > 0; i--) {
-      swap(nums, 0, i);
-      sink(nums, 0, i - 1);
-    }
-  }
-
-  class MedianFinder {
-    private final PriorityQueue<Integer> minHeap = new PriorityQueue<>((a, b) -> a - b),
-            maxHeap = new PriorityQueue<>((a, b) -> b - a);
-
-    public void addNum(int n) {
-      if (maxHeap.size() > minHeap.size()) {
-        if (n < maxHeap.peek()) {
-          minHeap.add(maxHeap.poll());
-          maxHeap.add(n);
-        } else {
-          minHeap.add(n);
-        }
-      } else {
-        if (!minHeap.isEmpty() && n > minHeap.peek()) {
-          maxHeap.add(minHeap.poll());
-          minHeap.add(n);
-        } else {
-          maxHeap.add(n);
-        }
-      }
-    }
-
-    public double findMedian() {
-      return maxHeap.size() > minHeap.size() ? maxHeap.peek() : (maxHeap.peek() + minHeap.peek()) / 2.0;
-    }
-  }
-
-  private void divideAndCount(int[] nums, int[] tmp, int start, int end) {
-    if (start >= end) return;
-    int mid = start + (end - start) / 2;
-    divideAndCount(nums, tmp, start, mid);
-    divideAndCount(nums, tmp, mid + 1, end);
-    if (nums[mid] <= nums[mid + 1]) return;
-    cnt += mergeAndCount(nums, tmp, start, mid, end);
-  }
-
-  private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
-    if (end > start) System.arraycopy(nums, start, tmp, start, end - start + 1);
-    int curCnt = 0, p1 = start, p2 = mid + 1;
-    for (int i = start; i <= end; i++) {
-      if (p1 == mid + 1) {
-        nums[i] = tmp[p2];
-        p2 += 1;
-      } else if (p2 == end + 1) {
-        nums[i] = tmp[p1];
-        p1 += 1;
-      } else if (tmp[p1] <= tmp[p2]) {
-        nums[i] = tmp[p1];
-        p1 += 1;
-      } else if (tmp[p1] > tmp[p2]) {
-        nums[i] = tmp[p2];
-        p2 += 1;
-        curCnt += mid - p1 + 1;
-      }
-    }
-  }
-
-  double findMedianSortedArrays(int[] nums1, int[] nums2) {
-    return (getLargestElement(nums1, nums2, top) + getLargestElement(nums1, nums2, topMore)) * 0.5;
-  }
-
-  String removeDuplicates(String s) {
-    int top = -1;
-    for (char ch : chs) {
-      if (top > -1 && chs[top] == ch) top -= 1;
-      else {
-        top += 1;
-        chs[top] = ch;
-      }
-    }
-    return String.valueOf(chs, 0, top + 1);
-  }
-
-  int removeDuplicates(int[] nums) {
-    int write = 0;
-    for (int n : nums) {
-      if (write >= k && nums[write - k] == n) continue;
-      nums[write++] = n;
-    }
-    return write;
-  }
-
-  /****************************二分***************************/
-  int getLargestElement(int[] nums1, int[] nums2, int k) {
-    while (p1 > -1 && p2 > -1 && ranking > 1) {
-      int half = ranking /2,
-              newP1 = Math.max(p1 - half, -1) +1,
-      if (nums1[newP1] >= nums2[newP2]) {
-        ranking -= (p1 - newP1 + 1);
-        p1 = newP1 - 1;
-      } else {}
-    }
-    if (p1 == l1) return nums2[p2 - ranking + 1];
-    return Math.max(nums1[p1], nums2[p2]);
-  }
-
-  int search(int[] nums, int target) {
-    while (lo < hi) {
-      if (nums[mid] < nums[hi]) {
-        if (nums[mid + 1] <= target && target <= nums[hi]) lo = mid + 1;
-        else hi = mid;
-      } else {
-        if (nums[lo] <= target && target <= nums[mid]) hi = mid;
-        else lo = mid + 1;
-      }
-    }
-  }
-
-  int findMin(int[] nums) {
-    while (lo < hi) {
-      if (nums[mid] >= nums[hi]) lo = mid + 1;
-      else hi = mid;
-    }
-  }
-
-  int findPeakElement(int[] nums) {
-    while (lo < hi) {
-      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
-      else hi = mid;
-    }
-  }
-
-  boolean searchMatrix(int[][] matrix, int target) {
-    while (lo < hi) {
-      int mid = lo + (hi - lo + 1) / 2;
-      if (matrix[mid][0] <= target) lo = mid;
-      else hi = mid - 1;
-    }
-    int[] row = matrix[hi];
-    if (row[0] == target) return true;
-    if (row[0] > target) return false;
-    int c = upperBound(row, target, 0);
-    return c == -1 ? false : row[c] == target;
-  }
-
-  int kthSmallest(int[][] matrix, int k) {
-    int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      if (countLte(matrix, mid) < k) lo = mid + 1;
-      else hi = mid;
-    }
-    return lo;
-  }
-
-  int countLte(int[][] matrix, int target) {
-    int c = 0, r = matrix.length - 1;
-    while (-1 < r && c < matrix[0].length) {
-      if (matrix[r][c] <= target) {
-        cnt += r + 1;
-        c += 1;
-      } else {
-        r -= 1;
-      }
-    }
-  }
-
-  /****************************前缀和***************************/
-
-  int maxSubArray(int[] nums) {
-    for (int n : nums) {
-      if (preSum + n > n) {
-        preSum += n;
-      } else {
-        preSum = n;
-      }
-      maxSum = Math.max(maxSum, preSum);
-    }
-    return maxSum;
-  }
-
-  int subarraySum(int[] nums, int k) {
-    Map<Integer, Integer> sum2Cnt = new HashMap<>();
-    sum2Cnt.put(0, 1);
-    for (int n : nums) {
-      preSum += n;
-      cnt += sum2Cnt.get(preSum - k);
-      sum2Cnt.put(preSum, 1 + sum2Cnt.get(preSum));
-    }
-    return cnt;
-  }
-
-  int findMaxLength(int[] nums) {
-    Map<Integer, Integer> sum2FirstIdx = new HashMap<>();
-    for (int i = 0; i < nums.length; i++) {
-      preSum += nums[i] == 0 ? -1 : 1;
-      if (!sum2FirstIdx.containsKey(preSum)) sum2FirstIdx.put(preSum, i);
-      maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
-    }
-    return maxLen;
-  }
-
-  int subarraysDivByK(int[] nums, int k) {
-    HashMap<Integer, Integer> remainder2Cnt = new HashMap<>();
-    remainder2Cnt.put(0, 1);
-    for (int n : nums) {
-      preSum += n;
-      int remainder = (preSum % k + k) % k;
-      int curCnt = remainder2Cnt.get(remainder);
-      remainder2Cnt.put(remainder, curCnt + 1);
-      cnt += curCnt;
-    }
-    return cnt;
-  }
-
-  int shortestSubarray(int[] nums, int k) {
-    for (int i = 0; i < preSum.length; i++) {
-      long sum = preSum[i];
-      while (!mq.isEmpty() && sum <= preSum[mq.peekLast()]) mq.pollLast();
-      while (!mq.isEmpty() && sum >= k + preSum[mq.peekFirst()])
-        minLen = Math.min(minLen, i - mq.pollFirst());
-      mq.offerLast(i);
-    }
-  }
-
-  boolean checkSubarraySum(int[] nums, int target) {
-    Set<Integer> visted = new HashSet<>();
-    for (int i = 2; i <= len; i++) {
-      visted.add(preSum[i - 2] % target);
-      if (visted.contains(preSum[i] % target)) return true;
-    }
-  }
-
-  /****************************字典序***************************/
-
-  void nextPermutation(int[] nums) {
-    while (peak > 0) {
-      if (nums[peak - 1] < nums[peak]) {
-        Arrays.sort(nums, peak, len);
-        break;
-      }
-      peak -= 1;
-    }
-    for (int i = peak; i < len; i++) {
-      if (nums[peak - 1] >= nums[i]) continue;
-      swap(nums, peak - 1, i);
+  void bt6(String s, Deque<String> path, List<String> res, int start, int cnt) {
+    if (start == s.length()) {
+      if (cnt == 0) res.add(String.join(".", path));
       return;
     }
-    Arrays.sort(nums);
-  }
-
-  int nextGreaterElement(int n) {
-    while (peak > -1) {
-      if (chs[peak] < chs[peak - 1]) break;
-      peak -= 1;
+    for (int i = start; i < start + 3 && i < s.length(); i++) {
+      String cur = s.substring(start, i + 1);
+      if (!isValidIP(cur) || i == start + 3 || cnt * 3 < s.length() - i) continue;
+      path.addLast(cur);
+      bt6(s, path, res, i + 1, cnt - 1);
+      path.removeLast();
     }
-    if (peak == -1) return -1;
-    for (int i = len - 1; i > peak; i--) {
-      if (chs[peak - 1] >= chs[i]) continue;
-      swap(chs, peak, i);
-      break;
+  }
+
+  boolean isValidIP(String s) {
+    if (s.length() == 1) return true;
+    if (s.length() > 3 || s.charAt(0) == '0') return false;
+    return Integer.parseInt(s) <= 255;
+  }
+
+  List<String> letterCombinations(String digits) {
+    if (digits.length() == 0) return new ArrayList<>();
+    bt13(digits, new StringBuilder(), res, 0);
+  }
+
+  void bt13(String str, StringBuilder path, List<String> res, int start) {
+    if (start == str.length()) {
+      res.add(path.toString());
+      return;
     }
-    revserse(chs, peak + 1, len - 1);
+    for (char ch : LetterMap[str.charAt(start) - '0'].toCharArray()) {
+      path.append(ch);
+      bt13(str, path, res, start + 1);
+      path.deleteCharAt(path.length() - 1);
+    }
   }
 
-  String largestNumber(int[] nums) {
-    // nums -> String[]
-    strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
-    // String[] -> String
-  }
-
-  int maximumSwap(int num) {
-    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - '0'] = i;
-    for (int i = 0; i < chs.length; i++) {
-      for (int d = 9; d > chs[i] - '0'; d--) {
-        if (lastIdxes[d] <= i) continue; // 位
-        swap(chs, i, lastIdxes[d]);
-        return Integer.parseInt(chs.toString());
+  List<String> removeInvalidParentheses(String s) {
+    for (char ch : chs) {
+      if (ch == '(') l += 1;
+      if (ch == ')') {
+        if (r < l) r += 1;
+        else maxRemR += 1; // 最多移除右括号数量
       }
     }
-    return num;
+    maxPair = Math.min(l, r);
+    maxRemL = l > maxPair ? l - maxPair : 0;
+    bt14(chs, 0, 0, 0, 0, 0, new StringBuilder());
   }
 
-  public int findKthNumber(int n, int k) {
-    while (cnt < k) {
-      int curCnt = count(prefix, n);
-      if (cnt + curCnt >= k) {
-        prefix *= 10;
-        cnt += 1;
-      } else {
-        prefix += 1;
-        cnt += curCnt;
-      }
+  void bt14(char[] chs, int start, int l, int r, int remL, int remR, StringBuilder path) {
+    if (r > l || l > maxPair || r > maxPair || remL > maxRemL || remR > maxRemR) return;
+    if (start == chs.length) {
+      res.add(path.toString());
+      return;
     }
-    return prefix;
-  }
-
-  int count(int lo, int hi) {
-    long cur = lo, nxt = lo + 1;
-    while (cur <= hi) {
-      cnt += Math.min(hi + 1, nxt) - cur;
-      cur *= 10;
-      nxt *= 10;
-    }
-  }
-}
-
-class SString {
-  String addStrings(String num1, String num2) {
-    while (p1 > -1 || p2 > -1 || carry != 0) {
-      int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
-              n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
-              tmp = n1 + n2 + carry;
-      sum.append(getChar(tmp % BASE));
-      carry = tmp / BASE;
-      p1 -= 1;
-      p2 -= 1;
-    }
-    return sum.reverse().toString();
-  }
-
-  String multiply(String num1, String num2) {
-    for (int p1 = l1 - 1; p1 > -1; p1--) {
-      int n1 = num1.charAt(p1) - '0';
-      for (int p2 = l2 - 1; p2 > -1; p2--) {
-        int n2 = num2.charAt(p2) - '0', sum = product[p1 + p2 + 1] + n1 * n2;
-        product[p1 + p2 + 1] = sum % BASE;
-        product[p1 + p2] += sum / BASE;
-      }
-    }
-    int idx = product[0] == 0 ? 1 : 0;
-    StringBuilder res = new StringBuilder();
-    while (idx < product.length) {
-      res.append(product[idx]);
-      idx += 1;
+    char ch = chs[start];
+    path.append(ch);
+    int nxt = start + 1;
+    if (ch == '(') {
+      bt14(chs, nxt, l + 1, r, remL, remR, path);
+      path.deleteCharAt(path.length() - 1);
+      bt14(chs, nxt, l, r, remL + 1, remR, path);
+    } else if (ch == ')') {
+      bt14(chs, nxt, l, r + 1, remL, remR, path);
+      path.deleteCharAt(path.length() - 1);
+      bt14(chs, nxt, l, r, remL, remR + 1, path);
+    } else {
+      bt14(chs, nxt, l, r, remL, remR, path);
+      path.deleteCharAt(path.length() - 1);
     }
   }
 
-  int compareVersion(String v1, String v2) {
-    while (p1 < l1 || p2 < l2) {
-      int n1 = 0, n2 = 0;
-      while (p1 < l1 && v1.charAt(p1) != '.') {
-        n1 = n1 * 10 + v1.charAt(p1) - '0';
-        p1 += 1;
-      }
-      p1 += 1;
-      if (n1 != n2) return n1 > n2 ? 1 : -1;
+  boolean canPartitionKSubsets(int[] nums, int k) {
+    for (int n : nums) {
+      sum += n;
+      if (max < n) max = n;
     }
+    target = sum / k;
+    return sum % k == 0 && max <= target && bt15(nums, 0, k, 0, new boolean[nums.length]);
   }
 
-  int longestOnes(int[] nums, int k) {
-    while (hi < nums.length) {
-      if (nums[hi] == 0) k -= 1;
-      while (k < 0) {
-        if (nums[lo] == 0) k += 1;
-        lo += 1;
-      }
-      maxLen = Math.max(maxLen, hi - lo + 1);
-      hi += 1;
+  boolean bt15(int[] nums, int start, int k, int sum, boolean[] recStack) {
+    if (k == 0) return true;
+    if (sum == target) return bt15(nums, 0, k - 1, 0, recStack);
+    for (int i = start; i < nums.length; i++) {
+      int cur = sum + nums[i];
+      if (recStack[i] || cur > target) continue;
+      recStack[i] = true;
+      if (bt15(nums, i + 1, k, cur, recStack)) return true;
+      recStack[i] = false;
     }
+    return false;
   }
 
-  int[] maxSlidingWindow(int[] nums, int k) {
-    for (int i = 0; i < nums.length; i++) {
-      while (mq.size() > 0 && mq.peekLast() < n) mq.pollLast();
-      mq.offerLast(n);
-      if (i < k - 1) continue;
-      int outIdx = i - k + 1, winMax = mq.peekFirst();
-      winMaxes[outIdx] = winMax;
-      if (mq.size() > 0 && nums[outIdx] == winMax) mq.pollFirst();
-    }
-  }
-
-  int longestSubarray(int[] nums, int limit) {
-    while (hi < nums.length) {
-      int add = nums[hi];
-      hi += 1;
-      while (maxMQ.size() > 0 && add > maxMQ.peekLast()) maxMQ.pollLast();
-      maxMQ.offerLast(add);
-      while (minMQ.size() > 0 && add < minMQ.peekLast()) minMQ.pollLast();
-      minMQ.offerLast(add);
-      while (maxMQ.peekFirst() - minMQ.peekFirst() > limit) {
-        int out = nums[lo];
-        lo += 1;
-        if (maxMQ.peekFirst() == out) maxMQ.pollFirst();
-        if (minMQ.peekFirst() == out) minMQ.pollFirst();
-      }
-      maxLen = Math.max(maxLen, hi - lo);
-    }
-  }
-
-  boolean isValid(String s) {
-    for (char ch : s.toCharArray()) {
-      if (!pairs.containsKey(ch)) {
-        stack.offerLast(ch);
-        continue;
-      }
-      if (stack.isEmpty() || stack.peekLast != pairs.get(ch)) return false;
-      stack.pollLast();
-    }
-    return stack.isEmpty();
-  }
-
-  boolean checkValidString(String s) {
-    for (char ch : s.toCharArray()) {
-      if (ch == '*') {
-        minCnt -= 1;
-        maxCnt += 1;
-      }
-      if (minCnt < 0) minCnt = 0;
-      if (minCnt > maxCnt) return false;
-    }
-    return minCnt == 0;
-  }
-
-  String decodeString(String s) {
-    for (char ch : s.toCharArray()) {
-      if (ch == '[') {
-        cntStack.offerLast(cnt);
-        strStack.offerLast(str.toString());
-        cnt = 0;
-        str = new StringBuilder();
-      } else if (ch == ']') {
-        int preCnt = cntStack.pollLast();
-        String preStr = strStack.pollLast();
-        str = new StringBuilder(preStr + str.toString().repeat(preCnt));
-      } else if (ch >= '0' && ch <= '9') {
-        cnt = cnt * 10 + ch - '0';
-      } else {
-        str.append(ch);
-      }
-    }
-    return str.toString();
-  }
-
-  int calculate(String s) {
-    char op = '+';
+  List<List<String>> partition(String s) {
     for (int i = 0; i < len; i++) {
-      char ch = chs[i];
-      if (Character.isDigit(ch)) n = n * 10 + (ch - '0');
-      if ((!Character.isDigit(ch) && ch != ' ') || i == len - 1) {
-        if (op == '+') numStack.offerLast(n);
-        if (op == '-') numStack.offerLast(-n);
-        if (op == '*') numStack.offerLast(numStack.pollLast() * n);
-        if (op == '/') numStack.offerLast(numStack.pollLast() / n);
-        n = 0;
-        op = ch;
+      collect(s, i, i, isPld);
+      collect(s, i, i + 1, isPld);
+    }
+    bt11(s, new ArrayDeque<>(), paths, 0, isPld);
+  }
+
+  void collect(String s, int lo, int hi, boolean[][] isPld) {
+    while (lo > -1 && hi < s.length() && s.charAt(lo) == s.charAt(hi)) {
+      isPld[lo][hi] = true;
+      lo -= 1;
+      hi += 1;
+    }
+  }
+
+  void bt11(
+          String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
+    if (start == s.length()) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int i = start; i < s.length(); i++) {
+      if (!isPld[start][i]) continue; // [start:i] 区间非回文
+      path.offerLast(s.substring(start, i + 1));
+      bt11(s, path, res, i + 1, isPld);
+      path.pollLast();
+    }
+  }
+
+  String validIpv4(String ip, String nt) {
+    if (ip.startsWith(".") || ip.endsWith(".") || ip.contains("..")) return nt;
+    String[] segs = ip.split("\\.");
+    if (segs.length != 4) return nt;
+    for (String s : segs) {
+      if (s.length() > 3) return nt;
+      int num = 0;
+      for (char ch : s.toCharArray()) {
+        if (!Character.isDigit(ch)) return nt;
+        num = num * 10 + (ch - '0');
+      }
+      if (num > 255 || (s.charAt(0) == '0' && s.length() > 1)) return nt;
+    }
+    return "IPv4";
+  }
+
+  String validIpv6(String ip, String nt) {
+    if (ip.startsWith(":") || ip.endsWith(":") || ip.contains("::")) return nt;
+    String[] segs = ip.split(":");
+    if (segs.length != 8) return nt;
+    for (String s : segs) {
+      if (s.length() == 0 || s.length() > 4) return nt;
+      for (char ch : s.toCharArray()) {
+        ch = Character.toLowerCase(ch);
+        if (!Character.isDigit(ch) && (ch < 'a' || ch > 'f')) return nt;
       }
     }
-    int sum = 0;
-    for (int num : numStack) sum += num;
-  }
-
-  int[] countLetter(char[] chs) {
-    opStack.offerLast(sign);
-    for (int i = 0; i < chs.length; i++) {
-      char ch = chs[i];
-      if (ch == '(') opStack.offerLast(sign);
-      if (ch == ')') opStack.pollLast();
-      if (ch == '+') sign = opStack.peekLast();
-      if (ch == '-') sign = -opStack.peekLast();
-      if (ch >= '0' && ch <= '9') {
-        long num = 0;
-        while (i < chs.length && Character.isDigit(chs[i])) {
-          num = num * 10 + chs[i] - '0';
-          i += 1;
-        }
-        i -= 1;
-        res += sign * num;
-      }
-    }
-  }
-
-  boolean validateStackSequences(int[] pushed, int[] popped) {
-    for (int add : pushed) {
-      pushed[stTop] = add;
-      stTop += 1;
-      while (stTop != 0 && pushed[stTop - 1] == popped[popIdx]) {
-        stTop -= 1;
-        popIdx += 1;
-      }
-    }
-    return stTop == 0;
-  }
-
-  String longestCommonPrefix(String[] strs) {
-    String ref = strs[0];
-    for (int i = 0; i < ref.length(); i++) {
-      char pivot = ref[i];
-      for (int j = 1; j < strs.length; j++) {
-        if (i < strs[j].length() && strs[j][i] == pivot) continue;
-        return ref.substring(0, i);
-      }
-    }
-    return ref;
-  }
-
-  String longestPalindrome(String s) {
-    int start, end;
-    for (int i = 0; i < 2 * len - 1; i++) {
-      int lo = i / 2, hi = lo + i % 2;
-      while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
-        if (hi - lo > end - start) {}
-        lo -= 1;
-        hi += 1;
-      }
-    }
-  }
-
-  int countSubstrings(String s) {
-    int cnt;
-    for (int i = 0; i < 2 * len - 1; i++) {
-      int lo = i / 2, hi = lo + i % 2;
-      while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
-        cnt += 1;
-        lo -= 1;
-        hi += 1;
-      }
-    }
-  }
-
-  int longestSubstring(String s, int k) {
-    int[] counter = new int[26];
-    for (char ch : s.toCharArray()) counter[ch - 'a'] += 1;
-    for (char ch : s.toCharArray()) {
-      if (counter[ch - 'a'] >= k) continue;
-      for (String seg : s.split(String.valueOf(ch))) maxLen = max(maxLen, longestSubstring(seg, k));
-      return maxLen;
-    }
-    return s.length();
-  }
-
-  int myAtoi(String s) {
-    boolean isNegative = false;
-    int idx = frontNoBlank(chs, 0);
-    int n = 0;
-    for (int i = idx; i < len; i++) {
-      char ch = chs[i];
-      if (ch < '0' || ch > '9') break;
-      int pre = n;
-      n = n * 10 + ch - '0';
-      if (pre != n / 10) return n;
-    }
-    return n;
-  }
-
-  int compress(char[] chars) {
-    int write, read;
-    while (read < len) {
-      while (start < len && chars[start] == chars[read]) start += 1;
-      chars[write++] = chars[read];
-      if (start - read > 1) {
-        char[] cnt = Integer.toString(start - read).toCharArray();
-      }
-      read = start;
-    }
-    return write;
-  }
-
-  String reverseWords(String s) {
-    reverseChs(chs, 0, len - 1);
-    int start;
-    while (start < len) {
-      int end = frontNoBlank(chs, start);
-      while (end < len && chs[end] != ' ') end += 1;
-      reverseChs(chs, start, end - 1);
-      start = end;
-    }
-    int write, read = frontNoBlank(chs, 0);
-    while (read < len) {
-      while (read < len && chs[read] != ' ') chs[write++] = chs[read++];
-      read = frontNoBlank(chs, read);
-      if (read == len) break;
-      chs[write++] = ' ';
-    }
-    return String.valueOf(chs, 0, write);
-  }
-
-  String intToRoman(int num) {
-    int cur = num;
-    for (int i = 0; i < NUMs.length; i++) {
-      int n = NUMs[i];
-      String ch = ROMANs[i];
-      while (cur >= n) {
-        roman.append(ch);
-        cur -= n;
-      }
-    }
-    return roman.toString();
-  }
-
-  int romanToInt(String s) {
-    for (int i = 0; i < chs.length; i++) {
-      int add = mapping.get(chs[i]);
-      // IV 与 VI 否则常规的做法是累加即可
-      if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) sum -= add;
-      else sum += add;
-    }
-  }
-
-  String convertToTitle(int cn) {
-    int cur = cn - 1;
-    while (cur > 0) {
-      res.append((char) (cur % 26 + 'A'));
-      cur = cur / 26 - 1;
-    }
-    return res.reverse().toString();
-  }
-
-  int[] dailyTemperatures(int[] temperatures) {
-    for (int i = 0; i < temperatures.length; i++) {
-      while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
-        int preIdx = ms.pollLast();
-        tpts[preIdx] = i - preIdx;
-      }
-      ms.offer(i);
-    }
-    return new int[] {};
-  }
-
-  int[] nextGreaterElements(int[] nums) {
-    for (int i = 0; i < 2 * len; i++) {
-      int n = nums[i % len];
-      while (!ms.isEmpty() && n > nums[ms.peekLast()]) elms[ms.pollLast()] = n;
-      ms.offerLast(i % len);
-    }
-    return new int[] {};
-  }
-
-  String removeKdigits(String num, int k) {
-    for (char ch : num.toCharArray()) {
-      while (k > 0 && ms.length() > 0 && ms.charAt(ms.length() - 1) > ch) {
-        ms.deleteCharAt(ms.length() - 1);
-        k -= 1;
-      }
-      if (ch == '0' && ms.length() == 0) continue; // 避免前导零
-      ms.append(ch);
-    }
-    String str = ms.substring(0, Math.max(ms.length() - k, 0));
-  }
-
-  int maximalRectangle(char[][] matrix) {
-    int[] hs = new int[len + 2];
-    for (char[] rows : matrix) {
-      for (int i = 0; i < hs.length; i++) {
-        if (i > 0 && i < len + 1) { // 哨兵内
-          if (rows[i - 1] == '1') hs[i] += 1;
-          else hs[i] = 0;
-        }
-        while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
-          int cur = ms.pollLast(), pre = ms.peekLast();
-          maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
-        }
-        ms.offerLast(i);
-      }
-    }
-    return maxArea;
+    return "IPv6";
   }
 }
+
+//class AArray {
+//  int[] sortedSquares(int[] nums) {
+//    for (int i = len - 1; i > -1; i--) {
+//      int a = nums[lo] * nums[lo], b = nums[hi] * nums[hi];
+//      if (a <= b) {
+//        res[i] = b;
+//        hi -= 1;
+//      } else {
+//        res[i] = a;
+//        lo += 1;
+//      }
+//    }
+//  }
+//
+//  int minMeetingRooms(int[][] intervals) {
+//    for (int[] itv : intervals) {
+//      if (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) minHeap.poll();
+//      minHeap.offer(itv[1]);
+//    }
+//  }
+//
+//  void quickSort(int[] nums, int lo, int hi) {
+//    if (lo >= hi) return;
+//    int pivotIdx = lo + new Random().nextInt(hi - lo + 1);
+//    swap(nums, pivotIdx, lo);
+//    int lt = lo, cur = lt + 1, gt = hi + 1;
+//    while (cur < gt) {
+//      if (nums[cur] < pivot) {
+//        lt += 1;
+//        swap(nums, cur, lt);
+//        cur += 1;
+//      }
+//      if (nums[cur] == pivot) cur += 1;
+//      if (nums[cur] > pivot) {
+//        gt -= 1;
+//        swap(nums, cur, lt);
+//      }
+//    }
+//    quickSort(nums, lo, lt - 1);
+//    quickSort(nums, gt, hi);
+//  }
+//
+//  int findKthLargest(int[] nums, int k) {
+//    heapify(nums, k - 1);
+//    for (int i = k; i < nums.length; i++) {
+//      if (priorityThan(nums[i], nums[0])) continue;
+//      swap(nums, 0, i);
+//      sink(nums, 0, k - 1);
+//    }
+//    return nums[0];
+//  }
+//
+//  void heapSort(int[] nums) {
+//    heapify(nums, len - 1);
+//    for (int i = len - 1; i > 0; i--) {
+//      swap(nums, 0, i);
+//      sink(nums, 0, i - 1);
+//    }
+//  }
+//
+//  class MedianFinder {
+//    final PriorityQueue<Integer> minHeap = new PriorityQueue<>((a, b) -> a - b),
+//            maxHeap = new PriorityQueue<>((a, b) -> b - a);
+//
+//    void addNum(int n) {
+//      if (maxHeap.size() > minHeap.size()) {
+//        if (n < maxHeap.peek()) {
+//          minHeap.add(maxHeap.poll());
+//          maxHeap.add(n);
+//        } else {
+//          minHeap.add(n);
+//        }
+//      } else {
+//        if (!minHeap.isEmpty() && n > minHeap.peek()) {
+//          maxHeap.add(minHeap.poll());
+//          minHeap.add(n);
+//        } else {
+//          maxHeap.add(n);
+//        }
+//      }
+//    }
+//
+//    double findMedian() {
+//      return maxHeap.size() > minHeap.size() ? maxHeap.peek() : (maxHeap.peek() + minHeap.peek()) / 2.0;
+//    }
+//  }
+//
+//  void divideAndCount(int[] nums, int[] tmp, int start, int end) {
+//    if (start >= end) return;
+//    int mid = start + (end - start) / 2;
+//    divideAndCount(nums, tmp, start, mid);
+//    divideAndCount(nums, tmp, mid + 1, end);
+//    if (nums[mid] <= nums[mid + 1]) return;
+//    cnt += mergeAndCount(nums, tmp, start, mid, end);
+//  }
+//
+//  int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
+//    if (end > start) System.arraycopy(nums, start, tmp, start, end - start + 1);
+//    int curCnt = 0, p1 = start, p2 = mid + 1;
+//    for (int i = start; i <= end; i++) {
+//      if (p1 == mid + 1) {
+//        nums[i] = tmp[p2];
+//        p2 += 1;
+//      } else if (p2 == end + 1) {
+//        nums[i] = tmp[p1];
+//        p1 += 1;
+//      } else if (tmp[p1] <= tmp[p2]) {
+//        nums[i] = tmp[p1];
+//        p1 += 1;
+//      } else if (tmp[p1] > tmp[p2]) {
+//        nums[i] = tmp[p2];
+//        p2 += 1;
+//        curCnt += mid - p1 + 1;
+//      }
+//    }
+//  }
+//
+//  double findMedianSortedArrays(int[] nums1, int[] nums2) {
+//    return (getLargestElement(nums1, nums2, top) + getLargestElement(nums1, nums2, topMore)) * 0.5;
+//  }
+//
+//  int getLargestElement(int[] nums1, int[] nums2, int k) {
+//    while (p1 > -1 && p2 > -1 && ranking > 1) {
+//      int half = ranking /2,
+//              newP1 = Math.max(p1 - half, -1) +1,
+//      if (nums1[newP1] >= nums2[newP2]) {
+//        ranking -= (p1 - newP1 + 1);
+//        p1 = newP1 - 1;
+//      } else {}
+//    }
+//    if (p1 == l1) return nums2[p2 - ranking + 1];
+//    return Math.max(nums1[p1], nums2[p2]);
+//  }
+//
+//  String removeDuplicates(String s) {
+//    int top = -1;
+//    for (char ch : chs) {
+//      if (top > -1 && chs[top] == ch) top -= 1;
+//      else {
+//        top += 1;
+//        chs[top] = ch;
+//      }
+//    }
+//    return String.valueOf(chs, 0, top + 1);
+//  }
+//
+//  int removeDuplicates(int[] nums) {
+//    int write = 0;
+//    for (int n : nums) {
+//      if (write >= k && nums[write - k] == n) continue;
+//      nums[write++] = n;
+//    }
+//    return write;
+//  }
+//
+//  /****************************二分***************************/
+//
+//  int search(int[] nums, int target) {
+//    while (lo < hi) {
+//      if (nums[mid] < nums[hi]) {
+//        if (nums[mid + 1] <= target && target <= nums[hi]) lo = mid + 1;
+//        else hi = mid;
+//      } else {
+//        if (nums[lo] <= target && target <= nums[mid]) hi = mid;
+//        else lo = mid + 1;
+//      }
+//    }
+//  }
+//
+//  int findMin(int[] nums) {
+//    while (lo < hi) {
+//      if (nums[mid] >= nums[hi]) lo = mid + 1;
+//      else hi = mid;
+//    }
+//  }
+//
+//  int findPeakElement(int[] nums) {
+//    while (lo < hi) {
+//      if (nums[mid] < nums[mid + 1]) lo = mid + 1;
+//      else hi = mid;
+//    }
+//  }
+//
+//  boolean searchMatrix(int[][] matrix, int target) {
+//    while (lo < hi) {
+//      int mid = lo + (hi - lo + 1) / 2;
+//      if (matrix[mid][0] <= target) lo = mid;
+//      else hi = mid - 1;
+//    }
+//    int[] row = matrix[hi];
+//    if (row[0] == target) return true;
+//    if (row[0] > target) return false;
+//    int c = upperBound(row, target, 0);
+//    return c == -1 ? false : row[c] == target;
+//  }
+//
+//  int kthSmallest(int[][] matrix, int k) {
+//    int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
+//    while (lo < hi) {
+//      int mid = lo + (hi - lo) / 2;
+//      if (countLte(matrix, mid) < k) lo = mid + 1;
+//      else hi = mid;
+//    }
+//    return lo;
+//  }
+//
+//  int countLte(int[][] matrix, int target) {
+//    int c = 0, r = matrix.length - 1;
+//    while (-1 < r && c < matrix[0].length) {
+//      if (matrix[r][c] <= target) {
+//        cnt += r + 1;
+//        c += 1;
+//      } else {
+//        r -= 1;
+//      }
+//    }
+//  }
+//
+//  int triangleNumber(int[] nums) {
+//    Arrays.sort(nums);
+//    for (int i = nums.length - 1; i > 1; i--) {
+//      int pivot = nums[i], lo = 0, hi = i - 1;
+//      while (lo < hi) {
+//        if (nums[lo] + nums[hi] > pivot) {
+//          cnt += hi - lo;
+//          hi -= 1;
+//        } else lo += 1;
+//      }
+//    }
+//  }
+//
+//  /****************************前缀和***************************/
+//
+//  int maxSubArray(int[] nums) {
+//    for (int n : nums) {
+//      if (preSum + n > n) {
+//        preSum += n;
+//      } else {
+//        preSum = n;
+//      }
+//      maxSum = Math.max(maxSum, preSum);
+//    }
+//    return maxSum;
+//  }
+//
+//  int subarraySum(int[] nums, int k) {
+//    Map<Integer, Integer> sum2Cnt = new HashMap<>();
+//    sum2Cnt.put(0, 1);
+//    for (int n : nums) {
+//      preSum += n;
+//      cnt += sum2Cnt.get(preSum - k);
+//      sum2Cnt.put(preSum, 1 + sum2Cnt.get(preSum));
+//    }
+//    return cnt;
+//  }
+//
+//  int findMaxLength(int[] nums) {
+//    Map<Integer, Integer> sum2FirstIdx = new HashMap<>();
+//    for (int i = 0; i < nums.length; i++) {
+//      preSum += nums[i] == 0 ? -1 : 1;
+//      if (!sum2FirstIdx.containsKey(preSum)) sum2FirstIdx.put(preSum, i);
+//      maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
+//    }
+//    return maxLen;
+//  }
+//
+//  int subarraysDivByK(int[] nums, int k) {
+//    HashMap<Integer, Integer> remainder2Cnt = new HashMap<>();
+//    remainder2Cnt.put(0, 1);
+//    for (int n : nums) {
+//      preSum += n;
+//      int remainder = (preSum % k + k) % k;
+//      int curCnt = remainder2Cnt.get(remainder);
+//      remainder2Cnt.put(remainder, curCnt + 1);
+//      cnt += curCnt;
+//    }
+//    return cnt;
+//  }
+//
+//  int shortestSubarray(int[] nums, int k) {
+//    for (int i = 0; i < preSum.length; i++) {
+//      long sum = preSum[i];
+//      while (!mq.isEmpty() && sum <= preSum[mq.peekLast()]) mq.pollLast();
+//      while (!mq.isEmpty() && sum >= k + preSum[mq.peekFirst()])
+//        minLen = Math.min(minLen, i - mq.pollFirst());
+//      mq.offerLast(i);
+//    }
+//  }
+//
+//  boolean checkSubarraySum(int[] nums, int target) {
+//    Set<Integer> visted = new HashSet<>();
+//    for (int i = 2; i <= len; i++) {
+//      visted.add(preSum[i - 2] % target);
+//      if (visted.contains(preSum[i] % target)) return true;
+//    }
+//  }
+//
+//  List<Integer> spiralOrder(int[][] matrix) {
+//    while (true) {
+//      for (int i = left; i <= right; i++) res.add(matrix[up][i]);
+//      up += 1;
+//      if (up > down) break;
+//    }
+//  }
+//
+//  /****************************字典序***************************/
+//
+//  void nextPermutation(int[] nums) {
+//    while (peak > 0) {
+//      if (nums[peak - 1] < nums[peak]) {
+//        Arrays.sort(nums, peak, len);
+//        break;
+//      }
+//      peak -= 1;
+//    }
+//    for (int i = peak; i < len; i++) {
+//      if (nums[peak - 1] >= nums[i]) continue;
+//      swap(nums, peak - 1, i);
+//      return;
+//    }
+//    Arrays.sort(nums);
+//  }
+//
+//  int nextGreaterElement(int n) {
+//    while (peak > -1) {
+//      if (chs[peak] < chs[peak - 1]) break;
+//      peak -= 1;
+//    }
+//    if (peak == -1) return -1;
+//    for (int i = len - 1; i > peak; i--) {
+//      if (chs[peak - 1] >= chs[i]) continue;
+//      swap(chs, peak, i);
+//      break;
+//    }
+//    revserse(chs, peak + 1, len - 1);
+//  }
+//
+//  String largestNumber(int[] nums) {
+//    // nums -> String[]
+//    strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
+//    // String[] -> String
+//  }
+//
+//  int maximumSwap(int num) {
+//    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - '0'] = i;
+//    for (int i = 0; i < chs.length; i++) {
+//      for (int d = 9; d > chs[i] - '0'; d--) {
+//        if (lastIdxes[d] <= i) continue; // 位
+//        swap(chs, i, lastIdxes[d]);
+//        return Integer.parseInt(chs.toString());
+//      }
+//    }
+//    return num;
+//  }
+//
+//  int findKthNumber(int n, int k) {
+//    while (cnt < k) {
+//      int curCnt = count(prefix, n);
+//      if (cnt + curCnt >= k) {
+//        prefix *= 10;
+//        cnt += 1;
+//      } else {
+//        prefix += 1;
+//        cnt += curCnt;
+//      }
+//    }
+//    return prefix;
+//  }
+//
+//  int count(int lo, int hi) {
+//    long cur = lo, nxt = lo + 1;
+//    while (cur <= hi) {
+//      cnt += Math.min(hi + 1, nxt) - cur;
+//      cur *= 10;
+//      nxt *= 10;
+//    }
+//  }
+//}
+
+//class SString {
+//  String addStrings(String num1, String num2) {
+//    while (p1 > -1 || p2 > -1 || carry != 0) {
+//      int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
+//              n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
+//              tmp = n1 + n2 + carry;
+//      sum.append(getChar(tmp % BASE));
+//      carry = tmp / BASE;
+//      p1 -= 1;
+//      p2 -= 1;
+//    }
+//    return sum.reverse().toString();
+//  }
+//
+//  String multiply(String num1, String num2) {
+//    for (int p1 = l1 - 1; p1 > -1; p1--) {
+//      int n1 = num1.charAt(p1) - '0';
+//      for (int p2 = l2 - 1; p2 > -1; p2--) {
+//        int n2 = num2.charAt(p2) - '0', sum = product[p1 + p2 + 1] + n1 * n2;
+//        product[p1 + p2 + 1] = sum % BASE;
+//        product[p1 + p2] += sum / BASE;
+//      }
+//    }
+//    int idx = product[0] == 0 ? 1 : 0;
+//    StringBuilder res = new StringBuilder();
+//    while (idx < product.length) {
+//      res.append(product[idx]);
+//      idx += 1;
+//    }
+//  }
+//
+//  int compareVersion(String v1, String v2) {
+//    while (p1 < l1 || p2 < l2) {
+//      int n1 = 0, n2 = 0;
+//      while (p1 < l1 && v1.charAt(p1) != '.') {
+//        n1 = n1 * 10 + v1.charAt(p1) - '0';
+//        p1 += 1;
+//      }
+//      p1 += 1;
+//      if (n1 != n2) return n1 > n2 ? 1 : -1;
+//    }
+//  }
+//
+//  int longestOnes(int[] nums, int k) {
+//    while (hi < nums.length) {
+//      if (nums[hi] == 0) k -= 1;
+//      while (k < 0) {
+//        if (nums[lo] == 0) k += 1;
+//        lo += 1;
+//      }
+//      maxLen = Math.max(maxLen, hi - lo + 1);
+//      hi += 1;
+//    }
+//  }
+//
+//  int[] maxSlidingWindow(int[] nums, int k) {
+//    for (int i = 0; i < nums.length; i++) {
+//      while (mq.size() > 0 && mq.peekLast() < n) mq.pollLast();
+//      mq.offerLast(n);
+//      if (i < k - 1) continue;
+//      int outIdx = i - k + 1, winMax = mq.peekFirst();
+//      winMaxes[outIdx] = winMax;
+//      if (mq.size() > 0 && nums[outIdx] == winMax) mq.pollFirst();
+//    }
+//  }
+//
+//  int longestSubarray(int[] nums, int limit) {
+//    while (hi < nums.length) {
+//      int add = nums[hi];
+//      hi += 1;
+//      while (maxMQ.size() > 0 && add > maxMQ.peekLast()) maxMQ.pollLast();
+//      maxMQ.offerLast(add);
+//      while (minMQ.size() > 0 && add < minMQ.peekLast()) minMQ.pollLast();
+//      minMQ.offerLast(add);
+//      while (maxMQ.peekFirst() - minMQ.peekFirst() > limit) {
+//        int out = nums[lo];
+//        lo += 1;
+//        if (maxMQ.peekFirst() == out) maxMQ.pollFirst();
+//        if (minMQ.peekFirst() == out) minMQ.pollFirst();
+//      }
+//      maxLen = Math.max(maxLen, hi - lo);
+//    }
+//  }
+//
+//  boolean isValid(String s) {
+//    for (char ch : s.toCharArray()) {
+//      if (!pairs.containsKey(ch)) {
+//        stack.offerLast(ch);
+//        continue;
+//      }
+//      if (stack.isEmpty() || stack.peekLast != pairs.get(ch)) return false;
+//      stack.pollLast();
+//    }
+//    return stack.isEmpty();
+//  }
+//
+//  boolean checkValidString(String s) {
+//    for (char ch : s.toCharArray()) {
+//      if (ch == '*') {
+//        minCnt -= 1;
+//        maxCnt += 1;
+//      }
+//      if (minCnt < 0) minCnt = 0;
+//      if (minCnt > maxCnt) return false;
+//    }
+//    return minCnt == 0;
+//  }
+//
+//  String decodeString(String s) {
+//    for (char ch : s.toCharArray()) {
+//      if (ch == '[') {
+//        cntStack.offerLast(cnt);
+//        strStack.offerLast(str.toString());
+//        cnt = 0;
+//        str = new StringBuilder();
+//      } else if (ch == ']') {
+//        int preCnt = cntStack.pollLast();
+//        String preStr = strStack.pollLast();
+//        str = new StringBuilder(preStr + str.toString().repeat(preCnt));
+//      } else if (ch >= '0' && ch <= '9') {
+//        cnt = cnt * 10 + ch - '0';
+//      } else {
+//        str.append(ch);
+//      }
+//    }
+//    return str.toString();
+//  }
+//
+//  int calculate(String s) {
+//    char op = '+';
+//    for (int i = 0; i < len; i++) {
+//      char ch = chs[i];
+//      if (Character.isDigit(ch)) n = n * 10 + (ch - '0');
+//      if ((!Character.isDigit(ch) && ch != ' ') || i == len - 1) {
+//        if (op == '+') numStack.offerLast(n);
+//        if (op == '-') numStack.offerLast(-n);
+//        if (op == '*') numStack.offerLast(numStack.pollLast() * n);
+//        if (op == '/') numStack.offerLast(numStack.pollLast() / n);
+//        n = 0;
+//        op = ch;
+//      }
+//    }
+//    int sum = 0;
+//    for (int num : numStack) sum += num;
+//  }
+//
+//  int[] countLetter(char[] chs) {
+//    opStack.offerLast(sign);
+//    for (int i = 0; i < chs.length; i++) {
+//      char ch = chs[i];
+//      if (ch == '(') opStack.offerLast(sign);
+//      if (ch == ')') opStack.pollLast();
+//      if (ch == '+') sign = opStack.peekLast();
+//      if (ch == '-') sign = -opStack.peekLast();
+//      if (ch >= '0' && ch <= '9') {
+//        long num = 0;
+//        while (i < chs.length && Character.isDigit(chs[i])) {
+//          num = num * 10 + chs[i] - '0';
+//          i += 1;
+//        }
+//        i -= 1;
+//        res += sign * num;
+//      }
+//    }
+//  }
+//
+//  boolean validateStackSequences(int[] pushed, int[] popped) {
+//    for (int add : pushed) {
+//      pushed[stTop] = add;
+//      stTop += 1;
+//      while (stTop != 0 && pushed[stTop - 1] == popped[popIdx]) {
+//        stTop -= 1;
+//        popIdx += 1;
+//      }
+//    }
+//    return stTop == 0;
+//  }
+//
+//  String longestCommonPrefix(String[] strs) {
+//    String ref = strs[0];
+//    for (int i = 0; i < ref.length(); i++) {
+//      char pivot = ref[i];
+//      for (int j = 1; j < strs.length; j++) {
+//        if (i < strs[j].length() && strs[j][i] == pivot) continue;
+//        return ref.substring(0, i);
+//      }
+//    }
+//    return ref;
+//  }
+//
+//  String longestPalindrome(String s) {
+//    int start, end;
+//    for (int i = 0; i < 2 * len - 1; i++) {
+//      int lo = i / 2, hi = lo + i % 2;
+//      while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
+//        if (hi - lo > end - start) {}
+//        lo -= 1;
+//        hi += 1;
+//      }
+//    }
+//  }
+//
+//  int countSubstrings(String s) {
+//    int cnt;
+//    for (int i = 0; i < 2 * len - 1; i++) {
+//      int lo = i / 2, hi = lo + i % 2;
+//      while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
+//        cnt += 1;
+//        lo -= 1;
+//        hi += 1;
+//      }
+//    }
+//  }
+//
+//  int longestSubstring(String s, int k) {
+//    int[] counter = new int[26];
+//    for (char ch : s.toCharArray()) counter[ch - 'a'] += 1;
+//    for (char ch : s.toCharArray()) {
+//      if (counter[ch - 'a'] >= k) continue;
+//      for (String seg : s.split(String.valueOf(ch))) maxLen = max(maxLen, longestSubstring(seg, k));
+//      return maxLen;
+//    }
+//    return s.length();
+//  }
+//
+//  int myAtoi(String s) {
+//    boolean isNegative = false;
+//    int idx = frontNoBlank(chs, 0);
+//    int n = 0;
+//    for (int i = idx; i < len; i++) {
+//      char ch = chs[i];
+//      if (ch < '0' || ch > '9') break;
+//      int pre = n;
+//      n = n * 10 + ch - '0';
+//      if (pre != n / 10) return n;
+//    }
+//    return n;
+//  }
+//
+//  int compress(char[] chars) {
+//    int write, read;
+//    while (read < len) {
+//      while (start < len && chars[start] == chars[read]) start += 1;
+//      chars[write++] = chars[read];
+//      if (start - read > 1) {
+//        char[] cnt = Integer.toString(start - read).toCharArray();
+//      }
+//      read = start;
+//    }
+//    return write;
+//  }
+//
+//  String reverseWords(String s) {
+//    reverseChs(chs, 0, len - 1);
+//    int start;
+//    while (start < len) {
+//      int end = frontNoBlank(chs, start);
+//      while (end < len && chs[end] != ' ') end += 1;
+//      reverseChs(chs, start, end - 1);
+//      start = end;
+//    }
+//    int write, read = frontNoBlank(chs, 0);
+//    while (read < len) {
+//      while (read < len && chs[read] != ' ') chs[write++] = chs[read++];
+//      read = frontNoBlank(chs, read);
+//      if (read == len) break;
+//      chs[write++] = ' ';
+//    }
+//    return String.valueOf(chs, 0, write);
+//  }
+//
+//  String intToRoman(int num) {
+//    int cur = num;
+//    for (int i = 0; i < NUMs.length; i++) {
+//      int n = NUMs[i];
+//      String ch = ROMANs[i];
+//      while (cur >= n) {
+//        roman.append(ch);
+//        cur -= n;
+//      }
+//    }
+//    return roman.toString();
+//  }
+//
+//  int romanToInt(String s) {
+//    for (int i = 0; i < chs.length; i++) {
+//      int add = mapping.get(chs[i]);
+//      // IV 与 VI 否则常规的做法是累加即可
+//      if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) sum -= add;
+//      else sum += add;
+//    }
+//  }
+//
+//  String convertToTitle(int cn) {
+//    int cur = cn - 1;
+//    while (cur > 0) {
+//      res.append((char) (cur % 26 + 'A'));
+//      cur = cur / 26 - 1;
+//    }
+//    return res.reverse().toString();
+//  }
+//
+//  int[] dailyTemperatures(int[] temperatures) {
+//    for (int i = 0; i < temperatures.length; i++) {
+//      while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
+//        int preIdx = ms.pollLast();
+//        tpts[preIdx] = i - preIdx;
+//      }
+//      ms.offer(i);
+//    }
+//    return new int[] {};
+//  }
+//
+//  int[] nextGreaterElements(int[] nums) {
+//    for (int i = 0; i < 2 * len; i++) {
+//      int n = nums[i % len];
+//      while (!ms.isEmpty() && n > nums[ms.peekLast()]) elms[ms.pollLast()] = n;
+//      ms.offerLast(i % len);
+//    }
+//    return new int[] {};
+//  }
+//
+//  String removeKdigits(String num, int k) {
+//    for (char ch : num.toCharArray()) {
+//      while (k > 0 && ms.length() > 0 && ms.charAt(ms.length() - 1) > ch) {
+//        ms.deleteCharAt(ms.length() - 1);
+//        k -= 1;
+//      }
+//      if (ch == '0' && ms.length() == 0) continue; // 避免前导零
+//      ms.append(ch);
+//    }
+//    String str = ms.substring(0, Math.max(ms.length() - k, 0));
+//  }
+//
+//  int maximalRectangle(char[][] matrix) {
+//    int[] hs = new int[len + 2];
+//    for (char[] rows : matrix) {
+//      for (int i = 0; i < hs.length; i++) {
+//        if (i > 0 && i < len + 1) { // 哨兵内
+//          if (rows[i - 1] == '1') hs[i] += 1;
+//          else hs[i] = 0;
+//        }
+//        while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
+//          int cur = ms.pollLast(), pre = ms.peekLast();
+//          maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
+//        }
+//        ms.offerLast(i);
+//      }
+//    }
+//    return maxArea;
+//  }
+//}
