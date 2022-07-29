@@ -202,7 +202,6 @@ public class AArray extends DefaultArray {
   public int[][] merge(int[][] intervals) {
     Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
     int[][] res = new int[intervals.length][2];
-    // 按照区间起始位置排序
     int idx = -1;
     for (int[] itv : intervals) {
       if (idx == -1 || itv[0] > res[idx][1]) {
@@ -250,6 +249,68 @@ public class AArray extends DefaultArray {
   }
 
   /**
+   * 无重叠区间，最少删除的个数，贪心
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/non-overlapping-intervals/solution/wu-zhong-die-qu-jian-by-leetcode-solutio-cpsb/
+   *
+   * @param intervals
+   * @return
+   */
+  public int eraseOverlapIntervals(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> v1[1] - v2[1]);
+    int len = intervals.length, hi = Integer.MIN_VALUE, cnt = 0;
+    for (int[] itv : intervals) {
+      if (itv[0] < hi) continue;
+      // 无重叠
+      cnt += 1;
+      hi = itv[1];
+    }
+    return len == 0 ? 0 : len - cnt;
+  }
+
+  /**
+   * 最小区间，滑窗
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/smallest-range-covering-elements-from-k-lists/solution/pai-xu-hua-chuang-by-netcan/
+   *
+   * @param nums
+   * @return
+   */
+  public int[] smallestRange(List<List<Integer>> nums) {
+    List<int[]> itvs = new ArrayList<>();
+    // 下方窗口移动需要 i 而比较区间大小用 num
+    for (int i = 0; i < nums.size(); i++) {
+      for (int n : nums.get(i)) itvs.add(new int[] {n, i});
+    }
+    Collections.sort(itvs, (v1, v2) -> v1[0] - v2[0]);
+    int[] res = new int[2];
+    int lo = 0, hi = 0, minGap = Integer.MAX_VALUE;
+    Map<Integer, Integer> window = new HashMap<>();
+    while (hi < itvs.size()) {
+      int add = itvs.get(hi)[1], preHi = hi;
+      hi += 1;
+      // 实际运行改用 getOrDefault
+      window.put(add, window.get(add) + 1);
+      while (window.size() == nums.size()) {
+        // 更新结果
+        int gap = itvs.get(preHi)[0] - itvs.get(lo)[0];
+        if (gap < minGap) {
+          minGap = gap;
+          res = new int[] {itvs.get(lo)[0], itvs.get(preHi)[0]};
+        }
+        // 缩窗
+        int out = itvs.get(lo)[1];
+        lo += 1;
+        window.put(out, window.get(out) - 1);
+        if (window.get(out) == 0) window.remove(out);
+      }
+    }
+    return res;
+  }
+
+  /**
    * 获取最大与第二大的数，无序数组
    *
    * @param nums
@@ -294,7 +355,7 @@ public class AArray extends DefaultArray {
    *
    * @author cenghui
    */
-  public class Solution {
+  public class Solution1 {
     private final int[] nums;
     private final Random random = new Random();
 
@@ -303,7 +364,7 @@ public class AArray extends DefaultArray {
      *
      * @param _nums the nums
      */
-    public Solution(int[] _nums) {
+    public Solution1(int[] _nums) {
       nums = _nums;
     }
 
@@ -328,6 +389,31 @@ public class AArray extends DefaultArray {
         swap(res, i, i + randomIdx);
       }
       return res;
+    }
+  }
+
+  /**
+   * 按权重随机选择 参考
+   * https://leetcode.cn/problems/random-pick-with-weight/solution/gong-shui-san-xie-yi-ti-shuang-jie-qian-8bx50/
+   */
+  public class Solution2 {
+    private final int[] preSum;
+
+    public Solution2(int[] w) {
+      int len = w.length;
+      preSum = new int[len + 1];
+      for (int i = 1; i < len + 1; i++) preSum[i] = preSum[i - 1] + w[i - 1];
+    }
+
+    public int pickIndex() {
+      int len = preSum.length - 1, target = (int) (Math.random() * preSum[len]) + 1;
+      int lo = 1, hi = len;
+      while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (preSum[mid] < target) lo = mid + 1;
+        else hi = mid;
+      }
+      return hi - 1;
     }
   }
 }
@@ -1616,8 +1702,10 @@ class DDuplicate extends DefaultArray {
     int len = nums.length;
     for (int i = 0; i < len; i++) {
       // 不断判断 i 位置上被放入正确的数 nums[i]-1
-      while (nums[i] > 0 && nums[i] <= len && nums[i] != nums[nums[i] - 1]) {
-        swap(nums, nums[i] - 1, i);
+      while (nums[i] > 0 && nums[i] < len + 1) {
+        int tar = nums[i] - 1;
+        if (nums[i] == nums[tar]) break;
+        swap(nums, i, tar);
       }
     }
     for (int i = 0; i < len; i++) {
@@ -1743,7 +1831,7 @@ class Delete extends DefaultArray {
 /** 遍历相关 */
 class Traversal extends DefaultArray {
   /**
-   * 轮转数组 / 旋转数组，反转三次，the whole & [0,k-1] & [k,end]
+   * 轮转数组/旋转数组，反转三次，the whole & [0,k-1] & [k,end]
    *
    * @param nums the nums
    * @param k the k

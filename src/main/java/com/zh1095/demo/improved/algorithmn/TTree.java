@@ -1517,7 +1517,7 @@ class MultiTrees {
  *
  * <p>次序 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
  *
- * <p>按照子组列的顺序，建议按照表格记忆
+ * <p>按照子组列的顺序，建议按照表格记忆，通过索引标识是否元素重复，通过排序再取标识标识值重复
  *
  * <p>剪枝必须做在进入回溯之前，如排序，或回溯选择分支之内，如分支选择非法而 break
  */
@@ -1530,8 +1530,7 @@ class BacktrackingCombinatorics {
    */
   public List<List<Integer>> subsets(int[] nums) {
     List<List<Integer>> res = new ArrayList<>();
-    if (nums.length == 0) return res; // 需要特判
-    bt1(nums, new ArrayDeque<>(), res, 0);
+    if (nums.length > 0) bt1(nums, new ArrayDeque<>(), res, 0); // 需要特判
     return res;
   }
 
@@ -1540,7 +1539,7 @@ class BacktrackingCombinatorics {
     // 另起一条路径
     for (int i = start; i < nums.length; i++) {
       path.offerLast(nums[i]);
-      // 不可选重复，则当前路径下一步选下一个元素
+      // 不可选重复，因此当前路径下一步选下一个元素
       bt1(nums, path, res, i + 1);
       path.pollLast();
     }
@@ -1557,9 +1556,10 @@ class BacktrackingCombinatorics {
    */
   public List<List<Integer>> combinationSum(int[] candidates, int target) {
     List<List<Integer>> res = new ArrayList<>();
-    if (candidates.length == 0) return res;
-    Arrays.sort(candidates);
-    bt2(candidates, new ArrayDeque<>(), res, 0, target);
+    if (candidates.length > 0) {
+      Arrays.sort(candidates);
+      bt2(candidates, new ArrayDeque<>(), res, 0, target);
+    }
     return res;
   }
 
@@ -1593,10 +1593,11 @@ class BacktrackingCombinatorics {
     //    char[] chs = s.toCharArray();
     //    Arrays.sort(chs);
     List<List<Integer>> res = new ArrayList<>();
-    if (nums.length == 0) return res;
-    //    Arrays.sort(nums);
-    bt4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
-    //    return res.toArray(new String[0]);
+    if (nums.length > 0) {
+      //    Arrays.sort(nums);
+      bt4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
+      //    return res.toArray(new String[0]);
+    }
     return res;
   }
 

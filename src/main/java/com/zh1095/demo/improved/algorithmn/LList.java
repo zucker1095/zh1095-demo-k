@@ -107,7 +107,7 @@ public class LList {
    */
   public ListNode middleNode(ListNode head) {
     if (head == null || head.next == null) return head;
-    ListNode lo = head, hi = head.next.next;
+    ListNode lo = head, hi = head;
     while (hi != null && hi.next != null) {
       lo = lo.next;
       hi = hi.next.next;
@@ -228,10 +228,8 @@ class ReverseList extends LList {
     ListNode dummy = new ListNode(), lo = head, hi = head;
     while (hi != null && hi.next != null) {
       ListNode cur = lo;
-      // 头插
       cur.next = dummy.next;
       dummy.next = cur;
-      // 步进
       lo = lo.next;
       hi = hi.next.next;
     }
@@ -263,12 +261,10 @@ class ReverseList extends LList {
       len += 1;
     }
     // 2.find the next count node
-    int count = len - k % len;
-    if (count == len) return head;
+    int cnt = len - k % len;
+    if (cnt == len) return head;
     cur.next = head;
-    for (int i = count; i > 0; i--) {
-      cur = cur.next;
-    }
+    for (int i = cnt; i > 0; i--) cur = cur.next;
     // 3.merge and separate
     ListNode newHead = cur.next;
     cur.next = null;
@@ -358,16 +354,8 @@ class MergeList extends LList {
    * @return the list node
    */
   public ListNode mergeKLists(ListNode[] lists) {
-    if (lists.length < 1) return null;
-    Queue<ListNode> pq =
-        new PriorityQueue<>(
-            lists.length,
-            (ListNode n1, ListNode n2) -> {
-              return n1.val - n2.val;
-            });
-    for (ListNode head : lists) {
-      pq.offer(head);
-    }
+    Queue<ListNode> pq = new PriorityQueue<>(lists.length, (n1, n2) -> n1.val - n2.val);
+    for (ListNode h : lists) pq.offer(h);
     ListNode dummy = new ListNode(), cur = dummy;
     while (!pq.isEmpty()) {
       cur.next = pq.poll();
@@ -567,7 +555,7 @@ class Cyclic extends LList {
    * @return the boolean
    */
   public boolean hasCycle(ListNode head) {
-    return cyclic(head) != null;
+    return isCyclic(head) != null;
   }
 
   /**
@@ -581,7 +569,7 @@ class Cyclic extends LList {
    * @return the list node
    */
   public ListNode detectCycle(ListNode head) {
-    ListNode meet = cyclic(head);
+    ListNode meet = isCyclic(head);
     if (meet == null) return null;
     ListNode finder = head;
     while (meet != finder) {
@@ -591,18 +579,18 @@ class Cyclic extends LList {
     return meet;
   }
 
-  private ListNode cyclic(ListNode head) {
-    boolean cycle = false;
+  private ListNode isCyclic(ListNode head) {
+    boolean cyclic = false;
     ListNode lo = head, hi = head;
-    while (lo != null && hi != null && hi.next != null) {
+    while (hi != null && hi.next != null) {
       lo = lo.next;
       hi = hi.next.next;
       if (lo == hi) {
-        cycle = true;
+        cyclic = true;
         break;
       }
     }
-    return cycle ? lo : null;
+    return cyclic ? lo : null;
   }
 
   /**
@@ -669,8 +657,12 @@ class DeleteList extends LList {
     ListNode dummy = new ListNode(), cur = head;
     dummy.next = head;
     while (cur != null && cur.next != null) {
-      if (cur.val != cur.next.val) cur = cur.next;
-      else cur.next = cur.next.next; // 进入迭代 next 非空
+      if (cur.val != cur.next.val) {
+        cur = cur.next;
+        continue;
+      }
+      // 进入迭代 next 非空
+      cur.next = cur.next.next;
     }
     return dummy.next;
   }
@@ -682,6 +674,7 @@ class DeleteList extends LList {
    * @return list node
    */
   private ListNode deleteDuplicatesII(ListNode head) {
+    // 把上方的 cur 看作 pre.next，并且增加一个内循环即可
     ListNode dummy = new ListNode(), pre = dummy;
     dummy.next = head;
     while (pre.next != null && pre.next.next != null) {
@@ -690,9 +683,7 @@ class DeleteList extends LList {
         continue;
       }
       int pivot = pre.next.val; // 进入迭代非空
-      while (pre.next != null && pre.next.val == pivot) {
-        pre.next = pre.next.next;
-      }
+      while (pre.next != null && pre.next.val == pivot) pre.next = pre.next.next;
     }
     return dummy.next;
   }
@@ -709,20 +700,20 @@ class DeleteList extends LList {
   public ListNode removeZeroSumSublists(ListNode head) {
     ListNode dummy = new ListNode(), cur = dummy;
     dummy.next = head;
-    Map<Integer, ListNode> presumByLastNode = new HashMap<>();
-    // 建立前缀和，覆盖取最终出现的结点
-    int presum = 0;
+    Map<Integer, ListNode> lastNode2PreSum = new HashMap<>();
+    // 覆盖取最终出现的结点
+    int preSum = 0;
     while (cur != null) {
-      presum += cur.val;
-      presumByLastNode.put(presum, cur);
+      preSum += cur.val;
+      lastNode2PreSum.put(preSum, cur);
       cur = cur.next;
     }
     // 若当前节点处 sum 在下一处出现，则表明两结点之间所有节点和为零，因此删除区间所有节点
-    presum = 0;
+    preSum = 0;
     cur = dummy;
     while (cur != null) {
-      presum += cur.val;
-      cur.next = presumByLastNode.get(presum).next;
+      preSum += cur.val;
+      cur.next = lastNode2PreSum.get(preSum).next;
       cur = cur.next;
     }
     return dummy.next;

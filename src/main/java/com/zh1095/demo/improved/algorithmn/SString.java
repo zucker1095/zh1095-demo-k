@@ -1560,6 +1560,33 @@ class MonotonicStack {
     for (char ch : stack) res.append(ch);
     return res.toString();
   }
+
+  /**
+   * 求区间最小数乘区间和的最大值
+   *
+   * <p>参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA
+   *
+   * @param nums
+   * @return
+   */
+  public int calculateIntervalSum(int[] nums) {
+    int maxSum = 0, len = nums.length;
+    int[] preSum = new int[len + 1];
+    for (int i = 1; i < len + 1; i++) preSum[i] = preSum[i - 1] + nums[i - 1];
+    Deque<Integer> stack = new ArrayDeque<>();
+    for (int i = 0; i < len; i++) {
+      while (!stack.isEmpty() && nums[stack.peekLast()] >= nums[i]) {
+        int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = i - 1;
+        maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
+      }
+      stack.offerLast(i);
+    }
+    while (!stack.isEmpty()) {
+      int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = len - 1;
+      maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
+    }
+    return maxSum;
+  }
 }
 
 /** The type Default s string. */
