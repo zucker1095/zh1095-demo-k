@@ -249,7 +249,7 @@ public class AArray extends DefaultArray {
   }
 
   /**
-   * 无重叠区间，最少删除的个数，贪心
+   * 无重叠区间，移除区间的最小数量，使剩余区间互不重叠 ，贪心
    *
    * <p>参考
    * https://leetcode.cn/problems/non-overlapping-intervals/solution/wu-zhong-die-qu-jian-by-leetcode-solutio-cpsb/
@@ -432,7 +432,7 @@ public class AArray extends DefaultArray {
  * <p>链表快排参考「排序链表」
  */
 class QQuick extends DefaultArray {
-  private final Random random = new Random();
+  private final Random random = new Random(); // 「快速排序」
 
   /**
    * 快速排序，三路，循环不变量

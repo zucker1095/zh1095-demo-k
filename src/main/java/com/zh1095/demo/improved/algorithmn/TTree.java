@@ -250,8 +250,8 @@ class Build {
   private TreeNode buildTree1(
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo) {
     if (preLo > preHi) return null;
-    TreeNode root = new TreeNode(preorder[preLo]);
-    int idx = v2i.get(preorder[preLo]), cntL = idx - inLo;
+    int val = preorder[preLo], idx = v2i.get(val), cntL = idx - inLo;
+    TreeNode root = new TreeNode(val);
     root.left = buildTree1(preorder, preLo + 1, preLo + cntL, v2i, inLo);
     root.right = buildTree1(preorder, preLo + cntL + 1, preHi, v2i, idx + 1);
     return root;
@@ -261,33 +261,32 @@ class Build {
   private TreeNode buildTree2(
       int[] postrorder, int postLo, int postHi, Map<Integer, Integer> v2i, int inLo) {
     if (postLo > postHi) return null;
-    TreeNode root = new TreeNode(postrorder[postHi]);
-    int idx = v2i.get(postrorder[postHi]), cntL = idx - inLo;
+    int val = postrorder[postHi], idx = v2i.get(val), cntL = idx - inLo;
+    TreeNode root = new TreeNode(val);
     root.left = buildTree2(postrorder, postLo, postLo + cntL - 1, v2i, inLo);
     root.right = buildTree2(postrorder, postLo + cntL, postHi - 1, v2i, idx + 1);
     return root;
   }
 
-  //  /**
-  //   * 根据前序和后序遍历构造二叉树
-  //   *
-  //   * @param preorder
-  //   * @param postorder
-  //   * @return
-  //   */
+  /**
+   * 根据前序和后序遍历构造二叉树
+   *
+   * @param preorder
+   * @param postorder
+   * @return
+   */
   //  public TreeNode constructFromPrePost(int[] preorder, int[] postorder) {
   //    Map<Integer, Integer> v2i = new HashMap<>();
   //    for (int i = 0; i < postorder.length; i++) v2i.put(postorder[i], i);
   //    return buildTree3(preorder, 0, postorder.length - 1, 0, preorder.length - 1, v2i);
   //  }
-  //
   //  private TreeNode buildTree3(
-  //      int[] preorder, int postLo, int postHi, int preLo, int preHi, Map<Integer, Integer> v2i) {
-  //    if (postLo > postHi || preLo > preHi) return null;
-  //    TreeNode root = new TreeNode(preorder[preLo]);
-  //    int idx = v2i.get(preorder[preLo + 1]), cntL = preLo + idx - postLo + 1;
-  //    root.left = buildTree3(preorder, postLo, idx, preLo + 1, cntL, v2i);
-  //    root.right = buildTree3(preorder, idx + 1, postHi - 1, cntL + 1, preHi, v2i);
+  //      int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int postLo) {
+  //    if (preLo > preHi) return null;
+  //    int val = preorder[postHi], idx = v2i.get(val), cntL = idx - inLo;
+  //    TreeNode root = new TreeNode(val);
+  //    root.left = buildTree2(preorder, postLo, postLo + cntL - 1, v2i, inLo);
+  //    root.right = buildTree2(preorder, postLo + cntL, postHi - 1, v2i, idx + 1);
   //    return root;
   //  }
 

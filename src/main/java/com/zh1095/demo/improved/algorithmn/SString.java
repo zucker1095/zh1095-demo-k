@@ -5,7 +5,7 @@
 // 无重复字符的最长子串
 // 最小覆盖子串
 // 长度最小的子数组
-// 至多包含K个不同字符的最长子串 上述模版一致，准备 window 和 counter 计数，注意处理缩窗的更新
+// 至多包含k个不同字符的最长子串 上述模版一致，准备 window 和 counter 计数，注意处理缩窗的更新
 // 最大连续1的个数III 贪心，将所有 0 都作为 1，触限则缩窗
 // 绝对差不超过限制的最长连续子数组 维护两个单调队列，二者队头之差过限则缩窗出队
 // 滑动窗口的最大值 一个单调队列，记录缩窗的索引与当前窗口内最大值，写入结果集
@@ -76,7 +76,7 @@ public class SString extends DefaultSString {
       int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
           n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
           tmp = n1 + n2 + carry;
-      sum.append(getChar(tmp % BASE));
+      sum.append(tmp % BASE);
       carry = tmp / BASE;
       p1 -= 1;
       p2 -= 1;
@@ -95,13 +95,13 @@ public class SString extends DefaultSString {
    */
   public String reduceStrings(String num1, String num2) {
     final int BASE = 10, l1 = num1.length(), l2 = num2.length();
-    StringBuilder diff = new StringBuilder();
+    StringBuilder gap = new StringBuilder();
     // 1.预处理下方大减小，并判断符号
     if ((l1 == l2 && Integer.parseInt(num1) < Integer.parseInt(num2)) || l1 < l2) {
       String tmp = num1;
       num1 = num2;
       num2 = num1;
-      diff.append('-');
+      gap.append('-');
     }
     // 2.从个位开始相减，注意借位，尾插，最终翻转
     int p1 = l1 - 1, p2 = l2 - 1;
@@ -112,13 +112,13 @@ public class SString extends DefaultSString {
           n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
           tmp = (n1 - n2 - carry + BASE) % BASE;
       // res.insert(0, tmp) 则无需 reverse
-      diff.append(tmp);
+      gap.append(tmp);
       carry = n1 - carry - n2 < 0 ? 1 : 0;
       p1 -= 1;
       p2 -= 1;
     }
     // 3.反转，移除前导零
-    String str = diff.reverse().toString();
+    String str = gap.reverse().toString();
     int idx = frontNoBlank(str.toCharArray(), 0);
     return str.substring(idx, str.length());
   }
@@ -287,24 +287,22 @@ class WWindow {
    */
   public String minWindow(String s, String t) {
     int[] needle = new int[128];
-    for (char ch : t.toCharArray()) {
-      needle[ch] += 1;
-    }
+    for (char ch : t.toCharArray()) needle[ch] += 1;
     // 遍历的指针与结果的始末
-    int start = -1, end = s.length(), counter = t.length();
+    int start = -1, end = s.length(), cnt = t.length();
     int lo = 0, hi = 0;
     while (hi < s.length()) {
       char add = s.charAt(hi);
-      if (needle[add] > 0) counter -= 1;
+      if (needle[add] > 0) cnt -= 1;
       needle[add] -= 1;
       hi += 1;
-      while (counter == 0) {
+      while (cnt == 0) {
         if (end - start > hi - lo) {
           start = lo;
           end = hi;
         }
         char out = s.charAt(lo);
-        if (needle[out] == 0) counter += 1;
+        if (needle[out] == 0) cnt += 1;
         needle[out] += 1;
         lo += 1;
       }
@@ -324,9 +322,9 @@ class WWindow {
    * @return int int
    */
   public int minSubArrayLen(int target, int[] nums) {
-    int winSum = 0, minLen = nums.length + 1;
+    int winSum = 0, len = nums.length, minLen = len + 1;
     int lo = 0, hi = 0;
-    while (hi < nums.length) {
+    while (hi < len) {
       winSum += nums[hi]; // in
       while (winSum >= target) {
         minLen = Math.min(minLen, hi - lo + 1);
@@ -335,7 +333,7 @@ class WWindow {
       }
       hi += 1;
     }
-    //    for (int hi = 0; hi < nums.length; i++) {
+    //    for (int hi = 0; hi < len; i++) {
     //      winSum += nums[hi];
     //      if (winSum == target) {
     //        // 入结果集
@@ -346,7 +344,7 @@ class WWindow {
     //        lo += 1;
     //      }
     //    }
-    return minLen == nums.length + 1 ? 0 : minLen;
+    return minLen == len + 1 ? 0 : minLen;
   }
 
   /**
@@ -357,19 +355,19 @@ class WWindow {
    * @return int int
    */
   public int lengthOfLongestSubstringKDistinct(String s, int k) {
-    int maxLen = 0, counter = k;
+    int maxLen = 0, cnt = k;
     int lo = 0, hi = 0;
     int[] window = new int[128];
     char[] chs = s.toCharArray();
     while (hi < chs.length) {
       char add = chs[hi];
       window[add] += 1;
-      if (window[add] == 1) counter -= 1;
+      if (window[add] == 1) cnt -= 1;
       hi += 1;
-      while (counter < 0) {
+      while (cnt < 0) {
         char out = chs[lo];
         window[out] -= 1;
-        if (window[out] == 0) counter += 1;
+        if (window[out] == 0) cnt += 1;
         lo += 1;
       }
       maxLen = Math.max(maxLen, hi - lo + 1);

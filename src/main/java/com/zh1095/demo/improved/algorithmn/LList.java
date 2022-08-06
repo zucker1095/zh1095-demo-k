@@ -252,20 +252,17 @@ class ReverseList extends LList {
    * @return list node
    */
   public ListNode rotateRight(ListNode head, int k) {
-    if (head == null || head.next == null || k == 0) return head;
+    if (head == null || k == 0) return head;
     ListNode cur = head;
-    // 1.count length
     int len = 1;
     while (cur.next != null) {
       cur = cur.next;
       len += 1;
     }
-    // 2.find the next count node
     int cnt = len - k % len;
     if (cnt == len) return head;
     cur.next = head;
     for (int i = cnt; i > 0; i--) cur = cur.next;
-    // 3.merge and separate
     ListNode newHead = cur.next;
     cur.next = null;
     return newHead;
@@ -346,7 +343,7 @@ class MergeList extends LList {
   }
 
   /**
-   * 合并k个有序链表，大顶堆 / 分治 up-to-bottom
+   * 合并k个有序链表，大顶堆/分治 up-to-bottom
    *
    * <p>下方「排序链表」则为 bottom-to-up
    *

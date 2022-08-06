@@ -10,7 +10,7 @@
 
 // rand7 randA to randB 四种情况 (randX-1)*Y+randY() 生成等概率 [1,X*Y]
 // x 的平方根 牛顿迭代 new=(old+num/old)*0.5
-// Pow(x,n)
+// Pow(x,n) 快速幂
 // 圆圈中最后剩下的数字
 // 第N个数字
 // 多数元素
@@ -915,7 +915,7 @@ class MMath {
   private double quickMulti(double x, int n) {
     if (n == 0) return 1;
     double y = quickMulti(x, n / 2);
-    return y * y * (((n & 1) == 0) ? 1 : x);
+    return y * y * (n % 2 == 0 ? 1 : x);
   }
 
   /**
@@ -1354,23 +1354,23 @@ class GGraph {
    */
   public List<Integer> eventualSafeNodes(int[][] graph) {
     int V = graph.length;
-    int[] colors = new int[V]; // initial with WHITE
+    int[] recStack = new int[V];
     List<Integer> vtxs = new ArrayList<>();
     for (int vtx = 0; vtx < V; vtx++) {
-      if (dfs20(graph, colors, vtx)) vtxs.add(vtx);
+      if (dfs20(graph, recStack, vtx)) vtxs.add(vtx);
     }
     return vtxs;
   }
 
   private final int WHILE = 0, GREY = 1, BLACK = 2;
 
-  private boolean dfs20(int[][] graph, int[] colors, int v) {
-    if (colors[v] > WHILE) return colors[v] == BLACK;
-    colors[v] = GREY;
-    for (int adj : graph[v]) { // 邻接矩阵
-      if (!dfs20(graph, colors, adj)) return false;
+  private boolean dfs20(int[][] graph, int[] recStack, int v) {
+    if (recStack[v] != WHILE) return recStack[v] == BLACK;
+    recStack[v] = GREY;
+    for (int adj : graph[v]) { // 题设邻接列表
+      if (!dfs20(graph, recStack, adj)) return false;
     }
-    colors[v] = BLACK;
+    recStack[v] = BLACK;
     return true;
   }
 
