@@ -1,50 +1,3 @@
-// 路径总和 I~III BFS 记录结果，回溯保存路径，引入前缀和与计数的映射
-// 求根节点到叶节点数字之和 BFS 记录累加结果
-// 从前序与中序遍历序列构造二叉树 先建立中序的映射
-// 二叉树的序列化与反序列化 都是递归，反序列维护一个 idx
-
-// 矩阵中的最长递增路径 记忆化搜索，保存从每个坐标出发的最长长度
-// 岛屿数量 记录 visited 并 dfs 返回数量
-// 岛屿的最大面积 记录 visited 并每次 dfs 返回时更新
-// 不同岛屿的数量 序列化路径并引入 Set 去重
-// 二叉树中所有距离为 k 的结点 先收集父节点，再从节点分别从三个方向 dfs 传参 from 避免回环
-// 被围绕的区域 从边界找 O 点 dfs 标记
-
-// 验证二叉搜索树 中序保留 pre
-// 二叉搜索树中的第k小的元素 中序保留每次递减
-// 恢复二叉搜索树 中序依次找两个逆序点，第二个要找到最后一个
-
-// 二叉搜索树与双向链表 记录 pre 尾插，注意首个节点，其余的依次补充两个指针即可
-// 将有序数组转换为二叉搜索树 二分分治两个区间后连接即可
-// 二叉搜索树的后序遍历序列 单调栈，记录 pre 逆序遍历，若出现非逆序则 false
-// 二叉搜索树中的插入操作 遍历，直到首个节点的值更小
-
-// 二叉树中的最大路径和 总和更新结果，返回其一
-// 二叉树的直径 模板一致
-// 平衡二叉树 dfs 分别返回高度比对，返回 -1 则表示存在不平衡
-// 二叉树展开为链表 后序遍历，依次将左子树挂在根的右，并将根的右挂在左子树的右
-
-// 对称二叉树 BFS 出队时比较，并按序入队左右节点
-// 翻转二叉树 BFS 出队时交换左右节点
-// 二叉树最大宽度 维护每个节点与根的距离，每轮出队相加队列首尾的距离
-// 二叉树的最大深度 BFS 统计清空队列的次数
-
-// LCA 多个判断条件
-// 合并二叉树 BFS 合并值后，依次判断 r1 的左右子树是否空，非空则入队，否则驳接至 r1
-// 相同的树
-// 另一棵树的子树
-// 翻转等价二叉树
-
-// 子集
-// 组合总和
-// 全排列
-// 括号生成 可选集为左右括号的剩余量，当左更多则剪枝
-// 单词搜索 不匹配当前字符则剪枝，否则深入，通过 recStack 避免环路
-// 二叉树的所有路径
-// 复原IP地址 留意特殊的剪枝与 IP 地址合法判断
-// 电话号码的字母组合 类似子集，每次进入下一个可选的分支内
-// 分割回文串 先收集 isPalindrome[lo][hi] 以便剪枝
-
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
@@ -200,20 +153,18 @@ public class TTree {
    *
    * <p>参考 https://mp.weixin.qq.com/s/yewlHvHSilMsrUMFIO8WAA
    *
-   * @param node the node
+   * @param root the node
    * @return next next
    */
-  public _TreeNode getNext(_TreeNode node) {
+  public _TreeNode getNext(_TreeNode root) {
     // 若有右子树，则返回其最左结点
-    if (node.right != null) {
-      _TreeNode cur = node.right;
-      while (cur.left != null) {
-        cur = cur.left;
-      }
+    if (root.right != null) {
+      _TreeNode cur = root.right;
+      while (cur.left != null) cur = cur.left;
       return cur;
     }
     // 否则，回溯父节点记 P，直到 P 的左子树是 node，返回 P
-    _TreeNode cur = node;
+    _TreeNode cur = root;
     while (cur.from != null) {
       if (cur.from.left.equals(cur)) return cur.from;
       cur = cur.from;
@@ -446,13 +397,9 @@ class DDFS {
   }
 
   private void dfs1(char[][] grid, int r, int c) {
-    if (!inArea(grid, r, c) || grid[r][c] == '0') {
-      return;
-    }
+    if (!inArea(grid, r, c) || grid[r][c] == '0') return;
     grid[r][c] = '0';
-    for (int[] dir : DIRECTIONS) {
-      dfs1(grid, r + dir[0], c + dir[1]);
-    }
+    for (int[] dir : DIRECTIONS) dfs1(grid, r + dir[0], c + dir[1]);
   }
 
   /**
@@ -1545,40 +1492,6 @@ class BacktrackingCombinatorics {
   }
 
   /**
-   * 组合总和I，可选重复，对于负数仍通用
-   *
-   * <p>扩展1，不能重复，组合总和II，参下 annotate
-   *
-   * @param candidates the candidates
-   * @param target the target
-   * @return the list
-   */
-  public List<List<Integer>> combinationSum(int[] candidates, int target) {
-    List<List<Integer>> res = new ArrayList<>();
-    if (candidates.length > 0) {
-      Arrays.sort(candidates);
-      bt2(candidates, new ArrayDeque<>(), res, 0, target);
-    }
-    return res;
-  }
-
-  private void bt2(
-      int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
-    if (target == 0) res.add(new ArrayList<>(path));
-    for (int i = start; i < candidates.length; i++) {
-      if (candidates[i] > target) break;
-      // 不可选重复则跳过
-      //      if (i > start && candidates[i - 1] == candidates[i]) continue;
-      path.offerLast(candidates[i]);
-      // 可选重复，则当前路径下一步选当前元素
-      bt2(candidates, path, res, i, target - candidates[i]);
-      // 不可选重复，则当前路径下一步选下一个元素
-      //      bt2(candidates, path, res, i + 1, target - candidates[i]);
-      path.pollLast();
-    }
-  }
-
-  /**
    * 全排列I，无重复
    *
    * <p>扩展1，有重复，全排列II，参下 annotate
@@ -1614,6 +1527,69 @@ class BacktrackingCombinatorics {
       bt4(nums, path, res, recStack);
       path.pollLast();
       recStack[i] = false;
+    }
+  }
+
+  /**
+   * 组合总和I，可选重复，对于负数仍通用
+   *
+   * <p>扩展1，不能重复，组合总和II，参下 annotate
+   *
+   * <p>扩展2，组合总和III，不能重复，只能选 [1:9]
+   *
+   * @param candidates the candidates
+   * @param target the target
+   * @return the list
+   */
+  public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (candidates.length > 0) {
+      Arrays.sort(candidates);
+      bt2(candidates, new ArrayDeque<>(), res, 0, target);
+    }
+    return res;
+  }
+
+  private void bt2(
+      int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
+    if (target == 0) res.add(new ArrayList<>(path));
+    for (int i = start; i < candidates.length; i++) {
+      if (candidates[i] > target) break;
+      // 不可选重复则跳过
+      //      if (i > start && candidates[i - 1] == candidates[i]) continue;
+      path.offerLast(candidates[i]);
+      // 可选重复，则当前路径下一步选当前元素
+      bt2(candidates, path, res, i, target - candidates[i]);
+      // 不可选重复，则当前路径下一步选下一个元素
+      //      bt2(candidates, path, res, i + 1, target - candidates[i]);
+      path.pollLast();
+    }
+  }
+
+  /**
+   * 组合，返回 [1:n] 可能的 k 个数的组合，搜索起点的上界 = n - (k - path.size()) + 1
+   *
+   * <p>n = 7, k = 4，从 5 开始搜索即没有意义，因此搜索起点的上界 + 接下来要选择的元素个数 - 1 = n
+   *
+   * @param n
+   * @param k
+   * @return
+   */
+  public List<List<Integer>> combine(int n, int k) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (k > 0 && n >= k) bt16(n, new ArrayDeque<>(), res, k, 1);
+    return res;
+  }
+
+  private void bt16(int n, Deque<Integer> path, List<List<Integer>> res, int k, int start) {
+    if (path.size() == k) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int i = start; i < n - (k - path.size()) + 2; i++) {
+      path.offerLast(i);
+      bt16(n, path, res, k, i + 1);
+      path.pollLast();
     }
   }
 }
@@ -1809,10 +1785,9 @@ class BacktrackingElse extends DDFS {
    * @return list
    */
   public List<String> letterCombinations(String digits) {
-    // 需要特判
-    if (digits.length() == 0) return new ArrayList<>();
     List<String> res = new ArrayList<>();
-    bt13(digits, new StringBuilder(), res, 0);
+    // 需要特判
+    if (digits.length() > 0) bt13(digits, new StringBuilder(), res, 0);
     return res;
   }
 

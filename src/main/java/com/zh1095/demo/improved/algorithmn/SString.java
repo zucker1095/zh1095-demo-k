@@ -1,39 +1,3 @@
-// 字符串相加 留高位，最终翻转
-// 大数相减 大减小就不用留高位，最终翻转，并移除前导零
-// 字符串相乘 内外迭代，最终移除前导零
-
-// 无重复字符的最长子串
-// 最小覆盖子串
-// 长度最小的子数组
-// 至多包含k个不同字符的最长子串 上述模版一致，准备 window 和 counter 计数，注意处理缩窗的更新
-// 最大连续1的个数III 贪心，将所有 0 都作为 1，触限则缩窗
-// 绝对差不超过限制的最长连续子数组 维护两个单调队列，二者队头之差过限则缩窗出队
-// 滑动窗口的最大值 一个单调队列，记录缩窗的索引与当前窗口内最大值，写入结果集
-
-// 有效的括号 左入右出
-// 有效的括号字符串 贪心维护左括号上下界，* 则 -+
-// 字符串解码 左入右出，出则 repeat 更新，数字则添加，相当于「压缩字符串」的逆过程
-// 简化路径 以 split 提取每段，回退则出栈，否则入栈，最终序列化栈内
-// 验证栈序列 贪心维护两个序列的索引，push 序列去匹 pop 序列的
-// 基本计算器
-
-// 最长公共前缀 以第一个为参照物，垂直遍历
-// 最长回文子串 中心扩散，内循环更新结果
-// 回文子串 同上，内循环递增结果
-// 至少有k个重复字符的最长子串 按字符统计个数后，用频率小于 k 的字符分割 s，再逐串递归取最大
-
-// 字符串转换整数 判断正负，逐位写入时判断溢出
-// 压缩字符串 读写双指针，读则加个内循环，然后逐位写入数字
-// 翻转字符串里的单词 两次翻转，最终再移除首尾与单词间多余的空格
-
-// 整数转罗马数字 从低位开始匹最大的字符，一直匹配直到取次大
-
-// 每日温度
-// 移掉k位数字 单调递减栈，记录值，并避免前导零，最终截取
-// 下一个更大元素II 单调递减栈，记录索引
-// 最大矩形
-// 柱状图中最大的矩形
-
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
@@ -145,22 +109,17 @@ public class SString extends DefaultSString {
   public String multiply(String num1, String num2) {
     if (num1.equals("0") || num2.equals("0")) return "0";
     final int BASE = 10, l1 = num1.length(), l2 = num2.length();
-    int[] product = new int[l1 + l2]; // 100*100=010000
+    int[] pro = new int[l1 + l2]; // 100*100=010000
     for (int p1 = l1 - 1; p1 > -1; p1--) {
       int n1 = num1.charAt(p1) - '0';
       for (int p2 = l2 - 1; p2 > -1; p2--) {
-        int n2 = num2.charAt(p2) - '0', sum = product[p1 + p2 + 1] + n1 * n2;
-        product[p1 + p2 + 1] = sum % BASE;
-        product[p1 + p2] += sum / BASE;
+        int n2 = num2.charAt(p2) - '0', sum = pro[p1 + p2 + 1] + n1 * n2;
+        pro[p1 + p2 + 1] = sum % BASE;
+        pro[p1 + p2] += sum / BASE;
       }
     }
-    // 跳过前导零
-    int idx = product[0] == 0 ? 1 : 0;
     StringBuilder res = new StringBuilder();
-    while (idx < product.length) {
-      res.append(product[idx]);
-      idx += 1;
-    }
+    for (int i = pro[0] == 0 ? 1 : 0; i < pro.length; i++) res.append(pro[i]);
     return res.toString();
   }
 
@@ -627,11 +586,8 @@ class SStack {
       else if (seg.equals("..")) stack.pollLast();
       else stack.offerLast(seg);
     }
-    StringBuilder res = new StringBuilder(stack.size());
-    for (String str : stack) {
-      res.append('/');
-      res.append(str);
-    }
+    StringBuilder res = new StringBuilder();
+    for (String s : stack) res.append('/' + s);
     return res.length() == 0 ? "/" : res.toString();
   }
 
@@ -731,18 +687,17 @@ class SStack {
    * @return boolean
    */
   public boolean validateStackSequences(int[] pushed, int[] popped) {
-    int stTop = 0, popIdx = 0; // 两个数组遍历的索引
+    int pushTop = 0, popIdx = 0; // 两个数组遍历的索引
     //    for (int add = 0; i < N; i++) {
     for (int add : pushed) {
-      pushed[stTop] = add; // 入栈
-      stTop += 1;
+      pushed[pushTop++] = add;
       // 出栈，直至空或序列不匹配
-      while (stTop != 0 && pushed[stTop - 1] == popped[popIdx]) {
-        stTop -= 1;
+      while (pushTop > 0 && pushed[pushTop - 1] == popped[popIdx]) {
+        pushTop -= 1;
         popIdx += 1;
       }
     }
-    return stTop == 0; // 是否还有未出栈的
+    return pushTop == 0; // 是否还有未出栈的
   }
 
   /**
@@ -756,8 +711,8 @@ class SStack {
    * @return string
    */
   public String minRemoveToMakeValid(String s) {
-    int unusedRight = 0;
     char[] chs = s.toCharArray();
+    int unusedRight = 0;
     for (char ch : chs) {
       if (ch == ')') unusedRight += 1;
     }
@@ -766,7 +721,8 @@ class SStack {
       if (ch == '(') {
         if (curLeft >= curRight + unusedRight) continue;
         curLeft += 1;
-      } else if (ch == ')') {
+      }
+      if (ch == ')') {
         unusedRight -= 1;
         if (curLeft <= curRight) continue;
         curRight += 1;
@@ -809,7 +765,7 @@ class SSubString {
     char[] chs = s.toCharArray();
     int start = 0, end = 0, len = chs.length;
     for (int i = 0; i < 2 * len - 1; i++) {
-      int lo = i / 2, hi = lo + i % 2;
+      int lo = i / 2, hi = i / 2 + i % 2;
       while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
         if (hi - lo > end - start) {
           start = lo;
@@ -819,7 +775,7 @@ class SSubString {
         hi += 1;
       }
     }
-    return String.valueOf(chs, start, end + 1);
+    return String.valueOf(chs, start, end - start + 1);
   }
 
   /**
@@ -832,7 +788,7 @@ class SSubString {
     char[] chs = s.toCharArray();
     int cnt = 0, len = chs.length;
     for (int i = 0; i < 2 * len - 1; i++) {
-      int lo = i / 2, hi = lo + i % 2;
+      int lo = i / 2, hi = i / 2 + i % 2;
       while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
         cnt += 1;
         lo -= 1;
@@ -872,7 +828,7 @@ class SSubString {
     char[] chs = s.toCharArray();
     int lo = 0, hi = chs.length - 1;
     while (lo < hi) {
-      // 分两种情况，一是右边减一，二是左边加一
+      // 两种情况，右边减一，或左边加一
       if (chs[lo] != chs[hi]) return isPalindrome(chs, lo, hi - 1) || isPalindrome(chs, lo + 1, hi);
       lo += 1;
       hi -= 1;
@@ -1042,12 +998,9 @@ class WWord extends DefaultSString {
   public String reverseWords(String s) {
     char[] chs = s.toCharArray();
     int len = chs.length;
-    // 翻转整个
-    reverseChs(chs, 0, len - 1);
-    // 带空格逐个翻转单词
-    reverseEachWord(chs, len);
-    // 移除单词间多余的空格
-    return removeBlanks(chs, len);
+    reverseChs(chs, 0, len - 1); // 翻转整个
+    reverseEachWord(chs, len); // 带空格逐个翻转单词
+    return removeBlanks(chs, len); // 移除单词间多余的空格
   }
 
   private void reverseEachWord(char[] chs, int len) {
@@ -1095,11 +1048,11 @@ class WWord extends DefaultSString {
       return 0;
     }
     // 第 2 步：已经访问过的 word 添加到 visited 哈希表里
-    Set<String> visited = new HashSet<>();
     // 分别用左边和右边扩散的哈希表代替单向 BFS 里的队列，它们在双向 BFS 的过程中交替使用
-    Set<String> beginVisited = new HashSet<>();
+    Set<String> recStack = new HashSet<>(),
+        beginVisited = new HashSet<>(),
+        endVisited = new HashSet<>();
     beginVisited.add(beginWord);
-    Set<String> endVisited = new HashSet<>();
     endVisited.add(endWord);
     // 第 3 步：执行双向 BFS，左右交替扩散的步数之和为所求
     int step = 1;
@@ -1113,7 +1066,7 @@ class WWord extends DefaultSString {
       // 逻辑到这里，保证 beginVisited 是相对较小的集合，nextLevelVisited 在扩散完成以后，会成为新的 beginVisited
       Set<String> nextLevelVisited = new HashSet<>();
       for (String word : beginVisited) {
-        if (changeWordEveryOneLetter(word, endVisited, visited, wordSet, nextLevelVisited)) {
+        if (changeWordEveryOneLetter(word, endVisited, recStack, wordSet, nextLevelVisited)) {
           return step + 1;
         }
       }
@@ -1128,7 +1081,7 @@ class WWord extends DefaultSString {
   private boolean changeWordEveryOneLetter(
       String word,
       Set<String> endVisited,
-      Set<String> visited,
+      Set<String> recStack,
       Set<String> wordSet,
       Set<String> nextLevelVisited) {
     char[] chs = word.toCharArray();
@@ -1140,8 +1093,8 @@ class WWord extends DefaultSString {
         String nextWord = String.valueOf(chs);
         if (wordSet.contains(nextWord)) continue;
         if (endVisited.contains(nextWord)) return true;
-        if (visited.contains(nextWord)) continue;
-        visited.add(nextWord);
+        if (recStack.contains(nextWord)) continue;
+        recStack.add(nextWord);
         nextLevelVisited.add(nextWord);
       }
       chs[i] = originCh; // 恢复，下次再用

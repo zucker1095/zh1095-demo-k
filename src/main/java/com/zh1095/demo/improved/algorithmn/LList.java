@@ -228,10 +228,10 @@ class ReverseList extends LList {
     ListNode dummy = new ListNode(), lo = head, hi = head;
     while (hi != null && hi.next != null) {
       ListNode cur = lo;
-      cur.next = dummy.next;
-      dummy.next = cur;
       lo = lo.next;
       hi = hi.next.next;
+      cur.next = dummy.next;
+      dummy.next = cur;
     }
     // 长度为奇数应跳过中点，否则下方比对 lo 会多一位
     if (hi != null) lo = lo.next;
@@ -351,8 +351,9 @@ class MergeList extends LList {
    * @return the list node
    */
   public ListNode mergeKLists(ListNode[] lists) {
+    if (lists == null || lists.length == 0) return null;
     Queue<ListNode> pq = new PriorityQueue<>(lists.length, (n1, n2) -> n1.val - n2.val);
-    for (ListNode h : lists) pq.offer(h);
+    for (ListNode h : lists) if (h != null) pq.offer(h);
     ListNode dummy = new ListNode(), cur = dummy;
     while (!pq.isEmpty()) {
       cur.next = pq.poll();
@@ -370,7 +371,7 @@ class MergeList extends LList {
   }
 }
 
-/** 重排链表 */
+/** 重排链表，遍历的场景通常设计反转，合并与中点 */
 class ReorderList extends LList {
   /**
    * 奇偶链表，如将 1234 调整为 1324，分离为两条链即可。
@@ -381,9 +382,10 @@ class ReorderList extends LList {
    * @return list node
    */
   public ListNode oddEvenList(ListNode head) {
-    if (head == null) return null;
-    ListNode evenHead = head.next, oddTail = getOddTail(head);
-    oddTail.next = evenHead;
+    if (head != null) {
+      ListNode evenHead = head.next, oddTail = splitOddTail(head);
+      oddTail.next = evenHead;
+    }
     return head;
   }
 
@@ -397,12 +399,12 @@ class ReorderList extends LList {
    */
   public ListNode sortOddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode evenHead = head.next, oddTail = getOddTail(head);
+    ListNode evenHead = head.next, oddTail = splitOddTail(head);
     oddTail.next = null;
     return mergeTwoLists(head, reverseList(evenHead));
   }
 
-  private ListNode getOddTail(ListNode head) {
+  private ListNode splitOddTail(ListNode head) {
     if (head == null) return null;
     ListNode odd = head, even = head.next;
     while (even != null && even.next != null) {
@@ -466,9 +468,7 @@ class ReorderList extends LList {
 
   // 链表快排，时间复杂度炸裂
   private ListNode quickSort(ListNode head, ListNode end) {
-    if (head == end || head.next == end) {
-      return head;
-    }
+    if (head == end || head.next == end) return head;
     // 分别为头插与尾插，变向 & 步进
     ListNode ltHead = head, gteTail = head;
     ListNode cur = head.next, nxt;
@@ -485,9 +485,9 @@ class ReorderList extends LList {
     }
     gteTail.next = end;
     // 顺序要求先 lt 再 gte
-    ListNode node = quickSort(ltHead, head);
+    ListNode newHead = quickSort(ltHead, head);
     head.next = quickSort(head.next, end);
-    return node;
+    return newHead;
   }
 
   /**

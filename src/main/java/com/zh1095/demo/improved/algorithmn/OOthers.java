@@ -1,23 +1,3 @@
-// Z字形变换
-// 加油站 最大子序列和增加 start
-// 跳跃游戏 加个索引标识当前可达的上界
-// 划分字母区间 收集每个字母的最后索引，并在遍历时更新当前片段的右边界
-// 把数字翻译成字符串 注意 9 与 26 两个阈值
-
-// LRU addToHead & moveToHead & moveTail & moveNode
-// 实现 Trie 实现 Lookup
-// 设计循环队列 注意尾占据一个哑节点
-
-// rand7 randA to randB 四种情况 (randX-1)*Y+randY() 生成等概率 [1,X*Y]
-// x 的平方根 牛顿迭代 new=(old+num/old)*0.5
-// Pow(x,n) 快速幂
-// 圆圈中最后剩下的数字
-// 第N个数字
-// 多数元素
-// 分数到小数
-
-// 课程表 拓扑排序，构建邻接矩阵并收集入度
-
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;

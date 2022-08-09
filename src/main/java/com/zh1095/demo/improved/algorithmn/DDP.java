@@ -1,35 +1,3 @@
-// 最长递增子序列 贪心，留一个 tails 数组记录
-// 最长回文子序列 徘徊，二维
-// 最长公共子序列 对角，二维
-// 编辑距离 多路，二维
-// 正则表达式匹配 多路，二维
-
-// 最长公共子串 徘徊，一维
-// 单词拆分 徘徊，记录最长单词，将串分为两段分别匹配 dp[j] 与 s[j:i] 并利用最长的长度剪枝
-// 最长连续递增序列 类似「最大子序和」
-// 最长连续序列 通过 set 去重，若存在左邻接则跳过，否则向右遍历，更新长度
-// 乘积最大子数组 留两个状态
-// 最长递增子序列的个数
-
-// 最小路径和 对角，二维
-// 三角形的最小路径和 对角，二维
-// 打家劫舍 记录取或不取当前节点两个状态
-
-// 买卖股票的最佳时机 以天维度分别记录买与卖
-// 接雨水 漏桶效应，双指针聚拢更新
-// 最长有效括号 左括号则需要计入前部分
-// 零钱兑换 外 coin 内 amount
-// 分发糖果 分别从左右遍历一次
-// 最大正方形
-// 完全平方数
-// 整数拆分 不拆与拆
-// 鸡蛋掉落
-
-// 不同路径
-// 圆环回原点 走 s-1 步到 1 与走 s-1 步到 v-1
-// 解码方法 成对判断高低位
-// 不同的二叉搜索树
-
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
@@ -183,19 +151,10 @@ class OptimalSubSequence extends DefaultArray {
     //    int[] from = new int[l1 * l2];
     for (int p1 = 1; p1 <= l1; p1++) {
       for (int p2 = 1; p2 <= l2; p2++) {
-        if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) {
-          dp[p1][p2] = dp[p1 - 1][p2 - 1] + 1;
-          //          from[encoding(p1, p2)] = encoding(p1 - 1, p2 - 1);
-        } else {
-          // dp[p1][p2] = max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
-          if (dp[p1 - 1][p2] > dp[p1][p2 - 1]) {
-            dp[p1][p2] = dp[p1 - 1][p2];
-            //            from[encoding(p1, p2)] = encoding(p1 - 1, p2);
-          } else {
-            dp[p1][p2] = dp[p1][p2 - 1];
-            //            from[encoding(p1, p2)] = encoding(p1, p2 - 1);
-          }
-        }
+        if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) dp[p1][p2] = dp[p1 - 1][p2 - 1] + 1;
+        else dp[p1][p2] = dp[p1 - 1][p2] > dp[p1][p2 - 1] ? dp[p1 - 1][p2] : dp[p1][p2 - 1];
+        //        from[encoding(p1, p2)] = encoding(p1 - 1, p2 - 1);
+        //        from[encoding(p1, p2)] = encoding(p1 - 1, p2) 或 encoding(p1, p2 - 1);
       }
     }
     return dp[l1][l2];

@@ -1,48 +1,3 @@
-// 打乱数组 每次选一个元素与末尾交换
-// 快速排序 三路，lt & gt & cur
-// 数组中的第k个最大元素 heapify 与 sink
-// 合并区间 排序，再分别比对上界与下界
-// 会议室 小根堆依次比较上一个末端与当前遍历的始端
-// 数据流的中位数 使用两个堆，保证大根堆元素始终多一个
-// 数组中的逆序对 引入 tmp 四种情况，判断其一越界，否则二者取小
-
-// 寻找两个有序数组的中位数 分别求 top len/2
-// 在排序数组中查找元素的第一个和最后一个位置 两次经典二分
-// 搜索旋转排序数组 四个分支，判断中点与下界，再target与 [mid, hi] 或 [lo, mid-1] 对比
-// 寻找旋转排序数组中的最小值 二分的比对改为中点与上界比
-// 寻找峰值 二分的比对改为中点与其右侧比对
-
-// 搜索二维矩阵 行间不重叠则两次二分，否则列方向需要线性
-// 有序矩阵中第k小的元素 对值域二分，每次都从左下角开始计数
-
-// 三数之和 内外循环 O(n^2)
-// 最接近的三数之和 三数之和在比对前更新结果即可
-// 有效三角形的个数 类似三数之和，但从上界开始累加
-
-// 最大子序和 前缀和，超过则累加，否则重置，并更新最大值
-// 和为k的子数组 前缀和引入 hash 计数，取 preSum-k 放 preSum
-// 连续数组
-// 和可被k整除的子数组 前缀和引入 hash 计数，取余数放余数
-// 和至少为k的最短子数组 引入单调队列，出队，再更新结果，最后入队
-// 连续的子数组和
-
-// 寻找重复数 类似环形链表
-// 缺失的第一个正数 原地哈希，取负
-// 数组中重复的数字 原地哈希，swap 两个元素
-
-// 删除排序数组中的重复项 相同则跳过
-// 删除字符串中的所有相邻重复项 原地建栈
-
-// 轮转数组 三次翻转
-// 旋转矩阵 依次沿右下斜对角线与垂直中线翻转
-// 螺旋矩阵 记住顺序即可
-
-// 下一个排列 两次找峰，第一次找到后要排序，都找不到就返回排序
-// 下一个更大元素III 都是找两次，但多两步，翻转与取前 len 个
-// 最大数 排序返回就好，但 Java 要转换数据结构两次
-// 最大交换 第一次遍历收集每个数字最后的索引，第二次查找首个比当前的值更大且位更高的数字
-// 字典序的第k小数字 逐个分支统计数目，超则深入，否则前往下个分支
-
 package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
@@ -121,19 +76,16 @@ public class AArray extends DefaultArray {
    * @return
    */
   public void merge(int[] nums1, int m, int[] nums2, int n) {
-    int p1 = m - 1, p2 = n - 1;
-    for (int i = m + n - 1; i >= 0; i--) {
-      int bigger,
-          n1 = p1 < 0 || p1 > nums1.length - 1 ? Integer.MIN_VALUE : nums1[p1],
-          n2 = p2 < 0 || p2 > nums2.length - 1 ? Integer.MIN_VALUE : nums2[p2];
-      if (n1 <= n2) {
-        bigger = n1;
+    int l1 = nums1.length, l2 = nums2.length, p1 = l1 - 1, p2 = l2 - 1;
+    for (int i = l1 + l2 - 1; i > -1; i--) {
+      int n1 = p1 < 0 ? Integer.MIN_VALUE : nums1[p1], n2 = p2 < 0 ? Integer.MIN_VALUE : nums2[p2];
+      if (n1 < n2) {
+        nums1[i] = n1;
         p1 -= 1; // nextIdx()
       } else {
-        bigger = n2;
+        nums1[i] = n2;
         p2 -= 1; // nextIdx()
       }
-      nums1[i] = bigger;
     }
   }
 
@@ -148,7 +100,7 @@ public class AArray extends DefaultArray {
     int[] res = new int[len];
     for (int i = len - 1; i > -1; i--) {
       int a = nums[lo] * nums[lo], b = nums[hi] * nums[hi];
-      if (a <= b) {
+      if (a < b) {
         res[i] = b;
         hi -= 1;
       } else {
@@ -171,21 +123,15 @@ public class AArray extends DefaultArray {
   public int[] intersection(int[] nums1, int[] nums2) {
     Arrays.sort(nums1);
     Arrays.sort(nums2);
-    int l1 = nums1.length, l2 = nums2.length;
+    int l1 = nums1.length, l2 = nums2.length, cur = 0, p1 = 0, p2 = 0;
     int[] res = new int[l1 + l2];
-    int cur = 0, p1 = 0, p2 = 0;
     while (p1 < l1 && p2 < l2) {
       int n1 = nums1[p1], n2 = nums2[p2];
-      if (n1 < n2) {
-        p1 += 1;
-      } else if (n1 > n2) {
-        p2 += 1;
-      } else if (n1 == n2) {
+      if (n1 < n2) p1 += 1;
+      if (n1 > n2) p2 += 1;
+      if (n1 == n2) {
         // 保证加入元素的唯一性
-        if (cur == 0 || n1 != res[cur - 1]) {
-          res[cur] = n1;
-          cur += 1;
-        }
+        if (cur == 0 || n1 != res[cur - 1]) res[cur++] = n1;
         p1 += 1;
         p2 += 1;
       }
@@ -285,7 +231,7 @@ public class AArray extends DefaultArray {
       for (int n : nums.get(i)) itvs.add(new int[] {n, i});
     }
     Collections.sort(itvs, (v1, v2) -> v1[0] - v2[0]);
-    int[] res = new int[2];
+    int[] minWin = new int[2];
     int lo = 0, hi = 0, minGap = Integer.MAX_VALUE;
     Map<Integer, Integer> window = new HashMap<>();
     while (hi < itvs.size()) {
@@ -298,7 +244,7 @@ public class AArray extends DefaultArray {
         int gap = itvs.get(preHi)[0] - itvs.get(lo)[0];
         if (gap < minGap) {
           minGap = gap;
-          res = new int[] {itvs.get(lo)[0], itvs.get(preHi)[0]};
+          minWin = new int[] {itvs.get(lo)[0], itvs.get(preHi)[0]};
         }
         // 缩窗
         int out = itvs.get(lo)[1];
@@ -307,7 +253,7 @@ public class AArray extends DefaultArray {
         if (window.get(out) == 0) window.remove(out);
       }
     }
-    return res;
+    return minWin;
   }
 
   /**
@@ -594,7 +540,7 @@ class HHeap extends DefaultArray {
         maxHeap = new PriorityQueue<>((a, b) -> b - a);
 
     public void addNum(int n) {
-      if (maxHeap.size() > minHeap.size()) {
+      if (minHeap.size() < maxHeap.size()) {
         if (n < maxHeap.peek()) {
           minHeap.add(maxHeap.poll());
           maxHeap.add(n);
@@ -620,26 +566,26 @@ class HHeap extends DefaultArray {
 
   /** 数据流的第k大，维护一个小根堆 */
   public class KthLargest {
-    private final int[] minheap;
+    private final int[] minHeap;
     private final int ranking;
     int size = 0;
 
     public KthLargest(int k, int[] nums) {
-      minheap = new int[k];
+      minHeap = new int[k];
       ranking = k;
       for (int i = 0; i < nums.length; i++) add(nums[i]);
     }
 
     public int add(int val) {
       if (size < ranking) {
-        minheap[size] = val;
-        swim(minheap, size);
+        minHeap[size] = val;
+        swim(minHeap, size);
         size += 1;
-      } else if (minheap[0] < val) {
-        minheap[0] = val;
-        sink(minheap, 0, ranking - 1);
+      } else if (minHeap[0] < val) {
+        minHeap[0] = val;
+        sink(minHeap, 0, ranking - 1);
       }
-      return minheap[0];
+      return minHeap[0];
     }
   }
 
@@ -2039,26 +1985,26 @@ class DicOrder extends DefaultSString {
    * @return
    */
   public int nextGreaterElement(int n) {
-    char[] chs = String.valueOf(n).toCharArray();
+    char[] nums = String.valueOf(n).toCharArray();
     // 1.找首个
-    int len = chs.length, peak = len - 2;
+    int len = nums.length, peak = len - 2;
     while (peak > -1) {
-      if (chs[peak] < chs[peak + 1]) break;
+      if (nums[peak] < nums[peak + 1]) break;
       peak -= 1;
     }
     if (peak == -1) return -1;
     // 2.找首个
     for (int i = len - 1; i > peak; i--) {
-      if (chs[peak] >= chs[i]) continue;
-      swap(chs, peak, i);
+      if (nums[peak] >= nums[i]) continue;
+      swap(nums, peak, i);
       break;
     }
     // 3.翻转
-    reverseChs(chs, peak + 1, len - 1);
+    reverseChs(nums, peak + 1, len - 1);
     // 返回结果，将 char[] 转为 int
-    long res = Integer.valueOf(chs.toString());
+    int res = Integer.valueOf(nums.toString());
     //    for (int i = 0; i < len; i++) res = res * 10 + (chs[i] - '0');
-    return res >= Integer.MAX_VALUE ? -1 : (int) (res);
+    return res >= Integer.MAX_VALUE ? -1 : res;
   }
 
   /**
@@ -2169,14 +2115,12 @@ class DicOrder extends DefaultSString {
     List<Integer> res = new ArrayList<>();
     int num = 1;
     while (res.size() < n) {
-      while (num <= n) { // 1.深度遍历
+      while (num <= n) { // 1.DFS
         res.add(num);
         num *= 10;
       }
       // 2.回溯，当前层子节点遍历完，或不存在节点(因为已经大于 n)，则返回上一层
-      while (num % 10 == 9 || num > n) {
-        num /= 10;
-      }
+      while (num % 10 == 9 || num > n) num /= 10;
       num += 1; // 3.根的下一个子节点
     }
     return res;
@@ -2194,25 +2138,23 @@ class DicOrder extends DefaultSString {
    */
   public String getPermutation(int n, int k) {
     // 阶乘即该节点叶节点总数
-    final int[] factorials = new int[n + 1];
-    factorials[0] = 1;
-    for (int i = 1; i < n; i++) {
-      factorials[i] = factorials[i - 1] * i;
-    }
+    int[] dp = new int[n + 1];
+    dp[0] = 1;
+    for (int i = 1; i < n; i++) dp[i] = dp[i - 1] * i;
     boolean[] visited = new boolean[n + 1];
-    StringBuilder permutation = new StringBuilder(n);
+    StringBuilder res = new StringBuilder(n);
     for (int i = n - 1; i > -1; i--) {
-      int cnt = factorials[i];
+      int cnt = dp[i];
       for (int j = 1; j <= n; j++) {
         if (!visited[j] && cnt >= k) {
           visited[j] = true;
-          permutation.append(j);
+          res.append(j);
           break;
         }
         if (cnt < k) k -= cnt;
       }
     }
-    return permutation.toString();
+    return res.toString();
   }
 
   /**
