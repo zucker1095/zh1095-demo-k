@@ -423,9 +423,7 @@ class DDFS {
     if (!inArea(grid, r, c) || grid[r][c] == 0) return 0;
     grid[r][c] = 0; // marking to avoid loop
     int pathLen = 1;
-    for (int[] dir : DIRECTIONS) {
-      pathLen += dfs2(grid, r + dir[0], c + dir[1]);
-    }
+    for (int[] dir : DIRECTIONS) pathLen += dfs2(grid, r + dir[0], c + dir[1]);
     return pathLen;
   }
 
@@ -436,11 +434,11 @@ class DDFS {
    * @return int int
    */
   public int longestIncreasingPath(int[][] matrix) {
-    int ROW = matrix.length, COL = matrix[0].length;
-    int[][] lens = new int[ROW][COL];
+    int row = matrix.length, col = matrix[0].length;
+    int[][] lens = new int[row][col];
     int maxLen = 0;
-    for (int r = 0; r < ROW; r++) {
-      for (int c = 0; c < COL; c++) {
+    for (int r = 0; r < row; r++) {
+      for (int c = 0; c < col; c++) {
         maxLen = Math.max(maxLen, dfs3(matrix, r, c, lens));
       }
     }
@@ -448,12 +446,12 @@ class DDFS {
   }
 
   private int dfs3(int[][] matrix, int r, int c, int[][] lens) {
-    if (lens[r][c] != 0) return lens[r][c];
+    if (lens[r][c] > 0) return lens[r][c];
     lens[r][c] += 1;
     for (int[] dir : DIRECTIONS) {
       int nr = r + dir[0], nc = c + dir[1];
       if (!inArea(matrix, nr, nc) || matrix[nr][nc] <= matrix[r][c]) continue;
-      lens[r][c] = Math.max(lens[r][c], dfs3(matrix, nr, nc, lens) + 1);
+      lens[r][c] = Math.max(lens[r][c], 1 + dfs3(matrix, nr, nc, lens));
     }
     return lens[r][c];
   }
@@ -541,15 +539,15 @@ class DDFS {
    * @param board
    */
   public void solve(char[][] board) {
-    int ROW = board.length, COL = board[0].length;
-    for (int r = 0; r < ROW; r++) {
-      for (int c = 0; c < COL; c++) {
-        if (board[r][c] == 'O' && (r == 0 || c == 0 || r == ROW - 1 || c == COL - 1))
+    int row = board.length, col = board[0].length;
+    for (int r = 0; r < row; r++) {
+      for (int c = 0; c < col; c++) {
+        if (board[r][c] == 'O' && (r == 0 || c == 0 || r == row - 1 || c == col - 1))
           dfs16(board, r, c);
       }
     }
-    for (int r = 0; r < ROW; r++) {
-      for (int c = 0; c < COL; c++) {
+    for (int r = 0; r < row; r++) {
+      for (int c = 0; c < col; c++) {
         if (board[r][c] == 'O') board[r][c] = 'X';
         if (board[r][c] == '#') board[r][c] = 'O';
       }
@@ -633,18 +631,17 @@ class BBSTInorder {
    * @return int int
    */
   public int kthSmallest(TreeNode root, int k) {
-    int cnt = k;
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
-        cur = cur.left; // right
+        cur = cur.left;
       }
       cur = stack.pollLast();
-      cnt -= 1;
-      if (cnt == 0) return cur.val;
-      cur = cur.right; // left
+      k -= 1;
+      if (k == 0) return cur.val;
+      cur = cur.right;
     }
     return -1; // impossible
   }
@@ -1014,7 +1011,7 @@ class Postorder {
     if (l == -1) return -1;
     int r = getHeight(root.right);
     if (r == -1) return -1;
-    return Math.abs(l - r) < 2 ? Math.max(l, r) + 1 : -1;
+    return Math.abs(l - r) > 1 ? -1 : Math.max(l, r) + 1;
   }
 
   /**
@@ -1027,12 +1024,12 @@ class Postorder {
     flatten(root.left);
     flatten(root.right);
     // 依次将左子树挂在根的右，并将根的右挂在左子树的右，即后驱
-    TreeNode oldRight = root.right;
+    TreeNode preR = root.right;
     root.right = root.left;
     root.left = null;
     TreeNode tail = root;
     while (tail.right != null) tail = tail.right;
-    tail.right = oldRight;
+    tail.right = preR;
   }
 
   /**
@@ -1206,6 +1203,7 @@ class BBFS {
    * @return
    */
   public boolean isSymmetric(TreeNode root) {
+    //    return root != null && dfs19(root.left, root.right);
     // 不足两个节点
     if (root == null || (root.left == null && root.right == null)) return true;
     Queue<TreeNode> queue = new LinkedList<>();
@@ -1225,6 +1223,13 @@ class BBFS {
     return true;
   }
 
+  private boolean dfs19(TreeNode l, TreeNode r) {
+    if (l == null && r == null) return true;
+    if (l == null || r == null) return false;
+    if (l.val != r.val) return false;
+    return dfs19(l.left, r.right) && dfs19(l.right, r.left);
+  }
+
   /**
    * 翻转二叉树/二叉树的镜像，前序/逐一交换遍历的结点的左右子树
    *
@@ -1232,9 +1237,8 @@ class BBFS {
    * @return tree node
    */
   public TreeNode invertTree(TreeNode root) {
-    if (root == null) return null;
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(root);
+    if (root != null) queue.offer(root);
     while (!queue.isEmpty()) {
       TreeNode n = queue.poll(), tmp = n.left;
       n.left = n.right;
@@ -1246,6 +1250,25 @@ class BBFS {
   }
 
   /**
+   * 找树左下角的值
+   *
+   * @param root
+   * @return
+   */
+  public int findBottomLeftValue(TreeNode root) {
+    int res = 0;
+    Queue<TreeNode> queue = new LinkedList();
+    if (root != null) queue.offer(root);
+    while (!queue.isEmpty()) {
+      TreeNode n = queue.poll();
+      if (n.right != null) queue.offer(n.right);
+      if (n.left != null) queue.offer(n.left);
+      res = n.val;
+    }
+    return res;
+  }
+
+  /**
    * 二叉树的最大深度，后序
    *
    * <p>扩展1，n 叉树，参考「N叉树的最大深度」，下方改为遍历所有子结点即可
@@ -1254,22 +1277,19 @@ class BBFS {
    * @return int int
    */
   public int maxDepth(TreeNode root) {
-    if (root == null) return 0;
-    int maxDepth = 0;
+    int depth = 0;
     Queue<TreeNode> queue = new LinkedList<>();
-    queue.offer(root);
+    if (root != null) queue.offer(root);
     while (!queue.isEmpty()) {
+      depth += 1;
       for (int i = queue.size(); i > 0; i--) {
         TreeNode n = queue.poll();
         if (n.left != null) queue.offer(n.left);
         if (n.right != null) queue.offer(n.right);
-        //        for (TreeNode node : cur.children) {
-        //          queue.offer(node);
-        //        }
+        //        for (TreeNode node : cur.children) queue.offer(node);
       }
-      maxDepth += 1;
     }
-    return maxDepth;
+    return depth;
   }
 
   /**
@@ -1285,7 +1305,8 @@ class BBFS {
     Deque<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
-      maxWidth = Math.max(maxWidth, queue.peekLast().val - queue.peekFirst().val + 1);
+      int preWidth = queue.peekLast().val - queue.peekFirst().val + 1;
+      maxWidth = Math.max(maxWidth, preWidth);
       for (int i = queue.size(); i > 0; i--) {
         TreeNode n = queue.poll();
         if (n.left != null) {
@@ -1299,6 +1320,40 @@ class BBFS {
       }
     }
     return maxWidth;
+  }
+
+  /**
+   * 完全二叉树的节点个数
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/count-complete-tree-nodes/solution/c-san-chong-fang-fa-jie-jue-wan-quan-er-cha-shu-de/
+   *
+   * @param root
+   * @return
+   */
+  public int countNodes(TreeNode root) {
+    int dep = 1, rootDep = getFullDepth(root), cnt = 0;
+    TreeNode cur = root;
+    while (cur != null) {
+      TreeNode r = cur.right;
+      if (r != null && dep + getFullDepth(r) == rootDep) {
+        cur = r;
+        cnt += Math.pow(2, rootDep - dep - 1);
+      } else {
+        cur = cur.left;
+      }
+      dep += 1;
+    }
+    return (int) (cnt + Math.pow(2, rootDep - 1));
+  }
+
+  private int getFullDepth(TreeNode root) {
+    int dep = 0;
+    while (root != null) {
+      root = root.left;
+      dep += 1;
+    }
+    return dep;
   }
 }
 
@@ -1614,13 +1669,10 @@ class BacktrackingSearch extends DDFS {
   private void bt0(TreeNode root, Deque<Integer> path, List<List<Integer>> res, int target) {
     if (root == null) return;
     path.offerLast(root.val);
-    int sum = target - root.val;
-    if (sum == 0 && root.left == null && root.right == null) {
-      res.add(new ArrayList<>(path));
-      return;
-    }
-    bt0(root.left, path, res, sum);
-    bt0(root.right, path, res, sum);
+    target -= root.val;
+    if (root.left == null && root.right == null && target == 0) res.add(new ArrayList(path));
+    bt0(root.left, path, res, target);
+    bt0(root.right, path, res, target);
     path.pollLast();
   }
 
@@ -1631,9 +1683,9 @@ class BacktrackingSearch extends DDFS {
    * @return list list
    */
   public List<String> generateParenthesis(int n) {
-    List<String> pts = new ArrayList<>();
-    if (n > 0) bt7(n, n, new StringBuilder(), pts); // 需要特判
-    return pts;
+    List<String> res = new ArrayList<>();
+    if (n > 0) bt7(n, n, new StringBuilder(), res); // 需要特判
+    return res;
   }
 
   // 可选集为左右括号的剩余量
@@ -1663,11 +1715,11 @@ class BacktrackingSearch extends DDFS {
    * @return boolean boolean
    */
   public boolean exist(char[][] board, String word) {
-    int ROW = board.length, COL = board[0].length;
+    int row = board.length, col = board[0].length;
     char[] chs = word.toCharArray();
-    boolean[][] recStack = new boolean[ROW][COL];
-    for (int r = 0; r < ROW; r++) {
-      for (int c = 0; c < COL; c++) {
+    boolean[][] recStack = new boolean[row][col];
+    for (int r = 0; r < row; r++) {
+      for (int c = 0; c < col; c++) {
         if (bt8(board, r, c, chs, 0, recStack)) return true;
       }
     }
@@ -1680,8 +1732,8 @@ class BacktrackingSearch extends DDFS {
     recStack[r][c] = true;
     for (int[] dir : DIRECTIONS) {
       int nX = r + dir[0], nY = c + dir[1];
-      if (!recStack[nX][nY]
-          && inArea(board, nX, nY)
+      if (inArea(board, nX, nY)
+          && !recStack[nX][nY]
           && bt8(board, nX, nY, word, start + 1, recStack)) return true;
     }
     recStack[r][c] = false;
@@ -1982,7 +2034,7 @@ class BacktrackingElse extends DDFS {
   /**
    * 验证IP地址
    *
-   * <p>TODO 参考 https://leetcode.cn/problems/validate-ip-address/solution/by-ac_oier-s217/
+   * <p>参考 https://leetcode.cn/problems/validate-ip-address/solution/by-ac_oier-s217/
    *
    * @param ip
    * @return

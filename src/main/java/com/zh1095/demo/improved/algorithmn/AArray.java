@@ -392,23 +392,24 @@ class QQuick extends DefaultArray {
   public void quickSort(int[] nums, int lo, int hi) {
     if (lo >= hi) return; // 对 [lo:hi] 快排
     int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
-    // 下方需要确保虚拟头 <pivot，因此从 lt+1 开始遍历
+    // 下方需要确保虚拟头 <pivot 即 lt=lo 也属于界外，并能够从 cur=lo+1 界内开始遍历
     swap(nums, pivotIdx, lo);
     // 虚拟头尾，保证界外，因此下方需要先步进，再 swap
     int lt = lo, cur = lt + 1, gt = hi + 1;
     while (cur < gt) {
-      if (nums[cur] < pivot) {
+      int n = nums[cur];
+      if (n < pivot) {
         lt += 1;
         swap(nums, cur, lt);
         cur += 1;
       }
-      if (nums[cur] == pivot) cur += 1;
-      if (nums[cur] > pivot) {
+      if (n == pivot) cur += 1;
+      if (n > pivot) {
         gt -= 1;
         swap(nums, cur, gt);
       }
     }
-    // 扰动，保证等概率分布
+    // 扰动，保证等概率分布，因此下方是排序 lt-1
     swap(nums, lo, lt);
     quickSort(nums, lo, lt - 1);
     quickSort(nums, gt, hi);
@@ -685,7 +686,6 @@ class HHeap extends DefaultArray {
 
 /** 分治相关，归并排序 */
 class MMerge extends DefaultArray {
-  private int cnt = 0; // 「数组中的逆序对」
 
   /**
    * 归并排序，up-to-bottom 递归，先分后合
@@ -711,39 +711,34 @@ class MMerge extends DefaultArray {
     return cnt;
   }
 
+  private int cnt = 0; // 「数组中的逆序对」
+
   // 合并 nums[lo:mid] & nums[mid+1:hi] 即排序区间 [lo,hi]
   // 四种情况，其一遍历结束 & 比较
   // 写成 < 会丢失稳定性，因为相同元素原来靠前的排序以后依然靠前，因此排序稳定性的保证必需 <=
-  private void divideAndCount(int[] nums, int[] tmp, int start, int end) {
+  private void divideAndCount(int[] nums, int[] tmp, int lo, int hi) {
     // 对于双指针，假如迭代内部基于比较，则不需要=，假如需要统计每个元素，则需要
-    if (start >= end) return;
-    int mid = start + (end - start) / 2;
-    divideAndCount(nums, tmp, start, mid);
-    divideAndCount(nums, tmp, mid + 1, end);
+    if (lo >= hi) return;
+    int mid = lo + (hi - lo) / 2;
+    divideAndCount(nums, tmp, lo, mid);
+    divideAndCount(nums, tmp, mid + 1, hi);
     // curing 因为此时 [lo,mid] & [mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
     if (nums[mid] <= nums[mid + 1]) return;
     // 合并 nums[start,mid] & nums[mid+1,end]
-    cnt += mergeAndCount(nums, tmp, start, mid, end);
+    cnt += mergeAndCount(nums, tmp, lo, mid, hi);
   }
 
-  private int mergeAndCount(int[] nums, int[] tmp, int start, int mid, int end) {
-    if (end > start) System.arraycopy(nums, start, tmp, start, end - start + 1);
-    int curCnt = 0, p1 = start, p2 = mid + 1;
+  private int mergeAndCount(int[] nums, int[] tmp, int start1, int start2, int end) {
+    if (end > start1) System.arraycopy(nums, start1, tmp, start1, end - start1 + 1);
+    int curCnt = 0, p1 = start1, p2 = start2 + 1;
     // 其一越界，否则二者取小
-    for (int i = start; i <= end; i++) {
-      if (p1 == mid + 1) {
-        nums[i] = tmp[p2];
-        p2 += 1;
-      } else if (p2 == end + 1) {
-        nums[i] = tmp[p1];
-        p1 += 1;
-      } else if (tmp[p1] <= tmp[p2]) {
-        nums[i] = tmp[p1];
-        p1 += 1;
-      } else if (tmp[p1] > tmp[p2]) {
-        nums[i] = tmp[p2];
-        p2 += 1;
-        curCnt += mid - p1 + 1; // 统计逆序的数目
+    for (int i = start1; i <= end; i++) {
+      if (p1 == start2 + 1) nums[i] = tmp[p2++];
+      else if (p2 == end + 1) nums[i] = tmp[p1++];
+      else if (tmp[p1] <= tmp[p2]) nums[i] = tmp[p1++];
+      else if (tmp[p1] > tmp[p2]) {
+        nums[i] = tmp[p2++];
+        curCnt += start2 - p1 + 1; // 统计逆序的数目
       }
     }
     return curCnt;
@@ -762,10 +757,8 @@ class MMerge extends DefaultArray {
    */
   public int[][] aggrateScrew2Nut(int[] screws, int[] nuts) {
     int len = screws.length;
-    int[][] screw2Nut = new int[len][len]; // 可能存在不成对。
-
+    int[][] screw2Nut = new int[len][len]; // 可能存在不成对
     for (int screw : screws) {}
-
     return screw2Nut;
   }
 
@@ -870,10 +863,9 @@ class DichotomyClassic extends DefaultArray {
    * @return int [ ]
    */
   public int[] searchRange(int[] nums, int target) {
-    int len = nums.length;
-    if (len < 1 || target < nums[0] || nums[len - 1] < target) return new int[] {-1, -1};
-    int lower = lowerBound(nums, 0, len - 1, target);
-    return lower == -1 ? new int[] {-1, -1} : new int[] {lower, upperBound(nums, target, lower)};
+    int lower = lowerBound(nums, 0, nums.length - 1, target);
+    if (lower == -1) return new int[] {-1, -1};
+    return new int[] {lower, upperBound(nums, target, lower)};
   }
 
   /**
@@ -1014,12 +1006,13 @@ class DichotomyElse extends DefaultArray {
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
-    // II 只能逐行对列二分
+    // II 由于行间的区间可能重叠，因此只能逐行二分
     //    for (int r = 0; r < matrix.length; r++) {
     //      int c = upperBound(matrix[r], target, 0);
     //      if (c != -1 && matrix[r][c] == target) return true;
     //    }
-    // I 先二分找到最后一个满足 matrix[x]][0] <= t 的行，再对该列二分
+    //    return false;
+    // I 行间的区间不重叠，因此先二分找到最后一个满足 matrix[x]][0] <= t 的行，再对该列二分
     int lo = 0, hi = matrix.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo + 1) / 2;
@@ -1050,8 +1043,8 @@ class DichotomyElse extends DefaultArray {
     // 左上角与右下角即数值的上下界
     int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
       // O(n^2) 每次都找矩阵 <=mid 的元素个数，判断目标分别在 [lo,mid] or [mid+1,hi]
+      int mid = lo + (hi - lo) / 2;
       if (countLte(matrix, mid) < k) lo = mid + 1;
       else hi = mid;
     }
@@ -1060,14 +1053,14 @@ class DichotomyElse extends DefaultArray {
 
   // 从左下角开始遍历，找每列最后一个 <=target 的数即知道每一列有多少个数 <=target
   private int countLte(int[][] matrix, int target) {
-    int cnt = 0, c = 0, r = matrix.length - 1;
+    int cnt = 0, r = matrix.length - 1, c = 0;
     while (-1 < r && c < matrix[0].length) {
       if (matrix[r][c] <= target) {
-        // 第 j 列有 i+1 个元素 <= mid
+        // 第 c 列有 r+1 个元素 <= mid
         cnt += r + 1;
         c += 1;
       } else {
-        // 第 j 列目前的数大于 mid，需要继续在当前列往上找
+        // 第 c 列目前的数大于 mid，需要继续在当前列往上找
         r -= 1;
       }
     }
@@ -1217,13 +1210,11 @@ class SSum extends DefaultArray {
    */
   public int threeSumClosest(int[] nums, int target) {
     Arrays.sort(nums);
-    int cSum = nums[0] + nums[1] + nums[2]; // 题设至少三位
-    for (int i = 0; i < nums.length; i++) {
-      int p = nums[i];
-      if (p > target) break;
-      int lo = i + 1, hi = nums.length - 1;
+    int len = nums.length, cSum = nums[0] + nums[1] + nums[2];
+    for (int i = 0; i < len; i++) {
+      int lo = i + 1, hi = len - 1;
       while (lo < hi) {
-        int sum = p + nums[lo] + nums[hi];
+        int sum = nums[i] + nums[lo] + nums[hi];
         if (Math.abs(target - sum) < Math.abs(target - cSum)) cSum = sum;
         if (sum < target) lo += 1;
         if (sum == target) return cSum;
@@ -1434,7 +1425,7 @@ class PreSum {
     return cnt;
   }
 
-  // 以下均需要区间和，因此前缀和为数组。
+  // 以下前缀和为数组。
 
   /**
    * 和至少为k的最短子数组，返回长度，和至少，前缀和数组 & 单调队列
@@ -1648,15 +1639,13 @@ class DDuplicate extends DefaultArray {
     int len = nums.length;
     for (int i = 0; i < len; i++) {
       // 不断判断 i 位置上被放入正确的数 nums[i]-1
-      while (nums[i] > 0 && nums[i] < len + 1) {
+      while (0 < nums[i] && nums[i] < len + 1) {
         int tar = nums[i] - 1;
         if (nums[i] == nums[tar]) break;
         swap(nums, i, tar);
       }
     }
-    for (int i = 0; i < len; i++) {
-      if (nums[i] != i + 1) return i + 1;
-    }
+    for (int i = 0; i < len; i++) if (nums[i] != i + 1) return i + 1;
     return len + 1; // 没有缺失
   }
 }
@@ -1958,20 +1947,21 @@ class DicOrder extends DefaultSString {
   public void nextPermutation(int[] nums) {
     int len = nums.length, peak = len - 1; // nums.length - 2
     while (peak > 0) {
-      // 1.find the first peak and sort from its idx to end
       if (nums[peak - 1] < nums[peak]) {
         Arrays.sort(nums, peak, len);
         break;
       }
       peak -= 1;
     }
-    // 2.find the second peak larger than IDX-1 and swap them
+    if (peak == 0) {
+      Arrays.sort(nums);
+      return;
+    }
     for (int i = peak; i < len; i++) {
       if (nums[peak - 1] >= nums[i]) continue;
       swap(nums, peak - 1, i);
       return;
     }
-    // 3.Otherwise, monotonic without peaks
     Arrays.sort(nums);
   }
 
@@ -2004,7 +1994,7 @@ class DicOrder extends DefaultSString {
     // 返回结果，将 char[] 转为 int
     int res = Integer.valueOf(nums.toString());
     //    for (int i = 0; i < len; i++) res = res * 10 + (chs[i] - '0');
-    return res >= Integer.MAX_VALUE ? -1 : res;
+    return res == Integer.MAX_VALUE ? -1 : res;
   }
 
   /**
@@ -2031,13 +2021,10 @@ class DicOrder extends DefaultSString {
     strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
     StringBuilder maxNum = new StringBuilder();
     for (String n : strs) maxNum.append(n);
-    return maxNum.toString();
-    // 「最小数」需要去除前导零，因为可能有 02>20
-    //    int start = 0;
-    //    while (start < nums.length - 1 && res.charAt(start) == '0') {
-    //      start += 1;
-    //    }
-    //    return res.substring(start);
+    // 「最大数」需要去除前导零，因为可能有 02>20
+    int start = 0;
+    while (start < nums.length - 1 && maxNum.charAt(start) == '0') start += 1;
+    return maxNum.substring(start);
   }
 
   /**
@@ -2075,18 +2062,19 @@ class DicOrder extends DefaultSString {
    * @return int int
    */
   public int findKthNumber(int n, int k) {
-    int cnt = 1, prefix = 1; // 字典序最小即起点为 1，其前缀为 1
-    while (cnt < k) {
-      int curCnt = count(prefix, n);
-      if (curCnt + cnt > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
-        prefix *= 10;
-        cnt += 1;
+    int lo = 1, hi = n; // 前缀为 1
+    k -= 1; // 字典序最小即起点为 1
+    while (k > 0) {
+      int curCnt = count(lo, hi);
+      if (curCnt > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
+        lo *= 10;
+        k -= 1;
       } else { // 去下个前缀，即相邻子树遍历
-        prefix += 1;
-        cnt += curCnt;
+        lo += 1;
+        k -= curCnt;
       }
     }
-    return prefix; // 退出循环时 cur==k 正好找到
+    return lo; // 退出循环时 cur==k 正好找到
   }
 
   // DFS lo 为根的树，统计至 hi 的个数
@@ -2217,8 +2205,8 @@ class DicOrder extends DefaultSString {
 
 /** 提供一些数组的通用方法 */
 abstract class DefaultArray {
-  protected int lowerBound(int[] nums, int start, int end, int target) {
-    int lo = start, hi = end;
+  protected int lowerBound(int[] nums, int lo, int hi, int target) {
+    if (lo > hi) return -1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
       // 下一轮搜索区间是 [lo...mid] 因为小于一定不是解

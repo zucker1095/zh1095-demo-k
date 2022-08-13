@@ -152,7 +152,7 @@ class OptimalSubSequence extends DefaultArray {
     for (int p1 = 1; p1 <= l1; p1++) {
       for (int p2 = 1; p2 <= l2; p2++) {
         if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) dp[p1][p2] = dp[p1 - 1][p2 - 1] + 1;
-        else dp[p1][p2] = dp[p1 - 1][p2] > dp[p1][p2 - 1] ? dp[p1 - 1][p2] : dp[p1][p2 - 1];
+        else dp[p1][p2] = Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
         //        from[encoding(p1, p2)] = encoding(p1 - 1, p2 - 1);
         //        from[encoding(p1, p2)] = encoding(p1 - 1, p2) 或 encoding(p1, p2 - 1);
       }
@@ -716,9 +716,8 @@ class OptimalPath {
 
   private int[] dfs11(TreeNode root) {
     if (root == null) return new int[2];
-    int[] left = dfs11(root.left), right = dfs11(root.right);
-    int settle = left[0] + right[0] + root.val,
-        skip = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
+    int[] l = dfs11(root.left), r = dfs11(root.right);
+    int skip = Math.max(l[0], l[1]) + Math.max(r[0], r[1]), settle = l[0] + r[0] + root.val;
     return new int[] {skip, settle};
   }
 
@@ -827,14 +826,14 @@ class OptimalElse {
     int lo = 0, hi = height.length - 1;
     int volume = 0, lm = height[lo], rm = height[hi];
     while (lo < hi) {
-      int left = height[lo], right = height[hi];
-      lm = Math.max(lm, left);
-      rm = Math.max(rm, right);
-      if (left <= right) {
-        volume += lm - left;
+      int l = height[lo], r = height[hi];
+      lm = Math.max(lm, l);
+      rm = Math.max(rm, r);
+      if (l <= r) {
+        volume += lm - l;
         lo += 1;
       } else {
-        volume += rm - right;
+        volume += rm - r;
         hi -= 1;
       }
     }
@@ -848,15 +847,15 @@ class OptimalElse {
    * @return int int
    */
   public int maxArea(int[] height) {
-    int maxVolume = 0;
     int lo = 0, hi = height.length - 1;
+    int maxVolume = 0;
     while (lo < hi) {
-      int width = hi - lo, left = height[lo], right = height[hi];
-      if (left <= right) {
-        maxVolume = Math.max(maxVolume, left * width);
+      int l = height[lo], r = height[hi];
+      if (l <= r) {
+        maxVolume = Math.max(maxVolume, l * (hi - lo));
         lo += 1;
       } else {
-        maxVolume = Math.max(maxVolume, right * width);
+        maxVolume = Math.max(maxVolume, r * (hi - lo));
         hi -= 1;
       }
     }
@@ -881,9 +880,14 @@ class OptimalElse {
       if (chs[i] == '(') continue;
       // 0...preIdx(...)) 其中 i 是最后一个括号
       int preIdx = i - dp[i - 1];
-      if (preIdx > 0 && chs[preIdx - 1] == '(')
-        dp[i] = 2 + dp[i - 1] + (preIdx < 2 ? 0 : dp[preIdx - 2]);
-      else if (chs[i - 1] == '(') dp[i] = 2 + (i < 2 ? 0 : dp[i - 2]);
+      System.out.println(preIdx);
+      if (chs[i - 1] == '(') {
+        dp[i] = 2;
+        if (i >= 2) dp[i] += dp[i - 2];
+      } else if (preIdx > 0 && chs[preIdx - 1] == '(') {
+        dp[i] = 2 + dp[i - 1];
+        if (preIdx >= 2) dp[i] += dp[preIdx - 2];
+      }
       maxLen = Math.max(maxLen, dp[i]);
     }
     return maxLen;
@@ -978,24 +982,26 @@ class OptimalElse {
    * @return the int
    */
   public int candy(int[] ratings) {
-    int len = ratings.length;
+    int len = ratings.length, r = 1, minCnt = 0;
     int[] l = new int[len];
-    for (int i = 0; i < len; i++) {
+    l[0] = 1;
+    for (int i = 1; i < len; i++) {
       //      if (i == 0 && ratings[0] > ratings[len - 1]) {
-      //        left[i] = left[len - 1] + 1;
+      //        l[i] = l[len - 1] + 1;
       //        continue;
       //      }
-      l[i] = i > 0 && ratings[i] > ratings[i - 1] ? l[i - 1] + 1 : 1;
+      l[i] = ratings[i] > ratings[i - 1] ? l[i - 1] + 1 : 1;
     }
-    int r = 0, minCnt = 0;
-    for (int i = len - 1; i > -1; i--) {
+    minCnt += Math.max(l[len - 1], r);
+    for (int i = len - 2; i > -1; i--) {
       //      if (i == len - 1 && ratings[0] < ratings[i]) {
-      //        right += 1;
+      //        r += 1;
       //        continue;
       //      }
-      r = i < len - 1 && ratings[i] > ratings[i + 1] ? r + 1 : 1;
+      r = ratings[i] > ratings[i + 1] ? r + 1 : 1;
       minCnt += Math.max(l[i], r);
     }
+    minCnt += Math.max(l[len - 1], r);
     return minCnt;
   }
 
@@ -1139,17 +1145,17 @@ class CCount {
    * @return int int
    */
   public int uniquePathsWithObstacles(int[][] obstacleGrid) {
-    int len = obstacleGrid[0].length;
-    int[] dp = new int[len];
-    // 起点可能有障碍物
-    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1;
+    int col = obstacleGrid[0].length;
+    int[] dp = new int[col];
+    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1; // 起点可能有障碍
     for (int i = 0; i < obstacleGrid.length; i++) {
-      for (int j = 0; j < len; j++) {
-        if (obstacleGrid[i][j] == 1) dp[j] = 0;
-        if (obstacleGrid[i][j] == 0 && j > 0) dp[j] += dp[j - 1];
+      for (int j = 0; j < col; j++) {
+        int cur = obstacleGrid[i][j];
+        if (cur == 1) dp[j] = 0;
+        if (cur == 0 && j > 0) dp[j] += dp[j - 1];
       }
     }
-    return dp[len - 1];
+    return dp[col - 1];
   }
 
   /**

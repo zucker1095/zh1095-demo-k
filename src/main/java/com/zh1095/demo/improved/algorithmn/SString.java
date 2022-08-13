@@ -132,18 +132,12 @@ public class SString extends DefaultSString {
    */
   public int compareVersion(String version1, String version2) {
     int l1 = version1.length(), l2 = version2.length(), p1 = 0, p2 = 0;
+    char[] chs1 = version1.toCharArray(), chs2 = version2.toCharArray();
     while (p1 < l1 || p2 < l2) {
       int n1 = 0, n2 = 0;
-      while (p1 < l1 && version1.charAt(p1) != '.') {
-        n1 = n1 * 10 + version1.charAt(p1) - '0';
-        p1 += 1;
-      }
-      // 跳过点号
-      p1 += 1;
-      while (p2 < l2 && version2.charAt(p2) != '.') {
-        n2 = n2 * 10 + version2.charAt(p2) - '0';
-        p2 += 1;
-      }
+      while (p1 < l1 && chs1[p1] != '.') n1 = n1 * 10 + chs1[p1++] - '0';
+      p1 += 1; // 跳过点号
+      while (p2 < l2 && chs2[p2] != '.') n2 = n2 * 10 + chs2[p2++] - '0';
       p2 += 1;
       if (n1 != n2) return n1 > n2 ? 1 : -1;
     }
@@ -248,7 +242,7 @@ class WWindow {
     int[] needle = new int[128];
     for (char ch : t.toCharArray()) needle[ch] += 1;
     // 遍历的指针与结果的始末
-    int start = -1, end = s.length(), cnt = t.length();
+    int start = -1, end = s.length() + 1, cnt = t.length();
     int lo = 0, hi = 0;
     while (hi < s.length()) {
       char add = s.charAt(hi);
@@ -266,7 +260,7 @@ class WWindow {
         lo += 1;
       }
     }
-    return end == s.length() ? "" : s.substring(start, end);
+    return end == s.length() + 1 ? "" : s.substring(start, end);
   }
 
   /**
@@ -371,16 +365,16 @@ class WWindow {
     int[] winMaxes = new int[nums.length - k + 1];
     Deque<Integer> mq = new ArrayDeque<>();
     for (int i = 0; i < nums.length; i++) {
-      int n = nums[i];
-      while (mq.size() > 0 && mq.peekLast() < n) mq.pollLast();
-      mq.offerLast(n);
+      int add = nums[i];
+      while (mq.size() > 0 && mq.peekLast() < add) mq.pollLast();
+      mq.offerLast(add);
       if (i < k - 1) continue;
       // 缩窗的索引，当前窗口内最大值
       int outIdx = i - k + 1, winMax = mq.peekFirst();
+      // mq.poll(nums[outIdx]);
+      if (nums[outIdx] == winMax) mq.pollFirst();
       // segMax[outIdx] = mq.max();
       winMaxes[outIdx] = winMax;
-      // mq.poll(nums[outIdx]);
-      if (mq.size() > 0 && nums[outIdx] == winMax) mq.pollFirst();
     }
     return winMaxes;
   }
@@ -744,7 +738,7 @@ class SSubString {
    */
   public String longestCommonPrefix(String[] strs) {
     if (strs.length == 0) return ""; // 需要特判
-    String ref = strs[0]; // 参照串
+    String ref = strs[0];
     for (int i = 0; i < ref.length(); i++) {
       char pivot = ref.charAt(i);
       for (int j = 1; j < strs.length; j++) { // 有 j 个字符需要比对
@@ -1361,15 +1355,15 @@ class MonotonicStack {
    * @return int [ ]
    */
   public int[] dailyTemperatures(int[] tem) {
-    Deque<Integer> stack = new ArrayDeque<>();
+    Deque<Integer> ms = new ArrayDeque<>();
     int[] res = new int[tem.length];
     for (int i = 0; i < tem.length; i++) {
       // 更新 res[pre] 直到满足其数字超过 temperatures[i]
-      while (!stack.isEmpty() && tem[i] > tem[stack.peekLast()]) {
-        int preIdx = stack.pollLast();
+      while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
+        int preIdx = ms.pollLast();
         res[preIdx] = i - preIdx;
       }
-      stack.offerLast(i);
+      ms.offerLast(i);
     }
     return res;
   }
@@ -1410,19 +1404,22 @@ class MonotonicStack {
    * @return string string
    */
   public String removeKdigits(String num, int k) {
-    if (num.length() == k) return "0";
-    StringBuilder ms = new StringBuilder();
+    Deque<Character> ms = new ArrayDeque<>();
     for (char ch : num.toCharArray()) {
-      // 单调递减栈即出栈直到栈顶 <= 方可入栈
-      while (k > 0 && ms.length() > 0 && ms.charAt(ms.length() - 1) > ch) {
-        ms.deleteCharAt(ms.length() - 1);
+      while (k > 0 && !ms.isEmpty() && ch < ms.peekLast()) {
+        ms.pollLast();
         k -= 1;
       }
-      if (ch == '0' && ms.length() == 0) continue; // 避免前导零
-      ms.append(ch);
+      if (ch == '0' && ms.isEmpty()) continue;
+      ms.offerLast(ch);
     }
-    String str = ms.substring(0, Math.max(ms.length() - k, 0));
-    return str.length() == 0 ? "0" : str; // 没有删除足够 k
+    while (k > 0 && !ms.isEmpty()) {
+      ms.pollLast();
+      k -= 1;
+    }
+    StringBuilder res = new StringBuilder(ms.size());
+    while (!ms.isEmpty()) res.append(ms.pollLast());
+    return res.length() == 0 ? "0" : res.toString();
   }
 
   /**

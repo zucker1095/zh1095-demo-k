@@ -87,16 +87,15 @@ public class OOthers {
    * @return int int
    */
   public int jump(int[] nums) {
-    int step = 0;
-    int lo = 0, hi = 0;
+    int cnt = 0, lo = 0, hi = 0;
     while (hi < nums.length - 1) {
       int maxIdx = 0;
-      for (int i = lo; i <= hi; i++) maxIdx = Math.max(i + nums[i], maxIdx);
+      for (int i = lo; i <= hi; i++) maxIdx = Math.max(maxIdx, i + nums[i]);
       lo = hi + 1;
       hi = maxIdx;
-      step += 1;
+      cnt += 1;
     }
-    return step;
+    return cnt;
   }
 
   /**
@@ -409,7 +408,7 @@ class DData {
   }
 
   /**
-   * 设计循环队列，三种实现方式，冗余一个元素/边界标记/计数器，此处选用前者
+   * 设计循环队列，三种实现方式，冗余一个元素/边界标记/计数器，此处选用冗余
    *
    * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即元素入队的位置
    *
@@ -513,30 +512,25 @@ class DData {
     private final Deque<Long> stack = new ArrayDeque<>();
 
     public void push(int x) {
-      long gap = stack.isEmpty() ? 0L : x - min;
-      stack.push(gap);
-      min = Math.min(min, x);
-      // 实际运行改用下方代码
-      //      if (stack.isEmpty()) {
-      //        stack.push(0l);
-      //        min = x;
-      //      } else {
-      //        stack.push(x - min);
-      //        if (x < min) min = x;
-      //      }
+      if (stack.isEmpty()) {
+        stack.push(0l);
+        min = x;
+      } else {
+        stack.push(x - min);
+        min = Math.min(min, x);
+      }
     }
 
     public void pop() {
       if (stack.isEmpty()) return;
       long pop = stack.pollLast();
-      // 弹出的是负值，要更新 min
       if (pop < 0) min -= pop;
     }
 
     public int top() {
+      // 题设总是在非空栈上调用
       long top = stack.peekLast();
-      // 负数的话，出栈的值保存在 min 中
-      // 出栈元素加上最小值即可
+      // 负数的话，出栈的值保存在 min，出栈元素加上 min
       return (int) (top < 0 ? min : top + min);
     }
 
@@ -673,7 +667,7 @@ class DData {
      */
     public int peek() {
       if (out.isEmpty()) {
-        while (!in.isEmpty()) out.addLast(in.pollLast());
+        while (!in.isEmpty()) out.offerLast(in.pollLast());
       }
       return out.peekLast();
     }
@@ -1151,32 +1145,32 @@ class GGraph {
    * @return boolean boolean
    */
   public boolean canFinish(int V, int[][] prerequisites) {
-    // 构造邻接矩阵并统计入度
+    // 构造邻接表并统计入度
     int[] indegrees = new int[V];
-    int[][] matrix = new int[V][V];
-    buildMatrix(prerequisites, matrix, indegrees);
-    Queue<Integer> queue = new LinkedList<>();
+    List<List<Integer>> table = new ArrayList(V);
+    for (int i = 0; i < V; i++) table.add(new LinkedList());
+    buildTable(prerequisites, table, indegrees);
+    Queue<Integer> queue = new LinkedList();
     // 收集起点
     for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.offer(i);
     }
     // 遍历起点的邻接点
-    int cnt = 0;
     while (!queue.isEmpty()) {
-      cnt += 1;
-      for (int adj : matrix[queue.poll()]) {
+      V -= 1;
+      for (int adj : table.get(queue.poll())) {
         indegrees[adj] -= 1;
         if (indegrees[adj] == 0) queue.offer(adj);
       }
     }
-    return cnt == V;
+    return V == 0;
   }
 
-  private void buildMatrix(int[][] prerequisites, int[][] matrix, int[] indegrees) {
+  private void buildTable(int[][] prerequisites, List<List<Integer>> table, int[] indegrees) {
     for (int[] cp : prerequisites) {
-      int to = cp[0], from = cp[1];
+      int from = cp[0], to = cp[1];
       indegrees[to] += 1;
-      matrix[from][to] = 0;
+      table.get(from).add(to);
     }
   }
 
@@ -1193,9 +1187,10 @@ class GGraph {
    */
   public int[] findOrder(int V, int[][] prerequisites) {
     int[] indegrees = new int[V];
-    int[][] matrix = new int[V][V];
-    buildMatrix(prerequisites, matrix, indegrees);
-    Queue<Integer> queue = new LinkedList<>();
+    List<List<Integer>> table = new ArrayList(V);
+    for (int i = 0; i < V; i++) table.add(new LinkedList());
+    buildTable(prerequisites, table, indegrees);
+    Queue<Integer> queue = new LinkedList();
     for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.offer(i);
     }
@@ -1205,7 +1200,7 @@ class GGraph {
       int ver = queue.poll();
       paths[cnt] = ver;
       cnt += 1;
-      for (int adj : matrix[ver]) {
+      for (int adj : table.get(ver)) {
         indegrees[adj] -= 1;
         if (indegrees[adj] == 0) queue.offer(adj);
       }

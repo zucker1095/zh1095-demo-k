@@ -107,7 +107,7 @@ public class LList {
    */
   public ListNode middleNode(ListNode head) {
     if (head == null || head.next == null) return head;
-    ListNode lo = head, hi = head;
+    ListNode lo = head, hi = head.next.next;
     while (hi != null && hi.next != null) {
       lo = lo.next;
       hi = hi.next.next;
@@ -428,7 +428,7 @@ class ReorderList extends LList {
    * @return list node
    */
   public ListNode sortList(ListNode head) {
-    if (head == null || head.next == null) return head;
+    if (head == null) return head;
     ListNode mid = middleNode(head), head2 = mid.next;
     mid.next = null;
     return mergeTwoLists(sortList(head), sortList(head2));
@@ -671,7 +671,7 @@ class DeleteList extends LList {
    * @return list node
    */
   private ListNode deleteDuplicatesII(ListNode head) {
-    // 把上方的 cur 看作 pre.next，并且增加一个内循环即可
+    // 将上方的 cur 替换为 pre.next，并且增加一个内循环即可
     ListNode dummy = new ListNode(), pre = dummy;
     dummy.next = head;
     while (pre.next != null && pre.next.next != null) {
