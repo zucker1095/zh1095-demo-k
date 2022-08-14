@@ -192,9 +192,10 @@ class Build {
    * @return the tree node
    */
   public TreeNode buildTree(int[] preorder, int[] inorder) {
-    Map<Integer, Integer> v2i = new HashMap<>(); // 节点值唯一，因此可以存储二者间的映射
-    for (int i = 0; i < preorder.length; i++) v2i.put(inorder[i], i);
-    return buildTree1(preorder, 0, preorder.length - 1, v2i, 0);
+    int len = inorder.length;
+    Map<Integer, Integer> v2i = new HashMap(len); // 节点值唯一，因此可以存储二者间的映射
+    for (int i = 0; i < len; i++) v2i.put(inorder[i], i);
+    return buildTree1(preorder, 0, len - 1, v2i, 0);
   }
 
   // 从前序与中序遍历序列构造二叉树/重建二叉树
@@ -1480,17 +1481,17 @@ class MultiTrees {
   public boolean isSubtree(TreeNode root, TreeNode subRoot) {
     //    if (subRoot == null) return true;
     //    if (root == null) return false;
-    //    return isSubtree(root.left, subRoot)
-    //        || isSubtree(root.right, subRoot)
-    //        || isSameTree(root, subRoot);
+    //    return isSameTree(root, subRoot)
+    //        || isSubtree(root.left, subRoot)
+    //        || isSubtree(root.right, subRoot);
     if (subRoot == null) return false;
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(root);
     while (!queue.isEmpty()) {
-      TreeNode node = queue.poll();
-      if (node.val == subRoot.val && isSameTree(node, subRoot)) return true;
-      if (node.left != null) queue.offer(node.left);
-      if (node.right != null) queue.offer(node.right);
+      TreeNode n = queue.poll();
+      if (n.val == subRoot.val && isSameTree(n, subRoot)) return true;
+      if (n.left != null) queue.offer(n.left);
+      if (n.right != null) queue.offer(n.right);
     }
     return false;
   }
@@ -1551,7 +1552,7 @@ class BacktrackingCombinatorics {
    *
    * <p>扩展1，有重复，全排列II，参下 annotate
    *
-   * <p>扩展2，「字符串的排列」一致
+   * <p>扩展2，「字符串的排列」类似
    *
    * @param nums the nums
    * @return the list
@@ -1561,11 +1562,16 @@ class BacktrackingCombinatorics {
     //    Arrays.sort(chs);
     List<List<Integer>> res = new ArrayList<>();
     if (nums.length > 0) {
+      // II 去重
       //    Arrays.sort(nums);
       bt4(nums, new ArrayDeque<>(), res, new boolean[nums.length]);
-      //    return res.toArray(new String[0]);
+      // 「字符串的排列」
+      //      char[] chs = s.toCharArray();
+      //      Arrays.sort(chs);
+      //      bt4(chs, new StringBuilder(), res, new boolean[s.length()]);
     }
     return res;
+    //    return res.toArray(new String[0]);
   }
 
   private void bt4(int[] nums, Deque<Integer> path, List<List<Integer>> res, boolean[] recStack) {
@@ -1574,9 +1580,11 @@ class BacktrackingCombinatorics {
       return;
     }
     for (int i = 0; i < nums.length; i++) {
-      if (recStack[i]) continue;
-      // 不在当前路径上但重复，或在
+      // II 不在当前路径上但重复，或在
       //      if (recStack[i] || (i > 0 && nums[i] == nums[i - 1] && !recStack[i - 1])) continue;
+      // 「字符串的排列」同理
+      //      if (recStack[i] || (i > 0 && chs[i] == chs[i - 1] && !recStack[i - 1])) continue;
+      if (recStack[i]) continue;
       recStack[i] = true;
       path.offerLast(nums[i]);
       bt4(nums, path, res, recStack);

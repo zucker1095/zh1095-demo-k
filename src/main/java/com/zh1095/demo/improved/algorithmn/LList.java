@@ -303,9 +303,9 @@ class MergeList extends LList {
     int carry = 0; // 还要加上一个高位
     while (p1 != null || p2 != null || carry != 0) {
       int n1 = p1 == null ? 0 : p1.val, n2 = p2 == null ? 0 : p2.val, tmp = n1 + n2 + carry;
-      cur.next = new ListNode(tmp % base);
+      cur.next = new ListNode(tmp % 10); // 尾插
       cur = cur.next;
-      carry = tmp / base;
+      carry = tmp / 10;
       p1 = p1 == null ? null : p1.next;
       p2 = p2 == null ? null : p2.next;
     }
@@ -316,9 +316,7 @@ class MergeList extends LList {
   // 分别反转 & 正序计算 & 反转整个链表
   // 允许空间，则分别遍历建栈，注意需要逆序尾插，即 cur->head
   private ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
-    //    ListNode p1 = reverseList(l1), p2 = reverseList(l2);
-    //    return reverseList(addTwoNumbers1(p1, p2));
-    final int base = 10; // 36 进制
+    //    return reverseList(addTwoNumbers1(reverseList(l1), reverseList(l2)));
     Deque<Integer> st1 = new ArrayDeque<>(), st2 = new ArrayDeque<>();
     while (l1 != null) {
       st1.offerLast(l1.val);
@@ -328,18 +326,18 @@ class MergeList extends LList {
       st2.offerLast(l2.val);
       l2 = l2.next;
     }
-    ListNode head = null;
+    ListNode dummy = new ListNode();
     int carry = 0;
     while (!st1.isEmpty() || !st2.isEmpty() || carry > 0) {
       int n1 = st1.isEmpty() ? 0 : st1.pollLast(),
           n2 = st2.isEmpty() ? 0 : st2.pollLast(),
           tmp = n1 + n2 + carry;
-      carry = tmp / base;
-      ListNode cur = new ListNode(tmp % base);
-      cur.next = head;
-      head = cur;
+      ListNode cur = new ListNode(tmp % 10);
+      cur.next = dummy.next; // 头插
+      dummy.next = cur;
+      carry = tmp / 10;
     }
-    return head;
+    return dummy.next;
   }
 
   /**

@@ -150,12 +150,8 @@ public class AArray extends DefaultArray {
     int[][] res = new int[intervals.length][2];
     int idx = -1;
     for (int[] itv : intervals) {
-      if (idx == -1 || itv[0] > res[idx][1]) {
-        idx += 1;
-        res[idx] = itv;
-      } else {
-        res[idx][1] = Math.max(res[idx][1], itv[1]);
-      }
+      if (idx == -1 || itv[0] > res[idx][1]) res[++idx] = itv;
+      else res[idx][1] = Math.max(res[idx][1], itv[1]);
     }
     return Arrays.copyOf(res, idx + 1);
   }
@@ -534,7 +530,7 @@ class HHeap extends DefaultArray {
    * <p>扩展1，所有整数都在 [1,100]，空间上优化，额外建立一个长度为 101
    * 的桶统计每个数的出现次数，同时记录数据流中总的元素数量，每次查找中位数时，先计算出中位数是第几位，从前往后扫描所有的桶得到答案
    *
-   * <p>扩展2，PCT99 整数都在 [1,100]，对于 1% 采用哨兵机制进行解决，在常规的最小桶和最大桶两侧分别维护一个有序序列，即建立一个代表负无穷和正无穷的桶
+   * <p>扩展2，PCT99 整数都在 [1,100]，对于 1% 采用哨兵机制进行解决，最小桶与最大桶两侧分别维护一个有序序列，即分别建立一个代表负无穷和正无穷的桶
    */
   public class MedianFinder {
     private final PriorityQueue<Integer> minHeap = new PriorityQueue<>((a, b) -> a - b),
@@ -728,17 +724,16 @@ class MMerge extends DefaultArray {
     cnt += mergeAndCount(nums, tmp, lo, mid, hi);
   }
 
-  private int mergeAndCount(int[] nums, int[] tmp, int start1, int start2, int end) {
-    if (end > start1) System.arraycopy(nums, start1, tmp, start1, end - start1 + 1);
-    int curCnt = 0, p1 = start1, p2 = start2 + 1;
-    // 其一越界，否则二者取小
-    for (int i = start1; i <= end; i++) {
-      if (p1 == start2 + 1) nums[i] = tmp[p2++];
-      else if (p2 == end + 1) nums[i] = tmp[p1++];
+  private int mergeAndCount(int[] nums, int[] tmp, int p1, int end1, int end2) {
+    if (end2 > p1) System.arraycopy(nums, p1, tmp, p1, end2 - p1 + 1);
+    int curCnt = 0, p2 = end1 + 1;
+    for (int i = p1; i <= end2; i++) {
+      if (p1 == end1 + 1) nums[i] = tmp[p2++];
+      else if (p2 == end2 + 1) nums[i] = tmp[p1++];
       else if (tmp[p1] <= tmp[p2]) nums[i] = tmp[p1++];
       else if (tmp[p1] > tmp[p2]) {
         nums[i] = tmp[p2++];
-        curCnt += start2 - p1 + 1; // 统计逆序的数目
+        curCnt += end1 - p1 + 1;
       }
     }
     return curCnt;
@@ -1012,7 +1007,7 @@ class DichotomyElse extends DefaultArray {
     //      if (c != -1 && matrix[r][c] == target) return true;
     //    }
     //    return false;
-    // I 行间的区间不重叠，因此先二分找到最后一个满足 matrix[x]][0] <= t 的行，再对该列二分
+    // I 行间的区间不重叠，因此先对列二分找上界，再对行
     int lo = 0, hi = matrix.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo + 1) / 2;
@@ -1327,6 +1322,9 @@ class PreSum {
    * @return int int
    */
   public int maxSubArray(int[] nums) {
+    //    int len = nums.length;
+    //    if (len > 0) return maxSubArraySum(nums, 0, len - 1);
+    //    return 0;
     int preSum = 0, maxSum = Integer.MIN_VALUE;
     // int start = 0, end = 0;
     for (int n : nums) {
@@ -1341,6 +1339,34 @@ class PreSum {
       }
     }
     return maxSum;
+  }
+
+  private int divide(int[] nums, int lo, int hi) {
+    if (lo == hi) return nums[lo];
+    int mid = lo + (hi - lo) / 2;
+    return Math.max(
+        merge(nums, lo, mid, hi), Math.max(divide(nums, lo, mid), divide(nums, mid + 1, hi)));
+  }
+
+  private int merge(int[] nums, int p1, int p2, int end) {
+    // 一定会包含 nums[mid]
+    int sum = 0, lSum = Integer.MIN_VALUE;
+    // 左半边包含 nums[mid] 元素，最多可以到什么地方
+    // 走到最边界，看看最值是什么
+    // 计算以 mid 结尾的最大的子数组的和
+    for (int i = p1; i <= p2; i++) {
+      sum += nums[i];
+      lSum = Math.max(lSum, sum);
+    }
+    sum = 0;
+    int rSum = Integer.MIN_VALUE;
+    // 右半边不包含 nums[mid] 元素，最多可以到什么地方
+    // 计算以 mid+1 开始的最大的子数组的和
+    for (int j = p2 + 1; j <= end; j++) {
+      sum += nums[j];
+      rSum = Math.max(rSum, sum);
+    }
+    return lSum + rSum;
   }
 
   /**
@@ -1411,7 +1437,7 @@ class PreSum {
    */
   public int subarraysDivByK(int[] nums, int k) {
     int preSum = 0, cnt = 0;
-    HashMap<Integer, Integer> remainder2Cnt = new HashMap<>();
+    Map<Integer, Integer> remainder2Cnt = new HashMap<>();
     remainder2Cnt.put(0, 1);
     for (int n : nums) {
       preSum += n;
@@ -1472,12 +1498,12 @@ class PreSum {
    */
   public boolean checkSubarraySum(int[] nums, int target) {
     int len = nums.length;
-    int[] preSum = new int[len + 1]; // 哑元素，因此下方始于 2
-    for (int i = 1; i <= len; i++) preSum[i] = preSum[i - 1] + nums[i - 1];
-    Set<Integer> visted = new HashSet<>();
+    int[] preSum = new int[len + 1];
+    for (int i = 0; i < len; i++) preSum[i + 1] = preSum[i] + nums[i];
+    Set<Integer> visited = new HashSet<>();
     for (int i = 2; i <= len; i++) {
-      visted.add(preSum[i - 2] % target);
-      if (visted.contains(preSum[i] % target)) return true;
+      visited.add(preSum[i - 2] % target);
+      if (visited.contains(preSum[i] % target)) return true;
     }
     return false;
     // 方案数
@@ -1564,7 +1590,7 @@ class PreSum {
 /** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，仅一个数重复，快慢指针，等同根「环形链表II」
+   * 寻找重复数，仅一个数重复，[1:n] 映射至 [0,n-1]，快慢指针，等同「环形链表II」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1592,7 +1618,7 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
-   * 数组中重复的数据，多个数重复，至多两次，返回所有重复数，区间 [1,n]
+   * 数组中重复的数据，多个数重复，至多两次，返回所有重复数，[1:n] 映射至 [0,n-1]
    *
    * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
    *
@@ -1695,35 +1721,6 @@ class Delete extends DefaultArray {
   }
 
   /**
-   * 删除字符串中的所有相邻重复项，毫无保留，原地模拟栈
-   *
-   * <p>类似「有效的括号」即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
-   *
-   * <p>匹配指当前字符与栈顶不同，即入栈，否则出栈，且 skip 当前 char
-   *
-   * <p>最终栈内即为最终结果
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/remove-all-adjacent-duplicates-in-string/solution/tu-jie-guan-fang-tui-jian-ti-jie-shan-ch-x8iz/
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String removeDuplicates(String s) {
-    char[] chs = s.toCharArray();
-    int top = -1;
-    for (char ch : chs) {
-      if (top > -1 && chs[top] == ch) {
-        top -= 1;
-      } else {
-        top += 1;
-        chs[top] = ch;
-      }
-    }
-    return String.valueOf(chs, 0, top + 1);
-  }
-
-  /**
    * 删除排序数组中的重复项，保留 k 位，I & II 通用
    *
    * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
@@ -1760,6 +1757,34 @@ class Delete extends DefaultArray {
       write += 1;
     }
     return String.valueOf(Arrays.copyOfRange(chs, 0, write));
+  }
+
+  /**
+   * 删除字符串中的所有相邻重复项，毫无保留，原地模拟栈
+   *
+   * <p>类似「有效的括号」即括号匹配，通过 top 指针模拟栈顶，即原地栈，且修改源数组
+   *
+   * <p>匹配指当前字符与栈顶不同，即入栈，否则出栈，且 skip 当前 char
+   *
+   * <p>最终栈内即为最终结果
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/remove-all-adjacent-duplicates-in-string/solution/tu-jie-guan-fang-tui-jian-ti-jie-shan-ch-x8iz/
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String removeDuplicates(String s) {
+    char[] chs = s.toCharArray();
+    int top = 0;
+    for (char ch : chs) {
+      // 先入栈
+      chs[top] = ch;
+      // 相同则出栈
+      if (top > 0 && chs[top] == chs[top - 1]) top -= 1;
+      else top += 1;
+    }
+    return new String(chs, 0, top);
   }
 }
 
@@ -1998,6 +2023,37 @@ class DicOrder extends DefaultSString {
   }
 
   /**
+   * 移掉k位数字，结果数值最小，单调栈 int n = 高位递增」的数，应尽量删低位。;
+   *
+   * <p>123531 这样「高位递增」的数，应尽量n
+   *
+   * <p>432135 这样「高位递减」的数，应尽量删高位，即让高位变小。
+   *
+   * <p>因此，如果当前遍历的数比栈顶大，符合递增，让它入栈。
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
+   *
+   * @param num the num
+   * @param k the k
+   * @return string string
+   */
+  public String removeKdigits(String num, int k) {
+    StringBuilder ms = new StringBuilder();
+    for (char ch : num.toCharArray()) {
+      while (k > 0 && !ms.isEmpty() && ms.charAt(ms.length() - 1) > ch) {
+        ms.setLength(ms.length() - 1);
+        k -= 1;
+      }
+      if (ch == '0' && ms.isEmpty()) continue;
+      ms.append(ch);
+    }
+    int remain = ms.length() - k - 1 < 0 ? 0 : ms.length() - k;
+    String res = ms.substring(0, remain).toString();
+    return res.length() == 0 ? "0" : res;
+  }
+
+  /**
    * 最大数，把数组排成最大的数，排序，即贪心，类似参考「拼接最大数」
    *
    * <p>对 nums 按照 ab>ba 为 b>a，前导零
@@ -2045,9 +2101,9 @@ class DicOrder extends DefaultSString {
     for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - '0'] = i;
     // 查找首个值更大、位更高的数字
     for (int i = 0; i < chs.length; i++) { // 自高位顺序遍历
-      for (int d = 9; d > chs[i] - '0'; d--) { // 值
-        if (lastIdxes[d] <= i) continue; // 位
-        swap(chs, i, lastIdxes[d]);
+      for (int n = 9; n > chs[i] - '0'; n--) { // 值
+        if (lastIdxes[n] <= i) continue; // 位
+        swap(chs, i, lastIdxes[n]);
         return Integer.parseInt(chs.toString());
       }
     }

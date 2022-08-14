@@ -106,16 +106,13 @@ public class OOthers {
    */
   public List<Integer> partitionLabels(String s) {
     char[] chs = s.toCharArray();
-    // 统计每个字母最终的节点，题设均 lowercase
-    int[] lastIdxes = new int[26];
-    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - 'a'] = i;
+    int[] upperBounds = new int[26];
+    for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - 'a'] = i;
     List<Integer> lens = new ArrayList<>();
-    int lo = 0, hi = 0; // 当前片段的首尾
+    int lo = 0, hi = 0;
     for (int i = 0; i < chs.length; i++) {
-      // 根据遍历的字母更新当前片段的右边界
-      hi = Math.max(hi, lastIdxes[chs[i] - 'a']);
-      // 未到达当前片段的右边界，即仍有部分字母在边界右侧
-      if (i > hi) continue;
+      hi = Math.max(hi, upperBounds[chs[i] - 'a']);
+      if (i < hi) continue;
       lens.add(hi - lo + 1);
       lo = hi + 1;
     }
@@ -781,30 +778,29 @@ class DData {
    * <p>参考 https://leetcode.cn/problems/insert-delete-getrandom-o1/solution/by-ac_oier-tpex/
    */
   public class RandomizedSet {
-    private final Random random = new Random();
     private final int[] nums = new int[200010];
     private final Map<Integer, Integer> map = new HashMap<>();
     private int idx = -1;
 
     public boolean insert(int val) {
       if (map.containsKey(val)) return false;
-      idx += 1;
       nums[idx] = val;
       map.put(val, idx);
+      idx += 1;
       return true;
     }
 
     public boolean remove(int val) {
       if (!map.containsKey(val)) return false;
       int idxDeleted = map.remove(val);
-      if (idxDeleted != idx) map.put(nums[idx], idxDeleted);
-      nums[idxDeleted] = nums[idx];
       idx -= 1;
+      nums[idxDeleted] = nums[idx];
+      if (idxDeleted != idx) map.put(nums[idx], idxDeleted);
       return true;
     }
 
     public int getRandom() {
-      return nums[random.nextInt(idx + 1)];
+      return nums[new Random().nextInt(idx + 1)];
     }
   }
 }
@@ -882,7 +878,7 @@ class MMath {
    * @return double double
    */
   public double myPow(double x, int n) {
-    return n >= 0 ? quickMulti(x, n) : 1.0 / quickMulti(x, -n);
+    return n < 0 ? 1.0 / quickMulti(x, -n) : quickMulti(x, n);
   }
 
   // 特判零次幂 & 递归二分 & 判断剩余幂
@@ -946,8 +942,8 @@ class MMath {
    */
   public int findNthDigit(int n) {
     int len = 1, base = 1;
-    while (n > (long) len * 9 * base) {
-      n -= len * 9 * base;
+    while (n > (long) 9 * len * base) {
+      n -= 9 * len * base;
       len += 1;
       base *= 10;
     }
@@ -1194,18 +1190,17 @@ class GGraph {
     for (int i = 0; i < V; i++) {
       if (indegrees[i] == 0) queue.offer(i);
     }
-    int cnt = 0;
     int[] paths = new int[V];
     while (!queue.isEmpty()) {
       int ver = queue.poll();
-      paths[cnt] = ver;
-      cnt += 1;
+      V -= 1;
+      paths[V] = ver;
       for (int adj : table.get(ver)) {
         indegrees[adj] -= 1;
         if (indegrees[adj] == 0) queue.offer(adj);
       }
     }
-    return cnt == V ? paths : new int[0];
+    return V == 0 ? paths : new int[0];
   }
 
   /**

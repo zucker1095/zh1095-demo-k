@@ -314,9 +314,9 @@ class WWindow {
     char[] chs = s.toCharArray();
     while (hi < chs.length) {
       char add = chs[hi];
+      hi += 1;
       window[add] += 1;
       if (window[add] == 1) cnt -= 1;
-      hi += 1;
       while (cnt < 0) {
         char out = chs[lo];
         window[out] -= 1;
@@ -852,20 +852,18 @@ class SSubString {
    * @return int
    */
   public int longestSubstring(String s, int k) {
-    if (s.length() < k) return 0; // 特判
-    int[] counter = new int[26];
+    if (s.length() < k) return 0;
+    int[] needle = new int[26];
     char[] chs = s.toCharArray();
-    for (char ch : chs) counter[ch - 'a'] += 1;
+    for (char ch : chs) needle[ch - 'a'] += 1;
     for (char ch : chs) {
-      // 题设选任意一个频率不足的字符
-      if (counter[ch - 'a'] >= k) continue;
-      // 将原串以该字符分割，分别获取子串内的最优解
+      if (needle[ch - 'a'] >= k) continue;
       int maxLen = 0;
       for (String seg : s.split(String.valueOf(ch)))
         maxLen = Math.max(maxLen, longestSubstring(seg, k));
       return maxLen;
     }
-    return s.length(); // 原字符串没有小于 k 的字符串
+    return s.length();
   }
 
   /**
@@ -1388,41 +1386,6 @@ class MonotonicStack {
   }
 
   /**
-   * 移掉k位数字，结果数值最小，单调栈 int n = 高位递增」的数，应尽量删低位。;
-   *
-   * <p>123531 这样「高位递增」的数，应尽量n
-   *
-   * <p>432135 这样「高位递减」的数，应尽量删高位，即让高位变小。
-   *
-   * <p>因此，如果当前遍历的数比栈顶大，符合递增，让它入栈。
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
-   *
-   * @param num the num
-   * @param k the k
-   * @return string string
-   */
-  public String removeKdigits(String num, int k) {
-    Deque<Character> ms = new ArrayDeque<>();
-    for (char ch : num.toCharArray()) {
-      while (k > 0 && !ms.isEmpty() && ch < ms.peekLast()) {
-        ms.pollLast();
-        k -= 1;
-      }
-      if (ch == '0' && ms.isEmpty()) continue;
-      ms.offerLast(ch);
-    }
-    while (k > 0 && !ms.isEmpty()) {
-      ms.pollLast();
-      k -= 1;
-    }
-    StringBuilder res = new StringBuilder(ms.size());
-    while (!ms.isEmpty()) res.append(ms.pollLast());
-    return res.length() == 0 ? "0" : res.toString();
-  }
-
-  /**
    * 柱状图中最大的矩形
    *
    * <p>TODO 参考
@@ -1453,11 +1416,11 @@ class MonotonicStack {
   public int maximalRectangle(char[][] matrix) {
     int maxArea = 0, len = matrix[0].length;
     int[] hs = new int[len + 2];
-    for (char[] rows : matrix) {
+    for (char[] row : matrix) {
       Deque<Integer> ms = new ArrayDeque<>();
       for (int i = 0; i < hs.length; i++) {
         if (i > 0 && i < len + 1) { // 哨兵内
-          if (rows[i - 1] == '1') hs[i] += 1;
+          if (row[i - 1] == '1') hs[i] += 1;
           else hs[i] = 0;
         }
         maxArea = pushAndReturn(hs, i, maxArea, ms);

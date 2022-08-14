@@ -637,7 +637,7 @@ class OptimalPath {
     // a
     // b c
     // d e f
-    for (int i = len - 1; i >= 0; i--) {
+    for (int i = len - 1; i > -1; i--) {
       for (int j = 0; j <= i; j++) {
         dp[j] = triangle.get(i).get(j) + Math.min(dp[j], dp[j + 1]);
       }
@@ -774,32 +774,31 @@ class OptimalElse {
   }
 
   // 有限次
-  // 扩展1，含手续费，参下 annotate
   private int maxProfitI(int[] prices) {
-    //    int[] buys = new int[k + 1], sells = new int[k + 1];
-    // BASE CASE buys[1] = max(buys[1], -p) & sells[1] = max(sells[1], buys[1]+p)
-    //    for (int p : prices) {
-    //      for (int i = 1; i <= k; ++i) {
-    //        buys[i] = Math.max(buys[i], sells[i - 1] - p); // 卖了买
-    //        sells[i] = Math.max(sells[i], buys[i] + p); // 买了卖
-    //      }
-    //    }
-    //    return sells[k];
     // 以限两次为例
     int buy1 = Integer.MIN_VALUE, sell1 = 0, buy2 = Integer.MIN_VALUE, sell2 = 0;
     for (int p : prices) {
-      // 手续费
-      //        buy = Math.max(buy, sell - p - fee);
       buy1 = Math.max(buy1, -p); // max(不买，买了) 第一次买
       sell1 = Math.max(sell1, buy1 + p); // max(不卖，卖了) 第一次卖
       buy2 = Math.max(buy2, sell1 - p); // 第一次卖了后现在买
       sell2 = Math.max(sell2, buy2 + p); // 第二次买了后现在卖
     }
     return sell2;
+    //    int[] buy = new int[k + 1], sell = new int[k + 1];
+    //    Arrays.fill(buy, Integer.MIN_VALUE);
+    //    Arrays.fill(sell, 0);
+    //    for (int p : prices) {
+    //      for (int i = 1; i <= k; i++) {
+    //        buy[i] = Math.max(buy[i], sell[i - 1] - p);
+    //        sell[i] = Math.max(sell[i], buy[i] + p);
+    //      }
+    //    }
+    //    return sell[k];
   }
 
   // 无限次
   // 扩展1，含冷冻期，参下 annotate
+  // 扩展2，含手续费，参下 annotate
   private int maxProfitII(int[] prices) {
     int buy = Integer.MIN_VALUE, sell = 0;
     //    int lock = 0; // 表示无法交易的时候
@@ -812,6 +811,8 @@ class OptimalElse {
       // 因为能够多次买卖，所以每天都要尝试能否更优解
       buy = Math.max(buy, sell - p);
       sell = Math.max(sell, buy + p);
+      // 手续费
+      //        buy = Math.max(buy, sell - p - fee);
     }
     return sell;
   }
