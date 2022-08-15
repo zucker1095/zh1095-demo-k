@@ -1271,11 +1271,11 @@ class SSum extends DefaultArray {
     for (int i = nums.length - 1; i > 1; i--) {
       int pivot = nums[i], lo = 0, hi = i - 1;
       while (lo < hi) {
-        if (nums[lo] + nums[hi] > pivot) {
+        if (nums[lo] + nums[hi] <= pivot) {
+          lo += 1;
+        } else {
           cnt += hi - lo;
           hi -= 1;
-        } else {
-          lo += 1;
         }
       }
     }
@@ -1731,9 +1731,7 @@ class Delete extends DefaultArray {
    * @return the int
    */
   public int removeDuplicates(int[] nums) {
-    final int k = 0;
-    // final int target = nums[last - k];
-    int write = 0;
+    int write = 0, k = 1;
     for (int n : nums) {
       if (write >= k && nums[write - k] == n) continue;
       nums[write++] = n;
@@ -2016,10 +2014,9 @@ class DicOrder extends DefaultSString {
     }
     // 3.翻转
     reverseChs(nums, peak + 1, len - 1);
-    // 返回结果，将 char[] 转为 int
-    int res = Integer.valueOf(nums.toString());
-    //    for (int i = 0; i < len; i++) res = res * 10 + (chs[i] - '0');
-    return res == Integer.MAX_VALUE ? -1 : res;
+    long res = 0;
+    for (int i = 0; i < len; i++) res = res * 10 + (nums[i] - '0');
+    return res > Integer.MAX_VALUE ? -1 : (int) (res);
   }
 
   /**
@@ -2063,7 +2060,7 @@ class DicOrder extends DefaultSString {
    * <p>再证明传递性，即两两之间都要满足该性质，参考
    * https://leetcode-cn.com/problems/largest-number/solution/gong-shui-san-xie-noxiang-xin-ke-xue-xi-vn86e/
    *
-   * <p>扩展1，最小数 / 把数组排成最小的数，调整本题的排序规则为 ab>ba -> a>b 即可，参考
+   * <p>扩展1，最小数/把数组排成最小的数，调整本题的排序规则为 ab>ba -> a>b 即可，参考
    * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
    *
    * <p>扩展2，参下 maxLessNumber

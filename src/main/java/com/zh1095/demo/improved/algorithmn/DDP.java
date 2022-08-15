@@ -1252,6 +1252,26 @@ class CCount {
   }
 
   /**
+   * 丑数II
+   *
+   * @param n
+   * @return
+   */
+  public int nthUglyNumber(int n) {
+    int[] dp = new int[n + 1];
+    dp[1] = 1;
+    int p2 = 1, p3 = 1, p5 = 1;
+    for (int i = 2; i <= n; i++) {
+      int n2 = dp[p2] * 2, n3 = dp[p3] * 3, n5 = dp[p5] * 5;
+      dp[i] = Math.min(Math.min(n2, n3), n5);
+      if (dp[i] == n2) p2 += 1;
+      if (dp[i] == n3) p3 += 1;
+      if (dp[i] == n5) p5 += 1;
+    }
+    return dp[n];
+  }
+
+  /**
    * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
    *
    * <p>参考

@@ -969,16 +969,16 @@ class MMath {
     StringBuilder res = new StringBuilder();
     res.append(num / de);
     res.append(".");
-    Map<Long, Integer> de2Idx = new HashMap<>();
+    Map<Long, Integer> de2LoIdx = new HashMap<>();
     for (long n = num % de; n != 0; n %= de) {
       // 出现过相同的余数说明开始出现循环小数
-      if (de2Idx.containsKey(n)) {
-        res.insert(de2Idx.get(n), "(");
+      if (de2LoIdx.containsKey(n)) {
+        res.insert(de2LoIdx.get(n), "(");
         res.append(")");
         break;
       }
       // 记录每一个余数对应到结果中的位置
-      de2Idx.put(n, res.length());
+      de2LoIdx.put(n, res.length());
       // 模拟除法的过程
       n *= 10;
       res.append(n / de);
@@ -1468,10 +1468,8 @@ class BBit {
    * @return int int
    */
   public int reverse(int x) {
-    // 已反转 & 待反转
-    int rever = 0, left = x;
+    int rever = 0, left = x; // 已反转 & 待反转
     while (left != 0) {
-      // overflow
       if (rever < Integer.MIN_VALUE / 10 || rever > Integer.MAX_VALUE / 10) return 0;
       // tail digit
       rever = rever * 10 + left % 10;

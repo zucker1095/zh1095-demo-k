@@ -470,23 +470,24 @@ class DDFS {
    */
   public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
     List<Integer> vers = new ArrayList<>();
-    if (root == null) return vers;
-    // 题设节点数有限，值互异，且 O(1) 查找采用 Map
-    Map<Integer, TreeNode> parents = new HashMap<>(500);
-    collectParents(root, parents);
-    // 为避免重复，递归时传入来源，在递归前比较目标结点是否与来源结点相同
-    dfs17(target, null, k, parents, vers);
+    if (root != null) {
+      // 题设节点数有限，值互异
+      Map<Integer, TreeNode> parents = new HashMap<>(500);
+      collectParents(root, parents);
+      // 递归时避免重复，在递归前比较目标结点是否与来源结点相同
+      dfs17(target, null, k, parents, vers);
+    }
     return vers;
   }
 
-  private void collectParents(TreeNode node, Map<Integer, TreeNode> parents) {
-    if (node.left != null) {
-      parents.put(node.left.val, node);
-      collectParents(node.left, parents);
+  private void collectParents(TreeNode root, Map<Integer, TreeNode> parents) {
+    if (root.left != null) {
+      parents.put(root.left.val, root);
+      collectParents(root.left, parents);
     }
-    if (node.right != null) {
-      parents.put(node.right.val, node);
-      collectParents(node.right, parents);
+    if (root.right != null) {
+      parents.put(root.right.val, root);
+      collectParents(root.right, parents);
     }
   }
 
@@ -760,7 +761,7 @@ class BBSTDFS {
   private TreeNode head, pre;
 
   /**
-   * 二叉搜索树与双向链表，双向链表，即补充叶节点的指针，中序
+   * 二叉搜索树与双向链表/将二叉搜索树转换为排序的双向链表，双向链表，即补充叶节点的指针，中序
    *
    * <p>扩展1，逆序，则右中左
    *
@@ -1762,13 +1763,13 @@ class BacktrackingSearch extends DDFS {
     return paths;
   }
 
-  private void bt12(TreeNode root, StringBuilder path, List<String> paths) {
+  private void bt12(TreeNode root, StringBuilder path, List<String> res) {
     if (root == null) return;
     String add = (path.length() == 0 ? "" : "->") + String.valueOf(root.val);
     path.append(add);
-    if (root.left == null && root.right == null) paths.add(path.toString());
-    bt12(root.left, path, paths);
-    bt12(root.right, path, paths);
+    if (root.left == null && root.right == null) res.add(path.toString());
+    bt12(root.left, path, res);
+    bt12(root.right, path, res);
     int addCnt = add.length(), len = path.length();
     path.delete(len - addCnt, len);
   }
@@ -1847,7 +1848,7 @@ class BacktrackingElse extends DDFS {
   public List<String> letterCombinations(String digits) {
     List<String> res = new ArrayList<>();
     // 需要特判
-    if (digits.length() > 0) bt13(digits, new StringBuilder(), res, 0);
+    if (digits.length() > 0) bt13(digits.toCharArray(), new StringBuilder(), res, 0);
     return res;
   }
 
@@ -1855,14 +1856,14 @@ class BacktrackingElse extends DDFS {
     " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
   }; // 「电话号码的字母组合」
 
-  private void bt13(String str, StringBuilder path, List<String> res, int start) {
-    if (start == str.length()) {
+  private void bt13(char[] nums, StringBuilder path, List<String> res, int start) {
+    if (start == nums.length) {
       res.add(path.toString());
       return;
     }
-    for (char ch : LetterMap[str.charAt(start) - '0'].toCharArray()) {
+    for (char ch : LetterMap[nums[start] - '0'].toCharArray()) {
       path.append(ch);
-      bt13(str, path, res, start + 1);
+      bt13(nums, path, res, start + 1);
       path.deleteCharAt(path.length() - 1);
     }
   }
