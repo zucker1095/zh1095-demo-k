@@ -977,7 +977,7 @@ class Postorder {
   }
 
   /**
-   * 二叉树的直径，后序，类似「二叉树的最大路径和」
+   * 二叉树的直径，即最长路径，后序，类似「二叉树的最大路径和」
    *
    * <p>扩展1，N 叉树，即无向图求最长路径，参考「N叉树的直径」
    *
@@ -1301,14 +1301,12 @@ class BBFS {
    * @return int int
    */
   public int widthOfBinaryTree(TreeNode root) {
-    if (root == null) return 0;
-    root.val = 0;
     int maxWidth = 0;
+    root.val = 0;
     Deque<TreeNode> queue = new LinkedList<>();
-    queue.offer(root);
+    if (root != null) queue.offer(root);
     while (!queue.isEmpty()) {
-      int preWidth = queue.peekLast().val - queue.peekFirst().val + 1;
-      maxWidth = Math.max(maxWidth, preWidth);
+      maxWidth = Math.max(maxWidth, queue.peekLast().val - queue.peekFirst().val + 1);
       for (int i = queue.size(); i > 0; i--) {
         TreeNode n = queue.poll();
         if (n.left != null) {
@@ -1825,7 +1823,7 @@ class BacktrackingElse extends DDFS {
       return;
     }
     for (int i = start; i < start + 3; i++) {
-      if (i == len || i == start + 3 || (4 - path.size()) * 3 + i < len) break;
+      if (i == len || i + (4 - path.size()) * 3 < len) break;
       String cur = s.substring(start, i + 1);
       if (!isValidIP(cur)) continue;
       path.addLast(cur);

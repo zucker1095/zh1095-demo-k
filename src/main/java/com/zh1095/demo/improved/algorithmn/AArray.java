@@ -1966,7 +1966,7 @@ class DicOrder extends DefaultSString {
    * @param nums the nums
    */
   public void nextPermutation(int[] nums) {
-    int len = nums.length, peak = len - 1; // nums.length - 2
+    int len = nums.length, peak = len - 1;
     while (peak > 0) {
       if (nums[peak - 1] < nums[peak]) {
         Arrays.sort(nums, peak, len);

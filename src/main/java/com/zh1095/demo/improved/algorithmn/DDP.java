@@ -578,17 +578,16 @@ class OptimalPath {
    * @return int int
    */
   public int minPathSum(int[][] grid) {
-    int COL = grid[0].length;
-    int[] dp = new int[COL];
+    int col = grid[0].length;
+    int[] dp = new int[col];
     dp[0] = grid[0][0];
     // 首行只能由左侧递推
-    for (int i = 1; i < COL; i++) dp[i] = dp[i - 1] + grid[0][i];
+    for (int i = 1; i < col; i++) dp[i] = dp[i - 1] + grid[0][i];
     for (int i = 1; i < grid.length; i++) {
-      // 首列只能由上侧递推
-      dp[0] += grid[i][0];
-      for (int j = 1; j < COL; j++) dp[j] = Math.min(dp[j - 1], dp[j]) + grid[i][j];
+      dp[0] += grid[i][0]; // 首列只能由上侧递推
+      for (int j = 1; j < col; j++) dp[j] = grid[i][j] + Math.min(dp[j - 1], dp[j]);
     }
-    return dp[COL - 1];
+    return dp[col - 1];
     //    int rows = grid.length, cols = grid[0].length;
     //    int[][] dp = new int[rows][cols];
     //    int[] from = new int[rows * cols];
@@ -935,9 +934,7 @@ class OptimalElse {
    */
   public int coinChange(int[] coins, int amount) {
     int[] dp = new int[amount + 1];
-    // 比较最小值
     Arrays.fill(dp, amount + 1);
-    // 单独一枚硬币如果能够凑出面值，符合最优子结构
     dp[0] = 0;
     Arrays.sort(coins);
     for (int c : coins) {
@@ -1124,16 +1121,16 @@ class CCount {
   public int uniquePaths(int m, int n) {
     int[] dp = new int[n];
     Arrays.fill(dp, 1);
-    for (int i = 1; i < m; i++) {
-      for (int j = 1; j < n; j++) {
-        dp[j] += dp[j - 1];
+    for (int r = 1; r < m; r++) {
+      for (int c = 1; c < n; c++) {
+        dp[c] += dp[c - 1];
       }
     }
     return dp[n - 1];
   }
 
   /**
-   * 不同路径II with obstacles
+   * 不同路径II
    *
    * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数，根据递推关系，可以压缩至一维
    *
@@ -1145,12 +1142,12 @@ class CCount {
   public int uniquePathsWithObstacles(int[][] obstacleGrid) {
     int col = obstacleGrid[0].length;
     int[] dp = new int[col];
-    dp[0] = obstacleGrid[0][0] == 1 ? 0 : 1; // 起点可能有障碍
-    for (int i = 0; i < obstacleGrid.length; i++) {
-      for (int j = 0; j < col; j++) {
-        int cur = obstacleGrid[i][j];
-        if (cur == 1) dp[j] = 0;
-        if (cur == 0 && j > 0) dp[j] += dp[j - 1];
+    if (obstacleGrid[0][0] != 1) dp[0] = 1;
+    for (int r = 0; r < obstacleGrid.length; r++) {
+      for (int c = 0; c < col; c++) {
+        int cur = obstacleGrid[r][c];
+        if (cur == 1) dp[c] = 0;
+        if (cur == 0 && c > 0) dp[c] += dp[c - 1];
       }
     }
     return dp[col - 1];

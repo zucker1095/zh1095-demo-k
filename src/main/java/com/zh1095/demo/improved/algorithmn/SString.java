@@ -242,25 +242,23 @@ class WWindow {
     int[] needle = new int[128];
     for (char ch : t.toCharArray()) needle[ch] += 1;
     // 遍历的指针与结果的始末
-    int start = -1, end = s.length() + 1, cnt = t.length();
-    int lo = 0, hi = 0;
-    while (hi < s.length()) {
-      char add = s.charAt(hi);
+    int cnt = t.length(), len = s.length();
+    int lo = 0, hi = 0, start = -1, end = len + 1;
+    while (hi < len) {
+      char add = s.charAt(hi++);
       if (needle[add] > 0) cnt -= 1;
       needle[add] -= 1;
-      hi += 1;
       while (cnt == 0) {
         if (end - start > hi - lo) {
           start = lo;
           end = hi;
         }
-        char out = s.charAt(lo);
+        char out = s.charAt(lo++);
         if (needle[out] == 0) cnt += 1;
         needle[out] += 1;
-        lo += 1;
       }
     }
-    return end == s.length() + 1 ? "" : s.substring(start, end);
+    return end == len + 1 ? "" : s.substring(start, end);
   }
 
   /**
@@ -398,7 +396,6 @@ class WWindow {
     int lo = 0, hi = 0, maxLen = 0;
     while (hi < nums.length) {
       int add = nums[hi];
-      hi += 1;
       // 扩窗入队
       while (maxMQ.size() > 0 && add > maxMQ.peekLast()) maxMQ.pollLast();
       maxMQ.offerLast(add);
@@ -411,6 +408,7 @@ class WWindow {
         if (maxMQ.peekFirst() == out) maxMQ.pollFirst();
         if (minMQ.peekFirst() == out) minMQ.pollFirst();
       }
+      hi += 1;
       maxLen = Math.max(maxLen, hi - lo);
     }
     return maxLen;

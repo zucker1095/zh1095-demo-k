@@ -172,19 +172,17 @@ class ReverseList extends LList {
     ListNode dummy = new ListNode();
     dummy.next = head;
     ListNode pre = dummy, cur = dummy;
-    while (cur.next != null) {
+    while (cur != null) {
       // cur.next != null 并统计 i 是否为 k 因为可能刚好等于 k，且不需判空当前结点
-      //      for (int i = 0; i < k && cur.next != null; i++) {
-      //        cur = cur.next;
-      //      }
+      //      for (int i = 0; i < k && cur.next != null; i++) cur = cur.next;
       for (int i = 0; i < k && cur != null; i++) cur = cur.next;
       if (cur == null) break;
-      // 此时 cur 为区间尾，暂存
-      ListNode curStart = pre.next, nxtStart = cur.next;
+      // cur 为区间尾
+      ListNode start = pre.next, nxt = cur.next;
       cur.next = null;
-      pre.next = reverseList(curStart);
-      curStart.next = nxtStart;
-      pre = cur = curStart;
+      pre.next = reverseList(start);
+      start.next = nxt;
+      pre = cur = start;
     }
     return dummy.next;
   }
@@ -203,9 +201,7 @@ class ReverseList extends LList {
     ListNode dummy = new ListNode();
     dummy.next = head;
     ListNode pre = dummy;
-    for (int step = 0; step < left - 1; step++) {
-      pre = pre.next;
-    }
+    for (int step = 0; step < left - 1; step++) pre = pre.next;
     // 题设保证区间合法，因此 pre.next.next 非空
     ListNode start = pre.next, cur = pre.next.next;
     for (int i = 0; i < right - left; i++) {
@@ -499,8 +495,8 @@ class ReorderList extends LList {
     // 偶数个节点返回前一个
     ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
     mid.next = null;
-    l2 = reverseList(l2); // 翻转
-    while (l1 != null && l2 != null) { // 逐个尾插
+    l2 = reverseList(l2);
+    while (l1 != null && l2 != null) { // 尾插
       ListNode l1Nxt = l1.next, l2Nxt = l2.next;
       l1.next = l2;
       l1 = l1Nxt;
