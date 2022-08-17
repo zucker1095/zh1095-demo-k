@@ -1170,22 +1170,20 @@ class SSum extends DefaultArray {
    * @return list list
    */
   public List<List<Integer>> threeSum(int[] nums) {
-    int target = 0;
+    int target = 0, len = nums.length;
     Arrays.sort(nums);
-    List<List<Integer>> sums = new ArrayList();
-    for (int i = 0; i < nums.length; i++) {
+    List<List<Integer>> res = new ArrayList();
+    for (int i = 0; i < len; i++) {
       int pivot = nums[i];
       if (pivot > target) break;
-      // first deduplication
       if (i > 0 && pivot == nums[i - 1]) continue;
-      int lo = i + 1, hi = nums.length - 1; // two sum
+      int lo = i + 1, hi = len - 1;
       while (lo < hi) {
         int sum = pivot + nums[lo] + nums[hi];
         if (sum < target) lo += 1;
         if (sum > target) hi -= 1;
         if (sum == target) {
-          sums.add(Arrays.asList(pivot, nums[lo], nums[hi]));
-          // second deduplication
+          res.add(Arrays.asList(pivot, nums[lo], nums[hi]));
           while (lo < hi && nums[lo] == nums[lo + 1]) lo += 1;
           while (lo < hi && nums[hi] == nums[hi - 1]) hi -= 1;
           lo += 1;
@@ -1193,7 +1191,7 @@ class SSum extends DefaultArray {
         }
       }
     }
-    return sums;
+    return res;
   }
 
   /**
@@ -1976,10 +1974,11 @@ class DicOrder extends DefaultSString {
       }
       peak -= 1;
     }
-    if (peak == 0) {
+    if (peak < 0) {
       Arrays.sort(nums);
       return;
     }
+    // peak -> len-1
     for (int i = peak; i < len; i++) {
       if (nums[peak - 1] >= nums[i]) continue;
       swap(nums, peak - 1, i);
@@ -1999,20 +1998,18 @@ class DicOrder extends DefaultSString {
    */
   public int nextGreaterElement(int n) {
     char[] nums = String.valueOf(n).toCharArray();
-    // 1.找首个
     int len = nums.length, peak = len - 2;
     while (peak > -1) {
       if (nums[peak] < nums[peak + 1]) break;
       peak -= 1;
     }
-    if (peak == -1) return -1;
-    // 2.找首个
+    if (peak < 0) return -1;
+    // len-1 -> peak+1
     for (int i = len - 1; i > peak; i--) {
       if (nums[peak] >= nums[i]) continue;
       swap(nums, peak, i);
       break;
     }
-    // 3.翻转
     reverseChs(nums, peak + 1, len - 1);
     long res = 0;
     for (int i = 0; i < len; i++) res = res * 10 + (nums[i] - '0');

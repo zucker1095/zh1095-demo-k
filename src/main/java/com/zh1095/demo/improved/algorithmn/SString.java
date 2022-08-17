@@ -366,7 +366,7 @@ class WWindow {
     Deque<Integer> mq = new ArrayDeque<>();
     for (int i = 0; i < nums.length; i++) {
       int add = nums[i];
-      while (mq.size() > 0 && mq.peekLast() < add) mq.pollLast();
+      while (mq.size() > 0 && add > mq.peekLast()) mq.pollLast();
       mq.offerLast(add);
       if (i < k - 1) continue;
       // 缩窗的索引，当前窗口内最大值

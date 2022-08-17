@@ -1131,21 +1131,21 @@ class BBFS {
    * @return list list
    */
   public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
-    List<List<Integer>> res = new ArrayList<>();
-    Queue<TreeNode> queue = new LinkedList<>();
+    List<List<Integer>> res = new ArrayList();
+    Queue<TreeNode> queue = new LinkedList();
     if (root != null) queue.offer(root);
     boolean isOdd = true;
     while (!queue.isEmpty()) {
-      Deque<Integer> curLevel = new ArrayDeque<>(queue.size());
+      Deque<Integer> cur = new ArrayDeque(queue.size());
       for (int i = queue.size(); i > 0; i--) {
-        TreeNode cur = queue.poll();
-        if (isOdd) curLevel.offerLast(cur.val);
-        else curLevel.offerFirst(cur.val);
-        TreeNode l = cur.left, r = cur.right;
+        TreeNode n = queue.poll();
+        if (isOdd) cur.offerLast(n.val);
+        else cur.offerFirst(n.val);
+        TreeNode l = n.left, r = n.right;
         if (l != null) queue.offer(l);
         if (r != null) queue.offer(r);
       }
-      res.add(new ArrayList<>(curLevel));
+      res.add(new ArrayList<>(cur));
       isOdd = !isOdd;
     }
     return res;
@@ -1560,7 +1560,7 @@ class BacktrackingCombinatorics {
    */
   public List<List<Integer>> permute(int[] nums) {
     //    char[] chs = s.toCharArray();
-    //    Arrays.sort(chs);
+    //    Arrays.sort(chs)
     List<List<Integer>> res = new ArrayList<>();
     if (nums.length > 0) {
       // II 去重
@@ -1814,21 +1814,22 @@ class BacktrackingElse extends DDFS {
    */
   public List<String> restoreIpAddresses(String s) {
     List<String> ips = new ArrayList<>();
-    if (s.length() > 12 || s.length() < 4) return ips;
-    bt6(s, new ArrayDeque<>(4), ips, 0, 4);
+    if (s.length() > 3 && s.length() < 13) bt6(s, new ArrayDeque<>(4), ips, 0);
     return ips;
   }
 
-  private void bt6(String s, Deque<String> path, List<String> res, int start, int cnt) {
-    if (start == s.length()) {
-      if (cnt == 0) res.add(String.join(".", path));
+  private void bt6(String s, Deque<String> path, List<String> res, int start) {
+    int len = s.length();
+    if (start == len) {
+      if (path.size() == 4) res.add(String.join(".", path));
       return;
     }
-    for (int i = start; i < start + 3 && i < s.length(); i++) {
+    for (int i = start; i < start + 3; i++) {
+      if (i == len || i == start + 3 || (4 - path.size()) * 3 + i < len) break;
       String cur = s.substring(start, i + 1);
-      if (!isValidIP(cur) || i == start + 3 || cnt * 3 < s.length() - i) continue;
+      if (!isValidIP(cur)) continue;
       path.addLast(cur);
-      bt6(s, path, res, i + 1, cnt - 1);
+      bt6(s, path, res, i + 1);
       path.removeLast();
     }
   }
@@ -2059,12 +2060,12 @@ class BacktrackingElse extends DDFS {
     if (segs.length != 4) return nt;
     for (String s : segs) {
       if (s.length() > 3) return nt;
-      int num = 0;
+      int n = 0;
       for (char ch : s.toCharArray()) {
         if (!Character.isDigit(ch)) return nt;
-        num = num * 10 + (ch - '0');
+        n = n * 10 + (ch - '0');
       }
-      if (num > 255 || (s.charAt(0) == '0' && s.length() > 1)) return nt;
+      if (n > 255 || (s.charAt(0) == '0' && s.length() > 1)) return nt;
     }
     return "IPv4";
   }

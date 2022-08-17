@@ -323,10 +323,10 @@ class DData {
      * @return the int
      */
     public int get(int key) {
-      DLinkedNode node = k2n.get(key);
-      if (node == null) return -1;
-      moveToHead(node);
-      return node.value;
+      DLinkedNode n = k2n.get(key);
+      if (n == null) return -1;
+      moveToHead(n);
+      return n.value;
     }
 
     /**
@@ -338,10 +338,10 @@ class DData {
      * @param value the value
      */
     public void put(int key, int value) {
-      DLinkedNode node = k2n.get(key);
-      if (node != null) {
-        node.value = value;
-        moveToHead(node);
+      DLinkedNode n = k2n.get(key);
+      if (n != null) {
+        n.value = value;
+        moveToHead(n);
         return;
       }
       DLinkedNode newNode = new DLinkedNode(key, value);
@@ -353,17 +353,17 @@ class DData {
       }
     }
 
-    private void addToHead(DLinkedNode node) {
-      node.prev = head;
-      node.next = head.next;
-      head.next.prev = node;
-      head.next = node;
+    private void addToHead(DLinkedNode n) {
+      n.prev = head;
+      n.next = head.next;
+      head.next.prev = n;
+      head.next = n;
     }
 
     // removeTail & addToHead
-    private void moveToHead(DLinkedNode node) {
-      removeNode(node);
-      addToHead(node);
+    private void moveToHead(DLinkedNode n) {
+      removeNode(n);
+      addToHead(n);
     }
 
     // revmoeNode
@@ -373,30 +373,17 @@ class DData {
       return last;
     }
 
-    private void removeNode(DLinkedNode node) {
-      node.prev.next = node.next;
-      node.next.prev = node.prev;
+    private void removeNode(DLinkedNode n) {
+      n.prev.next = n.next;
+      n.next.prev = n.prev;
     }
 
     private class DLinkedNode {
-      /** The Key. */
-      public int key,
-          /** The Value. */
-          value;
+      public int key, value;
+      public DLinkedNode prev, next;
 
-      /** The Prev. */
-      public DLinkedNode prev,
-          /** The Next. */
-          next;
-      /** Instantiates a new D linked node. */
       public DLinkedNode() {}
 
-      /**
-       * Instantiates a new D linked node.
-       *
-       * @param _key the key
-       * @param _value the value
-       */
       public DLinkedNode(int _key, int _value) {
         key = _key;
         value = _value;

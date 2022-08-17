@@ -874,10 +874,10 @@ class OptimalElse {
    * @return int int
    */
   public int longestValidParentheses(String s) {
-    int maxLen = 0;
     char[] chs = s.toCharArray();
-    int[] dp = new int[chs.length];
-    for (int i = 1; i < chs.length; i++) {
+    int maxLen = 0, len = chs.length;
+    int[] dp = new int[len];
+    for (int i = 1; i < len; i++) {
       if (chs[i] == '(') continue;
       // 0...preIdx(...)) 其中 i 是最后一个括号
       int preIdx = i - dp[i - 1];
@@ -908,20 +908,16 @@ class OptimalElse {
    * @return int int
    */
   public int maximalSquare(char[][] matrix) {
-    int maxSide = 0, ROW = matrix.length, COL = matrix[0].length;
-    int[] dp = new int[COL + 1]; // 首行首列均 0
-    for (int r = 0; r < ROW; r++) {
+    int maxSide = 0, row = matrix.length, col = matrix[0].length;
+    int[] dp = new int[col + 1]; // 首行首列均 0
+    for (int r = 0; r < row; r++) {
       int topLeft = 0;
-      for (int c = 0; c < COL; c++) {
+      for (int c = 0; c < col; c++) {
         int nxt = dp[c + 1];
-        if (matrix[r][c] == '1') {
-          // 类似木桶短边 matrix[i][j] 为右下角组成的最大面积受限于左上，上边与左侧的 0
-          dp[c + 1] = 1 + Math.min(topLeft, Math.min(dp[c], dp[c + 1]));
-          // maxSide = max(maxSide, dp[row+1][col+1]);
-          maxSide = Math.max(maxSide, dp[c + 1]);
-        } else {
-          dp[c + 1] = 0;
-        }
+        // 类似木桶短边 matrix[i][j] 为右下角组成的最大面积受限于左上，上边与左侧的 0
+        if (matrix[r][c] == '0') dp[c + 1] = 0;
+        else dp[c + 1] = 1 + Math.min(topLeft, Math.min(dp[c], dp[c + 1]));
+        maxSide = Math.max(maxSide, dp[c + 1]);
         topLeft = nxt;
       }
     }
@@ -966,7 +962,8 @@ class OptimalElse {
     for (int i = 1; i <= n; i++) {
       dp[i] = i; // 至少全由 1 组成，即 worst case
       for (int j = 1; j * j <= i; j++) {
-        dp[i] = Math.min(dp[i], dp[i - j * j] + 1);
+        int sum = i - j * j;
+        dp[i] = Math.min(dp[i], dp[sum] + 1);
       }
     }
     return dp[n];
