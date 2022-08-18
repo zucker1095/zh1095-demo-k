@@ -305,22 +305,19 @@ class Build {
      * @return the tree node
      */
     public TreeNode deserialize(String data) {
-      return traverse(data.split(","));
+      return dfs21(data.split(","));
     }
 
-    private TreeNode traverse(String[] nodes) {
+    private TreeNode dfs21(String[] nodes) {
       if (idx > nodes.length - 1) return null;
-      String v = nodes[idx];
-      idx += 1;
+      String v = nodes[idx++];
       //      String cnt = vals[idx++];
       if (v.equals("null")) return null;
       TreeNode root = new TreeNode(Integer.parseInt(v));
-      root.left = traverse(nodes);
-      root.right = traverse(nodes);
+      root.left = dfs21(nodes);
+      root.right = dfs21(nodes);
       //      root.children = new TreeNode[cnt];
-      //      for (int i = 0; i < cnt; i++) {
-      //        root.children[i] = traversal(vals);
-      //      }
+      //      for (int i = 0; i < cnt; i++) root.children[i] = dfs21(vals);
       return root;
     }
   }
@@ -1449,9 +1446,10 @@ class MultiTrees {
    * @return boolean boolean
    */
   public boolean isSameTree(TreeNode r1, TreeNode r2) {
-    //    if (p == null && q == null) return true;
-    //    else if (p == null || q == null) return false;
-    //    return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
+    //    if (r1 == null && r2 == null) return true;
+    //    if (r1 == null || r2 == null) return false;
+    //    if (r1.val != r2.val) return false;
+    //    return isSameTree(r1.left, r2.left) && isSameTree(r1.right, r2.right);
     Queue<TreeNode> queue = new LinkedList<>();
     queue.offer(r1);
     queue.offer(r2);
@@ -1469,7 +1467,7 @@ class MultiTrees {
   }
 
   /**
-   * 另一棵树的子树/树的子结构 isSubStructure
+   * 另一棵树的子树，与「树的子结构」有差异
    *
    * <p>特判匹配树 & 主树为空两种情况，isSameTree 中的两处特判可以去除，因为匹配树 & 主树均非空
    *
@@ -1493,6 +1491,28 @@ class MultiTrees {
       if (n.right != null) queue.offer(n.right);
     }
     return false;
+  }
+
+  /**
+   * 树的子结构
+   *
+   * @param root
+   * @param subRoot
+   * @return
+   */
+  public boolean isSubStructure(TreeNode root, TreeNode subRoot) {
+    if (subRoot == null || root == null) return false;
+    return isContain(root, subRoot)
+        || isSubStructure(root.left, subRoot)
+        || isSubStructure(root.right, subRoot);
+  }
+
+  private boolean isContain(TreeNode root, TreeNode subRoot) {
+    if (subRoot == null) return true;
+    if (root == null) return false;
+    return root.val == subRoot.val
+        && isContain(root.left, subRoot.left)
+        && isContain(root.right, subRoot.right);
   }
 
   /**

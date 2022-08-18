@@ -367,7 +367,6 @@ class WWindow {
       while (mq.size() > 0 && add > mq.peekLast()) mq.pollLast();
       mq.offerLast(add);
       if (i < k - 1) continue;
-      // 缩窗的索引，当前窗口内最大值
       int outIdx = i - k + 1, winMax = mq.peekFirst();
       // mq.poll(nums[outIdx]);
       if (nums[outIdx] == winMax) mq.pollFirst();

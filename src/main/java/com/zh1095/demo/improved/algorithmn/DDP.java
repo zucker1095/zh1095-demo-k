@@ -93,7 +93,7 @@ class OptimalSubSequence extends DefaultArray {
         if (nums[j] >= nums[i]) continue;
         if (dp[i] == dp[j] + 1) cnts[i] += cnts[j];
         if (dp[i] < dp[j] + 1) {
-          dp[i] = dp[j] + 1;
+          dp[i] = 1 + dp[j];
           cnts[i] = cnts[j];
         }
       }
@@ -125,7 +125,7 @@ class OptimalSubSequence extends DefaultArray {
       // [i+1:len-1]
       for (int j = i + 1; j < len; j++) {
         // s[i] 是否匹配 s[j] 否则 s[i:j]'s LPS depends on prev and next
-        if (s.charAt(i) == s.charAt(j)) dp[i][j] = dp[i + 1][j - 1] + 2;
+        if (s.charAt(i) == s.charAt(j)) dp[i][j] = 2 + dp[i + 1][j - 1];
         else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
       }
     }
@@ -151,7 +151,7 @@ class OptimalSubSequence extends DefaultArray {
     //    int[] from = new int[l1 * l2];
     for (int p1 = 1; p1 <= l1; p1++) {
       for (int p2 = 1; p2 <= l2; p2++) {
-        if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) dp[p1][p2] = dp[p1 - 1][p2 - 1] + 1;
+        if (text1.charAt(p1 - 1) == text2.charAt(p2 - 1)) dp[p1][p2] = 1 + dp[p1 - 1][p2 - 1];
         else dp[p1][p2] = Math.max(dp[p1 - 1][p2], dp[p1][p2 - 1]);
         //        from[encoding(p1, p2)] = encoding(p1 - 1, p2 - 1);
         //        from[encoding(p1, p2)] = encoding(p1 - 1, p2) 或 encoding(p1, p2 - 1);
@@ -374,7 +374,8 @@ class OptimalSubArray {
     int[] dp = new int[nums2.length + 1];
     for (int p1 = 1; p1 <= nums1.length; p1++) {
       for (int p2 = nums2.length; p2 >= 1; p2--) {
-        dp[p2] = nums1[p1 - 1] == nums2[p2 - 1] ? dp[p2 - 1] + 1 : 0;
+        if (nums1[p1 - 1] == nums2[p2 - 1]) dp[p2] = 1 + dp[p2 - 1];
+        else dp[p2] = 0;
         maxLen = Math.max(maxLen, dp[p2]);
       }
     }
@@ -582,7 +583,7 @@ class OptimalPath {
     int[] dp = new int[col];
     dp[0] = grid[0][0];
     // 首行只能由左侧递推
-    for (int i = 1; i < col; i++) dp[i] = dp[i - 1] + grid[0][i];
+    for (int i = 1; i < col; i++) dp[i] = grid[0][i] + dp[i - 1];
     for (int i = 1; i < grid.length; i++) {
       dp[0] += grid[i][0]; // 首列只能由上侧递推
       for (int j = 1; j < col; j++) dp[j] = grid[i][j] + Math.min(dp[j - 1], dp[j]);
@@ -985,7 +986,7 @@ class OptimalElse {
       //        l[i] = l[len - 1] + 1;
       //        continue;
       //      }
-      l[i] = ratings[i] > ratings[i - 1] ? l[i - 1] + 1 : 1;
+      l[i] = ratings[i] > ratings[i - 1] ? 1 + l[i - 1] : 1;
     }
     minCnt += Math.max(l[len - 1], r);
     for (int i = len - 2; i > -1; i--) {
@@ -993,7 +994,7 @@ class OptimalElse {
       //        r += 1;
       //        continue;
       //      }
-      r = ratings[i] > ratings[i + 1] ? r + 1 : 1;
+      r = ratings[i] > ratings[i + 1] ? 1 + r : 1;
       minCnt += Math.max(l[i], r);
     }
     minCnt += Math.max(l[len - 1], r);
@@ -1098,9 +1099,9 @@ class OptimalElse {
           swap += 1;
         }
       } else {
-        int pre = keep;
+        int nxt = keep + 1;
         keep = swap;
-        swap = pre + 1;
+        swap = nxt;
       }
     }
     return Math.min(keep, swap);

@@ -2042,8 +2042,7 @@ class DicOrder extends DefaultSString {
       if (ch == '0' && ms.isEmpty()) continue;
       ms.append(ch);
     }
-    int remain = ms.length() - k - 1 < 0 ? 0 : ms.length() - k;
-    String res = ms.substring(0, remain).toString();
+    String res = ms.substring(0, Math.max(ms.length() - k, 0));
     return res.length() == 0 ? "0" : res;
   }
 
