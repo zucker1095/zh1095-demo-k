@@ -826,7 +826,6 @@ class BBSTDFS {
     // 逆向遍历即翻转的先序遍历
     for (int i = postorder.length - 1; i > -1; i--) {
       int cur = postorder[i];
-      // 左子树小
       if (cur > pre) return false;
       // 数组元素小于单调栈的元素了，表示往左子树走了，记录下上个根节点
       // 找到这个左子树对应的根节点，之前右子树全部弹出，因为不可能在往根节点的右子树走了
@@ -937,8 +936,8 @@ class Postorder {
   private int singleSide1(TreeNode root) {
     if (root == null) return 0;
     int l = Math.max(0, singleSide1(root.left)), r = Math.max(0, singleSide1(root.right));
-    maxSum = Math.max(maxSum, l + r + root.val); // update both
-    return Math.max(l, r) + root.val; // return solo
+    maxSum = Math.max(maxSum, root.val + l + r);
+    return root.val + Math.max(l, r);
   }
 
   private CntAndPath singleSide3(TreeNode root) {
@@ -1847,9 +1846,9 @@ class BacktrackingElse extends DDFS {
       if (i == len || i + (4 - path.size()) * 3 < len) break;
       String cur = s.substring(start, i + 1);
       if (!isValidIP(cur)) continue;
-      path.addLast(cur);
+      path.offerLast(cur);
       bt6(s, path, res, i + 1);
-      path.removeLast();
+      path.pollLast();
     }
   }
 

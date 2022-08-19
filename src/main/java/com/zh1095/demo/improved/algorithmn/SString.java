@@ -241,24 +241,25 @@ class WWindow {
   public String minWindow(String s, String t) {
     int[] needle = new int[128];
     for (char ch : t.toCharArray()) needle[ch] += 1;
-    // 遍历的指针与结果的始末
     int cnt = t.length(), len = s.length();
-    int lo = 0, hi = 0, start = -1, end = len + 1;
+    int lo = 0, hi = 0, start = -1, end = len;
     while (hi < len) {
-      char add = s.charAt(hi++);
-      if (needle[add] > 0) cnt -= 1;
+      char add = s.charAt(hi);
       needle[add] -= 1;
+      if (needle[add] >= 0) cnt -= 1;
       while (cnt == 0) {
         if (end - start > hi - lo) {
           start = lo;
           end = hi;
         }
-        char out = s.charAt(lo++);
-        if (needle[out] == 0) cnt += 1;
+        char out = s.charAt(lo);
         needle[out] += 1;
+        if (needle[out] > 0) cnt += 1;
+        lo += 1;
       }
+      hi += 1;
     }
-    return end == len + 1 ? "" : s.substring(start, end);
+    return end == len ? "" : s.substring(start, end + 1);
   }
 
   /**
@@ -301,27 +302,29 @@ class WWindow {
   /**
    * 至多包含K个不同字符的最长子串，类似「最小覆盖子串」
    *
+   * <p>测试 https://www.lintcode.com/problem/386/
+   *
    * @param s the s
    * @param k the k
    * @return int int
    */
   public int lengthOfLongestSubstringKDistinct(String s, int k) {
-    int maxLen = 0, cnt = k;
+    int maxLen = 0, cnt = 0;
     int lo = 0, hi = 0;
     int[] window = new int[128];
     char[] chs = s.toCharArray();
     while (hi < chs.length) {
       char add = chs[hi];
-      hi += 1;
+      if (window[add] == 0) cnt += 1;
       window[add] += 1;
-      if (window[add] == 1) cnt -= 1;
-      while (cnt < 0) {
+      if (cnt <= k) maxLen = Math.max(maxLen, hi - lo + 1);
+      while (cnt > k) {
         char out = chs[lo];
-        window[out] -= 1;
-        if (window[out] == 0) cnt += 1;
         lo += 1;
+        window[out] -= 1;
+        if (window[out] == 0) cnt -= 1;
       }
-      maxLen = Math.max(maxLen, hi - lo + 1);
+      hi += 1;
     }
     return maxLen;
   }
@@ -395,20 +398,17 @@ class WWindow {
     int lo = 0, hi = 0, maxLen = 0;
     while (hi < nums.length) {
       int add = nums[hi];
-      // 扩窗入队
-      while (maxMQ.size() > 0 && add > maxMQ.peekLast()) maxMQ.pollLast();
-      maxMQ.offerLast(add);
-      while (minMQ.size() > 0 && add < minMQ.peekLast()) minMQ.pollLast();
-      minMQ.offerLast(add);
-      // 缩窗出队
-      while (maxMQ.peekFirst() - minMQ.peekFirst() > limit) {
-        int out = nums[lo];
+      while (!minMQ.isEmpty() && add <= nums[minMQ.peekLast()]) minMQ.pollLast();
+      minMQ.offerLast(hi);
+      while (!maxMQ.isEmpty() && add >= nums[maxMQ.peekLast()]) maxMQ.pollLast();
+      maxMQ.offerLast(hi);
+      while (Math.abs(nums[maxMQ.peekFirst()] - nums[minMQ.peekFirst()]) > limit) {
         lo += 1;
-        if (maxMQ.peekFirst() == out) maxMQ.pollFirst();
-        if (minMQ.peekFirst() == out) minMQ.pollFirst();
+        if (minMQ.peekFirst() < lo) minMQ.pollFirst();
+        if (maxMQ.peekFirst() < lo) maxMQ.pollFirst();
       }
+      maxLen = Math.max(maxLen, hi - lo + 1);
       hi += 1;
-      maxLen = Math.max(maxLen, hi - lo);
     }
     return maxLen;
   }
