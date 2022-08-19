@@ -87,15 +87,15 @@ public class OOthers {
    * @return int int
    */
   public int jump(int[] nums) {
-    int cnt = 0, lo = 0, hi = 0;
+    int minCnt = 0, lo = 0, hi = 0;
     while (hi < nums.length - 1) {
       int maxIdx = 0;
       for (int i = lo; i <= hi; i++) maxIdx = Math.max(maxIdx, i + nums[i]);
       lo = hi + 1;
       hi = maxIdx;
-      cnt += 1;
+      minCnt += 1;
     }
-    return cnt;
+    return minCnt;
   }
 
   /**

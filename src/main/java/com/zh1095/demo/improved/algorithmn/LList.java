@@ -27,9 +27,9 @@ public class LList {
     // iteration
     ListNode pre = null, cur = head;
     while (cur != null) {
-      ListNode nxt = cur.next; // 暂存
-      cur.next = pre; // 变向
-      pre = cur; // 步进
+      ListNode nxt = cur.next;
+      cur.next = pre;
+      pre = cur;
       cur = nxt;
     }
     return pre;
@@ -177,8 +177,7 @@ class ReverseList extends LList {
       //      for (int i = 0; i < k && cur.next != null; i++) cur = cur.next;
       for (int i = 0; i < k && cur != null; i++) cur = cur.next;
       if (cur == null) break;
-      // cur 为区间尾
-      ListNode start = pre.next, nxt = cur.next;
+      ListNode start = pre.next, nxt = start;
       cur.next = null;
       pre.next = reverseList(start);
       start.next = nxt;

@@ -471,22 +471,19 @@ class SStack {
    * @return the boolean
    */
   public boolean isValid(String s) {
-    if (s.length() % 2 == 1) return false;
-    Map<Character, Character> pairs = new HashMap<>(3);
+    Map<Character, Character> pairs = new HashMap(3);
     pairs.put(')', '(');
     pairs.put(']', '[');
     pairs.put('}', '{');
-    Deque<Character> stack = new ArrayDeque<>();
+    Deque<Character> stack = new ArrayDeque();
     // int level = 0;
     for (char ch : s.toCharArray()) {
-      // 左括号入栈
       // if ((priorities.indexOf(ch) + 1) % 3 > level) return false;
       // level = Math.max((priorities.indexOf(ch) + 1) % 3, level);
       if (!pairs.containsKey(ch)) {
         stack.offerLast(ch);
         continue;
       }
-      // 右括号出栈并判断
       if (stack.isEmpty() || stack.peekLast() != pairs.get(ch)) return false;
       // level = Math.max((priorities.indexOf(stack.peek() + 1) % 3, level);
       stack.pollLast();

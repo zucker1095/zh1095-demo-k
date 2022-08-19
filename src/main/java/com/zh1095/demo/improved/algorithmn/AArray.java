@@ -65,6 +65,78 @@ public class AArray extends DefaultArray {
   }
 
   /**
+   * 合并区间，逐一比较上一段尾 & 当前段首
+   *
+   * @param intervals
+   * @return
+   */
+  public int[][] merge(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
+    int[][] res = new int[intervals.length][2];
+    int idx = -1;
+    for (int[] itv : intervals) {
+      if (idx == -1 || itv[0] > res[idx][1]) res[++idx] = itv;
+      else res[idx][1] = Math.max(res[idx][1], itv[1]);
+    }
+    return Arrays.copyOf(res, idx + 1);
+  }
+
+  /**
+   * 会议室，判断是否有交集即可，即某个会议开始时，上一个会议是否结束。
+   *
+   * @param intervals
+   * @return
+   */
+  public boolean canAttendMeetings(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> (v1[0] - v2[0]));
+    for (int i = 1; i < intervals.length; i++) {
+      if (intervals[i - 1][1] > intervals[i][0]) return false;
+    }
+    return true;
+  }
+
+  /**
+   * 会议室II，返回最多重叠数，抽象成「上下车」问题。
+   *
+   * <p>满足最繁忙的时间点即可，因此区间有交集则暂存，否则移除末端最小的，因此使用小根堆。
+   *
+   * <p>参考 https://www.jiuzhang.com/solution/meeting-rooms-ii/
+   *
+   * @param meetings
+   * @return
+   */
+  public int minMeetingRooms(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+    for (int[] itv : intervals) {
+      if (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) minHeap.poll();
+      minHeap.offer(itv[1]);
+    }
+    return minHeap.size();
+  }
+
+  /**
+   * 无重叠区间，移除区间的最小数量，使剩余区间互不重叠 ，贪心
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/non-overlapping-intervals/solution/wu-zhong-die-qu-jian-by-leetcode-solutio-cpsb/
+   *
+   * @param intervals
+   * @return
+   */
+  public int eraseOverlapIntervals(int[][] intervals) {
+    Arrays.sort(intervals, (v1, v2) -> v1[1] - v2[1]);
+    int len = intervals.length, hi = Integer.MIN_VALUE, cnt = 0;
+    for (int[] itv : intervals) {
+      if (itv[0] < hi) continue;
+      // 无重叠
+      cnt += 1;
+      hi = itv[1];
+    }
+    return len == 0 ? 0 : len - cnt;
+  }
+
+  /**
    * 合并两个有序数组，题设不需要滤重，逆向，参考合并两个有序链表
    *
    * <p>扩展1，滤重，替换为 nextIdx
@@ -137,78 +209,6 @@ public class AArray extends DefaultArray {
       }
     }
     return Arrays.copyOfRange(res, 0, cur);
-  }
-
-  /**
-   * 合并区间，逐一比较上一段尾 & 当前段首
-   *
-   * @param intervals
-   * @return
-   */
-  public int[][] merge(int[][] intervals) {
-    Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
-    int[][] res = new int[intervals.length][2];
-    int idx = -1;
-    for (int[] itv : intervals) {
-      if (idx == -1 || itv[0] > res[idx][1]) res[++idx] = itv;
-      else res[idx][1] = Math.max(res[idx][1], itv[1]);
-    }
-    return Arrays.copyOf(res, idx + 1);
-  }
-
-  /**
-   * 会议室，判断是否有交集即可，即某个会议开始时，上一个会议是否结束。
-   *
-   * @param intervals
-   * @return
-   */
-  public boolean canAttendMeetings(int[][] intervals) {
-    Arrays.sort(intervals, (v1, v2) -> (v1[0] - v2[0]));
-    for (int i = 1; i < intervals.length; i++) {
-      if (intervals[i - 1][1] > intervals[i][0]) return false;
-    }
-    return true;
-  }
-
-  /**
-   * 会议室II，返回最多重叠数，抽象成「上下车」问题。
-   *
-   * <p>满足最繁忙的时间点即可，因此区间有交集则暂存，否则移除末端最小的，因此使用小根堆。
-   *
-   * <p>参考 https://www.jiuzhang.com/solution/meeting-rooms-ii/
-   *
-   * @param meetings
-   * @return
-   */
-  public int minMeetingRooms(int[][] intervals) {
-    Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
-    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-    for (int[] itv : intervals) {
-      if (!minHeap.isEmpty() && itv[0] >= minHeap.peek()) minHeap.poll();
-      minHeap.offer(itv[1]);
-    }
-    return minHeap.size();
-  }
-
-  /**
-   * 无重叠区间，移除区间的最小数量，使剩余区间互不重叠 ，贪心
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/non-overlapping-intervals/solution/wu-zhong-die-qu-jian-by-leetcode-solutio-cpsb/
-   *
-   * @param intervals
-   * @return
-   */
-  public int eraseOverlapIntervals(int[][] intervals) {
-    Arrays.sort(intervals, (v1, v2) -> v1[1] - v2[1]);
-    int len = intervals.length, hi = Integer.MIN_VALUE, cnt = 0;
-    for (int[] itv : intervals) {
-      if (itv[0] < hi) continue;
-      // 无重叠
-      cnt += 1;
-      hi = itv[1];
-    }
-    return len == 0 ? 0 : len - cnt;
   }
 
   /**
@@ -456,12 +456,16 @@ class HHeap extends DefaultArray {
    * @return the int
    */
   public int findKthLargest(int[] nums, int k) {
-    // 对前 k 个元素建小根堆，即堆化 [0,k-1] 区间的元素
-    //    for (int i = 0; i < k; i++) {
-    //      swim(nums, i);
+    //    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+    //    for (int n : nums) {
+    //      minHeap.add(n);
+    //      if (minHeap.size() > k) minHeap.poll();
     //    }
+    //    return minHeap.peek();
+    // 对前 k 个元素建小根堆，即堆化 [0,k-1] 区间的元素
+    //    for (int i = 0; i < k; i++) swim(nums, i);
     heapify(nums, k - 1);
-    // 剩下的元素与堆顶比较，若大于堆顶则去掉堆顶，再将其插入
+    // 向下调整
     for (int i = k; i < nums.length; i++) {
       if (priorityThan(nums[i], nums[0])) continue;
       swap(nums, 0, i);
@@ -879,7 +883,7 @@ class DichotomyClassic extends DefaultArray {
   public int search(int[] nums, int target) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2; // 向上取整
+      int mid = lo + (hi - lo) / 2;
       if (nums[mid] < nums[hi]) {
         // target 落在 [mid+1, hi]
         if (nums[mid + 1] <= target && target <= nums[hi]) lo = mid + 1;
@@ -1009,13 +1013,12 @@ class DichotomyElse extends DefaultArray {
     //    return false;
     // I 行间的区间不重叠，因此先对列二分找上界，再对行
     int lo = 0, hi = matrix.length - 1;
-    while (lo < hi) {
+    while (lo < hi) { // upper
       int mid = lo + (hi - lo + 1) / 2;
       if (matrix[mid][0] <= target) lo = mid;
       else hi = mid - 1;
     }
     int[] row = matrix[hi];
-    if (row[0] == target) return true;
     if (row[0] > target) return false;
     // 从所在行中定位到列，找到最后一个满足 matrix[row][x] <= t 的列
     int c = upperBound(row, target, 0);
@@ -1180,8 +1183,6 @@ class SSum extends DefaultArray {
       int lo = i + 1, hi = len - 1;
       while (lo < hi) {
         int sum = pivot + nums[lo] + nums[hi];
-        if (sum < target) lo += 1;
-        if (sum > target) hi -= 1;
         if (sum == target) {
           res.add(Arrays.asList(pivot, nums[lo], nums[hi]));
           while (lo < hi && nums[lo] == nums[lo + 1]) lo += 1;
@@ -1189,6 +1190,8 @@ class SSum extends DefaultArray {
           lo += 1;
           hi -= 1;
         }
+        if (sum < target) lo += 1;
+        if (sum > target) hi -= 1;
       }
     }
     return res;
@@ -1205,9 +1208,10 @@ class SSum extends DefaultArray {
     Arrays.sort(nums);
     int cSum = nums[0] + nums[1] + nums[2], len = nums.length;
     for (int i = 0; i < len; i++) {
+      int pivot = nums[i];
       int lo = i + 1, hi = len - 1;
       while (lo < hi) {
-        int sum = nums[i] + nums[lo] + nums[hi];
+        int sum = pivot + nums[lo] + nums[hi];
         if (Math.abs(target - sum) < Math.abs(target - cSum)) cSum = sum;
         if (sum < target) lo += 1;
         if (sum == target) return cSum;
@@ -1664,13 +1668,13 @@ class DDuplicate extends DefaultArray {
     for (int i = 0; i < len; i++) {
       // 不断判断 i 位置上被放入正确的数 nums[i]-1
       while (0 < nums[i] && nums[i] < len + 1) {
-        int tar = nums[i] - 1;
-        if (nums[i] == nums[tar]) break;
-        swap(nums, i, tar);
+        int home = nums[i] - 1;
+        if (nums[i] == nums[home]) break;
+        swap(nums, i, home);
       }
     }
     for (int i = 0; i < len; i++) if (nums[i] != i + 1) return i + 1;
-    return len + 1; // 没有缺失
+    return len + 1; // 无缺失
   }
 }
 
@@ -1970,9 +1974,9 @@ class DicOrder extends DefaultSString {
     for (int peak = len - 1; peak > 0; peak--) {
       if (nums[peak] <= nums[peak - 1]) continue;
       Arrays.sort(nums, peak, len);
-      for (int j = peak; j < len; j++) {
-        if (nums[j] <= nums[peak - 1]) continue;
-        swap(nums, j, peak - 1);
+      for (int i = peak; i < len; i++) {
+        if (nums[i] <= nums[peak - 1]) continue;
+        swap(nums, i, peak - 1);
         return;
       }
     }
@@ -1994,9 +1998,9 @@ class DicOrder extends DefaultSString {
     for (int peak = len - 1; peak > 0; peak--) {
       if (nums[peak] <= nums[peak - 1]) continue;
       Arrays.sort(nums, peak, len);
-      for (int j = peak; j < len; j++) {
-        if (nums[j] <= nums[peak - 1]) continue;
-        swap(nums, j, peak - 1);
+      for (int i = peak; i < len; i++) {
+        if (nums[i] <= nums[peak - 1]) continue;
+        swap(nums, i, peak - 1);
         long res = Long.parseLong(String.valueOf(nums));
         return res > Integer.MAX_VALUE ? -1 : (int) res;
       }

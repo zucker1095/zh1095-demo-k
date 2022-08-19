@@ -1329,28 +1329,29 @@ class BBFS {
    * @return
    */
   public int countNodes(TreeNode root) {
-    int dep = 1, rootDep = getFullDepth(root), cnt = 0;
-    TreeNode cur = root;
-    while (cur != null) {
-      TreeNode r = cur.right;
-      if (r != null && dep + getFullDepth(r) == rootDep) {
-        cur = r;
-        cnt += Math.pow(2, rootDep - dep - 1);
+    if (root == null) return 0;
+    int left = countLevel(root.left), cnt = 0;
+    while (root != null) {
+      int right = countLevel(root.right);
+      if (right == left) {
+        cnt += Math.pow(2, left);
+        root = root.right;
       } else {
-        cur = cur.left;
+        cnt += Math.pow(2, right);
+        root = root.left;
       }
-      dep += 1;
+      left -= 1;
     }
-    return (int) (cnt + Math.pow(2, rootDep - 1));
+    return cnt;
   }
 
-  private int getFullDepth(TreeNode root) {
-    int dep = 0;
+  private int countLevel(TreeNode root) {
+    int h = 0;
     while (root != null) {
       root = root.left;
-      dep += 1;
+      h += 1;
     }
-    return dep;
+    return h;
   }
 }
 

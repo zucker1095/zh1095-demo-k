@@ -42,15 +42,10 @@ class OptimalSubSequence extends DefaultArray {
     tails[0] = nums[0];
     // dp[0] = 1;
     for (int n : nums) {
-      if (n > tails[end]) {
-        end += 1;
-        tails[end] = n;
-        // dp[i] = hi + 1;
-      } else {
-        int lo = lowerBound(tails, 0, end, n);
-        tails[lo] = n;
-        // dp[i] = lo + 1;
-      }
+      if (n > tails[end]) tails[++end] = n;
+      // dp[i] = end + 1;
+      else tails[lowerBound(tails, 0, end, n)] = n;
+      // dp[i] = lo + 1;
     }
     //    getPath(nums, dp, hi + 1);
     return end + 1; // 索引 +1 即长度
@@ -279,6 +274,19 @@ class OptimalSubSequence extends DefaultArray {
       else first = n;
     }
     return false;
+  }
+
+  /**
+   * 让字符串成为回文串的最少插入次数
+   *
+   * <p>除去最长回文子序列，剩下的字符是不构成回文子序列的字符，添加与其同等数量的字符，即可构成回文串，参考
+   * https://leetcode.cn/problems/minimum-insertion-steps-to-make-a-string-palindrome/solution/cdong-tai-gui-hua-xin-ping-zhuang-jiu-jiu-by-xiaon/
+   *
+   * @param s
+   * @return
+   */
+  public int minInsertions(String s) {
+    return s.length() - longestPalindromeSubseq(s);
   }
 
   /**
