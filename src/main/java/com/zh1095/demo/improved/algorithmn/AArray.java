@@ -1170,9 +1170,9 @@ class SSum extends DefaultArray {
    * @return list list
    */
   public List<List<Integer>> threeSum(int[] nums) {
-    int target = 0, len = nums.length;
-    Arrays.sort(nums);
     List<List<Integer>> res = new ArrayList();
+    Arrays.sort(nums);
+    int target = 0, len = nums.length;
     for (int i = 0; i < len; i++) {
       int pivot = nums[i];
       if (pivot > target) break;
@@ -1195,7 +1195,7 @@ class SSum extends DefaultArray {
   }
 
   /**
-   * 最接近的三数之和，题设解唯一
+   * 最接近的三数之和，题设解唯一，因此不去重
    *
    * @param nums the nums
    * @param target the target
@@ -1203,7 +1203,7 @@ class SSum extends DefaultArray {
    */
   public int threeSumClosest(int[] nums, int target) {
     Arrays.sort(nums);
-    int len = nums.length, cSum = nums[0] + nums[1] + nums[2];
+    int cSum = nums[0] + nums[1] + nums[2], len = nums.length;
     for (int i = 0; i < len; i++) {
       int lo = i + 1, hi = len - 1;
       while (lo < hi) {
@@ -1966,23 +1966,15 @@ class DicOrder extends DefaultSString {
    * @param nums the nums
    */
   public void nextPermutation(int[] nums) {
-    int len = nums.length, peak = len - 1;
-    while (peak > 0) {
-      if (nums[peak - 1] < nums[peak]) {
-        Arrays.sort(nums, peak, len);
-        break;
+    int len = nums.length;
+    for (int peak = len - 1; peak > 0; peak--) {
+      if (nums[peak] <= nums[peak - 1]) continue;
+      Arrays.sort(nums, peak, len);
+      for (int j = peak; j < len; j++) {
+        if (nums[j] <= nums[peak - 1]) continue;
+        swap(nums, j, peak - 1);
+        return;
       }
-      peak -= 1;
-    }
-    if (peak < 0) {
-      Arrays.sort(nums);
-      return;
-    }
-    // peak -> len-1
-    for (int i = peak; i < len; i++) {
-      if (nums[peak - 1] >= nums[i]) continue;
-      swap(nums, peak - 1, i);
-      return;
     }
     Arrays.sort(nums);
   }
@@ -1998,22 +1990,54 @@ class DicOrder extends DefaultSString {
    */
   public int nextGreaterElement(int n) {
     char[] nums = String.valueOf(n).toCharArray();
-    int len = nums.length, peak = len - 2;
-    while (peak > -1) {
-      if (nums[peak] < nums[peak + 1]) break;
-      peak -= 1;
+    int len = nums.length;
+    for (int peak = len - 1; peak > 0; peak--) {
+      if (nums[peak] <= nums[peak - 1]) continue;
+      Arrays.sort(nums, peak, len);
+      for (int j = peak; j < len; j++) {
+        if (nums[j] <= nums[peak - 1]) continue;
+        swap(nums, j, peak - 1);
+        long res = Long.parseLong(String.valueOf(nums));
+        return res > Integer.MAX_VALUE ? -1 : (int) res;
+      }
     }
-    if (peak < 0) return -1;
-    // len-1 -> peak+1
-    for (int i = len - 1; i > peak; i--) {
-      if (nums[peak] >= nums[i]) continue;
-      swap(nums, peak, i);
-      break;
+    return -1;
+  }
+
+  /**
+   * 字典序的第k小数字，找到 [1,n] 内，前序
+   *
+   * @param n the n
+   * @param k the k
+   * @return int int
+   */
+  public int findKthNumber(int n, int k) {
+    int lo = 1, hi = n; // 前缀为 1
+    k -= 1;
+    while (k > 0) { // 字典序最小即起点为 1
+      int cnt = count(lo, hi);
+      if (cnt > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
+        lo *= 10;
+        k -= 1;
+      } else { // 去下个前缀，即相邻子树遍历
+        lo += 1;
+        k -= cnt;
+      }
     }
-    reverseChs(nums, peak + 1, len - 1);
-    long res = 0;
-    for (int i = 0; i < len; i++) res = res * 10 + (nums[i] - '0');
-    return res > Integer.MAX_VALUE ? -1 : (int) (res);
+    return lo; // 退出循环时 cur==k 正好找到
+  }
+
+  // DFS lo 为根的树，统计至 hi 的个数
+  private int count(int lo, int hi) {
+    // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出
+    long cur = lo, nxt = lo + 1;
+    int cnt = 0;
+    while (cur <= hi) { // 逐层
+      cnt += Math.min(hi + 1, nxt) - cur;
+      cur *= 10;
+      nxt *= 10;
+    }
+    return cnt;
   }
 
   /**
@@ -2068,6 +2092,8 @@ class DicOrder extends DefaultSString {
     List<String> strs = new ArrayList<>(nums.length);
     for (int n : nums) strs.add(String.valueOf(n));
     strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
+    // 「最小数」
+    //    strs.sort((s1, s2) -> (s1 + s2).compareTo(s2 + s1));
     StringBuilder maxNum = new StringBuilder();
     for (String n : strs) maxNum.append(n);
     // 「最大数」需要去除前导零，因为可能有 02>20
@@ -2101,42 +2127,6 @@ class DicOrder extends DefaultSString {
       }
     }
     return num;
-  }
-
-  /**
-   * 字典序的第k小数字，找到 [1,n] 内，前序
-   *
-   * @param n the n
-   * @param k the k
-   * @return int int
-   */
-  public int findKthNumber(int n, int k) {
-    int lo = 1, hi = n; // 前缀为 1
-    k -= 1; // 字典序最小即起点为 1
-    while (k > 0) {
-      int curCnt = count(lo, hi);
-      if (curCnt > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
-        lo *= 10;
-        k -= 1;
-      } else { // 去下个前缀，即相邻子树遍历
-        lo += 1;
-        k -= curCnt;
-      }
-    }
-    return lo; // 退出循环时 cur==k 正好找到
-  }
-
-  // DFS lo 为根的树，统计至 hi 的个数
-  private int count(int lo, int hi) {
-    // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出
-    long cur = lo, nxt = cur + 1;
-    int cnt = 0;
-    while (cur <= hi) { // 逐层
-      cnt += Math.min(hi + 1, nxt) - cur;
-      cur *= 10;
-      nxt *= 10;
-    }
-    return cnt;
   }
 
   /**

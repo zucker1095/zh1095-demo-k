@@ -1128,17 +1128,10 @@ class GGraph {
    * @return boolean boolean
    */
   public boolean canFinish(int V, int[][] prerequisites) {
-    // 构造邻接表并统计入度
     int[] indegrees = new int[V];
-    List<List<Integer>> table = new ArrayList(V);
-    for (int i = 0; i < V; i++) table.add(new LinkedList());
-    buildTable(prerequisites, table, indegrees);
+    List<List<Integer>> table = buildTable(prerequisites, V, indegrees);
     Queue<Integer> queue = new LinkedList();
-    // 收集起点
-    for (int i = 0; i < V; i++) {
-      if (indegrees[i] == 0) queue.offer(i);
-    }
-    // 遍历起点的邻接点
+    for (int i = 0; i < V; i++) if (indegrees[i] == 0) queue.offer(i);
     while (!queue.isEmpty()) {
       V -= 1;
       for (int adj : table.get(queue.poll())) {
@@ -1149,12 +1142,15 @@ class GGraph {
     return V == 0;
   }
 
-  private void buildTable(int[][] prerequisites, List<List<Integer>> table, int[] indegrees) {
+  private List<List<Integer>> buildTable(int[][] prerequisites, int V, int[] indegrees) {
+    List<List<Integer>> table = new ArrayList(V);
+    for (int i = 0; i < V; i++) table.add(new LinkedList());
     for (int[] cp : prerequisites) {
       int from = cp[0], to = cp[1];
       indegrees[to] += 1;
       table.get(from).add(to);
     }
+    return table;
   }
 
   /**
@@ -1170,13 +1166,9 @@ class GGraph {
    */
   public int[] findOrder(int V, int[][] prerequisites) {
     int[] indegrees = new int[V];
-    List<List<Integer>> table = new ArrayList(V);
-    for (int i = 0; i < V; i++) table.add(new LinkedList());
-    buildTable(prerequisites, table, indegrees);
+    List<List<Integer>> table = buildTable(prerequisites, V, indegrees);
     Queue<Integer> queue = new LinkedList();
-    for (int i = 0; i < V; i++) {
-      if (indegrees[i] == 0) queue.offer(i);
-    }
+    for (int i = 0; i < V; i++) if (indegrees[i] == 0) queue.offer(i);
     int[] paths = new int[V];
     while (!queue.isEmpty()) {
       int ver = queue.poll();
