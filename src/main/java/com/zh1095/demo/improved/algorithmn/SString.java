@@ -367,14 +367,12 @@ class WWindow {
     Deque<Integer> mq = new ArrayDeque<>();
     for (int i = 0; i < nums.length; i++) {
       int add = nums[i];
-      while (mq.size() > 0 && add > mq.peekLast()) mq.pollLast();
+      while (!mq.isEmpty() && add > mq.peekLast()) mq.pollLast();
       mq.offerLast(add);
       if (i < k - 1) continue;
-      int outIdx = i - k + 1, winMax = mq.peekFirst();
-      // mq.poll(nums[outIdx]);
-      if (nums[outIdx] == winMax) mq.pollFirst();
-      // segMax[outIdx] = mq.max();
-      winMaxes[outIdx] = winMax;
+      int outIdx = i - k + 1, max = mq.peekFirst();
+      if (nums[outIdx] == max) mq.pollFirst();
+      winMaxes[outIdx] = max;
     }
     return winMaxes;
   }
@@ -518,10 +516,12 @@ class SStack {
       if (ch == '(') {
         minCnt += 1;
         maxCnt += 1;
-      } else if (ch == ')') {
+      }
+      if (ch == ')') {
         minCnt -= 1;
         maxCnt -= 1;
-      } else if (ch == '*') {
+      }
+      if (ch == '*') {
         // 贪心，尽可能匹配右括号
         minCnt -= 1;
         maxCnt += 1;

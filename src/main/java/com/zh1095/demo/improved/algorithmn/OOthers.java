@@ -134,8 +134,9 @@ public class OOthers {
    */
   public int translateNum(int num) {
     if (num <= 9) return 1;
-    int ba = num % 100, res = translateNum(num / 10); // xyzcba
-    return ba > 9 && ba < 26 ? res + translateNum(num / 100) : res;
+    int ba = num % 100, tenPos = translateNum(num / 10);
+    if (ba > 9 && ba < 26) return tenPos + translateNum(num / 100);
+    return tenPos;
   }
 
   /**
@@ -406,77 +407,41 @@ class DData {
     private final int CAPACITY;
     private final int[] data;
     private int front, rear; // dummy head and tail
+    // 循环数组中任何时刻一定至少有一个位置不存放有效元素
+    // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
 
-    /**
-     * Instantiates a new My circular queue.
-     *
-     * @param k the k
-     */
     public MyCircularQueue(int k) {
-      // 循环数组中任何时刻一定至少有一个位置不存放有效元素
-      // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
       CAPACITY = k + 1;
       data = new int[CAPACITY];
     }
 
-    /**
-     * Is empty boolean.
-     *
-     * @return the boolean
-     */
     public boolean isEmpty() {
       return front == rear;
     }
 
-    /**
-     * Is full boolean.
-     *
-     * @return the boolean
-     */
     public boolean isFull() {
       return (rear + 1) % CAPACITY == front;
     }
 
-    /**
-     * Front int.
-     *
-     * @return the int
-     */
-    public int Front() {
-      return isEmpty() ? -1 : data[front];
-    }
-
-    /**
-     * Rear int.
-     *
-     * @return the int
-     */
-    public int Rear() {
-      return isEmpty() ? -1 : data[(rear - 1 + CAPACITY) % CAPACITY];
-    }
-
-    /**
-     * En queue boolean.
-     *
-     * @param value the value
-     * @return the boolean
-     */
     public boolean enQueue(int value) {
       if (isFull()) return false;
-      data[rear] = value; // CAS
-      rear = (rear + 1) % CAPACITY; // CAS
+      data[rear] = value;
+      rear = (rear + 1) % CAPACITY;
       return true;
     }
 
-    /**
-     * De queue boolean.
-     *
-     * @return the boolean
-     */
     public boolean deQueue() {
       if (isEmpty()) return false;
       front = (front + 1) % CAPACITY;
       return true;
+    }
+
+    public int Front() {
+      return isEmpty() ? -1 : data[front];
+    }
+
+    public int Rear() {
+      return isEmpty() ? -1 : data[(rear - 1 + CAPACITY) % CAPACITY];
     }
   }
 
@@ -495,13 +460,13 @@ class DData {
     private long min = Long.MAX_VALUE;
     private final Deque<Long> stack = new ArrayDeque<>();
 
-    public void push(int x) {
+    public void push(int n) {
       if (stack.isEmpty()) {
-        stack.push(0l);
-        min = x;
+        stack.push(0L);
+        min = n;
       } else {
-        stack.push(x - min);
-        min = Math.min(min, x);
+        stack.push(n - min);
+        min = Math.min(min, n);
       }
     }
 
@@ -514,7 +479,6 @@ class DData {
     public int top() {
       // 题设总是在非空栈上调用
       long top = stack.peekLast();
-      // 负数的话，出栈的值保存在 min，出栈元素加上 min
       return (int) (top < 0 ? min : top + min);
     }
 
@@ -847,14 +811,23 @@ class MMath {
    */
   public int mySqrt(int x) {
     if (x == 0) return 0;
-    double n = x;
-    while (true) {
-      double cur = (n + x / n) * 0.5;
-      // 后 n 位 1e^(-n)
-      if (Math.abs(n - cur) < 1e-7) break;
-      n = cur;
+    if (x == 1) return 1;
+    int lo = 1, hi = x / 2;
+    while (lo < hi) { // upper
+      int mid = lo + (hi - lo + 1) / 2;
+      if (mid <= x / mid) lo = mid;
+      else hi = mid - 1;
     }
-    return (int) n;
+    return lo;
+    //    if (x == 0) return 0;
+    //    double n = x;
+    //    while (true) {
+    //      double cur = (n + x / n) * 0.5;
+    //      // 后 n 位 1e^(-n)
+    //      if (Math.abs(n - cur) < 1e-7) break;
+    //      n = cur;
+    //    }
+    //    return (int) n;
   }
 
   /**
@@ -865,11 +838,19 @@ class MMath {
    * @return double double
    */
   public double myPow(double x, int n) {
+    //    long N = n;
     return n < 0 ? 1.0 / quickMulti(x, -n) : quickMulti(x, n);
   }
 
   // 特判零次幂 & 递归二分 & 判断剩余幂
   private double quickMulti(double x, int n) {
+    //    double res = 1.0, cur = x;
+    //    while (n > 0) {
+    //      if (n % 2 == 1) res *= cur;
+    //      cur *= cur;
+    //      n /= 2;
+    //    }
+    //    return res;
     if (n == 0) return 1;
     double y = quickMulti(x, n / 2);
     return y * y * (n % 2 == 0 ? 1 : x);

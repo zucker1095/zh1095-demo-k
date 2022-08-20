@@ -1372,6 +1372,32 @@ class PreSum {
   }
 
   /**
+   * 连续数组，严格相等，最长，找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
+   *
+   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录某个前缀和出现的首个下标
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
+   *
+   * @param nums the nums
+   * @return int
+   */
+  public int findMaxLength(int[] nums) {
+    int preSum = 0, maxLen = 0;
+    Map<Integer, Integer> sum2FirstIdx = new HashMap();
+    sum2FirstIdx.put(0, -1); // 可能存在前缀和刚好满足条件的情况
+    for (int i = 0; i < nums.length; i++) {
+      // 将 0 作为 -1
+      preSum += nums[i] == 0 ? -1 : 1;
+      // 仍未遍历到和为 0 的子数组，更新即可
+      if (!sum2FirstIdx.containsKey(preSum)) sum2FirstIdx.put(preSum, i);
+      // 画图可知 i - map[preSum] 即和为 0 的数组的长度
+      else maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
+    }
+    return maxLen;
+  }
+
+  /**
    * 和为k的子数组，返回其数量，严格相等
    *
    * <p>设 [i:j] 子数组和为 k，则有 pre[j−1] == pre[i]-k，因此计数 pre[j−1] 即可
@@ -1387,7 +1413,7 @@ class PreSum {
    */
   public int subarraySum(int[] nums, int k) {
     int cnt = 0, preSum = 0;
-    Map<Integer, Integer> sum2Cnt = new HashMap<>();
+    Map<Integer, Integer> sum2Cnt = new HashMap();
     // 需要预存 0 否则会漏掉前几位就满足的情况
     // 如 [1,1,0]，k=2 会返回 0 漏掉 1+1=2 与 1+1+0=2
     // 输入 [3,1,1,0] k=2 时则不会漏掉，因为 presum[3]-presum[0] 表示前面 3 位的和
@@ -1402,32 +1428,6 @@ class PreSum {
   }
 
   /**
-   * 连续数组，严格相等，最长，找到数量相同的 0 和 1 的最长子数组，题设非 0 即 1
-   *
-   * <p>将 0 作为 −1，则转换为求区间和满足 0 的最长子数组，同时记录某个前缀和出现的首个下标
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/contiguous-array/solution/qian-zhui-he-chai-fen-ha-xi-biao-java-by-liweiwei1/
-   *
-   * @param nums the nums
-   * @return int
-   */
-  public int findMaxLength(int[] nums) {
-    int preSum = 0, maxLen = 0;
-    Map<Integer, Integer> sum2FirstIdx = new HashMap<>();
-    sum2FirstIdx.put(0, -1); // 可能存在前缀和刚好满足条件的情况
-    for (int i = 0; i < nums.length; i++) {
-      // 将 0 作为 -1
-      preSum += nums[i] == 0 ? -1 : 1;
-      // 仍未遍历到和为 0 的子数组，更新即可
-      if (!sum2FirstIdx.containsKey(preSum)) sum2FirstIdx.put(preSum, i);
-      // 画图可知 i - map[preSum] 即和为 0 的数组的长度
-      else maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
-    }
-    return maxLen;
-  }
-
-  /**
    * 和可被k整除的子数组，严格相等
    *
    * <p>参考
@@ -1439,7 +1439,7 @@ class PreSum {
    */
   public int subarraysDivByK(int[] nums, int k) {
     int preSum = 0, cnt = 0;
-    Map<Integer, Integer> remainder2Cnt = new HashMap<>();
+    Map<Integer, Integer> remainder2Cnt = new HashMap();
     remainder2Cnt.put(0, 1);
     for (int n : nums) {
       preSum += n;
@@ -1453,7 +1453,7 @@ class PreSum {
     return cnt;
   }
 
-  // 以下前缀和为数组。
+  // 以下前缀和为数组，因为需要提前遍历一次，第二次遍历要上下文。
 
   /**
    * 和至少为k的最短子数组，返回长度，和至少，前缀和数组 & 单调队列
@@ -1475,7 +1475,7 @@ class PreSum {
     int len = nums.length, minLen = len + 1;
     long[] preSum = new long[len + 1];
     for (int i = 0; i < len; i++) preSum[i + 1] = preSum[i] + nums[i];
-    Deque<Integer> mq = new ArrayDeque<>();
+    Deque<Integer> mq = new ArrayDeque();
     for (int i = 0; i < len + 1; i++) {
       long sum = preSum[i];
       while (!mq.isEmpty() && sum <= preSum[mq.peekLast()]) mq.pollLast();
@@ -1502,7 +1502,7 @@ class PreSum {
     int len = nums.length;
     int[] preSum = new int[len + 1];
     for (int i = 0; i < len; i++) preSum[i + 1] = preSum[i] + nums[i];
-    Set<Integer> visited = new HashSet<>();
+    Set<Integer> visited = new HashSet();
     for (int i = 2; i <= len; i++) {
       visited.add(preSum[i - 2] % target);
       if (visited.contains(preSum[i] % target)) return true;
@@ -1517,6 +1517,22 @@ class PreSum {
     //      if (remainder2Cnt.containsKey(mod)) cnt += remainder2Cnt.get(mod);
     //    }
   }
+
+  //  public int maxSumTwoNoOverlap(int[] nums, int firstLen, int secondLen) {
+  //    for (int i = 1; i < nums.length; ++i) nums[i] += nums[i - 1];
+  //    int res = nums[firstLen + secondLen - 1], Lmax = nums[firstLen - 1], Mmax = nums[secondLen -
+  // 1];
+  //    for (int i = firstLen + secondLen; i < nums.length; ++i) {
+  //      Lmax = Math.max(Lmax, nums[i - secondLen] - nums[i - firstLen - secondLen]);
+  //      Mmax = Math.max(Mmax, nums[i - firstLen] - nums[i - firstLen - secondLen]);
+  //      res =
+  //              Math.max(
+  //                      res,
+  //                      Math.max(Lmax + nums[i] - nums[i - secondLen], Mmax + nums[i] - nums[i -
+  // firstLen]));
+  //    }
+  //    return res;
+  //  }
 
   /**
    * 最大子矩阵，元素和最大，类似「最大子数组和」
@@ -1804,7 +1820,7 @@ class Traversal extends DefaultArray {
   }
 
   /**
-   * 旋转图像/旋转矩阵，依次沿右下斜对角线与垂直中线翻转
+   * 旋转图像/旋转矩阵，先斜再中
    *
    * <p>扩展1，翻转 180 度，则分别沿水平与垂直翻转，而 270 度则改为沿西南斜对角线
    *
@@ -1831,10 +1847,10 @@ class Traversal extends DefaultArray {
    */
   public List<Integer> spiralOrder(int[][] matrix) {
     int row = matrix.length, col = matrix[0].length;
-    List<Integer> res = new ArrayList<>(row * col);
+    List<Integer> res = new ArrayList(row * col);
     int up = 0, down = row - 1, left = 0, right = col - 1;
     while (true) {
-      // 右下左上，任何一组越界即结束遍历
+      // （向）右下左上，任何一组越界即结束遍历
       for (int i = left; i <= right; i++) res.add(matrix[up][i]);
       up += 1;
       if (up > down) break;
@@ -1862,29 +1878,21 @@ class Traversal extends DefaultArray {
    */
   public int[][] generateMatrix(int n) {
     int[][] res = new int[n][n];
-    int num = 1;
+    int cnt = 1;
     int up = 0, down = n - 1, left = 0, right = n - 1;
-    while (num <= n * n) {
-      // 右下左上，等同「螺旋举证」
-      for (int i = left; i <= right; i++) {
-        res[up][i] = num;
-        num += 1;
-      }
+    while (cnt <= n * n) {
+      // （向）右下左上，等同「螺旋矩阵」
+      for (int i = left; i <= right; i++) res[up][i] = cnt;
+      cnt += right - left + 1;
       up += 1;
-      for (int i = up; i <= down; i++) {
-        res[i][right] = num;
-        num += 1;
-      }
+      for (int i = up; i <= down; i++) res[i][right] = cnt;
+      cnt += down - up + 1;
       right -= 1;
-      for (int i = right; i >= left; i--) {
-        res[down][i] = num;
-        num += 1;
-      }
+      for (int i = right; i >= left; i--) res[down][i] = cnt;
+      cnt += right - left + 1;
       down -= 1;
-      for (int i = down; i >= up; i--) {
-        res[i][left] = num;
-        num += 1;
-      }
+      for (int i = down; i >= up; i--) res[i][left] = cnt;
+      cnt += down - up + 1;
       left += 1;
     }
     return res;

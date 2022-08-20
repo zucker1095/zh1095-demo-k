@@ -107,7 +107,7 @@ public class LList {
    */
   public ListNode middleNode(ListNode head) {
     if (head == null || head.next == null) return head;
-    ListNode lo = head, hi = head.next.next;
+    ListNode lo = head, hi = head.next;
     while (hi != null && hi.next != null) {
       lo = lo.next;
       hi = hi.next.next;
@@ -375,11 +375,23 @@ class ReorderList extends LList {
    * @return list node
    */
   public ListNode oddEvenList(ListNode head) {
-    if (head != null) {
-      ListNode evenHead = head.next, oddTail = splitOddTail(head);
-      oddTail.next = evenHead;
-    }
+    if (head == null) return null;
+    ListNode evenHead = head.next, oddTail = splitOddTail(head);
+    oddTail.next = evenHead;
     return head;
+  }
+
+  // 分离奇偶链表，并返回奇链表的尾
+  private ListNode splitOddTail(ListNode head) {
+    if (head == null) return null;
+    ListNode odd = head, even = head.next;
+    while (even != null && even.next != null) {
+      odd.next = even.next;
+      odd = odd.next;
+      even.next = odd.next;
+      even = even.next;
+    }
+    return odd;
   }
 
   /**
@@ -397,16 +409,25 @@ class ReorderList extends LList {
     return mergeTwoLists(head, reverseList(evenHead));
   }
 
-  private ListNode splitOddTail(ListNode head) {
-    if (head == null) return null;
-    ListNode odd = head, even = head.next;
-    while (even != null && even.next != null) {
-      odd.next = even.next;
-      odd = odd.next;
-      even.next = odd.next;
-      even = even.next;
+  /**
+   * 重排链表，类似奇偶链表，将 1,2,3...n-1,n 排序为 1,n,2,n-1,3...n/2
+   *
+   * <p>找中 & 反转 & 连接
+   *
+   * @param head the head
+   */
+  public void reorderList(ListNode head) {
+    // 偶数个节点返回前一个
+    ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
+    mid.next = null;
+    l2 = reverseList(l2);
+    while (l1 != null && l2 != null) { // 尾插
+      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
+      l1.next = l2;
+      l1 = l1Nxt;
+      l2.next = l1;
+      l2 = l2Nxt;
     }
-    return odd;
   }
 
   /**
@@ -421,7 +442,7 @@ class ReorderList extends LList {
    * @return list node
    */
   public ListNode sortList(ListNode head) {
-    if (head == null) return head;
+    if (head == null || head.next == null) return head;
     ListNode mid = middleNode(head), head2 = mid.next;
     mid.next = null;
     return mergeTwoLists(sortList(head), sortList(head2));
@@ -481,27 +502,6 @@ class ReorderList extends LList {
     ListNode newHead = quickSort(ltHead, head);
     head.next = quickSort(head.next, end);
     return newHead;
-  }
-
-  /**
-   * 重排链表，类似奇偶链表，将 1,2,3...n-1,n 排序为 1,n,2,n-1,3...n/2
-   *
-   * <p>找中 & 反转 & 连接
-   *
-   * @param head the head
-   */
-  public void reorderList(ListNode head) {
-    // 偶数个节点返回前一个
-    ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
-    mid.next = null;
-    l2 = reverseList(l2);
-    while (l1 != null && l2 != null) { // 尾插
-      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
-      l1.next = l2;
-      l1 = l1Nxt;
-      l2.next = l1;
-      l2 = l2Nxt;
-    }
   }
 
   /**

@@ -624,12 +624,8 @@ class OptimalPath {
     //    return dp[rows - 1][cols - 1];
   }
 
-  //  private int[] deconding(int cols, int idx) {
-  //    return new int[] {idx / cols, idx % cols};
-  //  }
-  //  private int encoding(int cols, int x, int y) {
-  //    return x * cols + y;
-  //  }
+  //    private int[] deconding(int cols, int idx) { return new int[] {idx / cols, idx % cols}; }
+  //    private int encoding(int cols, int x, int y) { return x * cols + y; }
 
   /**
    * 三角形的最小路径和，bottom to up
@@ -811,10 +807,10 @@ class OptimalElse {
     int buy = Integer.MIN_VALUE, sell = 0;
     //    int lock = 0; // 表示无法交易的时候
     for (int p : prices) {
-      // 冷冻期，注意顺序
-      //      int preSell = sell;
-      //      sell = Math.max(sell, buy + p);
-      //      buy = Math.max(buy, lock - p);
+      // 冷冻期
+      //      int preBuy = buy, preSell = sell;
+      //      buy = Math.max(preBuy, lock - p);
+      //      sell = Math.max(preSell, preBuy + p);
       //      lock = preSell;
       // 因为能够多次买卖，所以每天都要尝试能否更优解
       buy = Math.max(buy, sell - p);

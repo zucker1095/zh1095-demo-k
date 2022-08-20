@@ -338,10 +338,6 @@ class Build {
 class DDFS {
   /** The Directions. */
   protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-  // 「二叉树中所有距离为k的结点」结果集
-  private final List<Integer> res5 = new ArrayList<>();
-  // 「二叉树中所有距离为k的结点」目标结点的父
-  private TreeNode parent;
 
   /**
    * 路径总和III，返回路径总数，但从任意点出发，题设值不重复，前缀和
@@ -466,10 +462,10 @@ class DDFS {
    * @return list list
    */
   public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    List<Integer> vers = new ArrayList<>();
+    List<Integer> vers = new ArrayList();
     if (root != null) {
       // 题设节点数有限，值互异
-      Map<Integer, TreeNode> parents = new HashMap<>(500);
+      Map<Integer, TreeNode> parents = new HashMap(500);
       collectParents(root, parents);
       // 递归时避免重复，在递归前比较目标结点是否与来源结点相同
       dfs17(target, null, k, parents, vers);
@@ -489,17 +485,16 @@ class DDFS {
   }
 
   private void dfs17(
-      TreeNode n, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
-    if (n == null) return;
+      TreeNode root, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
+    if (root == null) return;
     if (dist == 0) {
-      vers.add(n.val);
+      vers.add(root.val);
       return;
     }
     dist -= 1;
-    TreeNode parent = parents.get(n.val);
-    if (n.left != from) dfs17(n.left, n, dist, parents, vers);
-    if (n.right != from) dfs17(n.right, n, dist, parents, vers);
-    if (parent != from) dfs17(parent, n, dist, parents, vers);
+    if (root.left != from) dfs17(root.left, root, dist, parents, vers);
+    if (root.right != from) dfs17(root.right, root, dist, parents, vers);
+    if (parents.get(root.val) != from) dfs17(parents.get(root.val), root, dist, parents, vers);
   }
 
   /**
