@@ -26,6 +26,9 @@ class OptimalSubSequence extends DefaultArray {
    *
    * <p>如果想让上升子序列尽量的长，那么需要每次在上升子序列末尾添加的数字尽可能小，如 3465 应该选 345 而非 346
    *
+   * <p>既然结尾越小越好，我们可以记录在长度固定的情况下，结尾最小的那个元素的数值，参考
+   * https://leetcode.cn/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+   *
    * <p>扩展1，打印路径，参下 getPath
    *
    * <p>扩展2，求个数
@@ -36,16 +39,20 @@ class OptimalSubSequence extends DefaultArray {
   public int lengthOfLIS(int[] nums) {
     // 最后一个已经赋值的元素的索引
     int len = nums.length, end = 0;
-    // dp[i] 表示以 i 结尾的 LIS 用于求路径
     // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
-    int[] tails = new int[len], dp = new int[len];
+    int[] tails = new int[len];
+    // dp[i] 表示以 i 结尾的 LIS 用于求路径
+    //    int[] dp = new int[len];
     tails[0] = nums[0];
     // dp[0] = 1;
     for (int n : nums) {
-      if (n > tails[end]) tails[++end] = n;
-      // dp[i] = end + 1;
-      else tails[lowerBound(tails, 0, end, n)] = n;
-      // dp[i] = lo + 1;
+      if (n > tails[end]) {
+        tails[++end] = n;
+        // dp[i] = end + 1;
+      } else {
+        tails[lowerBound(tails, 0, end, n)] = n;
+        // dp[i] = lo + 1;
+      }
     }
     //    getPath(nums, dp, hi + 1);
     return end + 1; // 索引 +1 即长度
@@ -591,10 +598,11 @@ class OptimalPath {
     int[] dp = new int[col];
     dp[0] = grid[0][0];
     // 首行只能由左侧递推
-    for (int i = 1; i < col; i++) dp[i] = grid[0][i] + dp[i - 1];
-    for (int i = 1; i < grid.length; i++) {
-      dp[0] += grid[i][0]; // 首列只能由上侧递推
-      for (int j = 1; j < col; j++) dp[j] = grid[i][j] + Math.min(dp[j - 1], dp[j]);
+    for (int c = 1; c < col; c++) dp[c] = grid[0][c] + dp[c - 1];
+    for (int r = 1; r < grid.length; r++) {
+      // 首列只能由上侧递推
+      dp[0] += grid[r][0];
+      for (int c = 1; c < col; c++) dp[c] = grid[r][c] + Math.min(dp[c - 1], dp[c]);
     }
     return dp[col - 1];
     //    int rows = grid.length, cols = grid[0].length;
@@ -665,10 +673,10 @@ class OptimalPath {
     return rob2(nums);
   }
 
-  private int rob1(int[] nums) {
+  private int rob1(int[] nums, int start, int end) {
     int pre = 0, cur = 0;
-    for (int n : nums) {
-      int tmp = Math.max(cur, pre + n);
+    for (int i = start; i <= end; i++) {
+      int n = nums[i], tmp = Math.max(cur, pre + n);
       pre = cur;
       cur = tmp;
     }
@@ -702,9 +710,7 @@ class OptimalPath {
   private int rob2(int[] nums) {
     int len = nums.length;
     if (len < 2) return nums[0];
-    // [0:len-1] & [1:len]
-    return Math.max(
-        rob1(Arrays.copyOfRange(nums, 0, len - 1)), rob1(Arrays.copyOfRange(nums, 1, len)));
+    return Math.max(rob1(nums, 0, len - 1), rob1(nums, 1, len));
   }
 
   /**
@@ -1119,19 +1125,19 @@ class CCount {
    *
    * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
    *
-   * @param m the m
-   * @param n the n
+   * @param row the m
+   * @param col the n
    * @return int int
    */
-  public int uniquePaths(int m, int n) {
-    int[] dp = new int[n];
+  public int uniquePaths(int row, int col) {
+    int[] dp = new int[col];
     Arrays.fill(dp, 1);
-    for (int r = 1; r < m; r++) {
-      for (int c = 1; c < n; c++) {
+    for (int r = 1; r < row; r++) {
+      for (int c = 1; c < col; c++) {
         dp[c] += dp[c - 1];
       }
     }
-    return dp[n - 1];
+    return dp[col - 1];
   }
 
   /**
@@ -1217,10 +1223,10 @@ class CCount {
     int[][] dp = new int[v][s + 1]; // 便于从 1 开始递推
     dp[0][0] = 1;
     // j+1 与 j-1 可能越界 [0, v-1] 因此取余
-    for (int step = 1; step < s + 1; step++) {
-      for (int idx = 0; idx < v; idx++) {
-        int idxNxt = (idx + 1) % v, idxTail = (idx - 1 + v) % v;
-        dp[step][idx] = dp[step - 1][idxNxt] + dp[step - 1][idxTail];
+    for (int step = 1; step <= s; step++) {
+      for (int i = 0; i < v; i++) {
+        int nxt = (i + 1) % v, tail = (i - 1 + v) % v;
+        dp[step][i] = dp[step - 1][nxt] + dp[step - 1][tail];
       }
     }
     return dp[s][0];

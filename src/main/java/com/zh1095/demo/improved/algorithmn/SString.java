@@ -1350,10 +1350,9 @@ class MonotonicStack {
     Deque<Integer> ms = new ArrayDeque<>();
     int[] res = new int[tem.length];
     for (int i = 0; i < tem.length; i++) {
-      // 更新 res[pre] 直到满足其数字超过 temperatures[i]
       while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
-        int preIdx = ms.pollLast();
-        res[preIdx] = i - preIdx;
+        int outIdx = ms.pollLast();
+        res[outIdx] = i - outIdx;
       }
       ms.offerLast(i);
     }

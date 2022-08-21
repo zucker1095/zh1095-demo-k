@@ -1005,24 +1005,23 @@ class DichotomyElse extends DefaultArray {
    * @return boolean boolean
    */
   public boolean searchMatrix(int[][] matrix, int target) {
-    // II 由于行间的区间可能重叠，因此只能逐行二分
-    //    for (int r = 0; r < matrix.length; r++) {
-    //      int c = upperBound(matrix[r], target, 0);
-    //      if (c != -1 && matrix[r][c] == target) return true;
-    //    }
-    //    return false;
-    // I 行间的区间不重叠，因此先对列二分找上界，再对行
-    int lo = 0, hi = matrix.length - 1;
-    while (lo < hi) { // upper
-      int mid = lo + (hi - lo + 1) / 2;
-      if (matrix[mid][0] <= target) lo = mid;
-      else hi = mid - 1;
+    // II 由于行间的区间可能重叠，因此只能逐行二分，I 也通用
+    for (int r = 0; r < matrix.length; r++) {
+      int c = upperBound(matrix[r], target, 0);
+      if (c != -1 && matrix[r][c] == target) return true;
     }
-    int[] row = matrix[hi];
-    if (row[0] > target) return false;
-    // 从所在行中定位到列，找到最后一个满足 matrix[row][x] <= t 的列
-    int c = upperBound(row, target, 0);
-    return c == -1 ? false : row[c] == target;
+    return false;
+    // I 行间的区间不重叠，因此允许先对列二分找上界，再对行
+    //    int lo = 0, hi = matrix.length - 1;
+    //    while (lo < hi) { // upper
+    //      int mid = lo + (hi - lo + 1) / 2;
+    //      if (matrix[mid][0] <= target) lo = mid;
+    //      else hi = mid - 1;
+    //    }
+    //    int[] row = matrix[hi];
+    //    if (row[0] > target) return false;
+    //    int c = upperBound(row, target, 0);
+    //    return c == -1 ? false : row[c] == target;
   }
 
   /**
@@ -1701,21 +1700,22 @@ class DDuplicate extends DefaultArray {
  */
 class Delete extends DefaultArray {
   /**
-   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
+   * 删除排序数组中的重复项，保留 k 位，I & II 通用
    *
-   * <p>扩展1，链表参考「奇偶链表」
+   * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
    *
-   * @param nums
-   * @return
+   * <p>扩展1，参考删除字符串中的所有相邻重复项
+   *
+   * @param nums the nums
+   * @return the int
    */
-  public int[] exchange(int[] nums) {
-    int write = 0;
-    for (int read = 0; read < nums.length; read++) {
-      if ((nums[read] & 1) == 0) continue;
-      swap(nums, write, read);
-      write += 1;
+  public int removeDuplicates(int[] nums) {
+    int lo = 0, k = 1;
+    for (int n : nums) {
+      if (lo >= k && nums[lo - k] == n) continue;
+      nums[lo++] = n;
     }
-    return nums;
+    return lo;
   }
 
   /**
@@ -1728,33 +1728,12 @@ class Delete extends DefaultArray {
    * @param nums the nums
    */
   public void moveZeroes(int[] nums) {
-    final int target = 0, k = 0;
-    int write = 0;
-    for (int read = 0; read < nums.length; read++) {
-      //      if (nums[hi] != 1 && nums[hi] != 6 && nums[hi] != 3)
-      if (write >= k && target == nums[read]) continue;
-      swap(nums, write, read);
-      write += 1;
+    int lo = 0;
+    for (int hi = 0; hi < nums.length; hi++) {
+      if (nums[hi] == 0) continue;
+      swap(nums, lo, hi);
+      lo += 1;
     }
-  }
-
-  /**
-   * 删除排序数组中的重复项，保留 k 位，I & II 通用
-   *
-   * <p>原地，解法等同移动零，需要移除的目标位 nums[last - k]
-   *
-   * <p>扩展1，参考删除字符串中的所有相邻重复项
-   *
-   * @param nums the nums
-   * @return the int
-   */
-  public int removeDuplicates(int[] nums) {
-    int write = 0, k = 1;
-    for (int n : nums) {
-      if (write >= k && nums[write - k] == n) continue;
-      nums[write++] = n;
-    }
-    return write;
   }
 
   /**
@@ -1766,13 +1745,31 @@ class Delete extends DefaultArray {
    */
   public String moveChars(String str, char target) {
     char[] chs = str.toCharArray();
-    int write = 0;
-    for (int read = 0; read < chs.length; read++) {
-      if (target == chs[read]) continue;
-      swap(chs, write, read);
-      write += 1;
+    int lo = 0;
+    for (int hi = 0; hi < chs.length; hi++) {
+      if (chs[hi] == target) continue;
+      swap(chs, lo, hi);
+      lo += 1;
     }
-    return String.valueOf(Arrays.copyOfRange(chs, 0, write));
+    return String.valueOf(chs, 0, lo);
+  }
+
+  /**
+   * 调整数组顺序使奇数位于偶数前面，参考移动零，即遇到目标则跳过
+   *
+   * <p>扩展1，链表参考「奇偶链表」
+   *
+   * @param nums
+   * @return
+   */
+  public int[] exchange(int[] nums) {
+    int lo = 0;
+    for (int hi = 0; hi < nums.length; hi++) {
+      if ((nums[hi] & 1) == 0) continue;
+      swap(nums, lo, hi);
+      lo += 1;
+    }
+    return nums;
   }
 
   /**
@@ -1800,7 +1797,7 @@ class Delete extends DefaultArray {
       if (top > 0 && chs[top] == chs[top - 1]) top -= 1;
       else top += 1;
     }
-    return new String(chs, 0, top);
+    return String.valueOf(chs, 0, top);
   }
 }
 

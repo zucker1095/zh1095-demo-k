@@ -496,7 +496,6 @@ class DData {
     private static final int CAPACITY = 769;
     private final List[] buckets;
 
-    /** Instantiates a new My hash map. */
     public MyHashMap() {
       buckets = new LinkedList[CAPACITY];
       for (int i = 0; i < CAPACITY; i++) {
@@ -508,12 +507,6 @@ class DData {
       return key % CAPACITY;
     }
 
-    /**
-     * Get int.
-     *
-     * @param key the key
-     * @return the int
-     */
     public int get(int key) {
       int h = hash(key);
       Iterator<BucketNode> iterator = buckets[h].iterator();
@@ -526,12 +519,6 @@ class DData {
       return -1;
     }
 
-    /**
-     * Put.
-     *
-     * @param key the key
-     * @param value the value
-     */
     public void put(int key, int value) {
       int h = hash(key);
       Iterator<BucketNode> iterator = buckets[h].iterator();
@@ -545,11 +532,6 @@ class DData {
       buckets[h].add(new BucketNode(key, value));
     }
 
-    /**
-     * Remove.
-     *
-     * @param key the key
-     */
     public void remove(int key) {
       int h = hash(key);
       Iterator<BucketNode> iterator = buckets[h].iterator();
@@ -589,42 +571,24 @@ class DData {
    */
   public class MyQueue {
     private final Deque<Integer> out = new ArrayDeque<>(), in = new ArrayDeque<>();
-    /**
-     * Push.
-     *
-     * @param x the x
-     */
+
     public void push(int x) {
       in.offerLast(x);
     }
 
-    /**
-     * Pop int.
-     *
-     * @return the int
-     */
     public int pop() {
-      peek(); // 仅为复用
-      return out.pollLast();
+      int n = peek(); // 仅为复用
+      out.pollLast();
+      return n;
     }
 
-    /**
-     * Peek int.
-     *
-     * @return the int
-     */
     public int peek() {
-      if (out.isEmpty()) {
-        while (!in.isEmpty()) out.offerLast(in.pollLast());
-      }
+      if (!out.isEmpty()) return out.peekLast();
+      if (in.isEmpty()) return -1;
+      while (!in.isEmpty()) out.offerLast(in.pollLast());
       return out.peekLast();
     }
 
-    /**
-     * Empty boolean.
-     *
-     * @return the boolean
-     */
     public boolean empty() {
       return out.isEmpty() && in.isEmpty();
     }
@@ -639,7 +603,7 @@ class DData {
 
     public MyStack() {}
 
-    public void push(int x) {
+    public void push(int x) { // swap
       in.offer(x);
       while (!out.isEmpty()) in.offer(out.poll());
       Queue<Integer> tmp = out;
@@ -669,11 +633,6 @@ class DData {
   public class Trie {
     private final TireNode root = new TireNode(); // 哑结点
 
-    /**
-     * Insert.
-     *
-     * @param word the word
-     */
     public void insert(String word) {
       TireNode cur = root;
       for (char ch : word.toCharArray()) {
@@ -683,23 +642,11 @@ class DData {
       cur.isEnd = true;
     }
 
-    /**
-     * Search boolean.
-     *
-     * @param word the word
-     * @return the boolean
-     */
     public boolean search(String word) {
       TireNode target = lookup(word);
       return target == null ? false : target.isEnd;
     }
 
-    /**
-     * Starts with boolean.
-     *
-     * @param prefix the prefix
-     * @return the boolean
-     */
     public boolean startsWith(String prefix) {
       return lookup(prefix) != null;
     }
@@ -752,6 +699,27 @@ class DData {
 
     public int getRandom() {
       return nums[new Random().nextInt(idx + 1)];
+    }
+  }
+
+  /** 最大频率栈 */
+  class FreqStack {
+    private final Map<Integer, Integer> freq = new HashMap();
+    private final Map<Integer, Deque<Integer>> group = new HashMap();
+    private int maxfreq = 0;
+
+    public void push(int x) {
+      int f = freq.getOrDefault(x, 0) + 1;
+      freq.put(x, f);
+      if (f > maxfreq) maxfreq = f;
+      group.computeIfAbsent(f, z -> new ArrayDeque<>()).push(x);
+    }
+
+    public int pop() {
+      int x = group.get(maxfreq).pop();
+      freq.put(x, freq.get(x) - 1);
+      if (group.get(maxfreq).size() == 0) maxfreq -= 1;
+      return x;
     }
   }
 }
@@ -810,8 +778,7 @@ class MMath {
    * @return int int
    */
   public int mySqrt(int x) {
-    if (x == 0) return 0;
-    if (x == 1) return 1;
+    if (x == 0 || x == 1) return x;
     int lo = 1, hi = x / 2;
     while (lo < hi) { // upper
       int mid = lo + (hi - lo + 1) / 2;

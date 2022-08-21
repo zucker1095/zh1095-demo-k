@@ -70,26 +70,27 @@ public class TTree {
     //    int v = root.val;
     //    if (root.left == null && root.right == null) return v == sum;
     //    return hasPathSum(root.left, sum - v) || hasPathSum(root.right, sum - v);
-    if (root == null) return false;
     Queue<TreeNode> nodeQueue = new LinkedList<>();
     Queue<Integer> numQueue = new LinkedList<>();
-    nodeQueue.offer(root);
-    numQueue.offer(root.val);
+    if (root != null) {
+      nodeQueue.offer(root);
+      numQueue.offer(root.val);
+    }
     while (!nodeQueue.isEmpty()) {
       TreeNode node = nodeQueue.poll();
       int num = numQueue.poll();
-      TreeNode left = node.left, right = node.right;
-      if (left == null && right == null) {
+      TreeNode l = node.left, r = node.right;
+      if (l == null && r == null) {
         if (num == sum) return true;
         continue;
       }
-      if (left != null) {
-        nodeQueue.offer(left);
-        numQueue.offer(left.val + num);
+      if (l != null) {
+        nodeQueue.offer(l);
+        numQueue.offer(l.val + num);
       }
-      if (right != null) {
-        nodeQueue.offer(right);
-        numQueue.offer(right.val + num);
+      if (r != null) {
+        nodeQueue.offer(r);
+        numQueue.offer(r.val + num);
       }
     }
     return false;
@@ -391,9 +392,12 @@ class DDFS {
   }
 
   private void dfs1(char[][] grid, int r, int c) {
-    if (!inArea(grid, r, c) || grid[r][c] == '0') return;
     grid[r][c] = '0';
-    for (int[] dir : DIRECTIONS) dfs1(grid, r + dir[0], c + dir[1]);
+    for (int[] dir : DIRECTIONS) {
+      int nr = r + dir[0], nc = c + dir[1];
+      if (!inArea(grid, nr, nc) || grid[nr][nc] == '0') continue;
+      dfs1(grid, nr, nc);
+    }
   }
 
   /**
@@ -414,10 +418,13 @@ class DDFS {
   }
 
   private int dfs2(int[][] grid, int r, int c) {
-    if (!inArea(grid, r, c) || grid[r][c] == 0) return 0;
-    grid[r][c] = 0; // marking to avoid loop
+    grid[r][c] = 0;
     int pathLen = 1;
-    for (int[] dir : DIRECTIONS) pathLen += dfs2(grid, r + dir[0], c + dir[1]);
+    for (int[] dir : DIRECTIONS) {
+      int nr = r + dir[0], nc = c + dir[1];
+      if (!inArea(grid, nr, nc) || grid[nr][nc] == 0) continue;
+      pathLen += dfs2(grid, nr, nc);
+    }
     return pathLen;
   }
 
@@ -500,29 +507,34 @@ class DDFS {
   /**
    * 不同岛屿的数量
    *
+   * <p>测试 https://www.lintcode.com/problem/860
+   *
    * @param grid the grid
    * @return the int
    */
-  public int numDistinctIslands(int[][] grid) {
-    Set<String> paths = new HashSet<>(); // 通过字符串去重
-    for (int i = 0; i < grid.length; i++) {
-      for (int j = 0; j < grid[0].length; j++) {
-        if (grid[i][j] != 1) continue;
-        StringBuilder path = new StringBuilder();
-        dfs5(grid, path, i, j, i, j);
-        paths.add(path.toString());
-      }
-    }
-    return paths.size();
-  }
-
-  private void dfs5(int[][] grid, StringBuilder path, int x, int y, int preX, int preY) {
-    if (!inArea(grid, x, y) || grid[x][y] == 0) return;
-    grid[x][y] = 0; // mark it
-    path.append(x - preX); // 分别记录相对的横纵坐标
-    path.append(y - preY);
-    for (int[] dir : DIRECTIONS) dfs5(grid, path, x + dir[0], y + dir[1], preX, preY);
-  }
+  //  public int numberofDistinctIslands(int[][] grid) {
+  //    Set<String> paths = new HashSet<>();
+  //    for (int r = 0; r < grid.length; r++) {
+  //      for (int c = 0; c < grid[0].length; c++) {
+  //        if (grid[r][c] != 1) continue;
+  //        StringBuilder path = new StringBuilder();
+  //        dfs5(grid, r, c, path, 0);
+  //        paths.add(path.toString());
+  //      }
+  //    }
+  //    return paths.size();
+  //  }
+  //
+  //  private void dfs5(int[][] grid, int r, int c, StringBuilder sb, int dir) {
+  //    if (!inArea(grid, r, c) || grid[r][c] == 0) return;
+  //    grid[r][c] = 0;
+  //    sb.append(dir).append(",");
+  //    dfs5(grid, r - 1, c, sb, 1);
+  //    dfs5(grid, r + 1, c, sb, 2);
+  //    dfs5(grid, r, c - 1, sb, 3);
+  //    dfs5(grid, r, c + 1, sb, 4);
+  //    sb.append(-dir).append(",");
+  //  }
 
   /**
    * 被围绕的区域，填充所有被 X 围绕的 O，因此标记和边界联通的 O 路径即可。
@@ -549,9 +561,12 @@ class DDFS {
   }
 
   private void dfs16(char[][] board, int r, int c) {
-    if (!inArea(board, r, c) || board[r][c] != 'O') return;
     board[r][c] = '#';
-    for (int[] dir : DIRECTIONS) dfs16(board, r + dir[0], c + dir[1]);
+    for (int[] dir : DIRECTIONS) {
+      int nr = r + dir[0], nc = c + dir[1];
+      if (!inArea(board, nr, nc) || board[nr][nc] != '0') continue;
+      dfs16(board, nr, nc);
+    }
   }
 
   /**
@@ -633,8 +648,7 @@ class BBSTInorder {
         cur = cur.left;
       }
       cur = stack.pollLast();
-      k -= 1;
-      if (k == 0) return cur.val;
+      if (--k == 0) return cur.val;
       cur = cur.right;
     }
     return -1; // impossible
@@ -1407,23 +1421,25 @@ class MultiTrees {
    * @return tree node
    */
   public TreeNode mergeTrees(TreeNode r1, TreeNode r2) {
+    //    if (r1 == null && r2 == null) return null;
+    //    if (r1 == null) return r2;
+    //    if (r2 == null) return r1;
+    //    r1.val += r2.val;
+    //    r1.left = mergeTrees(r1.left, r2.left);
+    //    r1.right = mergeTrees(r1.right, r2.right);
+    //    return r1;
     if (r1 == null || r2 == null) return r1 == null ? r2 : r1;
-    Queue<TreeNode> queue = new LinkedList<>();
+    Queue<TreeNode> queue = new LinkedList();
     queue.offer(r1);
     queue.offer(r2);
     while (!queue.isEmpty()) {
       TreeNode n1 = queue.poll(), n2 = queue.poll();
-      // 合并当前节点的值
       n1.val += n2.val;
-      // 依次判断 r1 的左右子树
-      // 若二者左都不为空，则均需要遍历二者左的子节点，因此入队
       if (n1.left != null && n2.left != null) {
         queue.offer(n1.left);
         queue.offer(n2.left);
       }
-      // 若 r1 左空，就把 r2 左挂为前者左，即仅遍历 r2 左的子节点，否则 r1 左无改动
       if (n1.left == null) n1.left = n2.left;
-      // r1 右同理
       if (n1.right != null && n2.right != null) {
         queue.offer(n1.right);
         queue.offer(n2.right);
@@ -1445,14 +1461,14 @@ class MultiTrees {
     //    if (r1 == null || r2 == null) return false;
     //    if (r1.val != r2.val) return false;
     //    return isSameTree(r1.left, r2.left) && isSameTree(r1.right, r2.right);
-    Queue<TreeNode> queue = new LinkedList<>();
+    Queue<TreeNode> queue = new LinkedList();
     queue.offer(r1);
     queue.offer(r2);
     while (!queue.isEmpty()) {
       TreeNode n1 = queue.poll(), n2 = queue.poll();
       if (n1 == null && n2 == null) continue;
       if (n1 == null || n2 == null || n1.val != n2.val) return false;
-      // 按序，保证出队同侧
+      // 按序入队
       queue.offer(n1.left);
       queue.offer(n2.left);
       queue.offer(n1.right);
@@ -1511,18 +1527,15 @@ class MultiTrees {
   }
 
   /**
-   * 翻转等价二叉树
+   * 翻转等价二叉树，均空 -> 仅其一空或值不等 -> 依次比较同侧与异侧
    *
    * @param r1 the root 1
    * @param r2 the root 2
    * @return boolean boolean
    */
   public boolean flipEquiv(TreeNode r1, TreeNode r2) {
-    // 均空
     if (r1 == null && r2 == null) return true;
-    // 仅其一空或值不等
     if (r1 == null || r2 == null || r1.val != r2.val) return false;
-    // 均非空且值相同，则依次比较同侧与异侧
     return (flipEquiv(r1.left, r2.left) && flipEquiv(r1.right, r2.right))
         || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
   }
@@ -1754,9 +1767,8 @@ class BacktrackingSearch extends DDFS {
     recStack[r][c] = true;
     for (int[] dir : DIRECTIONS) {
       int nX = r + dir[0], nY = c + dir[1];
-      if (inArea(board, nX, nY)
-          && !recStack[nX][nY]
-          && bt8(board, nX, nY, word, start + 1, recStack)) return true;
+      if (!inArea(board, nX, nY) || recStack[nX][nY]) continue;
+      if (bt8(board, nX, nY, word, start + 1, recStack)) return true;
     }
     recStack[r][c] = false;
     return false;

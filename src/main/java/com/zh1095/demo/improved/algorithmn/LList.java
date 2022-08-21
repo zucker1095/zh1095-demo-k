@@ -140,6 +140,23 @@ public class LList {
     return nodes.stream().mapToInt(i -> i).toArray();
   }
 
+  /**
+   * 链表中倒数第k个节点
+   *
+   * @param head
+   * @param k
+   * @return
+   */
+  public ListNode getKthFromEnd(ListNode head, int k) {
+    ListNode lo = head, hi = head;
+    for (int i = 0; i < k; i++) hi = hi.next;
+    while (hi != null) {
+      hi = hi.next;
+      lo = lo.next;
+    }
+    return lo;
+  }
+
   private class Node {
     int val;
     Node next, random;
@@ -651,7 +668,6 @@ class DeleteList extends LList {
         cur = cur.next;
         continue;
       }
-      // 进入迭代 next 非空
       cur.next = cur.next.next;
     }
     return dummy.next;
@@ -672,7 +688,7 @@ class DeleteList extends LList {
         pre = pre.next;
         continue;
       }
-      int pivot = pre.next.val; // 进入迭代非空
+      int pivot = pre.next.val;
       while (pre.next != null && pre.next.val == pivot) pre.next = pre.next.next;
     }
     return dummy.next;
