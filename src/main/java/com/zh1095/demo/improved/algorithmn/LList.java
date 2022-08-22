@@ -576,9 +576,8 @@ class Cyclic extends LList {
    * @return the list node
    */
   public ListNode detectCycle(ListNode head) {
-    ListNode meet = isCyclic(head);
+    ListNode meet = isCyclic(head), finder = head;
     if (meet == null) return null;
-    ListNode finder = head;
     while (meet != finder) {
       meet = meet.next;
       finder = finder.next;
@@ -587,6 +586,7 @@ class Cyclic extends LList {
   }
 
   private ListNode isCyclic(ListNode head) {
+    if (head == null || head.next == null) return null;
     boolean cyclic = false;
     ListNode lo = head, hi = head;
     while (hi != null && hi.next != null) {

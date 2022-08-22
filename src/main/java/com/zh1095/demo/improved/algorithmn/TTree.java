@@ -274,6 +274,7 @@ class Build {
    */
   public class Codec {
     private int idx; // 反序列化
+    private final String NULL = "NULL";
 
     /**
      * Serialize string.
@@ -283,9 +284,9 @@ class Build {
      */
     public String serialize(TreeNode root) {
       return root == null
-          ? "null"
+          ? NULL
           : root.val + "," + serialize(root.left) + "," + serialize(root.right);
-      //      if (root == null) return "null";
+      //      if (root == null) return NULL;
       //      StringBuilder str = new StringBuilder();
       //      str.append(root.val);
       //      str.append(',');
@@ -313,7 +314,7 @@ class Build {
       if (idx > nodes.length - 1) return null;
       String v = nodes[idx++];
       //      String cnt = vals[idx++];
-      if (v.equals("null")) return null;
+      if (v.equals(NULL)) return null;
       TreeNode root = new TreeNode(Integer.parseInt(v));
       root.left = dfs21(nodes);
       root.right = dfs21(nodes);

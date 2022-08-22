@@ -393,59 +393,6 @@ class DData {
   }
 
   /**
-   * 设计循环队列，三种实现方式，冗余一个元素/边界标记/计数器，此处选用冗余
-   *
-   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即元素入队的位置
-   *
-   * <p>首尾碰撞为空，间隔一为满
-   *
-   * <p>取尾需要 (rear - 1 + CAPACITY) % CAPACITY
-   *
-   * <p>扩展1，并发安全，单个 push 多个 pop，采用 CAS 或参考 Disruptor
-   */
-  public class MyCircularQueue {
-    private final int CAPACITY;
-    private final int[] data;
-    private int front, rear; // dummy head and tail
-    // 循环数组中任何时刻一定至少有一个位置不存放有效元素
-    // 当 rear 循环到数组的前面，要从后面追上 front，还差一格的时候，判定队列为满
-
-    public MyCircularQueue(int k) {
-      CAPACITY = k + 1;
-      data = new int[CAPACITY];
-    }
-
-    public boolean isEmpty() {
-      return front == rear;
-    }
-
-    public boolean isFull() {
-      return (rear + 1) % CAPACITY == front;
-    }
-
-    public boolean enQueue(int value) {
-      if (isFull()) return false;
-      data[rear] = value;
-      rear = (rear + 1) % CAPACITY;
-      return true;
-    }
-
-    public boolean deQueue() {
-      if (isEmpty()) return false;
-      front = (front + 1) % CAPACITY;
-      return true;
-    }
-
-    public int Front() {
-      return isEmpty() ? -1 : data[front];
-    }
-
-    public int Rear() {
-      return isEmpty() ? -1 : data[(rear - 1 + CAPACITY) % CAPACITY];
-    }
-  }
-
-  /**
    * 最小栈，全局保存最小值，入栈存差并更新，出栈与取顶均需判负
    *
    * <p>参考 https://yeqown.xyz/2018/03/01/Stack%E5%AE%9E%E7%8E%B0O1%E7%9A%84Min%E5%92%8CMax/
@@ -484,6 +431,159 @@ class DData {
 
     public int getMin() {
       return (int) min;
+    }
+  }
+
+  /**
+   * 用栈实现队列，双栈，in & out，均摊可以认为时间复制度为 O(1)
+   *
+   * <p>记忆，out & in & out & in
+   */
+  public class MyQueue {
+    private final Deque<Integer> out = new ArrayDeque<>(), in = new ArrayDeque<>();
+
+    public void push(int x) {
+      in.offerLast(x);
+    }
+
+    public int pop() {
+      int n = peek(); // 仅为复用
+      out.pollLast();
+      return n;
+    }
+
+    public int peek() {
+      if (!out.isEmpty()) return out.peekLast();
+      if (in.isEmpty()) return -1;
+      while (!in.isEmpty()) out.offerLast(in.pollLast());
+      return out.peekLast();
+    }
+
+    public boolean empty() {
+      return out.isEmpty() && in.isEmpty();
+    }
+  }
+
+  /**
+   * 用队列实现栈 参考
+   * https://leetcode.cn/problems/implement-stack-using-queues/solution/wu-tu-guan-fang-tui-jian-ti-jie-yong-dui-63d4/
+   */
+  public class MyStack {
+    Queue<Integer> out = new LinkedList<>(), in = new LinkedList<>();
+
+    public MyStack() {}
+
+    public void push(int x) { // swap
+      in.offer(x);
+      while (!out.isEmpty()) in.offer(out.poll());
+      Queue<Integer> tmp = out;
+      out = in;
+      in = tmp;
+    }
+
+    public int pop() {
+      return out.poll();
+    }
+
+    public int top() {
+      return out.peek();
+    }
+
+    public boolean empty() {
+      return out.isEmpty();
+    }
+  }
+
+  /**
+   * 设计循环队列，三种实现方式，冗余一个元素/边界标记/计数器，此处选用冗余
+   *
+   * <p>front 指向队列头部，即首个有效数据的位置，而 rear 指向队尾下一个，即元素入队的位置
+   *
+   * <p>首尾碰撞为空，间隔一为满
+   *
+   * <p>取尾需要 (rear - 1 + CAPACITY) % CAPACITY
+   *
+   * <p>扩展1，并发安全，单个 push 多个 pop，采用 CAS 或参考 Disruptor
+   */
+  public class MyCircularQueue {
+    private final int CAPACITY;
+    private final int[] data;
+    private int front, rear; // dummy head and tail 至少有一个位置不存放有效元素
+
+    public MyCircularQueue(int k) {
+      CAPACITY = k + 1;
+      data = new int[CAPACITY];
+    }
+
+    public boolean isEmpty() {
+      return front == rear;
+    }
+
+    public boolean isFull() {
+      return (rear + 1) % CAPACITY == front;
+    }
+
+    public boolean enQueue(int value) {
+      if (isFull()) return false;
+      data[rear] = value;
+      rear = (rear + 1) % CAPACITY;
+      return true;
+    }
+
+    public boolean deQueue() {
+      if (isEmpty()) return false;
+      front = (front + 1) % CAPACITY;
+      return true;
+    }
+
+    public int Front() {
+      return isEmpty() ? -1 : data[front];
+    }
+
+    public int Rear() {
+      return isEmpty() ? -1 : data[(rear - 1 + CAPACITY) % CAPACITY];
+    }
+  }
+
+  /**
+   * 实现Trie（前缀树）
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/implement-trie-prefix-tree/solution/trie-tree-de-shi-xian-gua-he-chu-xue-zhe-by-huwt/
+   */
+  public class Trie {
+    private final TireNode root = new TireNode(); // 哑结点
+
+    public void insert(String word) {
+      TireNode cur = root;
+      for (char ch : word.toCharArray()) {
+        if (cur.next[ch - 'a'] == null) cur.next[ch - 'a'] = new TireNode();
+        cur = cur.next[ch - 'a'];
+      }
+      cur.isEnd = true;
+    }
+
+    public boolean search(String word) {
+      TireNode target = lookup(word);
+      return target == null ? false : target.isEnd;
+    }
+
+    public boolean startsWith(String prefix) {
+      return lookup(prefix) != null;
+    }
+
+    private TireNode lookup(String word) {
+      TireNode cur = root;
+      for (char ch : word.toCharArray()) {
+        cur = cur.next[ch - 'a'];
+        if (cur == null) return null;
+      }
+      return cur;
+    }
+
+    private class TireNode {
+      private final TireNode[] next = new TireNode[26];
+      private boolean isEnd = false;
     }
   }
 
@@ -561,108 +661,6 @@ class DData {
         this.key = key;
         this.value = value;
       }
-    }
-  }
-
-  /**
-   * 用栈实现队列，双栈，in & out，均摊可以认为时间复制度为 O(1)
-   *
-   * <p>记忆，out & in & out & in
-   */
-  public class MyQueue {
-    private final Deque<Integer> out = new ArrayDeque<>(), in = new ArrayDeque<>();
-
-    public void push(int x) {
-      in.offerLast(x);
-    }
-
-    public int pop() {
-      int n = peek(); // 仅为复用
-      out.pollLast();
-      return n;
-    }
-
-    public int peek() {
-      if (!out.isEmpty()) return out.peekLast();
-      if (in.isEmpty()) return -1;
-      while (!in.isEmpty()) out.offerLast(in.pollLast());
-      return out.peekLast();
-    }
-
-    public boolean empty() {
-      return out.isEmpty() && in.isEmpty();
-    }
-  }
-
-  /**
-   * 用队列实现栈 参考
-   * https://leetcode.cn/problems/implement-stack-using-queues/solution/wu-tu-guan-fang-tui-jian-ti-jie-yong-dui-63d4/
-   */
-  public class MyStack {
-    Queue<Integer> out = new LinkedList<>(), in = new LinkedList<>();
-
-    public MyStack() {}
-
-    public void push(int x) { // swap
-      in.offer(x);
-      while (!out.isEmpty()) in.offer(out.poll());
-      Queue<Integer> tmp = out;
-      out = in;
-      in = tmp;
-    }
-
-    public int pop() {
-      return out.poll();
-    }
-
-    public int top() {
-      return out.peek();
-    }
-
-    public boolean empty() {
-      return out.isEmpty();
-    }
-  }
-
-  /**
-   * 实现Trie（前缀树）
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/implement-trie-prefix-tree/solution/trie-tree-de-shi-xian-gua-he-chu-xue-zhe-by-huwt/
-   */
-  public class Trie {
-    private final TireNode root = new TireNode(); // 哑结点
-
-    public void insert(String word) {
-      TireNode cur = root;
-      for (char ch : word.toCharArray()) {
-        if (cur.next[ch - 'a'] == null) cur.next[ch - 'a'] = new TireNode();
-        cur = cur.next[ch - 'a'];
-      }
-      cur.isEnd = true;
-    }
-
-    public boolean search(String word) {
-      TireNode target = lookup(word);
-      return target == null ? false : target.isEnd;
-    }
-
-    public boolean startsWith(String prefix) {
-      return lookup(prefix) != null;
-    }
-
-    private TireNode lookup(String word) {
-      TireNode cur = root;
-      for (char ch : word.toCharArray()) {
-        cur = cur.next[ch - 'a'];
-        if (cur == null) return null;
-      }
-      return cur;
-    }
-
-    private class TireNode {
-      private final TireNode[] next = new TireNode[26];
-      private boolean isEnd = false;
     }
   }
 

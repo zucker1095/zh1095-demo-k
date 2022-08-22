@@ -649,9 +649,9 @@ class OptimalPath {
     // a
     // b c
     // d e f
-    for (int i = len - 1; i > -1; i--) {
-      for (int j = 0; j <= i; j++) {
-        dp[j] = triangle.get(i).get(j) + Math.min(dp[j], dp[j + 1]);
+    for (int r = len - 1; r > -1; r--) {
+      for (int c = 0; c <= r; c++) {
+        dp[c] = triangle.get(r).get(c) + Math.min(dp[c], dp[c + 1]);
       }
     }
     return dp[0];

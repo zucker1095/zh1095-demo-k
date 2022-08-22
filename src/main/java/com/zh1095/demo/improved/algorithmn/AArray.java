@@ -868,7 +868,7 @@ class DichotomyClassic extends DefaultArray {
   }
 
   /**
-   * 搜索旋转排序数组，目标分别与中点，左右边界对比，有序的一边的边界值可能等于目标值
+   * 搜索旋转排序数组，比较边界，有序的一边的边界值可能等于目标值
    *
    * <p>将数组一分为二，其中一定有一个是有序的，另一个可能是有序，此时有序部分用二分法查找，无序部分再一分为二，其中一个一定有序，另一个可能有序
    *
@@ -913,16 +913,16 @@ class DichotomyClassic extends DefaultArray {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      if (nums[mid] >= nums[hi]) lo = mid + 1;
+      if (nums[mid] < nums[hi]) hi = mid;
       // 有重复，则判断
       // else if (nums[mid] == nums[hi]) hi -= 1;
-      else hi = mid;
+      else lo = mid + 1;
     }
     return nums[lo];
   }
 
   /**
-   * 寻找峰值，返回任意一个峰的索引
+   * 寻找峰值，返回任意一个峰的索引，比较右邻
    *
    * <p>扩展1，需要返回的峰索引满足左右均单调递增，山脉数组的顶峰索引，参下 annotate
    *
@@ -958,36 +958,36 @@ class DichotomyClassic extends DefaultArray {
   }
 
   /**
-   * 山脉数组中查找目标值，三段二分
+   * 山脉数组中查找目标值，三段二分，比边界
    *
    * <p>TODO 参考
    * https://leetcode-cn.com/problems/find-in-mountain-array/solution/shi-yong-chao-hao-yong-de-er-fen-fa-mo-ban-python-/
    *
    * @param target
-   * @param mountainArr
+   * @param arr
    * @return
    */
-  public int findInMountainArray(int target, MountainArray mountainArr) {
-    int lo = 0, hi = mountainArr.length() - 1;
+  public int findInMountainArray(int target, MountainArray arr) {
+    int lo = 0, hi = arr.length() - 1;
     while (lo < hi) {
       int mid = lo + (hi - lo) / 2;
-      if (mountainArr.get(mid) < mountainArr.get(mid + 1)) lo = mid + 1;
+      if (arr.get(mid) < arr.get(mid + 1)) lo = mid + 1;
       else hi = mid;
     }
     // 模板同上「二分查找」最终需要检查左边界合法性
-    int peak = lo, idx = search(mountainArr, target, 0, peak, true);
-    return idx != -1 ? idx : search(mountainArr, target, peak + 1, mountainArr.length() - 1, false);
+    int peak = lo, idx = search(arr, target, 0, peak, true);
+    return idx != -1 ? idx : search(arr, target, peak + 1, arr.length() - 1, false);
   }
 
-  private int search(MountainArray mountainArr, int target, int lo, int hi, boolean flag) {
+  private int search(MountainArray arr, int target, int lo, int hi, boolean flag) {
     target *= flag ? 1 : -1;
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2, cur = mountainArr.get(mid) * (flag ? 1 : -1);
+      int mid = lo + (hi - lo) / 2, cur = arr.get(mid) * (flag ? 1 : -1);
       if (cur < target) lo = mid + 1;
-      else if (cur == target) return mid;
-      else hi = mid;
+      if (cur == target) return mid;
+      if (cur > target) hi = mid;
     }
-    int mid = lo + (hi - lo) / 2, cur = mountainArr.get(mid) * (flag ? 1 : -1);
+    int mid = lo + (hi - lo) / 2, cur = arr.get(mid) * (flag ? 1 : -1);
     return cur == target ? lo : -1;
   }
 }

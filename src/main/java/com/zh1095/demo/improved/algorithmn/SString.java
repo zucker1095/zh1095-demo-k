@@ -254,7 +254,7 @@ class WWindow {
         }
         char out = s.charAt(lo);
         needle[out] += 1;
-        if (needle[out] > 0) cnt += 1;
+        if (needle[out] >= 1) cnt += 1;
         lo += 1;
       }
       hi += 1;
