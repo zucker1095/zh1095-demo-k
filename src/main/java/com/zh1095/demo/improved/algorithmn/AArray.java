@@ -1235,10 +1235,9 @@ class SSum extends DefaultArray {
     Arrays.sort(nums);
     int cSum = nums[0] + nums[1] + nums[2], len = nums.length;
     for (int i = 0; i < len; i++) {
-      int pivot = nums[i];
       int lo = i + 1, hi = len - 1;
       while (lo < hi) {
-        int sum = pivot + nums[lo] + nums[hi];
+        int sum = nums[i] + nums[lo] + nums[hi];
         if (Math.abs(target - sum) < Math.abs(target - cSum)) cSum = sum;
         if (sum < target) lo += 1;
         if (sum == target) return cSum;
@@ -2053,10 +2052,10 @@ class DicOrder extends DefaultSString {
     k -= 1;
     while (k > 0) { // 字典序最小即起点为 1
       int cnt = count(lo, hi);
-      if (cnt > k) { // 本层，往下层遍历，一直遍历到第 K 个推出循环
+      if (cnt > k) { // DFS
         lo *= 10;
         k -= 1;
-      } else { // 去下个前缀，即相邻子树遍历
+      } else { // BFS
         lo += 1;
         k -= cnt;
       }
@@ -2337,10 +2336,10 @@ abstract class DefaultArray {
     nums[b] = tmp;
   }
 
-  protected final void swap(char[] nums, int a, int b) {
-    char tmp = nums[a];
-    nums[a] = nums[b];
-    nums[b] = tmp;
+  protected final void swap(char[] chs, int a, int b) {
+    char tmp = chs[a];
+    chs[a] = chs[b];
+    chs[b] = tmp;
   }
 
   /**

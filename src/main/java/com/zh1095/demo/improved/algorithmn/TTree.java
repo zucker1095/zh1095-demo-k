@@ -4,8 +4,6 @@ import java.util.*;
 
 // DFS 返回值非空：路径总和，岛屿的最大面积，矩阵中的最长递增路径，最长同值路径
 // 回溯返回值非空：单词搜索，划分为 k 个相等的子集，分割回文串，解数独
-// 关于 Java 模拟 stack 的选型
-// https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
 
 /**
  * 收集树相关，扩展大部分与打印路径相关，前序尝试均改为迭代，中序基本是 BST，后序统计相关 & 递归
@@ -1028,12 +1026,11 @@ class Postorder {
     flatten(root.left);
     flatten(root.right);
     // 依次将左子树挂在根的右，并将根的右挂在左子树的右，即后驱
-    TreeNode preR = root.right;
+    TreeNode end = root, oldR = root.right;
     root.right = root.left;
     root.left = null;
-    TreeNode tail = root;
-    while (tail.right != null) tail = tail.right;
-    tail.right = preR;
+    while (end.right != null) end = end.right;
+    end.right = oldR;
   }
 
   /**

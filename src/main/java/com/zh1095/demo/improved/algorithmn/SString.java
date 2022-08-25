@@ -757,11 +757,11 @@ class SSubString {
    */
   public int longestSubstring(String s, int k) {
     if (s.length() < k) return 0;
-    int[] needle = new int[26];
+    int[] counter = new int[26];
     char[] chs = s.toCharArray();
-    for (char ch : chs) needle[ch - 'a'] += 1;
+    for (char ch : chs) counter[ch - 'a'] += 1;
     for (char ch : chs) {
-      if (needle[ch - 'a'] >= k) continue;
+      if (counter[ch - 'a'] >= k) continue;
       int maxLen = 0;
       for (String seg : s.split(String.valueOf(ch)))
         maxLen = Math.max(maxLen, longestSubstring(seg, k));
@@ -769,6 +769,8 @@ class SSubString {
     }
     return s.length();
   }
+
+  // 回文求最长或统计则中心拓展，验证则两端聚拢
 
   /**
    * 最长回文子串，中心扩展
@@ -910,7 +912,7 @@ class SSubString {
   }
 }
 
-/** 子串相关，「单词搜索」参考 TTree，「单词拆分」参考 DP */
+/** 模拟相关，「单词搜索」参考 TTree，「单词拆分」参考 DP */
 class WWord extends DefaultSString {
   /**
    * 字符串转换整数，如 " -26" to 26
@@ -1516,18 +1518,15 @@ abstract class DefaultSString extends DefaultArray {
   /**
    * Reverse string.
    *
-   * @param chars the chars
+   * @param chs the chars
    * @param left the left
    * @param right the right
    */
-  protected void reverseChs(char[] chars, int left, int right) {
-    int lo = left, hi = right;
+  protected void reverseChs(char[] chs, int lo, int hi) {
     while (lo < hi) {
-      char temp = chars[lo];
-      chars[lo] = chars[hi];
-      chars[hi] = temp;
-      lo += 1;
-      hi -= 1;
+      char tmp = chs[lo];
+      chs[lo++] = chs[hi];
+      chs[hi--] = tmp;
     }
   }
 

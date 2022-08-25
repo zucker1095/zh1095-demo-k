@@ -263,17 +263,16 @@ class ReverseList extends LList {
    * @return list node
    */
   public ListNode rotateRight(ListNode head, int k) {
-    if (head == null || k == 0) return head;
-    ListNode cur = head;
     int len = 1;
-    while (cur.next != null) {
+    ListNode cur = head;
+    while (cur != null && cur.next != null) {
       cur = cur.next;
       len += 1;
     }
     int cnt = len - k % len;
     if (cnt == len) return head;
     cur.next = head;
-    for (int i = cnt; i > 0; i--) cur = cur.next;
+    for (int i = 0; i < cnt; i++) cur = cur.next;
     ListNode newHead = cur.next;
     cur.next = null;
     return newHead;

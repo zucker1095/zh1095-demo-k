@@ -13,7 +13,7 @@ import java.util.*;
  *
  * <p>所有的 DP 要输出路径/具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考 https://blog.51cto.com/u_15127578/3748446
  */
-class OptimalSubSequence extends DefaultArray {
+class SubSequence extends DefaultArray {
   /**
    * 最长递增子序列/最长上升子序列，基于贪心
    *
@@ -362,7 +362,7 @@ class OptimalSubSequence extends DefaultArray {
  *
  * @author cenghui
  */
-class OptimalSubArray {
+class SubArray {
   /**
    * 最长重复子数组/最长公共子串，与「最长公共子序列」的路径有出入
    *
@@ -476,22 +476,21 @@ class OptimalSubArray {
    * @return boolean boolean
    */
   public boolean wordBreak(String s, List<String> wordDict) {
-    // 记录最长的单词，下方 [j:i-1] 过长，无法用单词补足，可 curing
+    // 记录最长的单词，下方 [j:i-1] 过长，无法用单词补足，可省略
     int len = s.length(), maxLen = 0;
-    Set<String> wordSet = new HashSet();
+    Set<String> wordSet = new HashSet(wordDict.size());
     for (String w : wordDict) {
       wordSet.add(w);
-      maxLen = Math.max(maxLen, w.length());
+      //      maxLen = Math.max(maxLen, w.length());
     }
     boolean[] dp = new boolean[len + 1];
     dp[0] = true;
-    // O(n^2) 判断 [0:i-1] 是否能被匹配，即分别判断 [0:j-1] & [j:i-1]
-    for (int i = 1; i < len + 1; i++) {
-      for (int j = i; j > -1; j--) {
-        if (j + maxLen < i) break;
-        // 二者均可被匹配，即 s[0:i-1] 可被匹配，进入下一个区间即 s[0:i]
-        if (dp[j] && wordSet.contains(s.substring(j, i))) {
-          dp[i] = true;
+    // [0:hi-1] -> [0:lo-1] & [lo:hi-1]
+    for (int hi = 1; hi < len + 1; hi++) {
+      for (int lo = hi; lo > -1; lo--) {
+        //        if (lo + maxLen < hi) break;
+        if (dp[lo] && wordSet.contains(s.substring(lo, hi))) {
+          dp[hi] = true;
           break;
         }
       }
@@ -560,14 +559,8 @@ class OptimalSubArray {
   }
 }
 
-/**
- * 路径相关，其余如海岛类 & 最长递增路径，参考 TTree
- *
- * <p>所有需要打印路径的题型，基本都涉及回溯
- *
- * @author cenghui
- */
-class OptimalPath {
+/** 路径，求计数与最优解 */
+class Path {
   /**
    * 最小路径和，题设自然数
    *
@@ -650,6 +643,118 @@ class OptimalPath {
   }
 
   /**
+   * 不同路径I，求总数
+   *
+   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
+   *
+   * @param row the m
+   * @param col the n
+   * @return int int
+   */
+  public int uniquePaths(int row, int col) {
+    int[] dp = new int[col];
+    Arrays.fill(dp, 1);
+    for (int r = 1; r < row; r++) {
+      for (int c = 1; c < col; c++) {
+        dp[c] += dp[c - 1];
+      }
+    }
+    return dp[col - 1];
+  }
+
+  /**
+   * 不同路径II
+   *
+   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数，根据递推关系，可以压缩至一维
+   *
+   * <p>扩展1，打印路径，参考「最小路径和」
+   *
+   * @param obstacleGrid the obstacle grid
+   * @return int int
+   */
+  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+    int col = obstacleGrid[0].length;
+    int[] dp = new int[col];
+    if (obstacleGrid[0][0] != 1) dp[0] = 1;
+    for (int r = 0; r < obstacleGrid.length; r++) {
+      for (int c = 0; c < col; c++) {
+        int cur = obstacleGrid[r][c];
+        if (cur == 1) dp[c] = 0;
+        if (cur == 0 && c > 0) dp[c] += dp[c - 1];
+      }
+    }
+    return dp[col - 1];
+  }
+
+  /**
+   * 爬楼梯，对比零钱兑换 II，可选集为 [1,2] 需要返回凑成 n 的总数，元素可重，前者排列，后者组合
+   *
+   * <p>先走 2 步再走 1 步与先 1 后 2 是两种爬楼梯的方案，而先拿 2 块再拿 1 块 & 相反是同种凑金额的方案
+   *
+   * <p>扩展1，不能爬到 7 倍数的楼层，参下 annotate
+   *
+   * <p>扩展2，打印路径，参下回溯
+   *
+   * <p>扩展3，爬 1 or 3 级，参考
+   * https://www.nowcoder.com/questionTerminal/1e6ac1a96c3149348aa9009709a36a6f?f=discussion
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int climbStairs(int n) {
+    int step1 = 1, step2 = 1; // dp[i-1] & dp[i-2]
+    for (int i = 2; i < n + 1; i++) {
+      // 扩展 1 无法状态压缩
+      // if ((i + 1) % 7 == 0) { dp[i] = 0 }
+      // else { dp[i] = dp[i - 1] + dp[i - 2] }
+      int tmp = step2;
+      step2 = step2 + step1;
+      step1 = tmp;
+    }
+    return step2;
+  }
+
+  private void backtracking9(int floor, StringBuilder path, List<String> res) {
+    if (floor == 0) {
+      res.add(path.toString());
+      return;
+    }
+    for (int step = 1; step <= 2; step++) {
+      int nxtFloor = floor - step;
+      if (nxtFloor < 0) break;
+      path.append(nxtFloor);
+      backtracking9(nxtFloor, path, res);
+      path.deleteCharAt(path.length() - 1);
+    }
+  }
+
+  /**
+   * 圆环回原点，返回方案总数，类似爬楼梯，参考 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
+   *
+   * <p>圆环上有 m 个点，编号为 0~m-1，从 0 点出发，每次可以逆时针和顺时针走一步，求 n 步回到 0 点的走法
+   *
+   * <p>dp[i][j] 表示从 0 出发走 i 步到达 j 点的方案，即排列数
+   *
+   * <p>递推，走 s 步到 0 的方案数 = 走 s-1 步到 1 的方案数 + 走 s-1 步到 v-1 的方案数
+   *
+   * @param v 点数
+   * @param s 步数
+   * @return int int
+   */
+  public int backToOrigin(int v, int s) {
+    int[][] dp = new int[v][s + 1]; // 便于从 1 开始递推
+    dp[0][0] = 1;
+    // j+1 与 j-1 可能越界 [0, v-1] 因此取余
+    for (int step = 1; step <= s; step++) {
+      for (int i = 0; i < v; i++) {
+        int nxt = (i + 1) % v, tail = (i - 1 + v) % v;
+        dp[step][i] = dp[step - 1][nxt] + dp[step - 1][tail];
+      }
+    }
+    return dp[s][0];
+  }
+
+  /**
    * 打家劫舍
    *
    * <p>dp[i] 表示 nums[0,i] 产生的最大金额
@@ -722,46 +827,10 @@ class OptimalPath {
     int skip = Math.max(l[0], l[1]) + Math.max(r[0], r[1]), settle = l[0] + r[0] + root.val;
     return new int[] {skip, settle};
   }
-
-  /**
-   * 交错字符串，每次只能向右或下，画图可知即滚动数组
-   *
-   * <p>dp[i][j] 代表 s1[0:i+1] 个字符与 s2[0:j+1] 个字符拼接成 s3 任意 i+j 个字符，即存在目标路径能够到达 (i,j)
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/interleaving-string/solution/lei-si-lu-jing-wen-ti-zhao-zhun-zhuang-tai-fang-ch/
-   *
-   * @param s1
-   * @param s2
-   * @param s3
-   * @return
-   */
-  public boolean isInterleave(String s1, String s2, String s3) {
-    int l1 = s1.length(), l2 = s2.length(), l3 = s3.length();
-    char[] chs1 = s1.toCharArray(), chs2 = s2.toCharArray(), chs3 = s3.toCharArray();
-    if (l1 + l2 != l3) return false;
-    boolean[] dp = new boolean[l2 + 1]; // 横轴取 s2
-    dp[0] = true;
-    for (int j = 1; j <= l2; j++) { // dp[0][?]
-      if (chs2[j - 1] != chs3[j - 1]) break;
-      dp[j] = dp[j - 1];
-    }
-    //     dp[i][j] = (dp[i-1][j] && s3.charAt(i + j - 1) == s1.charAt(i - 1))
-    //                    || (dp[i][j - 1] && s3.charAt(i + j - 1) == chs2[j - 1]);
-    for (int i = 1; i <= l1; i++) {
-      dp[0] = dp[0] && chs1[i - 1] == chs3[i - 1];
-      for (int j = 1; j <= l2; j++) {
-        char c1 = chs1[i - 1], c2 = chs2[j - 1], c3 = chs3[i + j - 1];
-        // 画图即上方或左侧递推，分别 s3 匹配取 s1 或 s2
-        dp[j] = (dp[j] && c1 == c3) || (dp[j - 1] && c2 == c3);
-      }
-    }
-    return dp[l2];
-  }
 }
 
-/** 最优解，状态压缩 & 双指针 */
-class OptimalElse {
+/** 最优解，状态压缩 & 双指针，所有需要打印路径的题型，基本都涉及回溯 */
+class Optimal {
   /**
    * 买卖股票的最佳时机 I~IV
    *
@@ -950,26 +1019,6 @@ class OptimalElse {
   }
 
   /**
-   * 完全平方数，返回多个平方数的和 =n 的最少个数，完全背包，类似「零钱兑换」
-   *
-   * <p>dp[i] 表示和为 i 的几个完全平方数的最少数量，如 13=4+9 则 dp[13] 为 2
-   *
-   * @param n the n
-   * @return int
-   */
-  public int numSquares(int n) {
-    int[] dp = new int[n + 1];
-    for (int i = 1; i <= n; i++) {
-      dp[i] = i; // 至少全由 1 组成，即 worst case
-      for (int j = 1; j * j <= i; j++) {
-        int sum = i - j * j;
-        dp[i] = Math.min(dp[i], dp[sum] + 1);
-      }
-    }
-    return dp[n];
-  }
-
-  /**
    * 分发糖果，求满足权重规则的最少所需糖果量
    *
    * <p>扩展1，成环，参下 annotate
@@ -1001,6 +1050,128 @@ class OptimalElse {
     }
     minCnt += Math.max(l[len - 1], r);
     return minCnt;
+  }
+}
+
+/** 统计，区分统计排列 & 组合的区别 */
+class CCount {
+  /**
+   * 零钱兑换II，返回可以凑成总金额的硬币组合数，硬币可重，即 coins[i] 同个索引可重复选择
+   *
+   * <p>dp[i] 表示凑成 i 元的路径总数，即组合
+   *
+   * <p>与上方 I 保持外 coin 内 amount
+   *
+   * <p>https://leetcode-cn.com/problems/coin-change-2/solution/ling-qian-dui-huan-iihe-pa-lou-ti-wen-ti-dao-di-yo/
+   *
+   * @param amount the amount
+   * @param coins the coins
+   * @return int int
+   */
+  public int change(int amount, int[] coins) {
+    int[] dp = new int[amount + 1];
+    dp[0] = 1;
+    for (int c : coins) {
+      for (int i = c; i <= amount; i++) {
+        dp[i] += dp[i - c];
+      }
+    }
+    return dp[amount];
+  }
+
+  /**
+   * 丑数II
+   *
+   * @param n
+   * @return
+   */
+  public int nthUglyNumber(int n) {
+    int[] dp = new int[n + 1];
+    dp[1] = 1;
+    int p2 = 1, p3 = 1, p5 = 1;
+    for (int i = 2; i <= n; i++) {
+      int n2 = dp[p2] * 2, n3 = dp[p3] * 3, n5 = dp[p5] * 5;
+      dp[i] = Math.min(Math.min(n2, n3), n5);
+      if (dp[i] == n2) p2 += 1;
+      if (dp[i] == n3) p3 += 1;
+      if (dp[i] == n5) p5 += 1;
+    }
+    return dp[n];
+  }
+
+  /**
+   * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/decode-ways/solution/c-wo-ren-wei-hen-jian-dan-zhi-guan-de-jie-fa-by-pr/
+   *
+   * <p>dp[i] 表示 str[0,i] 的解码总数
+   *
+   * <p>递推关系，按照如下顺序，分别判断正序遍历时，当前与前一位的数字，s[i]=='0' -> s[i-1]=='1' or '2'
+   *
+   * <p>显然 dp[i] 仅依赖前二者，因此可状态压缩
+   *
+   * @param s the s
+   * @return int int
+   */
+  public int numDecodings(String s) {
+    char[] chs = s.toCharArray();
+    if (chs[0] == '0') return 0;
+    int preCnt = 1, cnt = 1;
+    for (int i = 1; i < chs.length; i++) {
+      char lo = chs[i], hi = chs[i - 1];
+      int tmp = cnt;
+      if (lo == '0') {
+        if (hi != '1' && hi != '2') return 0;
+        cnt = preCnt;
+      } else if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) {
+        cnt += preCnt;
+      }
+      preCnt = tmp;
+    }
+    return cnt;
+  }
+
+  /**
+   * 不同的二叉搜索树，卡特兰数公式，记忆即可
+   *
+   * <p>dp[i] 表示假设 i 个节点存在二叉排序树的个数
+   *
+   * @param n the n
+   * @return int int
+   */
+  public int numTrees(int n) {
+    int[] dp = new int[n + 1];
+    dp[0] = dp[1] = 1;
+    for (int i = 2; i < n + 1; i++) {
+      for (int j = 1; j < i + 1; j++) {
+        dp[i] += dp[j - 1] * dp[i - j];
+      }
+    }
+    return dp[n];
+  }
+}
+
+/** 频率较小的最优解题型 */
+class OptimalElse {
+  /**
+   * 完全平方数，返回多个平方数的和 =n 的最少个数，完全背包，类似「零钱兑换」
+   *
+   * <p>dp[i] 表示和为 i 的几个完全平方数的最少数量，如 13=4+9 则 dp[13] 为 2
+   *
+   * @param n the n
+   * @return int
+   */
+  public int numSquares(int n) {
+    int[] dp = new int[n + 1];
+    for (int i = 1; i <= n; i++) {
+      dp[i] = i; // 至少全由 1 组成，即 worst case
+      for (int j = 1; j * j <= i; j++) {
+        int sum = i - j * j;
+        dp[i] = Math.min(dp[i], dp[sum] + 1);
+      }
+    }
+    return dp[n];
   }
 
   /**
@@ -1108,215 +1279,40 @@ class OptimalElse {
     }
     return Math.min(keep, swap);
   }
-}
-
-/** 统计，区分统计排列 & 组合的区别 */
-class CCount {
-  /**
-   * 不同路径I，求总数
-   *
-   * <p>dp[i][j] 表示由起点，即 [0,0] 达到 [i,j] 的路径总数
-   *
-   * @param row the m
-   * @param col the n
-   * @return int int
-   */
-  public int uniquePaths(int row, int col) {
-    int[] dp = new int[col];
-    Arrays.fill(dp, 1);
-    for (int r = 1; r < row; r++) {
-      for (int c = 1; c < col; c++) {
-        dp[c] += dp[c - 1];
-      }
-    }
-    return dp[col - 1];
-  }
 
   /**
-   * 不同路径II
+   * 交错字符串，每次只能向右或下，画图可知即滚动数组
    *
-   * <p>dp[i][j] 表示由起点，即 (0,0) to (i,j) 的路径总数，根据递推关系，可以压缩至一维
+   * <p>dp[i][j] 代表 s1[0:i+1] 个字符与 s2[0:j+1] 个字符拼接成 s3 任意 i+j 个字符，即存在目标路径能够到达 (i,j)
    *
-   * <p>扩展1，打印路径，参考「最小路径和」
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/interleaving-string/solution/lei-si-lu-jing-wen-ti-zhao-zhun-zhuang-tai-fang-ch/
    *
-   * @param obstacleGrid the obstacle grid
-   * @return int int
-   */
-  public int uniquePathsWithObstacles(int[][] obstacleGrid) {
-    int col = obstacleGrid[0].length;
-    int[] dp = new int[col];
-    if (obstacleGrid[0][0] != 1) dp[0] = 1;
-    for (int r = 0; r < obstacleGrid.length; r++) {
-      for (int c = 0; c < col; c++) {
-        int cur = obstacleGrid[r][c];
-        if (cur == 1) dp[c] = 0;
-        if (cur == 0 && c > 0) dp[c] += dp[c - 1];
-      }
-    }
-    return dp[col - 1];
-  }
-
-  /**
-   * 爬楼梯，对比零钱兑换 II，可选集为 [1,2] 需要返回凑成 n 的总数，元素可重，前者排列，后者组合
-   *
-   * <p>先走 2 步再走 1 步与先 1 后 2 是两种爬楼梯的方案，而先拿 2 块再拿 1 块 & 相反是同种凑金额的方案
-   *
-   * <p>扩展1，不能爬到 7 倍数的楼层，参下 annotate
-   *
-   * <p>扩展2，打印路径，参下回溯
-   *
-   * <p>扩展3，爬 1 or 3 级，参考
-   * https://www.nowcoder.com/questionTerminal/1e6ac1a96c3149348aa9009709a36a6f?f=discussion
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int climbStairs(int n) {
-    int step1 = 1, step2 = 1; // dp[i-1] & dp[i-2]
-    for (int i = 2; i < n + 1; i++) {
-      // 扩展 1 无法状态压缩
-      // if ((i + 1) % 7 == 0) { dp[i] = 0 }
-      // else { dp[i] = dp[i - 1] + dp[i - 2] }
-      int tmp = step2;
-      step2 = step2 + step1;
-      step1 = tmp;
-    }
-    return step2;
-  }
-
-  private void backtracking9(int floor, StringBuilder path, List<String> res) {
-    if (floor == 0) {
-      res.add(path.toString());
-      return;
-    }
-    for (int step = 1; step <= 2; step++) {
-      int nxtFloor = floor - step;
-      if (nxtFloor < 0) break;
-      path.append(nxtFloor);
-      backtracking9(nxtFloor, path, res);
-      path.deleteCharAt(path.length() - 1);
-    }
-  }
-
-  /**
-   * 圆环回原点，返回方案总数，类似爬楼梯，参考 https://mp.weixin.qq.com/s/NZPaFsFrTybO3K3s7p7EVg
-   *
-   * <p>圆环上有 m 个点，编号为 0~m-1，从 0 点出发，每次可以逆时针和顺时针走一步，求 n 步回到 0 点的走法
-   *
-   * <p>dp[i][j] 表示从 0 出发走 i 步到达 j 点的方案，即排列数
-   *
-   * <p>递推，走 s 步到 0 的方案数 = 走 s-1 步到 1 的方案数 + 走 s-1 步到 v-1 的方案数
-   *
-   * @param v 点数
-   * @param s 步数
-   * @return int int
-   */
-  public int backToOrigin(int v, int s) {
-    int[][] dp = new int[v][s + 1]; // 便于从 1 开始递推
-    dp[0][0] = 1;
-    // j+1 与 j-1 可能越界 [0, v-1] 因此取余
-    for (int step = 1; step <= s; step++) {
-      for (int i = 0; i < v; i++) {
-        int nxt = (i + 1) % v, tail = (i - 1 + v) % v;
-        dp[step][i] = dp[step - 1][nxt] + dp[step - 1][tail];
-      }
-    }
-    return dp[s][0];
-  }
-
-  /**
-   * 零钱兑换II，返回可以凑成总金额的硬币组合数，硬币可重，即 coins[i] 同个索引可重复选择
-   *
-   * <p>dp[i] 表示凑成 i 元的路径总数，即组合
-   *
-   * <p>与上方 I 保持外 coin 内 amount
-   *
-   * <p>https://leetcode-cn.com/problems/coin-change-2/solution/ling-qian-dui-huan-iihe-pa-lou-ti-wen-ti-dao-di-yo/
-   *
-   * @param amount the amount
-   * @param coins the coins
-   * @return int int
-   */
-  public int change(int amount, int[] coins) {
-    int[] dp = new int[amount + 1];
-    dp[0] = 1;
-    for (int c : coins) {
-      for (int i = c; i <= amount; i++) {
-        dp[i] += dp[i - c];
-      }
-    }
-    return dp[amount];
-  }
-
-  /**
-   * 丑数II
-   *
-   * @param n
+   * @param s1
+   * @param s2
+   * @param s3
    * @return
    */
-  public int nthUglyNumber(int n) {
-    int[] dp = new int[n + 1];
-    dp[1] = 1;
-    int p2 = 1, p3 = 1, p5 = 1;
-    for (int i = 2; i <= n; i++) {
-      int n2 = dp[p2] * 2, n3 = dp[p3] * 3, n5 = dp[p5] * 5;
-      dp[i] = Math.min(Math.min(n2, n3), n5);
-      if (dp[i] == n2) p2 += 1;
-      if (dp[i] == n3) p3 += 1;
-      if (dp[i] == n5) p5 += 1;
+  public boolean isInterleave(String s1, String s2, String s3) {
+    int l1 = s1.length(), l2 = s2.length(), l3 = s3.length();
+    char[] chs1 = s1.toCharArray(), chs2 = s2.toCharArray(), chs3 = s3.toCharArray();
+    if (l1 + l2 != l3) return false;
+    boolean[] dp = new boolean[l2 + 1]; // 横轴取 s2
+    dp[0] = true;
+    for (int j = 1; j <= l2; j++) { // dp[0][?]
+      if (chs2[j - 1] != chs3[j - 1]) break;
+      dp[j] = dp[j - 1];
     }
-    return dp[n];
-  }
-
-  /**
-   * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/decode-ways/solution/c-wo-ren-wei-hen-jian-dan-zhi-guan-de-jie-fa-by-pr/
-   *
-   * <p>dp[i] 表示 str[0,i] 的解码总数
-   *
-   * <p>递推关系，按照如下顺序，分别判断正序遍历时，当前与前一位的数字，s[i]=='0' -> s[i-1]=='1' or '2'
-   *
-   * <p>显然 dp[i] 仅依赖前二者，因此可状态压缩
-   *
-   * @param s the s
-   * @return int int
-   */
-  public int numDecodings(String s) {
-    if (s.charAt(0) == '0') return 0;
-    // dp[-1] = dp[0] = 1
-    int preCnt = 1, cnt = 1;
-    for (int i = 1; i < s.length(); i++) {
-      // 滑窗，成对判断高低位
-      char hi = s.charAt(i - 1), lo = s.charAt(i);
-      int tmp = cnt;
-      if (hi == '1' || (hi == '2' && lo >= '1' && lo <= '6')) cnt += preCnt;
-      else if (lo == '0') {
-        if (hi != '1' && hi != '2') return 0;
-        cnt = preCnt;
-      }
-      preCnt = tmp;
-    }
-    return cnt;
-  }
-
-  /**
-   * 不同的二叉搜索树，卡特兰数公式，记忆即可
-   *
-   * <p>dp[i] 表示假设 i 个节点存在二叉排序树的个数
-   *
-   * @param n the n
-   * @return int int
-   */
-  public int numTrees(int n) {
-    int[] dp = new int[n + 1];
-    dp[0] = dp[1] = 1;
-    for (int i = 2; i < n + 1; i++) {
-      for (int j = 1; j < i + 1; j++) {
-        dp[i] += dp[j - 1] * dp[i - j];
+    //     dp[i][j] = (dp[i-1][j] && s3.charAt(i + j - 1) == s1.charAt(i - 1))
+    //                    || (dp[i][j - 1] && s3.charAt(i + j - 1) == chs2[j - 1]);
+    for (int i = 1; i <= l1; i++) {
+      dp[0] = dp[0] && chs1[i - 1] == chs3[i - 1];
+      for (int j = 1; j <= l2; j++) {
+        char c1 = chs1[i - 1], c2 = chs2[j - 1], c3 = chs3[i + j - 1];
+        // 画图即上方或左侧递推，分别 s3 匹配取 s1 或 s2
+        dp[j] = (dp[j] && c1 == c3) || (dp[j - 1] && c2 == c3);
       }
     }
-    return dp[n];
+    return dp[l2];
   }
 }

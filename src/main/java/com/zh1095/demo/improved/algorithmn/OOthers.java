@@ -66,15 +66,11 @@ public class OOthers {
    * @return boolean boolean
    */
   public boolean canJump(int[] nums) {
-    // 前 n-1 个元素能够跳到的最远索引
     int maxIdx = 0;
     for (int i = 0; i <= maxIdx; i++) {
-      // 第 i 个元素能够跳到的最远索引
       maxIdx = Math.max(maxIdx, i + nums[i]);
-      // 如果最远距离已经大于或等于最后一个元素的下标，则说明能跳过去，结束
       if (maxIdx >= nums.length - 1) return true;
     }
-    // 最远距离 k 不再改变，且没有到末尾元素
     return false;
   }
 
@@ -796,8 +792,8 @@ class MMath {
     //    }
     //    return res;
     if (n == 0) return 1;
-    double y = quickMulti(x, n / 2);
-    return y * y * (n % 2 == 0 ? 1 : x);
+    double dou = Math.pow(quickMulti(x, n / 2), 2);
+    return dou * (n % 2 == 0 ? 1 : x);
   }
 
   /**
@@ -1425,25 +1421,17 @@ class BBit {
    * @param nums the nums
    * @return int int
    */
-  public int singleNumber(int[] nums) {
-    if (nums.length < 1) return -1;
-    int[] bitSum = new int[32];
-    for (int num : nums) {
-      int bitMask = 1;
-      // 首位为符号位
-      for (int i = 31; i >= 0; i--) {
-        if ((num & bitMask) != 0) bitSum[i] += 1;
-        bitMask <<= 1;
-      }
-    }
-    int target = 0;
-    // 这种做法使得本算法同样适用于负数的情况
-    for (int i = 0; i < 32; i++) {
-      target += bitSum[i] % 3;
-      target <<= 1;
-    }
-    return target;
-  }
+  //  public int singleNumber(int[] nums) {
+  //    int xor = 0;
+  //    for (int n : nums) xor ^= n;
+  //    int mask = xor & (-xor);
+  //    int[] ans = new int[2];
+  //    for (int n : nums) {
+  //      if ((n & mask) == 0) ans[0] ^= n;
+  //      else ans[1] ^= n;
+  //    }
+  //    return ans;
+  //  }
 
   // 只出现一次的数字III，两个一次，其余两次。
   // TODO 参考
