@@ -99,27 +99,6 @@ public class OOthers {
   }
 
   /**
-   * 划分字母区间，返回可划分的子串上限，同一种字母只能在一个子串内
-   *
-   * <p>贪心，类似「最大交换」参考
-   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
-   */
-  public List<Integer> partitionLabels(String s) {
-    char[] chs = s.toCharArray();
-    int[] upperBounds = new int[26];
-    for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - 'a'] = i;
-    List<Integer> lens = new ArrayList<>();
-    int lo = 0, hi = 0;
-    for (int i = 0; i < chs.length; i++) {
-      hi = Math.max(hi, upperBounds[chs[i] - 'a']);
-      if (i < hi) continue;
-      lens.add(hi - lo + 1);
-      lo = hi + 1;
-    }
-    return lens;
-  }
-
-  /**
    * 把数字翻译成字符串，返回方案数
    *
    * <p>以 xyzcba 为例，先取最后两位 即 ba，如果 ba>=26 必然不能分解成 f(xyzcb)+f(xyzc)，此时只能分解成 f(xyzcb)
@@ -803,16 +782,16 @@ class MMath {
    * @return double double
    */
   public double myPow(double x, int n) {
-    //    long N = n;
+    //    long N = n; // 为测试通过
     return n < 0 ? 1.0 / quickMulti(x, -n) : quickMulti(x, n);
   }
 
   // 特判零次幂 & 递归二分 & 判断剩余幂
   private double quickMulti(double x, int n) {
-    //    double res = 1.0, cur = x;
+    //    double res = 1.0, y = x;
     //    while (n > 0) {
-    //      if (n % 2 == 1) res *= cur;
-    //      cur *= cur;
+    //      if (n % 2 == 1) res *= y;
+    //      y *= cur;
     //      n /= 2;
     //    }
     //    return res;

@@ -19,7 +19,6 @@ public class LList {
   public ListNode reverseList(ListNode head) {
     // recursion
     //    if (head == null || head.next == null) return head;
-    //    // 后半部分反转的头，即反转前 head 链表的尾
     //    ListNode newHead = reverseList(head.next);
     //    head.next.next = head;
     //    head.next = null;
@@ -384,6 +383,45 @@ class MergeList extends LList {
 /** 重排链表，遍历的场景通常设计反转，合并与中点 */
 class ReorderList extends LList {
   /**
+   * 重排链表，类似奇偶链表，将 1,2,3...n-1,n 排序为 1,n,2,n-1,3...n/2
+   *
+   * <p>找中 & 反转 & 连接
+   *
+   * @param head the head
+   */
+  public void reorderList(ListNode head) {
+    // 偶数个节点返回前一个
+    ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
+    mid.next = null;
+    l2 = reverseList(l2);
+    while (l1 != null && l2 != null) { // 尾插
+      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
+      l1.next = l2;
+      l1 = l1Nxt;
+      l2.next = l1;
+      l2 = l2Nxt;
+    }
+  }
+
+  /**
+   * 排序链表，建议掌握递归 up-to-bottom 即可，找中点 & 分割 & 分别排序 & 合并
+   *
+   * <p>bottom-to-up 参考
+   * https://leetcode.cn/problems/sort-list/solution/pai-xu-lian-biao-di-gui-die-dai-xiang-jie-by-cherr/
+   *
+   * <p>扩展1，去重，参下 annotate
+   *
+   * @param head the head
+   * @return list node
+   */
+  public ListNode sortList(ListNode head) {
+    if (head == null || head.next == null) return head;
+    ListNode mid = middleNode(head), head2 = mid.next;
+    mid.next = null;
+    return mergeTwoLists(sortList(head), sortList(head2));
+  }
+
+  /**
    * 奇偶链表，如将 1234 调整为 1324，分离为两条链即可。
    *
    * <p>扩展1，排序一个奇数位升序而偶数位降序的链表，O(n) & O(1)，参下「重排奇偶链表」
@@ -424,77 +462,6 @@ class ReorderList extends LList {
     ListNode evenHead = head.next, oddTail = splitOddTail(head);
     oddTail.next = null;
     return mergeTwoLists(head, reverseList(evenHead));
-  }
-
-  /**
-   * 重排链表，类似奇偶链表，将 1,2,3...n-1,n 排序为 1,n,2,n-1,3...n/2
-   *
-   * <p>找中 & 反转 & 连接
-   *
-   * @param head the head
-   */
-  public void reorderList(ListNode head) {
-    // 偶数个节点返回前一个
-    ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
-    mid.next = null;
-    l2 = reverseList(l2);
-    while (l1 != null && l2 != null) { // 尾插
-      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
-      l1.next = l2;
-      l1 = l1Nxt;
-      l2.next = l1;
-      l2 = l2Nxt;
-    }
-  }
-
-  /**
-   * 排序链表，建议掌握递归 up-to-bottom 即可，找中点 & 分割 & 分别排序 & 合并
-   *
-   * <p>bottom-to-up 参考
-   * https://leetcode.cn/problems/sort-list/solution/pai-xu-lian-biao-di-gui-die-dai-xiang-jie-by-cherr/
-   *
-   * <p>扩展1，去重，参下 annotate
-   *
-   * @param head the head
-   * @return list node
-   */
-  public ListNode sortList(ListNode head) {
-    if (head == null || head.next == null) return head;
-    ListNode mid = middleNode(head), head2 = mid.next;
-    mid.next = null;
-    return mergeTwoLists(sortList(head), sortList(head2));
-    //    ListNode dummy = new ListNode();
-    //    dummy.next = head;
-    //    // 1.count length
-    //    int len = 0;
-    //    while (head != null) {
-    //      len += 1;
-    //      head = head.next;
-    //    }
-    //    // 2.依次将链表分成1块，2块，4块...
-    //    for (int step = 1; step < len; step *= 2) {
-    //      // 每次变换步长，pre 和 cur 都初始化在链表头
-    //      ListNode pre = dummy, cur = dummy.next;
-    //      while (cur != null) {
-    //        ListNode h1 = cur, h2 = split(h1, step);
-    //        cur = split(h2, step);
-    //        pre.next = mergeTwoLists(h1, h2);
-    //        // 3.pre 步进到排序好的部分的末尾
-    //        while (pre.next != null) pre = pre.next;
-    //      }
-    //    }
-    //    return dummy.next;
-  }
-
-  private ListNode split(ListNode head, int step) {
-    if (head == null) return null;
-    ListNode l1 = head;
-    for (int i = 1; i < step && l1.next != null; i++) {
-      l1 = l1.next;
-    }
-    ListNode l2 = l1.next;
-    l1.next = null;
-    return l2;
   }
 
   // 链表快排，时间复杂度炸裂

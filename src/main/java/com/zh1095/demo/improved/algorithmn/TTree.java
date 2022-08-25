@@ -2,17 +2,13 @@ package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
 
+// DFS 返回值非空：路径总和，岛屿的最大面积，矩阵中的最长递增路径，最长同值路径
+// 回溯返回值非空：单词搜索，划分为 k 个相等的子集，分割回文串，解数独
+// 关于 Java 模拟 stack 的选型
+// https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
+
 /**
- * 收集树相关，扩展大部分与打印路径相关
- *
- * <p>关于 Java 模拟 stack 的选型
- * https://qastack.cn/programming/6163166/why-is-arraydeque-better-than-linkedlist
- *
- * <p>前序尝试均改为迭代
- *
- * <p>中序，基本即是 BST
- *
- * <p>后序，统计相关 & 递归，参下
+ * 收集树相关，扩展大部分与打印路径相关，前序尝试均改为迭代，中序基本是 BST，后序统计相关 & 递归
  *
  * @author cenghui
  */
@@ -1401,17 +1397,16 @@ class MultiTrees {
    */
   public int distBetween(TreeNode root, TreeNode p, TreeNode q) {
     TreeNode lca = lowestCommonAncestor(root, p, q);
-    return dfs18(lca, p) + dfs18(lca, q);
+    return dfs18(lca, p) + dfs18(lca, q) - 2;
   }
 
   // 返回 target 与根的距离
   private int dfs18(TreeNode root, TreeNode target) {
-    if (root == null) return -1;
-    if (root == target) return 0;
-    int l = dfs18(root.left, target);
-    if (l != -1) return l + 1;
-    int r = dfs18(root.right, target);
-    return r == -1 ? -1 : r + 1;
+    if (root == null) return 0;
+    if (root == target) return 1;
+    int l = dfs18(root.left, target), r = dfs18(root.right, target);
+    if (l == 0 && r == 0) return 0;
+    return l == 0 ? r + 1 : l + 1;
   }
 
   /**
@@ -1448,6 +1443,20 @@ class MultiTrees {
       if (n1.right == null) n1.right = n2.right;
     }
     return r1;
+  }
+
+  /**
+   * 翻转等价二叉树，均空 -> 仅其一空或值不等 -> 依次比较同侧与异侧
+   *
+   * @param r1 the root 1
+   * @param r2 the root 2
+   * @return boolean boolean
+   */
+  public boolean flipEquiv(TreeNode r1, TreeNode r2) {
+    if (r1 == null && r2 == null) return true;
+    if (r1 == null || r2 == null || r1.val != r2.val) return false;
+    return (flipEquiv(r1.left, r2.left) && flipEquiv(r1.right, r2.right))
+        || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
   }
 
   /**
@@ -1526,20 +1535,6 @@ class MultiTrees {
         && isContain(root.left, subRoot.left)
         && isContain(root.right, subRoot.right);
   }
-
-  /**
-   * 翻转等价二叉树，均空 -> 仅其一空或值不等 -> 依次比较同侧与异侧
-   *
-   * @param r1 the root 1
-   * @param r2 the root 2
-   * @return boolean boolean
-   */
-  public boolean flipEquiv(TreeNode r1, TreeNode r2) {
-    if (r1 == null && r2 == null) return true;
-    if (r1 == null || r2 == null || r1.val != r2.val) return false;
-    return (flipEquiv(r1.left, r2.left) && flipEquiv(r1.right, r2.right))
-        || (flipEquiv(r1.left, r2.right) && flipEquiv(r1.right, r2.left));
-  }
 }
 
 /**
@@ -1586,8 +1581,6 @@ class BacktrackingCombinatorics {
    * @return the list
    */
   public List<List<Integer>> permute(int[] nums) {
-    //    char[] chs = s.toCharArray();
-    //    Arrays.sort(chs)
     List<List<Integer>> res = new ArrayList<>();
     if (nums.length > 0) {
       // II 去重
@@ -1608,11 +1601,9 @@ class BacktrackingCombinatorics {
       return;
     }
     for (int i = 0; i < nums.length; i++) {
-      // II 不在当前路径上但重复，或在
-      //      if (recStack[i] || (i > 0 && nums[i] == nums[i - 1] && !recStack[i - 1])) continue;
-      // 「字符串的排列」同理
-      //      if (recStack[i] || (i > 0 && chs[i] == chs[i - 1] && !recStack[i - 1])) continue;
       if (recStack[i]) continue;
+      // II 与「字符串的排列」同理
+      //      if (i > 0 && nums[i] == nums[i - 1] && !recStack[i - 1]) continue;
       recStack[i] = true;
       path.offerLast(nums[i]);
       bt4(nums, path, res, recStack);
@@ -1912,12 +1903,10 @@ class BacktrackingElse extends DDFS {
       if (ch == '(') l += 1;
       if (ch == ')') {
         if (r < l) r += 1;
-        else maxRemR += 1; // 最多移除右括号数量
+        else maxRemR += 1;
       }
     }
-    // 最大合法括号对数
     maxPair = Math.min(l, r);
-    // 最多移除左括号数量
     maxRemL = l > maxPair ? l - maxPair : 0;
     bt14(chs, 0, 0, 0, 0, 0, new StringBuilder());
     return new ArrayList<>(res);

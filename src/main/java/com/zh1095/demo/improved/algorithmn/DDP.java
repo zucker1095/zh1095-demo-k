@@ -9,13 +9,6 @@ import java.util.*;
 // 徘徊或相向 最长回文子序，最长重复子数组，单词拆分，三角形的最小路径和，不同的二叉搜索树，完全平方数，整数拆分
 
 /**
- * 收集 DP 相关，根据题设划分，而非解法
- *
- * @author cenghui
- */
-public class DDP {}
-
-/**
  * 子序列
  *
  * <p>所有的 DP 要输出路径/具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考 https://blog.51cto.com/u_15127578/3748446
@@ -273,7 +266,6 @@ class OptimalSubSequence extends DefaultArray {
    * @return
    */
   public boolean increasingTriplet(int[] nums) {
-    if (nums.length < 3) return false;
     int first = Integer.MAX_VALUE, second = Integer.MAX_VALUE;
     for (int n : nums) {
       if (n > second) return true;
@@ -281,19 +273,6 @@ class OptimalSubSequence extends DefaultArray {
       else first = n;
     }
     return false;
-  }
-
-  /**
-   * 让字符串成为回文串的最少插入次数
-   *
-   * <p>除去最长回文子序列，剩下的字符是不构成回文子序列的字符，添加与其同等数量的字符，即可构成回文串，参考
-   * https://leetcode.cn/problems/minimum-insertion-steps-to-make-a-string-palindrome/solution/cdong-tai-gui-hua-xin-ping-zhuang-jiu-jiu-by-xiaon/
-   *
-   * @param s
-   * @return
-   */
-  public int minInsertions(String s) {
-    return s.length() - longestPalindromeSubseq(s);
   }
 
   /**
@@ -352,6 +331,19 @@ class OptimalSubSequence extends DefaultArray {
       }
     }
     return dp[l1][l2];
+  }
+
+  /**
+   * 让字符串成为回文串的最少插入次数
+   *
+   * <p>除去最长回文子序列，剩下的字符是不构成回文子序列的字符，添加与其同等数量的字符，即可构成回文串，参考
+   * https://leetcode.cn/problems/minimum-insertion-steps-to-make-a-string-palindrome/solution/cdong-tai-gui-hua-xin-ping-zhuang-jiu-jiu-by-xiaon/
+   *
+   * @param s
+   * @return
+   */
+  public int minInsertions(String s) {
+    return s.length() - longestPalindromeSubseq(s);
   }
 }
 

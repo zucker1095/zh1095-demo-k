@@ -35,6 +35,34 @@ interface MountainArray {
  */
 public class AArray extends DefaultArray {
   /**
+   * 排序数组
+   *
+   * @param nums
+   * @return
+   */
+  public int[] sortArray(int[] nums) {
+    int len = nums.length;
+    // 插入
+    for (int i = 0; i < len; i++) {
+      int n = nums[i], ltIdx = i;
+      while (ltIdx > 0 && nums[ltIdx - 1] > n) {
+        nums[ltIdx] = nums[ltIdx - 1];
+        ltIdx -= 1;
+      }
+      nums[ltIdx] = n;
+    }
+    // 选择
+    //    for (int i = 0; i < len; i++) {
+    //      int minIdx = i;
+    //      for (int j = i; j < len; j++) {
+    //        if (nums[j] < nums[minIdx]) minIdx = j;
+    //      }
+    //      swap(nums, i, minIdx);
+    //    }
+    return nums;
+  }
+
+  /**
    * 二分查找，下方 FFind 统一该写法，参考 https://www.zhihu.com/question/36132386
    *
    * <p>lo = mid+1(hi = mid) 经典 左边界 寻找旋转排序数组中的最小值 寻找峰值 搜索旋转排序数组
@@ -273,7 +301,7 @@ public class AArray extends DefaultArray {
   }
 
   /**
-   * 扑克牌中的顺子，A1，J11，Q12，K13，而大小王 0 ，可以看成任意数字，相当于判断无序数组是否完全连续，两类思路
+   * 扑克牌中的顺子，大小王可看成任意数字，即通配符，此外的最大差值不超过 5
    *
    * <p>Set后遍历
    *
@@ -284,12 +312,12 @@ public class AArray extends DefaultArray {
    */
   public boolean isStraight(int[] nums) {
     Arrays.sort(nums);
-    int joker = 0;
-    for (int i = 0; i < 4; i++) {
-      if (nums[i] == 0) joker += 1; // 统计大小王数量
-      else if (nums[i] == nums[i + 1]) return false; // 若有重复，提前返回 false
+    int firstIdx = 0; // 统计通配符数目，因此下一个可作为首个非通配符的数的索引
+    for (int i = 0; i < 5 - 1; i++) {
+      if (nums[i] == 0) firstIdx += 1;
+      else if (nums[i] == nums[i + 1]) return false; // 题设不允重复
     }
-    return nums[4] - nums[joker] < 5; // 最大牌 - 最小牌 < 5 则可构成顺子
+    return nums[4] - nums[firstIdx] < 5;
   }
 
   /**
@@ -912,10 +940,10 @@ class DichotomyClassic extends DefaultArray {
   public int findMin(int[] nums) {
     int lo = 0, hi = nums.length - 1;
     while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      if (nums[mid] < nums[hi]) hi = mid;
+      int mid = lo + (hi - lo) / 2, target = nums[hi];
+      if (nums[mid] < target) hi = mid;
       // 有重复，则判断
-      // else if (nums[mid] == nums[hi]) hi -= 1;
+      // else if (nums[mid] == target) hi -= 1;
       else lo = mid + 1;
     }
     return nums[lo];
@@ -1607,7 +1635,7 @@ class PreSum {
 /** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，仅一个数重复，[1:n] 映射至 [0,n-1]，快慢指针，等同「环形链表II」
+   * 寻找重复数，仅一个重复，[1:n] 映射至 [0,n-1]，类似「环形链表II」
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1621,7 +1649,7 @@ class DDuplicate extends DefaultArray {
    * @return int int
    */
   public int findDuplicate(int[] nums) {
-    int lo = nums[0], hi = nums[nums[0]]; // 题设区间为 [1,n]
+    int lo = nums[0], hi = nums[nums[0]];
     while (lo != hi) {
       lo = nums[lo];
       hi = nums[nums[hi]];
@@ -1635,7 +1663,7 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
-   * 数组中重复的数据，多个数重复，至多两次，返回所有重复数，[1:n] 映射至 [0,n-1]
+   * 数组中重复的数据，多个重复，至多两次，返回所有重复数，[1:n] 映射至 [0,n-1]
    *
    * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
    *
@@ -1653,7 +1681,7 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
-   * 数组中重复的数字，多个数重复，返回任意一个，区间 [0,len-1]
+   * 数组中重复的数字，多个重复，返回任一，区间 [0,len-1]
    *
    * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
    *
@@ -2125,17 +2153,38 @@ class DicOrder extends DefaultSString {
   public int maximumSwap(int num) {
     char[] chs = Integer.toString(num).toCharArray();
     // 收集每个数字最后出现的索引
-    int[] lastIdxes = new int[10];
-    for (int i = 0; i < chs.length; i++) lastIdxes[chs[i] - '0'] = i;
+    int[] upperBounds = new int[10];
+    for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - '0'] = i;
     // 查找首个值更大、位更高的数字
     for (int i = 0; i < chs.length; i++) { // 自高位顺序遍历
       for (int n = 9; n > chs[i] - '0'; n--) { // 值
-        if (lastIdxes[n] <= i) continue; // 位
-        swap(chs, i, lastIdxes[n]);
+        if (upperBounds[n] <= i) continue; // 位
+        swap(chs, i, upperBounds[n]);
         return Integer.parseInt(chs.toString());
       }
     }
     return num;
+  }
+
+  /**
+   * 划分字母区间，返回可划分的子串上限，同一种字母只能在一个子串内
+   *
+   * <p>贪心，类似「最大交换」参考
+   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
+   */
+  public List<Integer> partitionLabels(String s) {
+    char[] chs = s.toCharArray();
+    int[] upperBounds = new int[26];
+    for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - 'a'] = i;
+    List<Integer> lens = new ArrayList<>();
+    int lo = 0, hi = 0;
+    for (int i = 0; i < chs.length; i++) {
+      hi = Math.max(hi, upperBounds[chs[i] - 'a']);
+      if (i < hi) continue;
+      lens.add(hi - lo + 1);
+      lo = hi + 1;
+    }
+    return lens;
   }
 
   /**

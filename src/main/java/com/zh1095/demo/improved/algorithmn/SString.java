@@ -744,6 +744,33 @@ class SSubString {
   }
 
   /**
+   * 至少有k个重复字符的最长子串，同个字符的个数。
+   *
+   * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
+   *
+   * @param s the s
+   * @param k the k
+   * @return int
+   */
+  public int longestSubstring(String s, int k) {
+    if (s.length() < k) return 0;
+    int[] needle = new int[26];
+    char[] chs = s.toCharArray();
+    for (char ch : chs) needle[ch - 'a'] += 1;
+    for (char ch : chs) {
+      if (needle[ch - 'a'] >= k) continue;
+      int maxLen = 0;
+      for (String seg : s.split(String.valueOf(ch)))
+        maxLen = Math.max(maxLen, longestSubstring(seg, k));
+      return maxLen;
+    }
+    return s.length();
+  }
+
+  /**
    * 最长回文子串，中心扩展
    *
    * @param s the s
@@ -831,33 +858,6 @@ class SSubString {
       hi -= 1;
     }
     return true;
-  }
-
-  /**
-   * 至少有k个重复字符的最长子串，同个字符的个数。
-   *
-   * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
-   *
-   * @param s the s
-   * @param k the k
-   * @return int
-   */
-  public int longestSubstring(String s, int k) {
-    if (s.length() < k) return 0;
-    int[] needle = new int[26];
-    char[] chs = s.toCharArray();
-    for (char ch : chs) needle[ch - 'a'] += 1;
-    for (char ch : chs) {
-      if (needle[ch - 'a'] >= k) continue;
-      int maxLen = 0;
-      for (String seg : s.split(String.valueOf(ch)))
-        maxLen = Math.max(maxLen, longestSubstring(seg, k));
-      return maxLen;
-    }
-    return s.length();
   }
 
   /**
