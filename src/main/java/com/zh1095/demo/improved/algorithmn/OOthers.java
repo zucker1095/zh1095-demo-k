@@ -1063,17 +1063,6 @@ class GGraph {
     return V == 0;
   }
 
-  private List<List<Integer>> buildTable(int[][] prerequisites, int V, int[] indegrees) {
-    List<List<Integer>> table = new ArrayList(V);
-    for (int i = 0; i < V; i++) table.add(new LinkedList());
-    for (int[] cp : prerequisites) {
-      int from = cp[0], to = cp[1];
-      indegrees[to] += 1;
-      table.get(from).add(to);
-    }
-    return table;
-  }
-
   /**
    * 课程表II，比 I 新增记录即可
    *
@@ -1101,6 +1090,17 @@ class GGraph {
       }
     }
     return V == 0 ? paths : new int[0];
+  }
+
+  private List<List<Integer>> buildTable(int[][] prerequisites, int V, int[] indegrees) {
+    List<List<Integer>> table = new ArrayList(V);
+    for (int i = 0; i < V; i++) table.add(new LinkedList());
+    for (int[] cp : prerequisites) {
+      int from = cp[0], to = cp[1];
+      indegrees[to] += 1;
+      table.get(from).add(to);
+    }
+    return table;
   }
 
   /**

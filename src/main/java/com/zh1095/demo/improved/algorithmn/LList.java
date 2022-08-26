@@ -213,12 +213,10 @@ class ReverseList extends LList {
    * @return the list node
    */
   public ListNode reverseBetween(ListNode head, int left, int right) {
-    ListNode dummy = new ListNode();
+    ListNode dummy = new ListNode(), pre = dummy;
     dummy.next = head;
-    ListNode pre = dummy;
-    for (int step = 0; step < left - 1; step++) pre = pre.next;
-    // 题设保证区间合法，因此 pre.next.next 非空
-    ListNode start = pre.next, cur = pre.next.next;
+    for (int s = 0; s < left - 1; s++) pre = pre.next;
+    ListNode start = pre.next, cur = pre.next.next; // 题设区间合法
     for (int i = 0; i < right - left; i++) {
       ListNode nxt = cur.next;
       cur.next = pre.next;

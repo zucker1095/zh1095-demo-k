@@ -828,10 +828,8 @@ class DichotomyClassic extends DefaultArray {
 
   // 扩展1，求第 k 小参下 annotate
   private int getLargestElement(int[] nums1, int[] nums2, int k) {
-    int l1 = nums1.length, l2 = nums2.length, ranking = k;
-    int p1 = l1 - 1, p2 = l2 - 1;
+    int ranking = k, p1 = nums1.length - 1, p2 = nums2.length - 1;
     //    int p1 = 0, p2 = 0;
-    // 其一遍历完毕可直接定位
     while (p1 > -1 && p2 > -1 && ranking > 1) {
       //    while (p1 < l1 && p2 < l2 && ranking > 1) {
       int half = ranking / 2,
@@ -839,14 +837,14 @@ class DichotomyClassic extends DefaultArray {
           newP2 = 1 + Math.max(p2 - half, -1);
       //          newP1 = Math.min(p1 + half, l1) - 1,
       //          newP2 = Math.min(p2 + half, l2) - 1;
-      if (nums1[newP1] >= nums2[newP2]) {
-        ranking -= (p1 - newP1 + 1);
-        p1 = newP1 - 1;
-      } else {
+      if (nums1[newP1] < nums2[newP2]) {
         ranking -= (p2 - newP2 + 1);
         p2 = newP2 - 1;
+      } else {
+        ranking -= (p1 - newP1 + 1);
+        p1 = newP1 - 1;
       }
-      //      if (nums1[newP1] <= nums2[newP2]) {
+      //      if (nums1[newP1] < nums2[newP2]) {
       //        ranking -= (newP1 - p1 + 1);
       //        p1 = newP1 + 1;
       //      } else {
@@ -854,8 +852,8 @@ class DichotomyClassic extends DefaultArray {
       //        p2 = newP2 + 1;
       //      }
     }
-    if (p1 == l1) return nums2[p2 - ranking + 1];
-    if (p2 == l2) return nums1[p1 - ranking + 1];
+    if (p1 == -1) return nums2[p2 - ranking + 1];
+    if (p2 == -1) return nums1[p1 - ranking + 1];
     return Math.max(nums1[p1], nums2[p2]);
     //    if (p1 == l1) return nums2[p2 + ranking - 1];
     //    if (p2 == l2) return nums1[p1 + ranking - 1];
@@ -867,12 +865,8 @@ class DichotomyClassic extends DefaultArray {
       int[] nums1, int lo1, int hi1, int[] nums2, int lo2, int hi2, int k) {
     if (k == 1) return Math.min(nums1[lo1], nums2[lo2]);
     int l1 = hi1 - lo1 + 1, l2 = hi2 - lo2 + 1;
-    // 让 len1 的长度小于 len2，这样就能保证如果有数组空了，一定是 len1
-    if (l1 > l2) {
-      return getkSmallElement(nums2, lo2, hi2, nums1, lo1, hi1, k);
-    } else if (l1 == 0) {
-      return nums2[lo2 + k - 1];
-    }
+    if (l1 > l2) return getkSmallElement(nums2, lo2, hi2, nums1, lo1, hi1, k);
+    if (l1 == 0) return nums2[lo2 + k - 1];
     int p1 = lo1 + Math.min(l1, k / 2) - 1, p2 = lo2 + Math.min(l2, k / 2) - 1;
     return (nums1[p1] > nums2[p2])
         ? getkSmallElement(nums1, lo1, hi1, nums2, p2 + 1, hi2, k - (p2 - lo2 + 1))
@@ -1185,6 +1179,25 @@ class DichotomyElse extends DefaultArray {
       intervalSum += n;
     }
     return cnt;
+  }
+
+  /**
+   * 切割木头，参考 https://mp.weixin.qq.com/s/FQma0bdAWbzLMmCKhZRk7w
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public int splitWood(int[] nums, int k) {
+    int lo = 1, hi = 0; // 长度的上下界
+    for (int n : nums) hi = Math.max(hi, n);
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2, cnt = 0;
+      for (int n : nums) cnt += n / mid;
+      if (cnt >= k) lo = mid;
+      else hi = mid - 1;
+    }
+    return 0;
   }
 }
 
@@ -2003,12 +2016,12 @@ class DicOrder extends DefaultSString {
    */
   public void nextPermutation(int[] nums) {
     int len = nums.length;
-    for (int peak = len - 1; peak > 0; peak--) {
-      if (nums[peak] <= nums[peak - 1]) continue;
-      Arrays.sort(nums, peak, len);
-      for (int i = peak; i < len; i++) {
-        if (nums[i] <= nums[peak - 1]) continue;
-        swap(nums, i, peak - 1);
+    for (int p1 = len - 1; p1 > 0; p1--) {
+      if (nums[p1] <= nums[p1 - 1]) continue;
+      Arrays.sort(nums, p1, len);
+      for (int p2 = p1; p2 < len; p2++) {
+        if (nums[p2] <= nums[p1 - 1]) continue;
+        swap(nums, p2, p1 - 1);
         return;
       }
     }
@@ -2027,12 +2040,12 @@ class DicOrder extends DefaultSString {
   public int nextGreaterElement(int n) {
     char[] nums = String.valueOf(n).toCharArray();
     int len = nums.length;
-    for (int peak = len - 1; peak > 0; peak--) {
-      if (nums[peak] <= nums[peak - 1]) continue;
-      Arrays.sort(nums, peak, len);
-      for (int i = peak; i < len; i++) {
-        if (nums[i] <= nums[peak - 1]) continue;
-        swap(nums, i, peak - 1);
+    for (int p1 = len - 1; p1 > 0; p1--) {
+      if (nums[p1] <= nums[p1 - 1]) continue;
+      Arrays.sort(nums, p1, len);
+      for (int p2 = p1; p2 < len; p2++) {
+        if (nums[p2] <= nums[p1 - 1]) continue;
+        swap(nums, p2, p1 - 1);
         long res = Long.parseLong(String.valueOf(nums));
         return res > Integer.MAX_VALUE ? -1 : (int) res;
       }
@@ -2095,6 +2108,7 @@ class DicOrder extends DefaultSString {
   public String removeKdigits(String num, int k) {
     StringBuilder ms = new StringBuilder();
     for (char ch : num.toCharArray()) {
+      // peekLast & pollLast
       while (k > 0 && !ms.isEmpty() && ms.charAt(ms.length() - 1) > ch) {
         ms.setLength(ms.length() - 1);
         k -= 1;

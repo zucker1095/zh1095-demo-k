@@ -1381,9 +1381,9 @@ class MonotonicStack {
   }
 
   /**
-   * 柱状图中最大的矩形
+   * 柱状图中最大的矩形，即区间最小数乘区间和的最大值
    *
-   * <p>TODO 参考
+   * <p>TODO 参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA 与
    * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
    *
    * @param heights

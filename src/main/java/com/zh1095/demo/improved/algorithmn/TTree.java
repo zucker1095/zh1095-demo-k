@@ -782,8 +782,8 @@ class BBSTDFS {
   private void dfs7(TreeNode root) {
     if (root == null) return;
     dfs7(root.left);
-    if (pre == null) head = root; // 中序首个节点，即最左子树，指向链表的头节点
-    else pre.right = root; // 尾插，同时补充 pre 的后驱与 cur 的前驱
+    if (pre == null) head = root;
+    else pre.right = root; // 尾插
     root.left = pre;
     pre = root;
     dfs7(root.right);

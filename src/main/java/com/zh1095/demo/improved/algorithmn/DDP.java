@@ -582,10 +582,8 @@ class Path {
     int col = grid[0].length;
     int[] dp = new int[col];
     dp[0] = grid[0][0];
-    // 首行只能由左侧递推
     for (int c = 1; c < col; c++) dp[c] = grid[0][c] + dp[c - 1];
     for (int r = 1; r < grid.length; r++) {
-      // 首列只能由上侧递推
       dp[0] += grid[r][0];
       for (int c = 1; c < col; c++) dp[c] = grid[r][c] + Math.min(dp[c - 1], dp[c]);
     }
@@ -1011,11 +1009,11 @@ class Optimal {
     Arrays.sort(coins);
     for (int c : coins) {
       for (int i = c; i <= amount; i++) {
-        if (i < c) break;
-        dp[i] = Math.min(dp[i], dp[i - c] + 1);
+        dp[i] = Math.min(dp[i], 1 + dp[i - c]);
       }
     }
-    return (dp[amount] == amount + 1) ? -1 : dp[amount];
+    if (dp[amount] == amount + 1) return -1;
+    return dp[amount];
   }
 
   /**
