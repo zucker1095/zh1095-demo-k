@@ -59,15 +59,9 @@ public class SString extends DefaultSString {
    */
   public String reduceStrings(String num1, String num2) {
     final int BASE = 10, l1 = num1.length(), l2 = num2.length();
+    if (l1 < l2 || (l1 == l2 && Integer.parseInt(num1) < Integer.parseInt(num2)))
+      return '-' + reduceStrings(num2, num2);
     StringBuilder gap = new StringBuilder();
-    // 1.预处理下方大减小，并判断符号
-    if ((l1 == l2 && Integer.parseInt(num1) < Integer.parseInt(num2)) || l1 < l2) {
-      String tmp = num1;
-      num1 = num2;
-      num2 = num1;
-      gap.append('-');
-    }
-    // 2.从个位开始相减，注意借位，尾插，最终翻转
     int p1 = l1 - 1, p2 = l2 - 1;
     int carry = 0;
     while (p1 > -1 || p2 > -1) { // 由于保证大建小，因此不需要保留高位
@@ -81,7 +75,6 @@ public class SString extends DefaultSString {
       p1 -= 1;
       p2 -= 1;
     }
-    // 3.反转，移除前导零
     String str = gap.reverse().toString();
     int idx = frontNoBlank(str.toCharArray(), 0);
     return str.substring(idx, str.length());
@@ -533,6 +526,24 @@ class SStack {
   }
 
   /**
+   * 简化路径
+   *
+   * @param path the path
+   * @return string
+   */
+  public String simplifyPath(String path) {
+    Deque<String> stack = new ArrayDeque<>();
+    for (String seg : path.split("/")) {
+      if (seg.equals("") || seg.equals(".")) continue;
+      else if (seg.equals("..")) stack.pollLast();
+      else stack.offerLast(seg);
+    }
+    StringBuilder res = new StringBuilder();
+    for (String s : stack) res.append('/' + s);
+    return res.length() == 0 ? "/" : res.toString();
+  }
+
+  /**
    * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
    *
    * <p>recursion 参考「基本计算器」
@@ -559,24 +570,6 @@ class SStack {
       else str.append(ch);
     }
     return str.toString();
-  }
-
-  /**
-   * 简化路径
-   *
-   * @param path the path
-   * @return string
-   */
-  public String simplifyPath(String path) {
-    Deque<String> stack = new ArrayDeque<>();
-    for (String seg : path.split("/")) {
-      if (seg.equals("") || seg.equals(".")) continue;
-      else if (seg.equals("..")) stack.pollLast();
-      else stack.offerLast(seg);
-    }
-    StringBuilder res = new StringBuilder();
-    for (String s : stack) res.append('/' + s);
-    return res.length() == 0 ? "/" : res.toString();
   }
 
   /**
@@ -1255,37 +1248,6 @@ class WWord extends DefaultSString {
  */
 class CConvert extends DefaultSString {
   private final char[] CHARS = "0123456789ABCDEF".toCharArray();
-  // 「整数转换英文表示」
-  private final String[]
-      num2str_small =
-          {
-            "Zero",
-            "One",
-            "Two",
-            "Three",
-            "Four",
-            "Five",
-            "Six",
-            "Seven",
-            "Eight",
-            "Nine",
-            "Ten",
-            "Eleven",
-            "Twelve",
-            "Thirteen",
-            "Fourteen",
-            "Fifteen",
-            "Sixteen",
-            "Seventeen",
-            "Eighteen",
-            "Nineteen"
-          },
-      num2str_medium =
-          {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"},
-      num2str_large =
-          {
-            "Billion", "Million", "Thousand", "",
-          };
 
   /**
    * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
@@ -1469,30 +1431,51 @@ class CConvert extends DefaultSString {
    * @return string
    */
   public String numberToWords(int num) {
-    if (num == 0) return num2str_small[0];
-    StringBuilder str = new StringBuilder();
-    for (int i = (int) 1e9, j = 0; i >= 1; i /= 1000, j++) {
-      if (num < i) continue;
-      str.append(num2Str(num / i) + num2str_large[j] + " ");
-      num %= i;
+    if (num == 0) return "Zero";
+    StringBuilder sb = new StringBuilder();
+    for (int i = 3, unit = 1000000000; i >= 0; i--, unit /= 1000) {
+      int curNum = num / unit;
+      if (curNum == 0) continue;
+      num -= curNum * unit;
+      StringBuilder res = new StringBuilder();
+      cal(res, curNum);
+      res.append(thousands[i]).append(" ");
+      sb.append(res);
     }
-    while (str.charAt(str.length() - 1) == ' ') str.deleteCharAt(str.length() - 1);
-    return str.toString();
+    return sb.toString().trim();
   }
 
-  private String num2Str(int x) {
-    StringBuilder res = new StringBuilder();
-    if (x >= 100) {
-      res.append(num2str_small[x / 100] + " Hundred ");
-      x %= 100;
+  private void cal(StringBuilder res, int num) {
+    if (num == 0) return;
+    if (num < 10) res.append(singles[num]).append(" ");
+    else if (num < 20) res.append(teens[num - 10]).append(" ");
+    else if (num < 100) {
+      res.append(tens[num / 10]).append(" ");
+      cal(res, num % 10);
+    } else {
+      res.append(singles[num / 100]).append(" Hundred ");
+      cal(res, num % 100);
     }
-    if (x >= 20) {
-      res.append(num2str_medium[x / 10] + " ");
-      x %= 10;
-    }
-    if (x != 0) res.append(num2str_small[x] + " ");
-    return res.toString();
   }
+
+  private final String[]
+      singles = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"},
+      teens =
+          {
+            "Ten",
+            "Eleven",
+            "Twelve",
+            "Thirteen",
+            "Fourteen",
+            "Fifteen",
+            "Sixteen",
+            "Seventeen",
+            "Eighteen",
+            "Nineteen"
+          },
+      tens =
+          {"", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"},
+      thousands = {"", "Thousand", "Million", "Billion"};
 }
 
 /** The type Default s string. */
@@ -1532,18 +1515,6 @@ abstract class DefaultSString extends DefaultArray {
 
   protected int frontNoBlank(char[] chs, int start) {
     while (start < chs.length && chs[start] == ' ') start += 1;
-    return start;
-  }
-
-  /**
-   * 前导零
-   *
-   * @param chs
-   * @param start
-   * @return
-   */
-  protected int frontNoZero(char[] chs, int start) {
-    while (start < chs.length && chs[start] == '0') start += 1;
     return start;
   }
 }

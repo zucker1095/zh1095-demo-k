@@ -2,11 +2,8 @@ package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
 
-// 状态压缩基于滚动数组，尽量用具体含义，如 buy & sell 而非 dp1 & dp2
-// 区分「以 nums[i] 结尾」&「在 [0,i-1] 区间」的 dp 定义差异
-// 二维 dp 画图的路径通常包括
-// 右下
-// 徘徊或相向 最长回文子序，最长重复子数组，单词拆分，三角形的最小路径和，不同的二叉搜索树，完全平方数，整数拆分
+// 二维（全涉及子序列） 最长回文子序列 最长公共子序列 编辑距离 正则表达式匹配
+// 非同向（徘徊或相向） 最长回文子序列 最长重复子数组 单词拆分 三角形的最小路径和 不同的二叉搜索树 完全平方数 整数拆分
 
 /**
  * 子序列
@@ -117,9 +114,7 @@ class SubSequence extends DefaultArray {
     int[][] dp = new int[len][len];
     for (int i = len - 1; i > -1; i--) {
       dp[i][i] = 1;
-      // [i+1:len-1]
       for (int j = i + 1; j < len; j++) {
-        // s[i] 是否匹配 s[j] 否则 s[i:j]'s LPS depends on prev and next
         if (s.charAt(i) == s.charAt(j)) dp[i][j] = 2 + dp[i + 1][j - 1];
         else dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
       }
@@ -694,28 +689,28 @@ class Path {
    * @return int int
    */
   public int climbStairs(int n) {
-    int step1 = 1, step2 = 1; // dp[i-1] & dp[i-2]
+    int s1 = 1, s2 = 1; // dp[i-1] & dp[i-2]
     for (int i = 2; i < n + 1; i++) {
       // 扩展 1 无法状态压缩
       // if ((i + 1) % 7 == 0) { dp[i] = 0 }
       // else { dp[i] = dp[i - 1] + dp[i - 2] }
-      int tmp = step2;
-      step2 = step2 + step1;
-      step1 = tmp;
+      int tmp = s2;
+      s2 = s2 + s1;
+      s1 = tmp;
     }
-    return step2;
+    return s2;
   }
 
-  private void backtracking9(int floor, StringBuilder path, List<String> res) {
+  private void bt9(int floor, StringBuilder path, List<String> res) {
     if (floor == 0) {
       res.add(path.toString());
       return;
     }
-    for (int step = 1; step <= 2; step++) {
-      int nxtFloor = floor - step;
-      if (nxtFloor < 0) break;
-      path.append(nxtFloor);
-      backtracking9(nxtFloor, path, res);
+    for (int s = 1; s <= 2; s++) {
+      int nxt = floor - s;
+      if (nxt < 0) break;
+      path.append(nxt);
+      bt9(nxt, path, res);
       path.deleteCharAt(path.length() - 1);
     }
   }

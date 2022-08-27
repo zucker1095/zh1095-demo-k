@@ -4,6 +4,7 @@ import java.util.*;
 
 // DFS 返回值非空：路径总和，岛屿的最大面积，矩阵中的最长递增路径，最长同值路径
 // 回溯返回值非空：单词搜索，划分为 k 个相等的子集，分割回文串，解数独
+// 要去重都得排序以剪枝，排列 -> 随机 -> recStack & no start，组合与子集 -> 有序 -> 排序 & i+1 & start
 
 /**
  * 收集树相关，扩展大部分与打印路径相关，前序尝试均改为迭代，中序基本是 BST，后序统计相关 & 递归
@@ -403,8 +404,7 @@ class DDFS {
     int maxArea = 0;
     for (int r = 0; r < grid.length; r++) {
       for (int c = 0; c < grid[r].length; c++) {
-        if (grid[r][c] != 1) continue;
-        maxArea = Math.max(maxArea, dfs2(grid, r, c));
+        if (grid[r][c] == 1) maxArea = Math.max(maxArea, dfs2(grid, r, c));
       }
     }
     return maxArea;
@@ -412,13 +412,13 @@ class DDFS {
 
   private int dfs2(int[][] grid, int r, int c) {
     grid[r][c] = 0;
-    int pathLen = 1;
+    int area = 1;
     for (int[] dir : DIRECTIONS) {
       int nr = r + dir[0], nc = c + dir[1];
       if (!inArea(grid, nr, nc) || grid[nr][nc] == 0) continue;
-      pathLen += dfs2(grid, nr, nc);
+      area += dfs2(grid, nr, nc);
     }
-    return pathLen;
+    return area;
   }
 
   /**
@@ -1535,8 +1535,6 @@ class MultiTrees {
 /**
  * 回溯，前序与后序结合
  *
- * <p>要去重都得排序以剪枝，排列 -> 随机 -> recStack & no start，组合与子集 -> 有序 -> 排序 & i+1 & start
- *
  * <p>入参遵循次序 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
  *
  * <p>剪枝必须做在进入回溯之前，如排序，或回溯选择分支之内，如分支选择非法而 break
@@ -1667,7 +1665,7 @@ class BacktrackingCombinatorics {
   }
 }
 
-/** The type Backtracking search. */
+/** 回溯涉及搜索 */
 class BacktrackingSearch extends DDFS {
   /**
    * 路径总和II，从根出发要求达到叶，打印路径
@@ -1809,7 +1807,7 @@ class BacktrackingSearch extends DDFS {
   }
 }
 
-/** The type Backtracking else. */
+/** 回溯低频题型 */
 class BacktrackingElse extends DDFS {
   /**
    * 复原IP地址
@@ -1888,88 +1886,47 @@ class BacktrackingElse extends DDFS {
    */
   public List<String> removeInvalidParentheses(String s) {
     char[] chs = s.toCharArray();
-    // 确定删除最少的合法括号对数
     int l = 0, r = 0;
     for (char ch : chs) {
       if (ch == '(') l += 1;
       if (ch == ')') {
-        if (r < l) r += 1;
-        else maxRemR += 1;
+        if (l > 0) l -= 1;
+        else r += 1;
       }
     }
-    maxPair = Math.min(l, r);
-    maxRemL = l > maxPair ? l - maxPair : 0;
-    bt14(chs, 0, 0, 0, 0, 0, new StringBuilder());
-    return new ArrayList<>(res);
+    bt14(chs, 0, 0, 0, l, r);
+    return res;
   }
 
-  private final Set<String> res = new HashSet<>();
-
-  // 最多移除左括号数量、最多移除右括号数量、最大合法括号对数
-  private int maxRemL, maxRemR, maxPair;
-
-  // 对每个位置字符，考虑加入和删除两种情况，记录当前位置左右括号对数，删除的括号对数
-  // 以下几种情况可以剪枝
-  // 1.非法 r>l
-  // 2.放入的括号数量>最大对数 l > maxPair || r > maxPair
-  // 3.删除的括号数量>最大删除数量 remL > maxRemL || remR > maxRemR
-  private void bt14(char[] chs, int start, int l, int r, int remL, int remR, StringBuilder path) {
-    if (r > l || l > maxPair || r > maxPair || remL > maxRemL || remR > maxRemR) return;
+  private void bt14(char[] chs, int start, int cl, int cr, int dl, int dr) {
+    if (cr > cl || dl < 0 || dr < 0) return;
+    String cur = path.toString() + '#' + start;
+    if (visited.contains(cur)) return;
+    visited.add(cur);
     if (start == chs.length) {
-      res.add(path.toString());
+      if (dl == 0 && dr == 0) res.add(path.toString());
       return;
     }
     char ch = chs[start];
-    path.append(ch);
-    int nxt = start + 1;
+    start += 1;
     if (ch == '(') {
-      bt14(chs, nxt, l + 1, r, remL, remR, path);
-      path.deleteCharAt(path.length() - 1);
-      bt14(chs, nxt, l, r, remL + 1, remR, path);
-    } else if (ch == ')') {
-      bt14(chs, nxt, l, r + 1, remL, remR, path);
-      path.deleteCharAt(path.length() - 1);
-      bt14(chs, nxt, l, r, remL, remR + 1, path);
-    } else {
-      bt14(chs, nxt, l, r, remL, remR, path);
-      path.deleteCharAt(path.length() - 1);
+      bt14(chs, start, cl, cr, dl - 1, dr);
+      cl += 1;
     }
+    if (ch == ')') {
+      bt14(chs, start, cl, cr, dl, dr - 1);
+      cr += 1;
+    }
+    path.append(ch);
+    bt14(chs, start, cl, cr, dl, dr);
+    path.delete(path.length() - 1, path.length());
   }
 
-  /**
-   * 划分为 k 个相等的子集
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/solution/javadai-fan-hui-zhi-de-hui-su-fa-by-caipengbo/
-   *
-   * @param nums
-   * @param k
-   * @return
-   */
-  public boolean canPartitionKSubsets(int[] nums, int k) {
-    int sum = 0, max = 0;
-    for (int n : nums) {
-      sum += n;
-      if (max < n) max = n;
-    }
-    target = sum / k;
-    return sum % k == 0 && max <= target && bt15(nums, 0, k, 0, new boolean[nums.length]);
-  }
+  private List<String> res = new ArrayList<>();
 
-  private int target; // 「划分为 k 个相等的子集」
+  private StringBuilder path = new StringBuilder();
 
-  private boolean bt15(int[] nums, int start, int k, int sum, boolean[] recStack) {
-    if (k == 0) return true;
-    if (sum == target) return bt15(nums, 0, k - 1, 0, recStack);
-    for (int i = start; i < nums.length; i++) {
-      int cur = sum + nums[i];
-      if (recStack[i] || cur > target) continue;
-      recStack[i] = true;
-      if (bt15(nums, i + 1, k, cur, recStack)) return true;
-      recStack[i] = false;
-    }
-    return false;
-  }
+  private final Set<String> visited = new HashSet<>();
 
   /**
    * 分割回文串，将字符串分割为多个回文子串，返回所有结果
@@ -2019,32 +1976,38 @@ class BacktrackingElse extends DDFS {
   }
 
   /**
-   * 将数字串拆分为多个不超过 k 的子串，打印路径
+   * 划分为 k 个相等的子集
    *
-   * @param s the s
-   * @param K the k
-   * @return list
+   * <p>参考
+   * https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/solution/javadai-fan-hui-zhi-de-hui-su-fa-by-caipengbo/
+   *
+   * @param nums
+   * @param k
+   * @return
    */
-  public List<List<Integer>> splitNumbers(String s, int K) {
-    List<List<Integer>> paths = new ArrayList<>();
-    bt5(s, 0, new ArrayDeque<>(), paths, K);
-    return paths;
+  public boolean canPartitionKSubsets(int[] nums, int k) {
+    int sum = 0, max = 0;
+    for (int n : nums) {
+      sum += n;
+      if (max < n) max = n;
+    }
+    target = sum / k;
+    return sum % k == 0 && max <= target && bt15(nums, 0, k, 0, new boolean[nums.length]);
   }
 
-  private void bt5(String s, int start, Deque<Integer> path, List<List<Integer>> res, int K) {
-    if (start == s.length()) {
-      res.add(new ArrayList<>(path));
-      return;
+  private int target; // 「划分为 k 个相等的子集」
+
+  private boolean bt15(int[] nums, int start, int k, int sum, boolean[] recStack) {
+    if (k == 0) return true;
+    if (sum == target) return bt15(nums, 0, k - 1, 0, recStack);
+    for (int i = start; i < nums.length; i++) {
+      int cur = sum + nums[i];
+      if (recStack[i] || cur > target) continue;
+      recStack[i] = true;
+      if (bt15(nums, i + 1, k, cur, recStack)) return true;
+      recStack[i] = false;
     }
-    // 每轮只截到 K 的位数
-    int n = 0;
-    for (int i = start; i < s.length(); i++) {
-      n = n * 10 + (s.charAt(i) - '0');
-      if (n > K) break;
-      path.offerLast(n);
-      bt5(s, i + 1, path, res, K);
-      path.pollLast();
-    }
+    return false;
   }
 
   /**
@@ -2088,6 +2051,35 @@ class BacktrackingElse extends DDFS {
       }
     }
     return "IPv6";
+  }
+
+  /**
+   * 将数字串拆分为多个不超过 k 的子串，打印路径
+   *
+   * @param s the s
+   * @param K the k
+   * @return list
+   */
+  public List<List<Integer>> splitNumbers(String s, int K) {
+    List<List<Integer>> paths = new ArrayList<>();
+    bt5(s, 0, new ArrayDeque<>(), paths, K);
+    return paths;
+  }
+
+  private void bt5(String s, int start, Deque<Integer> path, List<List<Integer>> res, int K) {
+    if (start == s.length()) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    // 每轮只截到 K 的位数
+    int n = 0;
+    for (int i = start; i < s.length(); i++) {
+      n = n * 10 + (s.charAt(i) - '0');
+      if (n > K) break;
+      path.offerLast(n);
+      bt5(s, i + 1, path, res, K);
+      path.pollLast();
+    }
   }
 
   /**

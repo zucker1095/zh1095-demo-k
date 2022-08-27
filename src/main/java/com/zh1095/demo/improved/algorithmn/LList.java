@@ -447,6 +447,32 @@ class ReorderList extends LList {
   }
 
   /**
+   * 分隔链表，使得所有小于 x 的结点都出现在大于或等于 x 的结点之前
+   *
+   * <p>两条链表，类似双路快排，尾插
+   *
+   * @param head the head
+   * @param x the x
+   * @return list node
+   */
+  public ListNode partition(ListNode head, int x) {
+    ListNode ltDummy = new ListNode(), gteDummy = new ListNode();
+    ListNode ltHead = ltDummy, gteHead = gteDummy;
+    for (ListNode cur = head; cur != null; cur = cur.next) {
+      if (cur.val < x) {
+        ltHead.next = cur;
+        ltHead = ltHead.next;
+      } else {
+        gteHead.next = cur;
+        gteHead = gteHead.next;
+      }
+    }
+    ltHead.next = gteDummy.next;
+    gteHead.next = null;
+    return ltDummy.next;
+  }
+
+  /**
    * 重排奇偶链表，奇数位置升序，偶数位置反之，升序排列整个链表
    *
    * <p>参考 https://mp.weixin.qq.com/s/0WVa2wIAeG0nYnVndZiEXQ
@@ -483,32 +509,6 @@ class ReorderList extends LList {
     ListNode newHead = quickSort(ltHead, head);
     head.next = quickSort(head.next, end);
     return newHead;
-  }
-
-  /**
-   * 分隔链表，使得所有小于 x 的结点都出现在大于或等于 x 的结点之前
-   *
-   * <p>两条链表，类似双路快排，尾插
-   *
-   * @param head the head
-   * @param x the x
-   * @return list node
-   */
-  public ListNode partition(ListNode head, int x) {
-    ListNode ltDummy = new ListNode(), gteDummy = new ListNode();
-    ListNode ltHead = ltDummy, gteHead = gteDummy;
-    for (ListNode cur = head; cur != null; cur = cur.next) {
-      if (cur.val < x) {
-        ltHead.next = cur;
-        ltHead = ltHead.next;
-      } else {
-        gteHead.next = cur;
-        gteHead = gteHead.next;
-      }
-    }
-    ltHead.next = gteDummy.next;
-    gteHead.next = null;
-    return ltDummy.next;
   }
 }
 
