@@ -175,12 +175,13 @@ class SubSequence extends DefaultArray {
   private int editDistance(String word1, String word2) {
     int l1 = word1.length(), l2 = word2.length();
     int[][] dp = new int[l1 + 1][l2 + 1];
-    for (int i = 0; i <= l1; i++) dp[i][0] = i;
-    for (int j = 0; j <= l2; j++) dp[0][j] = j;
-    for (int i = 1; i <= l1; i++) {
-      for (int j = 1; j <= l2; j++) {
-        if (word1.charAt(i - 1) == word2.charAt(j - 1)) dp[i][j] = dp[i - 1][j - 1];
-        else dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
+    for (int p1 = 0; p1 <= l1; p1++) dp[p1][0] = p1;
+    for (int p2 = 0; p2 <= l2; p2++) dp[0][p2] = p2;
+    for (int p1 = 1; p1 <= l1; p1++) {
+      for (int p2 = 1; p2 <= l2; p2++) {
+        if (word1.charAt(p1 - 1) == word2.charAt(p2 - 1)) dp[p1][p2] = dp[p1 - 1][p2 - 1];
+        else
+          dp[p1][p2] = 1 + Math.min(dp[p1 - 1][p2 - 1], Math.min(dp[p1 - 1][p2], dp[p1][p2 - 1]));
       }
     }
     return dp[l1][l2];
@@ -193,19 +194,12 @@ class SubSequence extends DefaultArray {
   private int deleteOperationForTwoStrings(String s1, String s2) {
     int n1 = s1.length(), n2 = s2.length();
     int[][] dp = new int[n1 + 1][n2 + 1];
-    for (int i = 0; i <= n1; i++) {
-      dp[i][0] = i;
-    }
-    for (int j = 0; j <= n2; j++) {
-      dp[0][j] = j;
-    }
+    for (int i = 0; i <= n1; i++) dp[i][0] = i;
+    for (int j = 0; j <= n2; j++) dp[0][j] = j;
     for (int i = 1; i <= n1; i++) {
       for (int j = 1; j <= n2; j++) {
-        int minDistance = Math.min(dp[i - 1][j], dp[i][j - 1]) + 1;
-        dp[i][j] =
-            (s1.charAt(i - 1) == s2.charAt(j - 1))
-                ? Math.min(minDistance, dp[i - 1][j - 1])
-                : minDistance;
+        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1]);
+        if (s1.charAt(i - 1) == s2.charAt(j - 1)) dp[i][j] = Math.min(dp[i][j], dp[i - 1][j - 1]);
       }
     }
     return dp[n1][n2];
@@ -948,9 +942,7 @@ class Optimal {
     int[] dp = new int[len];
     for (int i = 1; i < len; i++) {
       if (chs[i] == '(') continue;
-      // 0...preIdx(...)) 其中 i 是最后一个括号
       int preIdx = i - dp[i - 1];
-      System.out.println(preIdx);
       if (chs[i - 1] == '(') {
         dp[i] = 2;
         if (i >= 2) dp[i] += dp[i - 2];

@@ -370,9 +370,8 @@ class DData {
   /**
    * 最小栈，全局保存最小值，入栈存差并更新，出栈与取顶均需判负
    *
-   * <p>参考 https://yeqown.xyz/2018/03/01/Stack%E5%AE%9E%E7%8E%B0O1%E7%9A%84Min%E5%92%8CMax/
-   *
-   * <p>https://www.cnblogs.com/Acx7/p/14617661.html
+   * <p>最大栈参下 annotate 与
+   * https://yeqown.xyz/2018/03/01/Stack%E5%AE%9E%E7%8E%B0O1%E7%9A%84Min%E5%92%8CMax/
    *
    * <p>TODO 扩展1，O(1) 同时返回最大与最小
    *
@@ -389,19 +388,22 @@ class DData {
       } else {
         stack.push(n - min);
         min = Math.min(min, n);
+        //        max = Math.max(max, n);
       }
     }
 
     public void pop() {
       if (stack.isEmpty()) return;
-      long pop = stack.pollLast();
-      if (pop < 0) min -= pop;
+      long top = stack.pollLast();
+      if (top < 0) min -= top;
+      //      if (top > 0) max -= top;
     }
 
     public int top() {
       // 题设总是在非空栈上调用
       long top = stack.peekLast();
       return (int) (top < 0 ? min : top + min);
+      //      return (int) (top > 0 ? max : top + max);
     }
 
     public int getMin() {
@@ -1036,7 +1038,7 @@ class MMath {
  */
 class GGraph {
   /**
-   * 课程表/检测循环依赖，返回是否 DAG，拓扑排序/Kahn 算法
+   * 课程表/检测循环依赖，返回是否 DAG，拓扑排序/Kahn 算法，省略 II 中的 paths 逻辑即可
    *
    * <p>拓扑排序有两种模式，从入度思考，即从前往后排序，采用 BFS，入度为 0 的节点在拓扑排序中一定排在前面, 然后删除和该节点对应的边, 迭代寻找入度为 0 的节点
    *
@@ -1049,22 +1051,11 @@ class GGraph {
    * @return boolean boolean
    */
   public boolean canFinish(int V, int[][] prerequisites) {
-    int[] indegrees = new int[V];
-    List<List<Integer>> table = buildTable(prerequisites, V, indegrees);
-    Queue<Integer> queue = new LinkedList();
-    for (int i = 0; i < V; i++) if (indegrees[i] == 0) queue.offer(i);
-    while (!queue.isEmpty()) {
-      V -= 1;
-      for (int adj : table.get(queue.poll())) {
-        indegrees[adj] -= 1;
-        if (indegrees[adj] == 0) queue.offer(adj);
-      }
-    }
-    return V == 0;
+    return findOrder(V, prerequisites).length == V;
   }
 
   /**
-   * 课程表II，比 I 新增记录即可
+   * 课程表II
    *
    * <p>若存在循环依赖则返回空，否则返回可行的编译顺序
    *

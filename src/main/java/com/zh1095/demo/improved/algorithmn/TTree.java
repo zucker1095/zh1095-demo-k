@@ -11,8 +11,6 @@ import java.util.*;
  * @author cenghui
  */
 public class TTree {
-  private int res3 = 0; // 「求根节点到叶节点数字之和」
-
   /**
    * 中序遍历，前中后依次为 入（结果集）左右 左入右 入右左
    *
@@ -34,9 +32,7 @@ public class TTree {
     while (cur != null || !stack.isEmpty()) {
       //      cur = stack.pollLast();
       //      res.add(cur.val);
-      //      for (TreeNode node : cur.chlidren){
-      //        stack.offerLast(node);
-      //      }
+      //      for (TreeNode n : cur.chlidren) stack.offerLast(n);
       while (cur != null) {
         //        res.add(cur.val); // 前序与后序
         stack.offerLast(cur);
@@ -124,6 +120,8 @@ public class TTree {
     }
     return sum;
   }
+
+  private int res3 = 0; // 「求根节点到叶节点数字之和」
 
   private void dfs12(TreeNode root, int num) {
     if (root == null) return;
@@ -601,7 +599,7 @@ class DDFS {
 /** 二叉搜索树，中序为主，模板与「中序遍历」一致 */
 class BBSTInorder {
   /**
-   * 验证二叉搜索树，模板参上「中序遍历」
+   * 验证二叉搜索树
    *
    * @param root the root
    * @return boolean
@@ -1535,11 +1533,11 @@ class MultiTrees {
 }
 
 /**
- * 回溯，前序与后序结合，入参遵循
+ * 回溯，前序与后序结合
  *
- * <p>次序 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
+ * <p>要去重都得排序以剪枝，排列 -> 随机 -> recStack & no start，组合与子集 -> 有序 -> 排序 & i+1 & start
  *
- * <p>按照子组列的顺序，建议按照表格记忆，通过索引标识是否元素重复，通过排序再取标识标识值重复
+ * <p>入参遵循次序 selection, path, res(if need), ...args，其中 path 采用 stack 因为符合回溯的语义
  *
  * <p>剪枝必须做在进入回溯之前，如排序，或回溯选择分支之内，如分支选择非法而 break
  */
@@ -1552,23 +1550,55 @@ class BacktrackingCombinatorics {
    */
   public List<List<Integer>> subsets(int[] nums) {
     List<List<Integer>> res = new ArrayList<>();
-    if (nums.length > 0) bt1(nums, new ArrayDeque<>(), res, 0); // 需要特判
+    if (nums.length > 0) bt1(nums, new ArrayDeque<>(), res, 0);
     return res;
   }
 
   private void bt1(int[] nums, Deque<Integer> path, List<List<Integer>> res, int start) {
     res.add(new ArrayList<>(path));
-    // 另起一条路径
     for (int i = start; i < nums.length; i++) {
       path.offerLast(nums[i]);
-      // 不可选重复，因此当前路径下一步选下一个元素
       bt1(nums, path, res, i + 1);
       path.pollLast();
     }
   }
 
   /**
-   * 全排列I，无重复
+   * 组合总和，可选重复，对于负数仍通用
+   *
+   * <p>扩展1，不能重复，组合总和II，参下 annotate
+   *
+   * <p>扩展2，组合总和III，不能重复，只能选 [1:9]
+   *
+   * @param candidates the candidates
+   * @param target the target
+   * @return the list
+   */
+  public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (candidates.length > 0) {
+      Arrays.sort(candidates);
+      bt2(candidates, new ArrayDeque<>(), res, 0, target);
+    }
+    return res;
+  }
+
+  private void bt2(
+      int[] nums, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
+    if (target == 0) res.add(new ArrayList<>(path));
+    for (int i = start; i < nums.length; i++) {
+      if (nums[i] > target) break;
+      path.offerLast(nums[i]);
+      bt2(nums, path, res, i, target - nums[i]);
+      // 不可选重复则跳过，且当前路径下一步选下一个元素
+      //      if (i > start && candidates[i - 1] == candidates[i]) continue;
+      //      bt2(candidates, path, res, i + 1, target - candidates[i]);
+      path.pollLast();
+    }
+  }
+
+  /**
+   * 全排列，无重复
    *
    * <p>扩展1，有重复，全排列II，参下 annotate
    *
@@ -1599,49 +1629,13 @@ class BacktrackingCombinatorics {
     }
     for (int i = 0; i < nums.length; i++) {
       if (recStack[i]) continue;
-      // II 与「字符串的排列」同理
+      // II 与「字符串的排列」同理，额外剪枝
       //      if (i > 0 && nums[i] == nums[i - 1] && !recStack[i - 1]) continue;
       recStack[i] = true;
       path.offerLast(nums[i]);
       bt4(nums, path, res, recStack);
       path.pollLast();
       recStack[i] = false;
-    }
-  }
-
-  /**
-   * 组合总和I，可选重复，对于负数仍通用
-   *
-   * <p>扩展1，不能重复，组合总和II，参下 annotate
-   *
-   * <p>扩展2，组合总和III，不能重复，只能选 [1:9]
-   *
-   * @param candidates the candidates
-   * @param target the target
-   * @return the list
-   */
-  public List<List<Integer>> combinationSum(int[] candidates, int target) {
-    List<List<Integer>> res = new ArrayList<>();
-    if (candidates.length > 0) {
-      Arrays.sort(candidates);
-      bt2(candidates, new ArrayDeque<>(), res, 0, target);
-    }
-    return res;
-  }
-
-  private void bt2(
-      int[] candidates, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
-    if (target == 0) res.add(new ArrayList<>(path));
-    for (int i = start; i < candidates.length; i++) {
-      if (candidates[i] > target) break;
-      // 不可选重复则跳过
-      //      if (i > start && candidates[i - 1] == candidates[i]) continue;
-      path.offerLast(candidates[i]);
-      // 可选重复，则当前路径下一步选当前元素
-      bt2(candidates, path, res, i, target - candidates[i]);
-      // 不可选重复，则当前路径下一步选下一个元素
-      //      bt2(candidates, path, res, i + 1, target - candidates[i]);
-      path.pollLast();
     }
   }
 

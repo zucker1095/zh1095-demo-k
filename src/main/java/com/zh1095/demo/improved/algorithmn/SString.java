@@ -782,7 +782,7 @@ class SSubString {
     char[] chs = s.toCharArray();
     int start = 0, end = 0, len = chs.length;
     for (int i = 0; i < 2 * len - 1; i++) {
-      int lo = i / 2, hi = i / 2 + i % 2;
+      int lo = i / 2, hi = lo + i % 2;
       while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
         if (hi - lo > end - start) {
           start = lo;
@@ -805,7 +805,7 @@ class SSubString {
     char[] chs = s.toCharArray();
     int cnt = 0, len = chs.length;
     for (int i = 0; i < 2 * len - 1; i++) {
-      int lo = i / 2, hi = i / 2 + i % 2;
+      int lo = i / 2, hi = lo + i % 2;
       while (lo > -1 && hi < len && chs[lo] == chs[hi]) {
         cnt += 1;
         lo -= 1;
@@ -909,6 +909,161 @@ class SSubString {
       p2 += 1;
     }
     return p1 == s.length();
+  }
+}
+
+/** 单调栈，递增利用波谷剔除栈中的波峰，留下波谷，反之，波峰 */
+class MonotonicStack {
+  /**
+   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
+   *
+   * @param tem the t
+   * @return int [ ]
+   */
+  public int[] dailyTemperatures(int[] tem) {
+    Deque<Integer> ms = new ArrayDeque<>();
+    int[] res = new int[tem.length];
+    for (int i = 0; i < tem.length; i++) {
+      while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
+        int outIdx = ms.pollLast();
+        res[outIdx] = i - outIdx;
+      }
+      ms.offerLast(i);
+    }
+    return res;
+  }
+
+  /**
+   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
+   *
+   * @param nums the nums
+   * @return int [ ]
+   */
+  public int[] nextGreaterElements(int[] nums) {
+    Deque<Integer> ms = new ArrayDeque<>();
+    int len = nums.length;
+    int[] res = new int[len];
+    Arrays.fill(res, -1);
+    for (int i = 0; i < 2 * len; i++) {
+      int n = nums[i % len];
+      while (!ms.isEmpty() && n > nums[ms.peekLast()]) res[ms.pollLast()] = n;
+      ms.offerLast(i % len);
+    }
+    return res;
+  }
+
+  /**
+   * 柱状图中最大的矩形，即区间最小数乘区间和的最大值
+   *
+   * <p>TODO 参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA 与
+   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
+   *
+   * @param heights
+   * @return
+   */
+  public int largestRectangleArea(int[] heights) {
+    int maxArea = 0, len = heights.length;
+    // 整体向右移位，且首尾添加哨兵，下方不用判断边界
+    int[] hs = new int[len + 2];
+    System.arraycopy(heights, 0, hs, 1, len);
+    Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
+    for (int i = 0; i < hs.length; i++) maxArea = pushAndReturn(hs, i, maxArea, ms);
+    return maxArea;
+  }
+
+  /**
+   * 最大矩形，遍历每行的高度，通过栈
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalRectangle(char[][] matrix) {
+    int maxArea = 0, len = matrix[0].length;
+    int[] hs = new int[len + 2];
+    for (char[] row : matrix) {
+      Deque<Integer> ms = new ArrayDeque<>();
+      for (int i = 0; i < hs.length; i++) {
+        if (i > 0 && i < len + 1) { // 哨兵内
+          if (row[i - 1] == '1') hs[i] += 1;
+          else hs[i] = 0;
+        }
+        maxArea = pushAndReturn(hs, i, maxArea, ms);
+      }
+    }
+    return maxArea;
+  }
+
+  // 放入单调递减栈，比较的是在 hs 内的取值，并返回更新后的最大面积
+  // 面积的高为 hs[pollLast] 宽为弹出后与 i 的距离
+  private int pushAndReturn(int[] hs, int i, int maxArea, Deque<Integer> ms) {
+    while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
+      int cur = ms.pollLast(), pre = ms.peekLast();
+      maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
+    }
+    ms.offerLast(i);
+    return maxArea;
+  }
+
+  /**
+   * 去除重复字母/不同字符的最小子序列，且要求之后的整体字典序最小
+   *
+   * <p>greedy - 结果中第一个字母的字典序靠前的优先级最高
+   *
+   * <p>单调栈 - 每次贪心要找到一个当前最靠前的字母
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String removeDuplicateLetters(String s) {
+    if (s.length() < 2) return s;
+    Deque<Character> stack = new ArrayDeque<>(s.length());
+    // 栈内尚存的字母
+    boolean[] visited = new boolean[26];
+    // 记录每个字符出现的最后一个位置
+    int[] lastIdxs = new int[26];
+    for (int i = 0; i < s.length(); i++) lastIdxs[s.charAt(i) - 'a'] = i;
+    for (int i = 0; i < s.length(); i++) {
+      char cur = s.charAt(i);
+      if (visited[cur - 'a']) continue;
+      while (!stack.isEmpty() && cur < stack.getLast() && lastIdxs[stack.getLast() - 'a'] > i) {
+        visited[stack.pollLast() - 'a'] = false;
+      }
+      stack.offerLast(cur);
+      visited[cur - 'a'] = true;
+    }
+    StringBuilder res = new StringBuilder();
+    for (char ch : stack) res.append(ch);
+    return res.toString();
+  }
+
+  /**
+   * 求区间最小数乘区间和的最大值
+   *
+   * <p>参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA
+   *
+   * @param nums
+   * @return
+   */
+  public int calculateIntervalSum(int[] nums) {
+    int maxSum = 0, len = nums.length;
+    int[] preSum = new int[len + 1];
+    for (int i = 1; i < len + 1; i++) preSum[i] = preSum[i - 1] + nums[i - 1];
+    Deque<Integer> stack = new ArrayDeque<>();
+    for (int i = 0; i < len; i++) {
+      while (!stack.isEmpty() && nums[stack.peekLast()] >= nums[i]) {
+        int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = i - 1;
+        maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
+      }
+      stack.offerLast(i);
+    }
+    while (!stack.isEmpty()) {
+      int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = len - 1;
+      maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
+    }
+    return maxSum;
   }
 }
 
@@ -1337,161 +1492,6 @@ class CConvert extends DefaultSString {
     }
     if (x != 0) res.append(num2str_small[x] + " ");
     return res.toString();
-  }
-}
-
-/** 单调栈，递增利用波谷剔除栈中的波峰，留下波谷，反之，波峰 */
-class MonotonicStack {
-  /**
-   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
-   *
-   * @param tem the t
-   * @return int [ ]
-   */
-  public int[] dailyTemperatures(int[] tem) {
-    Deque<Integer> ms = new ArrayDeque<>();
-    int[] res = new int[tem.length];
-    for (int i = 0; i < tem.length; i++) {
-      while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
-        int outIdx = ms.pollLast();
-        res[outIdx] = i - outIdx;
-      }
-      ms.offerLast(i);
-    }
-    return res;
-  }
-
-  /**
-   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
-   *
-   * @param nums the nums
-   * @return int [ ]
-   */
-  public int[] nextGreaterElements(int[] nums) {
-    Deque<Integer> ms = new ArrayDeque<>();
-    int len = nums.length;
-    int[] res = new int[len];
-    Arrays.fill(res, -1);
-    for (int i = 0; i < 2 * len; i++) {
-      int n = nums[i % len];
-      while (!ms.isEmpty() && n > nums[ms.peekLast()]) res[ms.pollLast()] = n;
-      ms.offerLast(i % len);
-    }
-    return res;
-  }
-
-  /**
-   * 柱状图中最大的矩形，即区间最小数乘区间和的最大值
-   *
-   * <p>TODO 参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA 与
-   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
-   *
-   * @param heights
-   * @return
-   */
-  public int largestRectangleArea(int[] heights) {
-    int maxArea = 0, len = heights.length;
-    // 整体向右移位，且首尾添加哨兵，下方不用判断边界
-    int[] hs = new int[len + 2];
-    System.arraycopy(heights, 0, hs, 1, len);
-    Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
-    for (int i = 0; i < hs.length; i++) maxArea = pushAndReturn(hs, i, maxArea, ms);
-    return maxArea;
-  }
-
-  /**
-   * 最大矩形，遍历每行的高度，通过栈
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
-   *
-   * @param matrix
-   * @return
-   */
-  public int maximalRectangle(char[][] matrix) {
-    int maxArea = 0, len = matrix[0].length;
-    int[] hs = new int[len + 2];
-    for (char[] row : matrix) {
-      Deque<Integer> ms = new ArrayDeque<>();
-      for (int i = 0; i < hs.length; i++) {
-        if (i > 0 && i < len + 1) { // 哨兵内
-          if (row[i - 1] == '1') hs[i] += 1;
-          else hs[i] = 0;
-        }
-        maxArea = pushAndReturn(hs, i, maxArea, ms);
-      }
-    }
-    return maxArea;
-  }
-
-  // 放入单调递减栈，比较的是在 hs 内的取值，并返回更新后的最大面积
-  // 面积的高为 hs[pollLast] 宽为弹出后与 i 的距离
-  private int pushAndReturn(int[] hs, int i, int maxArea, Deque<Integer> ms) {
-    while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
-      int cur = ms.pollLast(), pre = ms.peekLast();
-      maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
-    }
-    ms.offerLast(i);
-    return maxArea;
-  }
-
-  /**
-   * 去除重复字母/不同字符的最小子序列，且要求之后的整体字典序最小
-   *
-   * <p>greedy - 结果中第一个字母的字典序靠前的优先级最高
-   *
-   * <p>单调栈 - 每次贪心要找到一个当前最靠前的字母
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String removeDuplicateLetters(String s) {
-    if (s.length() < 2) return s;
-    Deque<Character> stack = new ArrayDeque<>(s.length());
-    // 栈内尚存的字母
-    boolean[] visited = new boolean[26];
-    // 记录每个字符出现的最后一个位置
-    int[] lastIdxs = new int[26];
-    for (int i = 0; i < s.length(); i++) lastIdxs[s.charAt(i) - 'a'] = i;
-    for (int i = 0; i < s.length(); i++) {
-      char cur = s.charAt(i);
-      if (visited[cur - 'a']) continue;
-      while (!stack.isEmpty() && cur < stack.getLast() && lastIdxs[stack.getLast() - 'a'] > i) {
-        visited[stack.pollLast() - 'a'] = false;
-      }
-      stack.offerLast(cur);
-      visited[cur - 'a'] = true;
-    }
-    StringBuilder res = new StringBuilder();
-    for (char ch : stack) res.append(ch);
-    return res.toString();
-  }
-
-  /**
-   * 求区间最小数乘区间和的最大值
-   *
-   * <p>参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA
-   *
-   * @param nums
-   * @return
-   */
-  public int calculateIntervalSum(int[] nums) {
-    int maxSum = 0, len = nums.length;
-    int[] preSum = new int[len + 1];
-    for (int i = 1; i < len + 1; i++) preSum[i] = preSum[i - 1] + nums[i - 1];
-    Deque<Integer> stack = new ArrayDeque<>();
-    for (int i = 0; i < len; i++) {
-      while (!stack.isEmpty() && nums[stack.peekLast()] >= nums[i]) {
-        int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = i - 1;
-        maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
-      }
-      stack.offerLast(i);
-    }
-    while (!stack.isEmpty()) {
-      int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = len - 1;
-      maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
-    }
-    return maxSum;
   }
 }
 

@@ -506,7 +506,6 @@ class ReorderList extends LList {
         gteHead = gteHead.next;
       }
     }
-    // merge
     ltHead.next = gteDummy.next;
     gteHead.next = null;
     return ltDummy.next;
@@ -550,18 +549,13 @@ class Cyclic extends LList {
   }
 
   private ListNode isCyclic(ListNode head) {
-    if (head == null || head.next == null) return null;
-    boolean cyclic = false;
     ListNode lo = head, hi = head;
     while (hi != null && hi.next != null) {
       lo = lo.next;
       hi = hi.next.next;
-      if (lo == hi) {
-        cyclic = true;
-        break;
-      }
+      if (lo == hi) return lo;
     }
-    return cyclic ? lo : null;
+    return null;
   }
 
   /**
