@@ -2,7 +2,7 @@ package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
 
-// 二维（全涉及子序列） 最长回文子序列 最长公共子序列 编辑距离 正则表达式匹配
+// 非一维（全是子序列） 最长回文子序列 最长公共子序列 编辑距离 正则表达式匹配
 // 非同向（徘徊或相向） 最长回文子序列 最长重复子数组 单词拆分 三角形的最小路径和 不同的二叉搜索树 完全平方数 整数拆分
 
 /**
@@ -379,7 +379,7 @@ class SubArray {
   }
 
   /**
-   * 最长连续序列，逐个数字递增查找
+   * 最长连续序列，查左向右
    *
    * <p>仅当该数是连续序列的首个数，才会进入内循环匹配连续序列中的数，因此数组中的每个数只会进入内层循环一次，即线性时间复杂度
    *
@@ -394,10 +394,8 @@ class SubArray {
     for (int n : nums) set.add(n);
     int maxLen = 0;
     for (int n : set) {
-      // indicates that the number has been traversed
       if (set.contains(n - 1)) continue;
       int hi = n;
-      // go up downing the number
       while (set.contains(hi + 1)) hi += 1;
       maxLen = Math.max(maxLen, hi - n + 1);
     }
@@ -422,36 +420,6 @@ class SubArray {
   }
 
   /**
-   * 乘积最大子数组，返回乘积，可能存在负数，因此至少需要引入两个状态
-   *
-   * <p>dp[i][0] 表示以 nums[i] 结尾的子数组的乘积的最小值，dp[i][1] 为最大
-   *
-   * <p>递推需要根据 nums[i] 判断
-   *
-   * <p>递归关系只与前一个相关，因此滚动变量，即状态压缩第一维，而保留 0 & 1 两个状态
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/maximum-product-subarray/solution/hua-jie-suan-fa-152-cheng-ji-zui-da-zi-xu-lie-by-g/
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int maxProduct(int[] nums) {
-    int maxPro = Integer.MIN_VALUE, proMax = 1, proMin = 1;
-    for (int n : nums) {
-      if (n < 0) {
-        int tmp = proMax;
-        proMax = proMin;
-        proMin = tmp;
-      }
-      proMax = Math.max(proMax * n, n);
-      proMin = Math.min(proMin * n, n);
-      maxPro = Math.max(maxPro, proMax);
-    }
-    return maxPro;
-  }
-
-  /**
    * 单词拆分，wordDict 是否可组合为 s，可重复使用
    *
    * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 至少其一匹配，比如 wordDict=["apple", "pen", "code"]
@@ -460,6 +428,8 @@ class SubArray {
    *
    * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
    *
+   * <p>扩展 1，返回拆分结果，参考 II
+   *
    * @param s the s
    * @param wordDict the word dict
    * @return boolean boolean
@@ -467,11 +437,11 @@ class SubArray {
   public boolean wordBreak(String s, List<String> wordDict) {
     // 记录最长的单词，下方 [j:i-1] 过长，无法用单词补足，可省略
     int len = s.length(), maxLen = 0;
-    Set<String> wordSet = new HashSet(wordDict.size());
-    for (String w : wordDict) {
-      wordSet.add(w);
-      //      maxLen = Math.max(maxLen, w.length());
-    }
+    wordSet = new HashSet(wordDict);
+    //    for (String w : wordDict) {
+    //      wordSet.add(w);
+    //      maxLen = Math.max(maxLen, w.length());
+    //    }
     boolean[] dp = new boolean[len + 1];
     dp[0] = true;
     // [0:hi-1] -> [0:lo-1] & [lo:hi-1]
@@ -485,6 +455,27 @@ class SubArray {
       }
     }
     return dp[len];
+    // 返回拆分结果
+    //    List<String> res = new ArrayList<>();
+    //    if (dp[len]) bt17(s, len - 1, dp, new ArrayDeque<>(), res);
+    //    return res;
+  }
+
+  private Set<String> wordSet;
+
+  private void bt17(String s, int start, boolean[] dp, Deque<String> path, List<String> res) {
+    if (start == -1) {
+      res.add(String.join(" ", path));
+      return;
+    }
+    for (int i = start; i > -1; i--) {
+      String suffix = s.substring(i, start + 1);
+      if (wordSet.contains(suffix) && dp[i]) {
+        path.offerFirst(suffix);
+        bt17(s, i - 1, dp, path, res);
+        path.pollFirst();
+      }
+    }
   }
 
   /**
@@ -574,7 +565,9 @@ class Path {
     for (int c = 1; c < col; c++) dp[c] = grid[0][c] + dp[c - 1];
     for (int r = 1; r < grid.length; r++) {
       dp[0] += grid[r][0];
-      for (int c = 1; c < col; c++) dp[c] = grid[r][c] + Math.min(dp[c - 1], dp[c]);
+      for (int c = 1; c < col; c++) {
+        dp[c] = grid[r][c] + Math.min(dp[c - 1], dp[c]);
+      }
     }
     return dp[col - 1];
     //    int rows = grid.length, cols = grid[0].length;
@@ -623,7 +616,7 @@ class Path {
     // d e f
     for (int r = len - 1; r > -1; r--) {
       for (int c = 0; c <= r; c++) {
-        dp[c] = triangle.get(r).get(c) + Math.min(dp[c], dp[c + 1]);
+        dp[c] = triangle.get(r).get(c) + Math.min(dp[c + 1], dp[c]);
       }
     }
     return dp[0];
@@ -665,9 +658,9 @@ class Path {
     if (obstacleGrid[0][0] != 1) dp[0] = 1;
     for (int r = 0; r < obstacleGrid.length; r++) {
       for (int c = 0; c < col; c++) {
-        int cur = obstacleGrid[r][c];
-        if (cur == 1) dp[c] = 0;
-        if (cur == 0 && c > 0) dp[c] += dp[c - 1];
+        int n = obstacleGrid[r][c];
+        if (n == 1) dp[c] = 0;
+        if (n == 0 && c > 0) dp[c] += dp[c - 1];
       }
     }
     return dp[col - 1];

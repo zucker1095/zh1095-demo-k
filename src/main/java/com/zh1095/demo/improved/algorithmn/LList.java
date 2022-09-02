@@ -193,11 +193,12 @@ class ReverseList extends LList {
       //      for (int i = 0; i < k && cur.next != null; i++) cur = cur.next;
       for (int i = 0; i < k && cur != null; i++) cur = cur.next;
       if (cur == null) break;
-      ListNode start = pre.next, nxt = start;
+      ListNode start = pre.next, nxt = cur.next;
       cur.next = null;
       pre.next = reverseList(start);
       start.next = nxt;
-      pre = cur = start;
+      pre = start;
+      cur = start;
     }
     return dummy.next;
   }
@@ -216,7 +217,7 @@ class ReverseList extends LList {
     ListNode dummy = new ListNode(), pre = dummy;
     dummy.next = head;
     for (int s = 0; s < left - 1; s++) pre = pre.next;
-    ListNode start = pre.next, cur = pre.next.next; // 题设区间合法
+    ListNode start = pre.next, cur = start.next; // 题设区间合法
     for (int i = 0; i < right - left; i++) {
       ListNode nxt = cur.next;
       cur.next = pre.next;

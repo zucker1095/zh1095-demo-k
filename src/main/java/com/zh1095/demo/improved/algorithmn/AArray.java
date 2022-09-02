@@ -303,7 +303,7 @@ class QQuick extends DefaultArray {
   public void quickSort(int[] nums, int lo, int hi) {
     if (lo >= hi) return; // 对 [lo:hi] 快排
     int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
-    // 下方需要确保虚拟头 <pivot 即 lt=lo 也属于界外，并能够从 cur=lo+1 界内开始遍历
+    // 下方需要确保虚拟头 <pivot 即 lt=lo 也属于界外，并能够从 cur=lt+1 界内开始遍历
     swap(nums, pivotIdx, lo);
     // 虚拟头尾，保证界外，因此下方需要先步进，再 swap
     int lt = lo, cur = lt + 1, gt = hi + 1;
@@ -599,7 +599,6 @@ class HHeap extends DefaultArray {
 
 /** 分治相关，归并排序 */
 class MMerge extends DefaultArray {
-
   /**
    * 归并排序，up-to-bottom 递归，先分后合
    *
@@ -654,6 +653,48 @@ class MMerge extends DefaultArray {
       }
     }
     return curCnt;
+  }
+
+  /**
+   * 计算右侧小于当前元素的个数
+   *
+   * @param nums
+   * @return
+   */
+  public List<Integer> countSmaller(int[] nums) {
+    int len = nums.length;
+    // 索引数组，归并回去的时候，方便知道是哪个下标的元素
+    int[] tmp = new int[len], res = new int[len], idx = new int[len];
+    for (int i = 0; i < len; i++) idx[i] = i;
+    divide(nums, 0, len - 1, idx, tmp, res);
+    List<Integer> ans = new ArrayList<>();
+    for (int i = 0; i < len; i++) ans.add(res[i]);
+    return ans;
+  }
+
+  private void divide(int[] nums, int lo, int hi, int[] idx, int[] tmp, int[] res) {
+    if (lo == hi) return;
+    int mid = lo + (hi - lo) / 2;
+    divide(nums, lo, mid, idx, tmp, res);
+    divide(nums, mid + 1, hi, idx, tmp, res);
+    if (nums[idx[mid]] <= nums[idx[mid + 1]]) return;
+    merge(nums, lo, mid, hi, idx, tmp, res);
+  }
+
+  private void merge(int[] nums, int p1, int end1, int end2, int[] idx, int[] tmp, int[] res) {
+    for (int i = p1; i <= end2; i++) tmp[i] = idx[i];
+    int p2 = end1 + 1;
+    for (int i = p1; i <= end2; i++) {
+      if (p1 > end1) idx[i] = tmp[p2++];
+      else if (p2 > end2) {
+        idx[i] = tmp[p1++];
+        res[idx[i]] += end2 - end1;
+      } else if (nums[tmp[p1]] <= nums[tmp[p2]]) {
+        // 注意：这里是 <= ，保证稳定性
+        idx[i] = tmp[p1++];
+        res[idx[i]] += p2 - end1 - 1;
+      } else idx[i] = tmp[p2++];
+    }
   }
 
   /**
@@ -945,28 +986,22 @@ class DichotomyElse extends DefaultArray {
     // 左上角与右下角即数值的上下界
     int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1];
     while (lo < hi) {
-      // O(n^2) 每次都找矩阵 <=mid 的元素个数，判断目标分别在 [lo,mid] or [mid+1,hi]
-      int mid = lo + (hi - lo) / 2;
-      if (countLte(matrix, mid) < k) lo = mid + 1;
+      // O(n^2) 每次都找矩阵 <=mid 的元素个数，判断目标在 [lo,mid] 或 [mid+1,hi]
+      int mid = lo + (hi - lo) / 2, cnt = 0;
+      // 从左下角开始遍历，找每列最后一个 <=target 的数即知道每一列有多少个数 <=target
+      int r = matrix.length - 1, c = 0;
+      while (-1 < r && c < matrix[0].length) {
+        if (matrix[r][c] <= mid) {
+          cnt += r + 1;
+          c += 1;
+        } else {
+          r -= 1;
+        }
+      }
+      if (cnt < k) lo = mid + 1;
       else hi = mid;
     }
     return lo;
-  }
-
-  // 从左下角开始遍历，找每列最后一个 <=target 的数即知道每一列有多少个数 <=target
-  private int countLte(int[][] matrix, int target) {
-    int cnt = 0, r = matrix.length - 1, c = 0;
-    while (-1 < r && c < matrix[0].length) {
-      if (matrix[r][c] <= target) {
-        // 第 c 列有 r+1 个元素 <= mid
-        cnt += r + 1;
-        c += 1;
-      } else {
-        // 第 c 列目前的数大于 mid，需要继续在当前列往上找
-        r -= 1;
-      }
-    }
-    return cnt;
   }
 
   /**
@@ -1734,15 +1769,14 @@ class PreSum {
    */
   public int findMaxLength(int[] nums) {
     int preSum = 0, maxLen = 0;
-    Map<Integer, Integer> sum2FirstIdx = new HashMap();
-    sum2FirstIdx.put(0, -1); // 可能存在前缀和刚好满足条件的情况
+    Map<Integer, Integer> sum2Lower = new HashMap();
+    sum2Lower.put(0, -1); // 可能存在前缀和刚好满足条件的情况
     for (int i = 0; i < nums.length; i++) {
-      // 将 0 作为 -1
       preSum += nums[i] == 0 ? -1 : 1;
-      // 仍未遍历到和为 0 的子数组，更新即可
-      if (!sum2FirstIdx.containsKey(preSum)) sum2FirstIdx.put(preSum, i);
-      // 画图可知 i - map[preSum] 即和为 0 的数组的长度
-      else maxLen = Math.max(maxLen, i - sum2FirstIdx.get(preSum));
+      // 仍未遍历到和为 0 的子数组则更新
+      if (!sum2Lower.containsKey(preSum)) sum2Lower.put(preSum, i);
+      // 画图可知 i-map[preSum] 即和为 0 的数组的长度
+      else maxLen = Math.max(maxLen, i - sum2Lower.get(preSum));
     }
     return maxLen;
   }
@@ -2336,13 +2370,6 @@ abstract class DefaultArray {
     return nums[hi] == target ? hi : -1;
   }
 
-  /**
-   * 调换
-   *
-   * @param nums the nums
-   * @param a the a
-   * @param b the b
-   */
   protected final void swap(int[] nums, int a, int b) {
     int tmp = nums[a];
     nums[a] = nums[b];
@@ -2355,30 +2382,6 @@ abstract class DefaultArray {
     chs[b] = tmp;
   }
 
-  /**
-   * 返回顺序首个 k 满足 nums[k] != nums[start]，否则返回 -1
-   *
-   * @param nums the nums
-   * @param start the start
-   * @param upper the upper
-   * @return int int
-   */
-  protected final int nextIdx(int[] nums, int start, boolean upper) {
-    int step = upper ? 1 : -1;
-    for (int i = start + 1; i < nums.length && i > -1; i += step) {
-      if (nums[i] == nums[start]) continue;
-      return i;
-    }
-    return -1;
-  }
-
-  /**
-   * Reverse.
-   *
-   * @param nums the nums
-   * @param start the start
-   * @param end the end
-   */
   protected void reverse(int[] nums, int start, int end) {
     int lo = start, hi = end;
     while (lo < hi) {

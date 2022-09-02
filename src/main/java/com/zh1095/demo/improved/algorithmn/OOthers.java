@@ -1026,7 +1026,7 @@ class MMath {
 }
 
 /**
- * 收集图相关，参考 https://oi-wiki.org/graph，有如下题型
+ * 收集图相关，参考 oi-wiki.org/graph，有如下题型
  *
  * <p>环路 & 两点连通性
  *

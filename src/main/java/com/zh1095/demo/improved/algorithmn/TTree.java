@@ -196,8 +196,8 @@ class Build {
   private TreeNode buildTree1(
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo) {
     if (preLo > preHi) return null;
-    int val = preorder[preLo], idx = v2i.get(val), cntL = idx - inLo;
-    TreeNode root = new TreeNode(val);
+    int v = preorder[preLo], idx = v2i.get(v), cntL = idx - inLo;
+    TreeNode root = new TreeNode(v);
     root.left = buildTree1(preorder, preLo + 1, preLo + cntL, v2i, inLo);
     root.right = buildTree1(preorder, preLo + cntL + 1, preHi, v2i, idx + 1);
     return root;
@@ -207,8 +207,8 @@ class Build {
   private TreeNode buildTree2(
       int[] postrorder, int postLo, int postHi, Map<Integer, Integer> v2i, int inLo) {
     if (postLo > postHi) return null;
-    int val = postrorder[postHi], idx = v2i.get(val), cntL = idx - inLo;
-    TreeNode root = new TreeNode(val);
+    int v = postrorder[postHi], idx = v2i.get(v), cntL = idx - inLo;
+    TreeNode root = new TreeNode(v);
     root.left = buildTree2(postrorder, postLo, postLo + cntL - 1, v2i, inLo);
     root.right = buildTree2(postrorder, postLo + cntL, postHi - 1, v2i, idx + 1);
     return root;
@@ -541,8 +541,8 @@ class DDFS {
     int row = board.length, col = board[0].length;
     for (int r = 0; r < row; r++) {
       for (int c = 0; c < col; c++) {
-        if (board[r][c] == 'O' && (r == 0 || c == 0 || r == row - 1 || c == col - 1))
-          dfs16(board, r, c);
+        if (board[r][c] != 'O') continue;
+        if (r == 0 || c == 0 || r == row - 1 || c == col - 1) dfs16(board, r, c);
       }
     }
     for (int r = 0; r < row; r++) {
@@ -585,6 +585,39 @@ class DDFS {
     else r = 0;
     cnt = Math.max(cnt, l + r);
     return Math.max(l, r);
+  }
+
+  /**
+   * 排列序列
+   *
+   * @param n
+   * @param k
+   * @return
+   */
+  public String getPermutation(int n, int k) {
+    int[] factorial = new int[n + 1];
+    factorial[0] = 1;
+    for (int i = 1; i <= n; i++) factorial[i] = factorial[i - 1] * i;
+    StringBuilder path = new StringBuilder();
+    dfs22(n, k, factorial, 0, path, new boolean[n + 1]);
+    return path.toString();
+  }
+  // 已经选择了几个数字，其值恰好等于这一步需要确定的下标位置
+  private void dfs22(
+      int n, int k, int[] factorial, int start, StringBuilder path, boolean[] visited) {
+    if (start == n) return;
+    int cnt = factorial[n - start - 1];
+    for (int i = 1; i <= n; i++) {
+      if (visited[i]) continue;
+      if (cnt < k) {
+        k -= cnt;
+        continue;
+      }
+      path.append(i);
+      visited[i] = true;
+      dfs22(n, k, factorial, start + 1, path, visited);
+      return;
+    }
   }
 
   protected boolean inArea(char[][] board, int i, int j) {
