@@ -1100,6 +1100,26 @@ class DichotomyElse extends DefaultArray {
   }
 
   /**
+   * 爱吃香蕉的珂珂
+   *
+   * @param piles
+   * @param H
+   * @return
+   */
+  public int minEatingSpeed(int[] piles, int H) {
+    int maxVal = 1;
+    for (int p : piles) maxVal = Math.max(maxVal, p);
+    int lo = 1, hi = maxVal;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2, sum = 0;
+      for (int p : piles) sum += (p + mid - 1) / mid;
+      if (sum > H) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  /**
    * 切割木头，参考 https://mp.weixin.qq.com/s/FQma0bdAWbzLMmCKhZRk7w
    *
    * @param nums
@@ -1552,6 +1572,24 @@ class Interval {
  * https://leetcode.cn/problems/corporate-flight-bookings/solution/gong-shui-san-xie-yi-ti-shuang-jie-chai-fm1ef/
  */
 class SSum extends DefaultArray {
+  /**
+   * 两数之和 II，返回其下标
+   *
+   * @param numbers
+   * @param target
+   * @return
+   */
+  public int[] twoSum(int[] numbers, int target) {
+    int lo = 0, hi = numbers.length - 1;
+    while (lo < hi) {
+      int sum = numbers[lo] + numbers[hi];
+      if (sum < target) lo += 1;
+      if (sum == target) return new int[] {lo + 1, hi + 1};
+      if (sum > target) hi -= 1;
+    }
+    return new int[] {-1, -1};
+  }
+
   /**
    * 三数之和
    *

@@ -252,12 +252,10 @@ class Build {
   public void getPostorder(
       int[] preorder, int preLo, int preHi, Map<Integer, Integer> v2i, int inLo, int[] postorder) {
     if (preLo > preHi) return;
-    int root = preorder[preLo];
-    int idx = v2i.get(root), cntL = idx - inLo;
+    int val = preorder[preLo], idx = v2i.get(val), cntL = idx - inLo;
     getPostorder(preorder, preLo + 1, preLo + cntL, v2i, inLo, postorder);
     getPostorder(preorder, preLo + cntL + 1, preHi, v2i, idx + 1, postorder);
-    postorder[postIdx] = root;
-    postIdx += 1;
+    postorder[postIdx++] = val;
   }
 
   /**
@@ -2025,7 +2023,8 @@ class BacktrackingElse extends DDFS {
       if (max < n) max = n;
     }
     target = sum / k;
-    return sum % k == 0 && max <= target && bt15(nums, 0, k, 0, new boolean[nums.length]);
+    if (max > target || sum % k != 0) return false;
+    return bt15(nums, 0, k, 0, new boolean[nums.length]);
   }
 
   private int target; // 「划分为 k 个相等的子集」

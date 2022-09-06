@@ -529,6 +529,16 @@ class Cyclic extends LList {
     return isCyclic(head) != null;
   }
 
+  private ListNode isCyclic(ListNode head) {
+    ListNode lo = head, hi = head;
+    while (hi != null && hi.next != null) {
+      lo = lo.next;
+      hi = hi.next.next;
+      if (lo == hi) return lo;
+    }
+    return null;
+  }
+
   /**
    * 环形链表II
    *
@@ -547,16 +557,6 @@ class Cyclic extends LList {
       finder = finder.next;
     }
     return meet;
-  }
-
-  private ListNode isCyclic(ListNode head) {
-    ListNode lo = head, hi = head;
-    while (hi != null && hi.next != null) {
-      lo = lo.next;
-      hi = hi.next.next;
-      if (lo == hi) return lo;
-    }
-    return null;
   }
 
   /**

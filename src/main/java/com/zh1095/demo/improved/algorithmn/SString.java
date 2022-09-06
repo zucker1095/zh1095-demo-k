@@ -1167,6 +1167,30 @@ class WWord extends DefaultSString {
   }
 
   /**
+   * 重构字符串
+   *
+   * @param s
+   * @return
+   */
+  public String reorganizeString(String s) {
+    int[][] cntAndIdx = new int[26][2];
+    for (char ch : s.toCharArray()) cntAndIdx[ch - 'a'][0] += 1;
+    for (int i = 0; i < 26; i++) cntAndIdx[i][1] = i;
+    PriorityQueue<int[]> pq = new PriorityQueue<>((o1, o2) -> o2[0] - o1[0]);
+    for (int i = 0; i < 26; i++) if (cntAndIdx[i][0] > 0) pq.add(cntAndIdx[i]);
+    StringBuilder res = new StringBuilder();
+    int[] last = new int[2];
+    while (!pq.isEmpty()) {
+      int[] cur = pq.poll();
+      res.append('a' + cur[1]);
+      if (last[0] > 0) pq.offer(Arrays.copyOf(last, 2));
+      last[0] = cur[0] - 1;
+      last[1] = cur[1];
+    }
+    return last[0] > 0 ? "" : res.toString();
+  }
+
+  /**
    * 单词接龙，返回 beginWord 每次 diff 一个字母，最终变为 endWord 的最短路径，且所有路径均包含在 wordList 内
    *
    * <p>TODO 参考
