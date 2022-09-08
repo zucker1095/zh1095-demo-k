@@ -204,7 +204,7 @@ class ReverseList extends LList {
   }
 
   /**
-   * 反转链表II，区间，pre [start...cur...] nxt
+   * 反转链表 II，区间，pre [start...cur...] nxt
    *
    * <p>三步曲，暂存 & 变向三次 & 步进，顺序同上 cur pre start
    *
@@ -268,10 +268,9 @@ class ReverseList extends LList {
       cur = cur.next;
       len += 1;
     }
-    int cnt = len - k % len;
-    if (cnt == len) return head;
+    if (k % len == 0) return head;
     cur.next = head;
-    for (int i = 0; i < cnt; i++) cur = cur.next;
+    for (int i = 0; i < len - k % len; i++) cur = cur.next;
     ListNode newHead = cur.next;
     cur.next = null;
     return newHead;

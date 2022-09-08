@@ -401,7 +401,7 @@ class DDFS {
   public int maxAreaOfIsland(int[][] grid) {
     int maxArea = 0;
     for (int r = 0; r < grid.length; r++) {
-      for (int c = 0; c < grid[r].length; c++) {
+      for (int c = 0; c < grid[0].length; c++) {
         if (grid[r][c] == 1) maxArea = Math.max(maxArea, dfs2(grid, r, c));
       }
     }
@@ -948,7 +948,6 @@ class BBSTDFS {
 class Postorder {
   private int maxSum = Integer.MIN_VALUE; // 「二叉树中的最大路径和」
   private String maxPath; // 「二叉树中的最大路径和」follow up 打印路径
-  private int diameter = 0; // 「二叉树的直径」
 
   /**
    * 二叉树中的最大路径和，从任意结点出发，后序遍历，模板与「二叉树的直径」近乎一致
@@ -1004,6 +1003,8 @@ class Postorder {
     }
     return solo;
   }
+
+  private int diameter = 0; // 「二叉树的直径」
 
   /**
    * 二叉树的直径，即最长路径，后序，类似「二叉树的最大路径和」
@@ -1105,53 +1106,6 @@ class Postorder {
 
 /** 广度优先搜索 */
 class BBFS {
-  /**
-   * 二叉树的层序遍历，递归实现，前序，记录 level 即可
-   *
-   * <p>扩展1，N 叉树
-   *
-   * @param root the root
-   * @return list list
-   */
-  public List<List<Integer>> levelOrder(TreeNode root) {
-    List<List<Integer>> res = new ArrayList<>();
-    if (root != null) dfs8(res, root, 0);
-    return res;
-  }
-
-  private void dfs8(List<List<Integer>> res, TreeNode node, int level) {
-    // 需要加层
-    if (res.size() - 1 < level) res.add(new ArrayList<Integer>());
-    res.get(level).add(node.val);
-    if (node.left != null) dfs8(res, node.left, level + 1);
-    if (node.right != null) dfs8(res, node.right, level + 1);
-  }
-
-  /**
-   * 二叉树的层序遍历II
-   *
-   * @param root the root
-   * @return list
-   */
-  public List<List<Integer>> levelOrderBottom(TreeNode root) {
-    List<List<Integer>> res = new ArrayList<>();
-    Queue<TreeNode> queue = new LinkedList<>();
-    if (root != null) queue.offer(root);
-    while (!queue.isEmpty()) {
-      List<Integer> curLevel = new ArrayList<>(queue.size());
-      for (int i = queue.size(); i > 0; i--) {
-        TreeNode cur = queue.poll();
-        curLevel.add(cur.val);
-        TreeNode l = cur.left, r = cur.right;
-        if (l != null) queue.offer(l);
-        if (r != null) queue.offer(r);
-      }
-      res.add(curLevel);
-    }
-    Collections.reverse(res);
-    return res;
-  }
-
   /**
    * 二叉树的锯齿形层序遍历
    *
@@ -1280,25 +1234,6 @@ class BBFS {
   }
 
   /**
-   * 找树左下角的值
-   *
-   * @param root
-   * @return
-   */
-  public int findBottomLeftValue(TreeNode root) {
-    int res = 0;
-    Queue<TreeNode> queue = new LinkedList();
-    if (root != null) queue.offer(root);
-    while (!queue.isEmpty()) {
-      TreeNode n = queue.poll();
-      if (n.right != null) queue.offer(n.right);
-      if (n.left != null) queue.offer(n.left);
-      res = n.val;
-    }
-    return res;
-  }
-
-  /**
    * 二叉树的最大深度，后序
    *
    * <p>扩展1，n 叉树，参考「N叉树的最大深度」，下方改为遍历所有子结点即可
@@ -1348,6 +1283,72 @@ class BBFS {
       }
     }
     return maxWidth;
+  }
+
+  /**
+   * 找树左下角的值
+   *
+   * @param root
+   * @return
+   */
+  public int findBottomLeftValue(TreeNode root) {
+    int res = 0;
+    Queue<TreeNode> queue = new LinkedList();
+    if (root != null) queue.offer(root);
+    while (!queue.isEmpty()) {
+      TreeNode n = queue.poll();
+      if (n.right != null) queue.offer(n.right);
+      if (n.left != null) queue.offer(n.left);
+      res = n.val;
+    }
+    return res;
+  }
+
+  /**
+   * 二叉树的层序遍历，递归实现，前序，记录 level 即可
+   *
+   * <p>扩展1，N 叉树
+   *
+   * @param root the root
+   * @return list list
+   */
+  public List<List<Integer>> levelOrder(TreeNode root) {
+    List<List<Integer>> res = new ArrayList<>();
+    if (root != null) dfs8(res, root, 0);
+    return res;
+  }
+
+  private void dfs8(List<List<Integer>> res, TreeNode node, int level) {
+    // 需要加层
+    if (res.size() - 1 < level) res.add(new ArrayList<Integer>());
+    res.get(level).add(node.val);
+    if (node.left != null) dfs8(res, node.left, level + 1);
+    if (node.right != null) dfs8(res, node.right, level + 1);
+  }
+
+  /**
+   * 二叉树的层序遍历II
+   *
+   * @param root the root
+   * @return list
+   */
+  public List<List<Integer>> levelOrderBottom(TreeNode root) {
+    List<List<Integer>> res = new ArrayList<>();
+    Queue<TreeNode> queue = new LinkedList<>();
+    if (root != null) queue.offer(root);
+    while (!queue.isEmpty()) {
+      List<Integer> curLevel = new ArrayList<>(queue.size());
+      for (int i = queue.size(); i > 0; i--) {
+        TreeNode cur = queue.poll();
+        curLevel.add(cur.val);
+        TreeNode l = cur.left, r = cur.right;
+        if (l != null) queue.offer(l);
+        if (r != null) queue.offer(r);
+      }
+      res.add(curLevel);
+    }
+    Collections.reverse(res);
+    return res;
   }
 
   /**
@@ -1411,28 +1412,6 @@ class MultiTrees {
     TreeNode r = lowestCommonAncestor(root.right, p, q);
     if (l != null && r != null) return root;
     return l == null ? r : l;
-  }
-
-  /**
-   * 任意两个节点之间的最短路径，两个点分别沿着 LCA DFS 即可
-   *
-   * @param root
-   * @param p
-   * @param q
-   * @return
-   */
-  public int distBetween(TreeNode root, TreeNode p, TreeNode q) {
-    TreeNode lca = lowestCommonAncestor(root, p, q);
-    return dfs18(lca, p) + dfs18(lca, q) - 2;
-  }
-
-  // 返回 target 与根的距离
-  private int dfs18(TreeNode root, TreeNode target) {
-    if (root == null) return 0;
-    if (root == target) return 1;
-    int l = dfs18(root.left, target), r = dfs18(root.right, target);
-    if (l == 0 && r == 0) return 0;
-    return l == 0 ? r + 1 : l + 1;
   }
 
   /**
@@ -1560,6 +1539,28 @@ class MultiTrees {
     return root.val == subRoot.val
         && isContain(root.left, subRoot.left)
         && isContain(root.right, subRoot.right);
+  }
+
+  /**
+   * 任意两个节点之间的最短路径，两个点分别沿着 LCA DFS 即可
+   *
+   * @param root
+   * @param p
+   * @param q
+   * @return
+   */
+  public int distBetween(TreeNode root, TreeNode p, TreeNode q) {
+    TreeNode lca = lowestCommonAncestor(root, p, q);
+    return dfs18(lca, p) + dfs18(lca, q) - 2;
+  }
+
+  // 返回 target 与根的距离
+  private int dfs18(TreeNode root, TreeNode target) {
+    if (root == null) return 0;
+    if (root == target) return 1;
+    int l = dfs18(root.left, target), r = dfs18(root.right, target);
+    if (l == 0 && r == 0) return 0;
+    return l == 0 ? r + 1 : l + 1;
   }
 }
 
@@ -1841,6 +1842,35 @@ class BacktrackingSearch extends DDFS {
 /** 回溯低频题型 */
 class BacktrackingElse extends DDFS {
   /**
+   * 电话号码的字母组合，类似「子集」
+   *
+   * @param digits the digits
+   * @return list
+   */
+  public List<String> letterCombinations(String digits) {
+    List<String> res = new ArrayList<>();
+    // 需要特判
+    if (digits.length() > 0) bt13(digits.toCharArray(), new StringBuilder(), res, 0);
+    return res;
+  }
+
+  private final String[] LetterMap = {
+    " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
+  }; // 「电话号码的字母组合」
+
+  private void bt13(char[] nums, StringBuilder path, List<String> res, int start) {
+    if (start == nums.length) {
+      res.add(path.toString());
+      return;
+    }
+    for (char ch : LetterMap[nums[start] - '0'].toCharArray()) {
+      path.append(ch);
+      bt13(nums, path, res, start + 1);
+      path.deleteCharAt(path.length() - 1);
+    }
+  }
+
+  /**
    * 复原IP地址
    *
    * <p>参考
@@ -1875,35 +1905,6 @@ class BacktrackingElse extends DDFS {
     if (s.length() == 1) return true;
     if (s.length() > 3 || s.charAt(0) == '0') return false;
     return Integer.parseInt(s) <= 255;
-  }
-
-  /**
-   * 电话号码的字母组合，类似「子集」
-   *
-   * @param digits the digits
-   * @return list
-   */
-  public List<String> letterCombinations(String digits) {
-    List<String> res = new ArrayList<>();
-    // 需要特判
-    if (digits.length() > 0) bt13(digits.toCharArray(), new StringBuilder(), res, 0);
-    return res;
-  }
-
-  private final String[] LetterMap = {
-    " ", "*", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
-  }; // 「电话号码的字母组合」
-
-  private void bt13(char[] nums, StringBuilder path, List<String> res, int start) {
-    if (start == nums.length) {
-      res.add(path.toString());
-      return;
-    }
-    for (char ch : LetterMap[nums[start] - '0'].toCharArray()) {
-      path.append(ch);
-      bt13(nums, path, res, start + 1);
-      path.deleteCharAt(path.length() - 1);
-    }
   }
 
   /**
@@ -2103,8 +2104,7 @@ class BacktrackingElse extends DDFS {
       res.add(new ArrayList<>(path));
       return;
     }
-    // 每轮只截到 K 的位数
-    int n = 0;
+    int n = 0; // 每轮只截到 K 的位数
     for (int i = start; i < s.length(); i++) {
       n = n * 10 + (s.charAt(i) - '0');
       if (n > K) break;

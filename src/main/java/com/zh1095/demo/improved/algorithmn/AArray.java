@@ -663,7 +663,7 @@ class MMerge extends DefaultArray {
    */
   public List<Integer> countSmaller(int[] nums) {
     int len = nums.length;
-    // 索引数组，归并回去的时候，方便知道是哪个下标的元素
+    // 索引数组，归并回去时方便知道是哪个下标的元素
     int[] tmp = new int[len], res = new int[len], idx = new int[len];
     for (int i = 0; i < len; i++) idx[i] = i;
     divide(nums, 0, len - 1, idx, tmp, res);
@@ -685,15 +685,14 @@ class MMerge extends DefaultArray {
     for (int i = p1; i <= end2; i++) tmp[i] = idx[i];
     int p2 = end1 + 1;
     for (int i = p1; i <= end2; i++) {
-      if (p1 > end1) idx[i] = tmp[p2++];
-      else if (p2 > end2) {
+      if (p1 == end1 + 1) idx[i] = tmp[p2++];
+      else if (p2 == end2 + 1) {
         idx[i] = tmp[p1++];
         res[idx[i]] += end2 - end1;
       } else if (nums[tmp[p1]] <= nums[tmp[p2]]) {
-        // 注意：这里是 <= ，保证稳定性
         idx[i] = tmp[p1++];
         res[idx[i]] += p2 - end1 - 1;
-      } else idx[i] = tmp[p2++];
+      } else if (nums[tmp[p1]] > nums[tmp[p2]]) idx[i] = tmp[p2++];
     }
   }
 
@@ -1573,24 +1572,6 @@ class Interval {
  */
 class SSum extends DefaultArray {
   /**
-   * 两数之和 II，返回其下标
-   *
-   * @param numbers
-   * @param target
-   * @return
-   */
-  public int[] twoSum(int[] numbers, int target) {
-    int lo = 0, hi = numbers.length - 1;
-    while (lo < hi) {
-      int sum = numbers[lo] + numbers[hi];
-      if (sum < target) lo += 1;
-      if (sum == target) return new int[] {lo + 1, hi + 1};
-      if (sum > target) hi -= 1;
-    }
-    return new int[] {-1, -1};
-  }
-
-  /**
    * 三数之和
    *
    * @param nums the nums
@@ -1601,14 +1582,14 @@ class SSum extends DefaultArray {
     Arrays.sort(nums);
     int target = 0, len = nums.length;
     for (int i = 0; i < len; i++) {
-      int pivot = nums[i];
-      if (pivot > target) break;
-      if (i > 0 && pivot == nums[i - 1]) continue;
+      int p = nums[i];
+      if (p > target) break;
+      if (i > 0 && p == nums[i - 1]) continue;
       int lo = i + 1, hi = len - 1;
       while (lo < hi) {
-        int sum = pivot + nums[lo] + nums[hi];
+        int sum = p + nums[lo] + nums[hi];
         if (sum == target) {
-          res.add(Arrays.asList(pivot, nums[lo], nums[hi]));
+          res.add(Arrays.asList(p, nums[lo], nums[hi]));
           while (lo < hi && nums[lo] == nums[lo + 1]) lo += 1;
           while (lo < hi && nums[hi] == nums[hi - 1]) hi -= 1;
           lo += 1;
@@ -1642,6 +1623,50 @@ class SSum extends DefaultArray {
       }
     }
     return cSum;
+  }
+
+  /**
+   * 有效三角形的个数，类似三数之和
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/valid-triangle-number/solution/ming-que-tiao-jian-jin-xing-qiu-jie-by-jerring/
+   *
+   * @param nums
+   * @return
+   */
+  public int triangleNumber(int[] nums) {
+    Arrays.sort(nums);
+    int cnt = 0;
+    for (int i = nums.length - 1; i > 1; i--) {
+      int pivot = nums[i], lo = 0, hi = i - 1;
+      while (lo < hi) {
+        if (nums[lo] + nums[hi] <= pivot) {
+          lo += 1;
+        } else {
+          cnt += hi - lo;
+          hi -= 1;
+        }
+      }
+    }
+    return cnt;
+  }
+
+  /**
+   * 两数之和 II，返回其下标
+   *
+   * @param numbers
+   * @param target
+   * @return
+   */
+  public int[] twoSum(int[] numbers, int target) {
+    int lo = 0, hi = numbers.length - 1;
+    while (lo < hi) {
+      int sum = numbers[lo] + numbers[hi];
+      if (sum < target) lo += 1;
+      if (sum == target) return new int[] {lo + 1, hi + 1};
+      if (sum > target) hi -= 1;
+    }
+    return new int[] {-1, -1};
   }
 
   /**
@@ -1679,32 +1704,6 @@ class SSum extends DefaultArray {
       }
     }
     return false;
-  }
-
-  /**
-   * 有效三角形的个数，类似三数之和
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/valid-triangle-number/solution/ming-que-tiao-jian-jin-xing-qiu-jie-by-jerring/
-   *
-   * @param nums
-   * @return
-   */
-  public int triangleNumber(int[] nums) {
-    Arrays.sort(nums);
-    int cnt = 0;
-    for (int i = nums.length - 1; i > 1; i--) {
-      int pivot = nums[i], lo = 0, hi = i - 1;
-      while (lo < hi) {
-        if (nums[lo] + nums[hi] <= pivot) {
-          lo += 1;
-        } else {
-          cnt += hi - lo;
-          hi -= 1;
-        }
-      }
-    }
-    return cnt;
   }
 
   /**

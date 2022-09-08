@@ -32,7 +32,6 @@ public class SString extends DefaultSString {
    * @return the string
    */
   public String addStrings(String num1, String num2) {
-    final int BASE = 10; // 36 进制
     StringBuilder sum = new StringBuilder();
     int p1 = num1.length() - 1, p2 = num2.length() - 1;
     int carry = 0;
@@ -40,8 +39,8 @@ public class SString extends DefaultSString {
       int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
           n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
           tmp = n1 + n2 + carry;
-      sum.append(tmp % BASE);
-      carry = tmp / BASE;
+      sum.append(tmp % 10);
+      carry = tmp / 10;
       p1 -= 1;
       p2 -= 1;
     }
@@ -58,7 +57,7 @@ public class SString extends DefaultSString {
    * @return
    */
   public String reduceStrings(String num1, String num2) {
-    final int BASE = 10, l1 = num1.length(), l2 = num2.length();
+    final int l1 = num1.length(), l2 = num2.length();
     if (l1 < l2 || (l1 == l2 && Integer.parseInt(num1) < Integer.parseInt(num2)))
       return '-' + reduceStrings(num2, num2);
     StringBuilder gap = new StringBuilder();
@@ -68,7 +67,7 @@ public class SString extends DefaultSString {
       // 避免 n1-n2-carry < 0
       int n1 = p1 < 0 ? 0 : num1.charAt(p1) - '0',
           n2 = p2 < 0 ? 0 : num2.charAt(p2) - '0',
-          tmp = (n1 - n2 - carry + BASE) % BASE;
+          tmp = (n1 - n2 - carry + 10) % 10;
       // res.insert(0, tmp) 则无需 reverse
       gap.append(tmp);
       carry = n1 - carry - n2 < 0 ? 1 : 0;
@@ -78,16 +77,6 @@ public class SString extends DefaultSString {
     String str = gap.reverse().toString();
     int idx = frontNoBlank(str.toCharArray(), 0);
     return str.substring(idx, str.length());
-  }
-
-  // ASCII coding
-  private char getChar(int num) {
-    return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
-  }
-
-  // ASCII 允许相减
-  private int getInt(char num) {
-    return '0' <= num && num <= '9' ? num - '0' : num - 'a' + 10;
   }
 
   /**
@@ -101,19 +90,29 @@ public class SString extends DefaultSString {
    */
   public String multiply(String num1, String num2) {
     if (num1.equals("0") || num2.equals("0")) return "0";
-    final int BASE = 10, l1 = num1.length(), l2 = num2.length();
+    final int l1 = num1.length(), l2 = num2.length();
     int[] pro = new int[l1 + l2]; // 100*100=010000
     for (int p1 = l1 - 1; p1 > -1; p1--) {
       int n1 = num1.charAt(p1) - '0';
       for (int p2 = l2 - 1; p2 > -1; p2--) {
         int n2 = num2.charAt(p2) - '0', sum = pro[p1 + p2 + 1] + n1 * n2;
-        pro[p1 + p2 + 1] = sum % BASE;
-        pro[p1 + p2] += sum / BASE;
+        pro[p1 + p2 + 1] = sum % 10;
+        pro[p1 + p2] += sum / 10;
       }
     }
     StringBuilder res = new StringBuilder();
     for (int i = pro[0] == 0 ? 1 : 0; i < pro.length; i++) res.append(pro[i]);
     return res.toString();
+  }
+
+  // ASCII coding
+  private char getChar(int num) {
+    return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
+  }
+
+  // ASCII 允许相减
+  private int getInt(char num) {
+    return '0' <= num && num <= '9' ? num - '0' : num - 'a' + 10;
   }
 
   /**
@@ -148,12 +147,8 @@ public class SString extends DefaultSString {
   public char firstUniqChar(String s) {
     int[] counter = new int[26];
     char[] chs = s.toCharArray();
-    for (char ch : chs) {
-      counter[ch - 'a'] += 1;
-    }
-    for (char ch : chs) {
-      if (counter[ch - 'a'] == 1) return ch;
-    }
+    for (char ch : chs) counter[ch - 'a'] += 1;
+    for (char ch : chs) if (counter[ch - 'a'] == 1) return ch;
     return ' ';
   }
 
@@ -544,6 +539,33 @@ class SStack {
   }
 
   /**
+   * 验证栈序列，无重复，贪心，原地模拟
+   *
+   * <p>将 pushed 队列中的每个数都 push 到栈中，同时检查这个数是不是 popped 序列中下一个要 pop 的值，如果是就把它 pop 出来。
+   *
+   * <p>最后，检查不是所有的该 pop 出来的值都是 pop
+   *
+   * <p>扩展1，入序列为 [1,n]，参下 annotate
+   *
+   * @param pushed the pushed
+   * @param popped the popped
+   * @return boolean
+   */
+  public boolean validateStackSequences(int[] pushed, int[] popped) {
+    int pushTop = 0, popIdx = 0; // 两个数组遍历的索引
+    //    for (int add = 0; i < N; i++) {
+    for (int add : pushed) {
+      pushed[pushTop++] = add;
+      // 出栈，直至空或序列不匹配
+      while (pushTop > 0 && pushed[pushTop - 1] == popped[popIdx]) {
+        pushTop -= 1;
+        popIdx += 1;
+      }
+    }
+    return pushTop == 0; // 是否还有未出栈的
+  }
+
+  /**
    * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
    *
    * <p>recursion 参考「基本计算器」
@@ -655,33 +677,6 @@ class SStack {
   }
 
   /**
-   * 验证栈序列，无重复，贪心，原地模拟
-   *
-   * <p>将 pushed 队列中的每个数都 push 到栈中，同时检查这个数是不是 popped 序列中下一个要 pop 的值，如果是就把它 pop 出来。
-   *
-   * <p>最后，检查不是所有的该 pop 出来的值都是 pop
-   *
-   * <p>扩展1，入序列为 [1,n]，参下 annotate
-   *
-   * @param pushed the pushed
-   * @param popped the popped
-   * @return boolean
-   */
-  public boolean validateStackSequences(int[] pushed, int[] popped) {
-    int pushTop = 0, popIdx = 0; // 两个数组遍历的索引
-    //    for (int add = 0; i < N; i++) {
-    for (int add : pushed) {
-      pushed[pushTop++] = add;
-      // 出栈，直至空或序列不匹配
-      while (pushTop > 0 && pushed[pushTop - 1] == popped[popIdx]) {
-        pushTop -= 1;
-        popIdx += 1;
-      }
-    }
-    return pushTop == 0; // 是否还有未出栈的
-  }
-
-  /**
    * 移除无效的括号
    *
    * <p>当遇到左括号时，确认栈中左括号数量 <= 栈中右括号数量 + 尚未遍历的右括号数量
@@ -763,10 +758,8 @@ class SSubString {
     return s.length();
   }
 
-  // 回文求最长或统计则中心拓展，验证则两端聚拢
-
   /**
-   * 最长回文子串，中心扩展
+   * 最长回文子串，回文求最长或统计则中心拓展，验证则两端聚拢
    *
    * @param s the s
    * @return the string

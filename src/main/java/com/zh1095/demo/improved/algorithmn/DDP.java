@@ -48,56 +48,6 @@ class SubSequence extends DefaultArray {
     return end + 1; // 索引 +1 即长度
   }
 
-  // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
-  // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
-  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
-  // https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
-  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
-  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
-  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
-  private int[] getPath(int[] nums, int[] dp, int len) {
-    int[] path = new int[len];
-    int cnt = len;
-    for (int i = nums.length - 1; i > -1; i--) {
-      if (cnt < 0) break;
-      if (dp[i] != cnt) continue;
-      cnt -= 1;
-      path[cnt] = nums[i];
-    }
-    return path;
-  }
-
-  /**
-   * 最长递增子序列的个数
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
-   *
-   * @param nums
-   * @return
-   */
-  public int findNumberOfLIS(int[] nums) {
-    int len = nums.length, maxLen = 1;
-    int[] dp = new int[len], cnts = new int[len];
-    for (int i = 0; i < len; i++) {
-      dp[i] = cnts[i] = 1;
-      for (int j = 0; j < i; j++) {
-        if (nums[j] >= nums[i]) continue;
-        if (dp[i] == dp[j] + 1) cnts[i] += cnts[j];
-        if (dp[i] < dp[j] + 1) {
-          dp[i] = 1 + dp[j];
-          cnts[i] = cnts[j];
-        }
-      }
-      maxLen = Math.max(maxLen, dp[i]);
-    }
-    int cnt = 0;
-    for (int i = 0; i < len; i++) {
-      if (dp[i] == maxLen) cnt += cnts[i];
-    }
-    return cnt;
-  }
-
   /**
    * 最长回文子序列
    *
@@ -262,6 +212,56 @@ class SubSequence extends DefaultArray {
       else first = n;
     }
     return false;
+  }
+
+  // 需要反向从后往前找，因为相同长度的 dp[i]，后面的肯定比前面的字典序小
+  // 如果后面的比前面大，那么必定后面的长度 > 前面的长度
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/zui-chang-shang-sheng-zi-xu-lie-dong-tai-gui-hua-2/
+  // https://leetcode-cn.com/problems/pile-box-lcci/solution/ti-mu-zong-jie-zui-chang-shang-sheng-zi-7jfd3/
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/xiao-bai-lang-jing-dian-dong-tai-gui-hua-px0v/
+  // https://leetcode-cn.com/problems/longest-increasing-subsequence/solution/dong-tai-gui-hua-er-fen-cha-zhao-tan-xin-suan-fa-p/
+  // https://www.nowcoder.com/questionTerminal/9cf027bf54714ad889d4f30ff0ae5481?answerType=1&f=discussion
+  private int[] getPath(int[] nums, int[] dp, int len) {
+    int[] path = new int[len];
+    int cnt = len;
+    for (int i = nums.length - 1; i > -1; i--) {
+      if (cnt < 0) break;
+      if (dp[i] != cnt) continue;
+      cnt -= 1;
+      path[cnt] = nums[i];
+    }
+    return path;
+  }
+
+  /**
+   * 最长递增子序列的个数
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/number-of-longest-increasing-subsequence/solution/gong-shui-san-xie-lis-de-fang-an-shu-wen-obuz/
+   *
+   * @param nums
+   * @return
+   */
+  public int findNumberOfLIS(int[] nums) {
+    int len = nums.length, maxLen = 1;
+    int[] dp = new int[len], cnts = new int[len];
+    for (int i = 0; i < len; i++) {
+      dp[i] = cnts[i] = 1;
+      for (int j = 0; j < i; j++) {
+        if (nums[j] >= nums[i]) continue;
+        if (dp[i] == dp[j] + 1) cnts[i] += cnts[j];
+        if (dp[i] < dp[j] + 1) {
+          dp[i] = 1 + dp[j];
+          cnts[i] = cnts[j];
+        }
+      }
+      maxLen = Math.max(maxLen, dp[i]);
+    }
+    int cnt = 0;
+    for (int i = 0; i < len; i++) {
+      if (dp[i] == maxLen) cnt += cnts[i];
+    }
+    return cnt;
   }
 
   /**
@@ -1058,26 +1058,6 @@ class CCount {
   }
 
   /**
-   * 丑数II
-   *
-   * @param n
-   * @return
-   */
-  public int nthUglyNumber(int n) {
-    int[] dp = new int[n + 1];
-    dp[1] = 1;
-    int p2 = 1, p3 = 1, p5 = 1;
-    for (int i = 2; i <= n; i++) {
-      int n2 = dp[p2] * 2, n3 = dp[p3] * 3, n5 = dp[p5] * 5;
-      dp[i] = Math.min(Math.min(n2, n3), n5);
-      if (dp[i] == n2) p2 += 1;
-      if (dp[i] == n3) p3 += 1;
-      if (dp[i] == n5) p5 += 1;
-    }
-    return dp[n];
-  }
-
-  /**
    * 解码方法，返回字符可以被编码的方案总数，如对于 "226" 可以被解码为 "2 26" & "22 6" & "2 2 6"
    *
    * <p>参考
@@ -1108,6 +1088,26 @@ class CCount {
       preCnt = tmp;
     }
     return cnt;
+  }
+
+  /**
+   * 丑数II
+   *
+   * @param n
+   * @return
+   */
+  public int nthUglyNumber(int n) {
+    int[] dp = new int[n + 1];
+    dp[1] = 1;
+    int p2 = 1, p3 = 1, p5 = 1;
+    for (int i = 2; i <= n; i++) {
+      int n2 = dp[p2] * 2, n3 = dp[p3] * 3, n5 = dp[p5] * 5;
+      dp[i] = Math.min(Math.min(n2, n3), n5);
+      if (dp[i] == n2) p2 += 1;
+      if (dp[i] == n3) p3 += 1;
+      if (dp[i] == n5) p5 += 1;
+    }
+    return dp[n];
   }
 
   /**

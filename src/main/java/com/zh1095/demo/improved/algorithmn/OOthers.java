@@ -30,7 +30,7 @@ public class OOthers {
       r += isForward;
     }
     StringBuilder res = new StringBuilder();
-    for (StringBuilder i : rows) res.append(i);
+    for (StringBuilder n : rows) res.append(n);
     return res.toString();
   }
 
@@ -281,23 +281,13 @@ class DData {
     private final Map<Integer, DLinkedNode> k2n = new HashMap<>();
     private final DLinkedNode head = new DLinkedNode(), tail = new DLinkedNode(); // dummy
     private final int CAPACITY;
-    /**
-     * Instantiates a new Lru cache.
-     *
-     * @param capacity the capacity
-     */
+
     public LRUCache(int capacity) {
       this.CAPACITY = capacity;
       head.next = tail;
       tail.prev = head;
     }
 
-    /**
-     * get & moveToHead
-     *
-     * @param key the key
-     * @return the int
-     */
     public int get(int key) {
       DLinkedNode n = k2n.get(key);
       if (n == null) return -1;
@@ -894,6 +884,33 @@ class MMath {
       res.append(n / de);
     }
     return res.toString();
+  }
+
+  /**
+   * 直线上最多的点数
+   *
+   * @param ps
+   * @return
+   */
+  public int maxPoints(int[][] ps) {
+    int len = ps.length, res = 1;
+    for (int i = 0; i < len; i++) {
+      Map<String, Integer> line2Cnt = new HashMap<>();
+      int max = 0;
+      for (int j = i + 1; j < len; j++) {
+        int x1 = ps[i][0], y1 = ps[i][1], x2 = ps[j][0], y2 = ps[j][1];
+        int a = x1 - x2, b = y1 - y2, k = gcd(a, b);
+        String key2Line = (a / k) + "_" + (b / k);
+        line2Cnt.put(key2Line, line2Cnt.getOrDefault(key2Line, 0) + 1);
+        max = Math.max(max, line2Cnt.get(key2Line));
+      }
+      res = Math.max(res, max + 1);
+    }
+    return res;
+  }
+
+  private int gcd(int a, int b) {
+    return b == 0 ? a : gcd(b, a % b);
   }
 
   /**
