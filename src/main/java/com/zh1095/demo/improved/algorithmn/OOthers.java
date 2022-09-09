@@ -901,7 +901,7 @@ class MMath {
         int x1 = ps[i][0], y1 = ps[i][1], x2 = ps[j][0], y2 = ps[j][1];
         int a = x1 - x2, b = y1 - y2, k = gcd(a, b);
         String key2Line = (a / k) + "_" + (b / k);
-        line2Cnt.put(key2Line, line2Cnt.getOrDefault(key2Line, 0) + 1);
+        line2Cnt.put(key2Line, 1 + line2Cnt.getOrDefault(key2Line, 0));
         max = Math.max(max, line2Cnt.get(key2Line));
       }
       res = Math.max(res, max + 1);

@@ -1066,49 +1066,6 @@ class DichotomyElse extends DefaultArray {
   }
 
   /**
-   * 分割数组的最大值
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/split-array-largest-sum/solution/er-fen-cha-zhao-by-liweiwei1419-4/
-   *
-   * @param nums
-   * @param m
-   * @return
-   */
-  public int splitArray(int[] nums, int m) {
-    // 计算子数组各自和的最大值的上下界
-    int max = 0, sum = 0;
-    for (int n : nums) {
-      max = Math.max(max, n);
-      sum += n;
-    }
-    // 二分确定一个恰当的子数组各自的和的最大值，使得它对应的「子数组的分割数」恰好等于 m
-    int lo = max, hi = sum;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2, cnt = split(nums, mid);
-      // 如果分割数太多，说明「子数组各自的和的最大值」太小，此时需要调大该值
-      if (cnt > m) lo = mid + 1; // 下一轮搜索的区间是 [mid + 1, right]
-      else hi = mid;
-    }
-    return lo;
-  }
-
-  // 满足不超过「子数组各自的和的最大值」的分割数
-  private int split(int[] nums, int maxSum) {
-    // 至少是一个分割 & 当前区间的和
-    int cnt = 1, intervalSum = 0;
-    for (int n : nums) {
-      // 尝试加上当前遍历的这个数，如果加上去超过了「子数组各自的和的最大值」，就不加这个数，另起炉灶
-      if (intervalSum + n > maxSum) {
-        intervalSum = 0;
-        cnt += 1;
-      }
-      intervalSum += n;
-    }
-    return cnt;
-  }
-
-  /**
    * 爱吃香蕉的珂珂
    *
    * @param piles
@@ -1148,319 +1105,7 @@ class DichotomyElse extends DefaultArray {
   }
 }
 
-/** 字典序相关 */
-class DicOrder extends DefaultSString {
-  /**
-   * 下一个排列，求按照字典序，该排列下一个大的
-   *
-   * <p>对比下方「最大交换」，后者是找到交换结果的最大
-   *
-   * <p>扩展1，上一个排列，从 n-2 开始找到首个峰 & 峰右边调为降序 & 从 n-1 开始找到首个比峰小的数，交换
-   *
-   * <p>扩展2，数字转字符串，即「下一个更大元素III」
-   *
-   * @param nums the nums
-   */
-  public void nextPermutation(int[] nums) {
-    int len = nums.length;
-    for (int p1 = len - 1; p1 > 0; p1--) {
-      if (nums[p1] <= nums[p1 - 1]) continue;
-      Arrays.sort(nums, p1, len);
-      for (int p2 = p1; p2 < len; p2++) {
-        if (nums[p2] <= nums[p1 - 1]) continue;
-        swap(nums, p2, p1 - 1);
-        return;
-      }
-    }
-    Arrays.sort(nums);
-  }
-
-  /**
-   * 下一个更大元素III
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/next-greater-element-iii/solution/cchao-100shu-xue-jie-fa-by-zhouzihong-lcg9/
-   *
-   * @param n
-   * @return
-   */
-  public int nextGreaterElement(int n) {
-    char[] nums = String.valueOf(n).toCharArray();
-    int len = nums.length;
-    for (int p1 = len - 1; p1 > 0; p1--) {
-      if (nums[p1] <= nums[p1 - 1]) continue;
-      Arrays.sort(nums, p1, len);
-      for (int p2 = p1; p2 < len; p2++) {
-        if (nums[p2] <= nums[p1 - 1]) continue;
-        swap(nums, p2, p1 - 1);
-        long res = Long.parseLong(String.valueOf(nums));
-        return res > Integer.MAX_VALUE ? -1 : (int) res;
-      }
-    }
-    return -1;
-  }
-
-  /**
-   * 字典序的第k小数字，找到 [1,n] 内，前序
-   *
-   * @param n the n
-   * @param k the k
-   * @return int int
-   */
-  public int findKthNumber(int n, int k) {
-    int lo = 1, hi = n; // 前缀为 1
-    k -= 1;
-    while (k > 0) { // 字典序最小即起点为 1
-      int cnt = count(lo, hi);
-      if (cnt > k) { // DFS
-        lo *= 10;
-        k -= 1;
-      } else { // BFS
-        lo += 1;
-        k -= cnt;
-      }
-    }
-    return lo; // 退出循环时 cur==k 正好找到
-  }
-
-  // DFS lo 为根的树，统计至 hi 的个数
-  private int count(int lo, int hi) {
-    // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出
-    long cur = lo, nxt = lo + 1;
-    int cnt = 0;
-    while (cur <= hi) { // 逐层
-      cnt += Math.min(hi + 1, nxt) - cur;
-      cur *= 10;
-      nxt *= 10;
-    }
-    return cnt;
-  }
-
-  /**
-   * 移掉k位数字，结果数值最小，单调栈 int n = 高位递增」的数，应尽量删低位。;
-   *
-   * <p>123531 这样「高位递增」的数，应尽量n
-   *
-   * <p>432135 这样「高位递减」的数，应尽量删高位，即让高位变小。
-   *
-   * <p>因此，如果当前遍历的数比栈顶大，符合递增，让它入栈。
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
-   *
-   * @param num the num
-   * @param k the k
-   * @return string string
-   */
-  public String removeKdigits(String num, int k) {
-    StringBuilder ms = new StringBuilder();
-    for (char ch : num.toCharArray()) {
-      // peekLast & pollLast
-      while (k > 0 && !ms.isEmpty() && ms.charAt(ms.length() - 1) > ch) {
-        ms.setLength(ms.length() - 1);
-        k -= 1;
-      }
-      if (ch == '0' && ms.isEmpty()) continue;
-      ms.append(ch);
-    }
-    String res = ms.substring(0, Math.max(ms.length() - k, 0));
-    return res.length() == 0 ? "0" : res;
-  }
-
-  /**
-   * 最大数，把数组排成最大的数，排序，即贪心，类似参考「拼接最大数」
-   *
-   * <p>对 nums 按照 ab>ba 为 b>a，前导零
-   *
-   * <p>先单独证明两个数需要满足该定律，比如 3 & 30 有 330>303 显然 3 需要安排至 30 前，即表现为 3<30
-   *
-   * <p>再证明传递性，即两两之间都要满足该性质，参考
-   * https://leetcode-cn.com/problems/largest-number/solution/gong-shui-san-xie-noxiang-xin-ke-xue-xi-vn86e/
-   *
-   * <p>扩展1，最小数/把数组排成最小的数，调整本题的排序规则为 ab>ba -> a>b 即可，参考
-   * https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/solution/mian-shi-ti-45-ba-shu-zu-pai-cheng-zui-xiao-de-s-4/
-   *
-   * <p>扩展2，参下 maxLessNumber
-   *
-   * @param nums
-   * @return
-   */
-  public String largestNumber(int[] nums) {
-    List<String> strs = new ArrayList<>(nums.length);
-    for (int n : nums) strs.add(String.valueOf(n));
-    strs.sort((s1, s2) -> (s2 + s1).compareTo(s1 + s2));
-    // 「最小数」
-    //    strs.sort((s1, s2) -> (s1 + s2).compareTo(s2 + s1));
-    StringBuilder maxNum = new StringBuilder();
-    for (String n : strs) maxNum.append(n);
-    // 「最大数」需要去除前导零，因为可能有 02>20
-    int start = 0;
-    while (start < nums.length - 1 && maxNum.charAt(start) == '0') start += 1;
-    return maxNum.substring(start);
-  }
-
-  /**
-   * 最大交换，只交换一次任意两位的数，使其结果的数值是所有方案中最大的
-   *
-   * <p>贪心，将较高位的 n 与后面 m 交换，需满足 m>n 且 m 尽可能靠后
-   *
-   * <p>TODO 类似「划分字母区间」参考
-   * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
-   *
-   * @param num
-   * @return
-   */
-  public int maximumSwap(int num) {
-    char[] chs = Integer.toString(num).toCharArray();
-    // 收集每个数字最后出现的索引
-    int[] upperBounds = new int[10];
-    for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - '0'] = i;
-    // 查找首个值更大、位更高的数字
-    for (int i = 0; i < chs.length; i++) { // 自高位顺序遍历
-      for (int n = 9; n > chs[i] - '0'; n--) { // 值
-        if (upperBounds[n] <= i) continue; // 位
-        swap(chs, i, upperBounds[n]);
-        return Integer.parseInt(chs.toString());
-      }
-    }
-    return num;
-  }
-
-  /**
-   * 划分字母区间，返回可划分的子串上限，同一种字母只能在一个子串内
-   *
-   * <p>贪心，类似「最大交换」参考
-   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
-   */
-  public List<Integer> partitionLabels(String s) {
-    char[] chs = s.toCharArray();
-    int[] upperBounds = new int[26];
-    for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - 'a'] = i;
-    List<Integer> lens = new ArrayList<>();
-    int lo = 0, hi = 0;
-    for (int i = 0; i < chs.length; i++) {
-      hi = Math.max(hi, upperBounds[chs[i] - 'a']);
-      if (i < hi) continue;
-      lens.add(hi - lo + 1);
-      lo = hi + 1;
-    }
-    return lens;
-  }
-
-  /**
-   * 字典序排数，按字典序返回 [1,n] 所有整数，N 叉树遍历
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/lexicographical-numbers/solution/386-zi-dian-xu-pai-shu-o1-kong-jian-fu-z-aea2/
-   *
-   * @param n the n
-   * @return list list
-   */
-  public List<Integer> lexicalOrder(int n) {
-    List<Integer> res = new ArrayList<>();
-    int num = 1;
-    while (res.size() < n) {
-      while (num <= n) { // 1.DFS
-        res.add(num);
-        num *= 10;
-      }
-      // 2.回溯，当前层子节点遍历完，或不存在节点(因为已经大于 n)，则返回上一层
-      while (num % 10 == 9 || num > n) num /= 10;
-      num += 1; // 3.根的下一个子节点
-    }
-    return res;
-  }
-
-  /**
-   * 第k个排列，[1:n] 所有数字全排列按数字序第 k 小。
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/permutation-sequence/solution/hui-su-jian-zhi-python-dai-ma-java-dai-ma-by-liwei/
-   *
-   * @param n
-   * @param k
-   * @return
-   */
-  public String getPermutation(int n, int k) {
-    // 阶乘即该节点叶节点总数
-    int[] dp = new int[n + 1];
-    dp[0] = 1;
-    for (int i = 1; i < n; i++) dp[i] = dp[i - 1] * i;
-    boolean[] visited = new boolean[n + 1];
-    StringBuilder res = new StringBuilder(n);
-    for (int i = n - 1; i > -1; i--) {
-      int cnt = dp[i];
-      for (int j = 1; j <= n; j++) {
-        if (!visited[j] && cnt >= k) {
-          visited[j] = true;
-          res.append(j);
-          break;
-        }
-        if (cnt < k) k -= cnt;
-      }
-    }
-    return res.toString();
-  }
-
-  /**
-   * TODO 给定一个与一组正数，求由 A 中元素组成的小于 n 的最大数，如 {2,4,9} 小于 23121 的最大数为 22999
-   *
-   * <p>从最高位向最低位构造目标数，用 A 中尽量大的元素（但要小于等于 n 的相应位数字）。
-   *
-   * <p>一旦目标数中有一位数字小于 n 相应位的数字，剩余低位可用 A 中最大元素填充。
-   *
-   * <p>可能构造出等于 n 的数，需判断后重新构造。
-   *
-   * <p>若 A 中没有小于等于 n 最高位数字的元素，则可直接用 A 中最大元素填充低
-   *
-   * @param target
-   * @param nums
-   * @return
-   */
-  public int maxLessNumber(int target, int[] nums) {
-    char[] digits = String.valueOf(target).toCharArray();
-    Arrays.sort(nums);
-    int[] resNums = new int[digits.length];
-    int write = 0;
-    for (char d : digits) {
-      // 找到刚好小于 d 的数
-      int lessNum = -1;
-      int lo = 0, hi = nums.length - 1;
-      while (lo < hi) {
-        int mid = lo + (hi - lo) / 2, cur = nums[mid];
-        if (mid > 0 && nums[mid - 1] < d && cur >= d) {
-          lessNum = cur;
-          break;
-        }
-        if (cur < d) lo = mid + 1;
-        else hi = mid;
-      }
-      if (lessNum > -1) {
-        resNums[write] = lessNum;
-        resNums[write + 1] = nums[nums.length - 1];
-      }
-      write += 1;
-    }
-    // 比如 2 & {2} 无解，需要统计，且去除前导零。
-    int num = 0;
-    for (int n : resNums) num += num * 10 + n;
-    return num;
-  }
-
-  /**
-   * 拼接最大数，两个无序正整数数组，共取 k 个拼接为数字，求该数最大的方案
-   *
-   * <p>TODO
-   *
-   * @param nums1 the nums 1
-   * @param nums2 the nums 2
-   * @param k the k
-   * @return int [ ]
-   */
-  //  public int[] maxNumber(int[] nums1, int[] nums2, int k) {}
-}
-
-/** 区间类型 */
+/** 区间类型，涉及重叠，区间和，前缀和，单调栈 */
 class Interval {
   /**
    * 合并区间，逐一比较上一段尾 & 当前段首
@@ -2033,6 +1678,168 @@ class PreSum {
       counter[cntOdd] += 1;
     }
     return cnt;
+  }
+}
+
+/**
+ * 单调栈用于求左或右首个更大的元素，单调队列用于求区间极值
+ *
+ * <p>单调栈允许移除首个元素，即是单调队列，后者操作上被称为双端队列
+ *
+ * <p>递增利用波谷剔除栈中的波峰，留下波谷，反之，波峰
+ */
+class MonotonicStack {
+  /**
+   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
+   *
+   * @param tem the t
+   * @return int [ ]
+   */
+  public int[] dailyTemperatures(int[] tem) {
+    Deque<Integer> ms = new ArrayDeque<>();
+    int[] res = new int[tem.length];
+    for (int i = 0; i < tem.length; i++) {
+      while (!ms.isEmpty() && tem[i] > tem[ms.peekLast()]) {
+        int outIdx = ms.pollLast();
+        res[outIdx] = i - outIdx;
+      }
+      ms.offerLast(i);
+    }
+    return res;
+  }
+
+  /**
+   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
+   *
+   * @param nums the nums
+   * @return int [ ]
+   */
+  public int[] nextGreaterElements(int[] nums) {
+    Deque<Integer> ms = new ArrayDeque<>();
+    int len = nums.length;
+    int[] res = new int[len];
+    Arrays.fill(res, -1);
+    for (int i = 0; i < 2 * len; i++) {
+      int n = nums[i % len];
+      while (!ms.isEmpty() && n > nums[ms.peekLast()]) res[ms.pollLast()] = n;
+      ms.offerLast(i % len);
+    }
+    return res;
+  }
+
+  /**
+   * 柱状图中最大的矩形，即区间最小数乘区间和的最大值
+   *
+   * <p>TODO 参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA 与
+   * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
+   *
+   * @param heights
+   * @return
+   */
+  public int largestRectangleArea(int[] heights) {
+    int maxArea = 0, len = heights.length;
+    // 整体向右移位，且首尾添加哨兵，下方不用判断边界
+    int[] hs = new int[len + 2];
+    System.arraycopy(heights, 0, hs, 1, len);
+    Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
+    for (int i = 0; i < hs.length; i++) maxArea = pushAndReturn(hs, i, maxArea, ms);
+    return maxArea;
+  }
+
+  /**
+   * 最大矩形，遍历每行的高度，通过栈
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/maximal-rectangle/solution/yu-zhao-zui-da-ju-xing-na-ti-yi-yang-by-powcai/
+   *
+   * @param matrix
+   * @return
+   */
+  public int maximalRectangle(char[][] matrix) {
+    int maxArea = 0, len = matrix[0].length;
+    int[] hs = new int[len + 2];
+    for (char[] row : matrix) {
+      Deque<Integer> ms = new ArrayDeque<>();
+      for (int i = 0; i < hs.length; i++) {
+        if (i > 0 && i < len + 1) { // 哨兵内
+          if (row[i - 1] == '1') hs[i] += 1;
+          else hs[i] = 0;
+        }
+        maxArea = pushAndReturn(hs, i, maxArea, ms);
+      }
+    }
+    return maxArea;
+  }
+
+  // 放入单调递减栈，比较的是在 hs 内的取值，并返回更新后的最大面积
+  // 面积的高为 hs[pollLast] 宽为弹出后与 i 的距离
+  private int pushAndReturn(int[] hs, int i, int maxArea, Deque<Integer> ms) {
+    while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
+      int cur = ms.pollLast(), pre = ms.peekLast();
+      maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
+    }
+    ms.offerLast(i);
+    return maxArea;
+  }
+
+  /**
+   * 去除重复字母/不同字符的最小子序列，且要求之后的整体字典序最小
+   *
+   * <p>greedy - 结果中第一个字母的字典序靠前的优先级最高
+   *
+   * <p>单调栈 - 每次贪心要找到一个当前最靠前的字母
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String removeDuplicateLetters(String s) {
+    if (s.length() < 2) return s;
+    char[] chs = s.toCharArray();
+    int len = chs.length;
+    Deque<Character> ms = new ArrayDeque<>(len);
+    // 栈内尚存的字母
+    boolean[] visited = new boolean[26];
+    // 记录每个字符出现的最后一个位置
+    int[] lastIdxs = new int[26];
+    for (int i = 0; i < len; i++) lastIdxs[chs[i] - 'a'] = i;
+    for (int i = 0; i < len; i++) {
+      char ch = chs[i];
+      if (visited[ch - 'a']) continue;
+      while (!ms.isEmpty() && ch < ms.getLast() && lastIdxs[ms.getLast() - 'a'] > i)
+        visited[ms.pollLast() - 'a'] = false;
+      ms.offerLast(ch);
+      visited[ch - 'a'] = true;
+    }
+    StringBuilder res = new StringBuilder();
+    for (char ch : ms) res.append(ch);
+    return res.toString();
+  }
+
+  /**
+   * 求区间最小数乘区间和的最大值
+   *
+   * <p>参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA
+   *
+   * @param nums
+   * @return
+   */
+  public int calculateIntervalSum(int[] nums) {
+    int maxSum = 0, len = nums.length;
+    int[] preSum = new int[len + 1];
+    for (int i = 1; i < len + 1; i++) preSum[i] = preSum[i - 1] + nums[i - 1];
+    Deque<Integer> stack = new ArrayDeque<>();
+    for (int i = 0; i < len; i++) {
+      while (!stack.isEmpty() && nums[stack.peekLast()] >= nums[i]) {
+        int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = i - 1;
+        maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
+      }
+      stack.offerLast(i);
+    }
+    while (!stack.isEmpty()) {
+      int peak = nums[stack.pollLast()], lo = stack.isEmpty() ? -1 : stack.peekLast(), hi = len - 1;
+      maxSum = Math.max(maxSum, peak * (preSum[hi + 1] - preSum[lo + 1]));
+    }
+    return maxSum;
   }
 }
 

@@ -27,7 +27,9 @@ public class LList {
     ListNode pre = null, cur = head;
     while (cur != null) {
       ListNode nxt = cur.next;
+      // -------
       cur.next = pre;
+      // -------
       pre = cur;
       cur = nxt;
     }
@@ -194,9 +196,11 @@ class ReverseList extends LList {
       for (int i = 0; i < k && cur != null; i++) cur = cur.next;
       if (cur == null) break;
       ListNode start = pre.next, nxt = cur.next;
+      // -------
       cur.next = null;
       pre.next = reverseList(start);
       start.next = nxt;
+      // -------
       pre = start;
       cur = start;
     }
@@ -220,9 +224,11 @@ class ReverseList extends LList {
     ListNode start = pre.next, cur = start.next; // 题设区间合法
     for (int i = 0; i < right - left; i++) {
       ListNode nxt = cur.next;
+      // -------
       cur.next = pre.next;
       pre.next = cur;
       start.next = nxt;
+      // -------
       cur = nxt;
     }
     return dummy.next;

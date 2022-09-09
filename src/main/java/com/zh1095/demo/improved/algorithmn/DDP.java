@@ -6,9 +6,7 @@ import java.util.*;
 // 非同向（徘徊或相向） 最长回文子序列 最长重复子数组 单词拆分 三角形的最小路径和 不同的二叉搜索树 完全平方数 整数拆分
 
 /**
- * 子序列
- *
- * <p>所有的 DP 要输出路径/具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考 https://blog.51cto.com/u_15127578/3748446
+ * 子序列，所有的 DP 要输出路径/具体方案，均需要回溯，即记录状态转移的过程，例子参考「最小路径和」，策略参考 https://blog.51cto.com/u_15127578/3748446
  */
 class SubSequence extends DefaultArray {
   /**
@@ -476,32 +474,6 @@ class SubArray {
         path.pollFirst();
       }
     }
-  }
-
-  /**
-   * 分割等和子集，01 背包
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/partition-equal-subset-sum/solution/0-1-bei-bao-wen-ti-xiang-jie-zhen-dui-ben-ti-de-yo/
-   *
-   * @param nums
-   * @return
-   */
-  public boolean canPartition(int[] nums) {
-    int sum = 0;
-    for (int n : nums) sum += n;
-    if ((sum & 1) == 1) return false;
-    int maxCapacity = sum / 2;
-    boolean[] dp = new boolean[maxCapacity + 1];
-    dp[0] = true;
-    if (nums[0] <= maxCapacity) dp[nums[0]] = true;
-    for (int i = 1; i < nums.length; i++) {
-      for (int j = maxCapacity; nums[i] <= j; j--) {
-        if (dp[maxCapacity]) return true;
-        dp[j] = dp[j] || dp[j - nums[i]];
-      }
-    }
-    return dp[maxCapacity];
   }
 
   /**
@@ -1127,6 +1099,217 @@ class CCount {
       }
     }
     return dp[n];
+  }
+}
+
+/** 划分或分割，背包，贪心，回溯，二分 */
+class Split {
+  /**
+   * 划分字母区间，贪心，返回可划分的子串上限，同一种字母只能在一个子串内
+   *
+   * <p>类似「最大交换」参考
+   * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
+   */
+  public List<Integer> partitionLabels(String s) {
+    char[] chs = s.toCharArray();
+    int[] upperBounds = new int[26];
+    for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - 'a'] = i;
+    List<Integer> lens = new ArrayList<>();
+    int lo = 0, hi = 0;
+    for (int i = 0; i < chs.length; i++) {
+      hi = Math.max(hi, upperBounds[chs[i] - 'a']);
+      if (i < hi) continue;
+      lens.add(hi - lo + 1);
+      lo = hi + 1;
+    }
+    return lens;
+  }
+
+  /**
+   * 分割回文串，回溯，将字符串分割为多个回文子串，返回所有结果
+   *
+   * <p>对整个串做回文判断 & 暴力回溯
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/palindrome-partitioning/solution/hui-su-you-hua-jia-liao-dong-tai-gui-hua-by-liweiw/
+   *
+   * @param s the s
+   * @return list list
+   */
+  public List<List<String>> partition(String s) {
+    List<List<String>> paths = new ArrayList<>();
+    int len = s.length();
+    // isPalindrome[i][j] 表示 s[i][j] 是否回文
+    boolean[][] isPld = new boolean[len][len];
+    char[] chs = s.toCharArray();
+    for (int i = 0; i < len; i++) {
+      collect(chs, i, i, isPld);
+      collect(chs, i, i + 1, isPld);
+    }
+    bt11(s, new ArrayDeque<>(), paths, 0, isPld);
+    return paths;
+  }
+
+  // 中心扩展，记录所有回文子串的始末点
+  private void collect(char[] chs, int lo, int hi, boolean[][] isPld) {
+    while (lo > -1 && hi < chs.length && chs[lo] == chs[hi]) {
+      isPld[lo][hi] = true;
+      lo -= 1;
+      hi += 1;
+    }
+  }
+
+  private void bt11(
+      String s, Deque<String> path, List<List<String>> res, int start, boolean[][] isPld) {
+    if (start == s.length()) {
+      res.add(new ArrayList<>(path));
+      return;
+    }
+    for (int i = start; i < s.length(); i++) {
+      if (!isPld[start][i]) continue; // [start:i] 区间非回文
+      path.offerLast(s.substring(start, i + 1));
+      bt11(s, path, res, i + 1, isPld);
+      path.pollLast();
+    }
+  }
+
+  /**
+   * 字母异或词分组，贪心
+   *
+   * @param strs
+   * @return
+   */
+  public List<List<String>> groupAnagrams(String[] strs) {
+    Map<String, List> cnt2List = new HashMap<>();
+    for (String str : strs) {
+      int[] counter = new int[26];
+      for (char ch : str.toCharArray()) counter[ch - 'a'] += 1;
+      String key2Str = new String(counter, 0, counter.length);
+      if (!cnt2List.containsKey(key2Str)) cnt2List.put(key2Str, new ArrayList());
+      cnt2List.get(key2Str).add(str);
+    }
+    return new ArrayList(cnt2List.values());
+  }
+
+  /**
+   * 分割数组，贪心
+   *
+   * @param nums
+   * @return
+   */
+  public int partitionDisjoint(int[] nums) {
+    int max = nums[0], leftMax = max, upper = 0;
+    for (int i = 0; i < nums.length; i++) {
+      max = Math.max(max, nums[i]);
+      if (nums[i] < leftMax) {
+        leftMax = max;
+        upper = i;
+      }
+    }
+    return upper + 1;
+  }
+
+  /**
+   * 划分为k个相等的子集，回溯
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/partition-to-k-equal-sum-subsets/solution/javadai-fan-hui-zhi-de-hui-su-fa-by-caipengbo/
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public boolean canPartitionKSubsets(int[] nums, int k) {
+    int sum = 0, max = 0;
+    for (int n : nums) {
+      sum += n;
+      if (max < n) max = n;
+    }
+    target = sum / k;
+    if (max > target || sum % k != 0) return false;
+    return bt15(nums, 0, k, 0, new boolean[nums.length]);
+  }
+
+  private int target; // 「划分为 k 个相等的子集」
+
+  private boolean bt15(int[] nums, int start, int k, int sum, boolean[] recStack) {
+    if (k == 0) return true;
+    if (sum == target) return bt15(nums, 0, k - 1, 0, recStack);
+    for (int i = start; i < nums.length; i++) {
+      int cur = sum + nums[i];
+      if (recStack[i] || cur > target) continue;
+      recStack[i] = true;
+      if (bt15(nums, i + 1, k, cur, recStack)) return true;
+      recStack[i] = false;
+    }
+    return false;
+  }
+
+  /**
+   * 分割等和子集，01 背包
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/partition-equal-subset-sum/solution/0-1-bei-bao-wen-ti-xiang-jie-zhen-dui-ben-ti-de-yo/
+   *
+   * @param nums
+   * @return
+   */
+  public boolean canPartition(int[] nums) {
+    int sum = 0;
+    for (int n : nums) sum += n;
+    if ((sum & 1) == 1) return false;
+    int maxCapacity = sum / 2;
+    boolean[] dp = new boolean[maxCapacity + 1];
+    dp[0] = true;
+    if (nums[0] <= maxCapacity) dp[nums[0]] = true;
+    for (int i = 1; i < nums.length; i++) {
+      for (int j = maxCapacity; nums[i] <= j; j--) {
+        if (dp[maxCapacity]) return true;
+        dp[j] = dp[j] || dp[j - nums[i]];
+      }
+    }
+    return dp[maxCapacity];
+  }
+
+  /**
+   * 分割数组的最大值，二分
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/split-array-largest-sum/solution/er-fen-cha-zhao-by-liweiwei1419-4/
+   *
+   * @param nums
+   * @param m
+   * @return
+   */
+  public int splitArray(int[] nums, int m) {
+    int max = 0, sum = 0;
+    for (int n : nums) {
+      max = Math.max(max, n);
+      sum += n;
+    }
+    // 确定一个子数组和的最大值，使得它对应的「子数组的分割数」恰好等于 m
+    int lo = max, hi = sum;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2, cnt = countSplit(nums, mid);
+      // 如果分割数太多，说明子数组和的最大值太小，需要调大
+      if (cnt > m) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  // 满足不超过「子数组各自的和的最大值」的分割数
+  private int countSplit(int[] nums, int maxSum) {
+    int cnt = 1, sum = 0; // 区间和
+    for (int n : nums) {
+      // 超过子数组和的最大值，则不加这个数
+      sum += n;
+      if (sum > maxSum) {
+        sum = n;
+        cnt += 1;
+      }
+    }
+    return cnt;
   }
 }
 
