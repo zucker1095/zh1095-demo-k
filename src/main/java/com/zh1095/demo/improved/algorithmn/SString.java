@@ -1005,23 +1005,24 @@ class MonotonicStack {
    */
   public String removeDuplicateLetters(String s) {
     if (s.length() < 2) return s;
-    Deque<Character> stack = new ArrayDeque<>(s.length());
+    char[] chs = s.toCharArray();
+    int len = chs.length;
+    Deque<Character> ms = new ArrayDeque<>(len);
     // 栈内尚存的字母
     boolean[] visited = new boolean[26];
     // 记录每个字符出现的最后一个位置
     int[] lastIdxs = new int[26];
-    for (int i = 0; i < s.length(); i++) lastIdxs[s.charAt(i) - 'a'] = i;
-    for (int i = 0; i < s.length(); i++) {
-      char cur = s.charAt(i);
-      if (visited[cur - 'a']) continue;
-      while (!stack.isEmpty() && cur < stack.getLast() && lastIdxs[stack.getLast() - 'a'] > i) {
-        visited[stack.pollLast() - 'a'] = false;
-      }
-      stack.offerLast(cur);
-      visited[cur - 'a'] = true;
+    for (int i = 0; i < len; i++) lastIdxs[chs[i] - 'a'] = i;
+    for (int i = 0; i < len; i++) {
+      char ch = chs[i];
+      if (visited[ch - 'a']) continue;
+      while (!ms.isEmpty() && ch < ms.getLast() && lastIdxs[ms.getLast() - 'a'] > i)
+        visited[ms.pollLast() - 'a'] = false;
+      ms.offerLast(ch);
+      visited[ch - 'a'] = true;
     }
     StringBuilder res = new StringBuilder();
-    for (char ch : stack) res.append(ch);
+    for (char ch : ms) res.append(ch);
     return res.toString();
   }
 

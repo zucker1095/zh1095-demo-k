@@ -812,6 +812,52 @@ class Path {
 /** 最优解，状态压缩 & 双指针，所有需要打印路径的题型，基本都涉及回溯 */
 class Optimal {
   /**
+   * 接雨水，贪心，漏桶效应，更新短边
+   *
+   * @param height the height
+   * @return int int
+   */
+  public int trap(int[] height) {
+    int lo = 0, hi = height.length - 1;
+    int volume = 0, lm = height[lo], rm = height[hi];
+    while (lo < hi) {
+      int l = height[lo], r = height[hi];
+      lm = Math.max(lm, l);
+      rm = Math.max(rm, r);
+      if (l <= r) {
+        volume += lm - l;
+        lo += 1;
+      } else {
+        volume += rm - r;
+        hi -= 1;
+      }
+    }
+    return volume;
+  }
+
+  /**
+   * 盛最多水的容器，更新短边
+   *
+   * @param height the height
+   * @return int int
+   */
+  public int maxArea(int[] height) {
+    int lo = 0, hi = height.length - 1;
+    int maxVolume = 0;
+    while (lo < hi) {
+      int l = height[lo], r = height[hi];
+      if (l <= r) {
+        maxVolume = Math.max(maxVolume, (hi - lo) * l);
+        lo += 1;
+      } else {
+        maxVolume = Math.max(maxVolume, (hi - lo) * r);
+        hi -= 1;
+      }
+    }
+    return maxVolume;
+  }
+
+  /**
    * 买卖股票的最佳时机 I~IV
    *
    * <p>参考
@@ -866,52 +912,6 @@ class Optimal {
       //        buy = Math.max(buy, sell - p - fee);
     }
     return sell;
-  }
-
-  /**
-   * 接雨水，贪心，漏桶效应，更新短边
-   *
-   * @param height the height
-   * @return int int
-   */
-  public int trap(int[] height) {
-    int lo = 0, hi = height.length - 1;
-    int volume = 0, lm = height[lo], rm = height[hi];
-    while (lo < hi) {
-      int l = height[lo], r = height[hi];
-      lm = Math.max(lm, l);
-      rm = Math.max(rm, r);
-      if (l <= r) {
-        volume += lm - l;
-        lo += 1;
-      } else {
-        volume += rm - r;
-        hi -= 1;
-      }
-    }
-    return volume;
-  }
-
-  /**
-   * 盛最多水的容器，更新短边
-   *
-   * @param height the height
-   * @return int int
-   */
-  public int maxArea(int[] height) {
-    int lo = 0, hi = height.length - 1;
-    int maxVolume = 0;
-    while (lo < hi) {
-      int l = height[lo], r = height[hi];
-      if (l <= r) {
-        maxVolume = Math.max(maxVolume, l * (hi - lo));
-        lo += 1;
-      } else {
-        maxVolume = Math.max(maxVolume, r * (hi - lo));
-        hi -= 1;
-      }
-    }
-    return maxVolume;
   }
 
   /**

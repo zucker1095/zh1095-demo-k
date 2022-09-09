@@ -635,9 +635,8 @@ class MMerge extends DefaultArray {
     divideAndCount(nums, tmp, lo, mid);
     divideAndCount(nums, tmp, mid + 1, hi);
     // curing 因为此时 [lo,mid] & [mid+1,hi] 分别有序，否则说明二者在数轴上范围存在重叠
-    if (nums[mid] <= nums[mid + 1]) return;
     // 合并 nums[start,mid] & nums[mid+1,end]
-    cnt += mergeAndCount(nums, tmp, lo, mid, hi);
+    if (nums[mid] > nums[mid + 1]) cnt += mergeAndCount(nums, tmp, lo, mid, hi);
   }
 
   private int mergeAndCount(int[] nums, int[] tmp, int p1, int end1, int end2) {
@@ -661,38 +660,49 @@ class MMerge extends DefaultArray {
    * @param nums
    * @return
    */
-  public List<Integer> countSmaller(int[] nums) {
-    int len = nums.length;
+  public List<Integer> countSmaller(int[] _nums) {
+    int len = _nums.length;
+    nums = _nums;
+    res = new int[len];
     // 索引数组，归并回去时方便知道是哪个下标的元素
-    int[] tmp = new int[len], res = new int[len], idx = new int[len];
+    int[] tmp = new int[len], idx = new int[len];
     for (int i = 0; i < len; i++) idx[i] = i;
-    divide(nums, 0, len - 1, idx, tmp, res);
+    divide(idx, tmp, 0, len - 1);
     List<Integer> ans = new ArrayList<>();
     for (int i = 0; i < len; i++) ans.add(res[i]);
     return ans;
   }
 
-  private void divide(int[] nums, int lo, int hi, int[] idx, int[] tmp, int[] res) {
-    if (lo == hi) return;
+  private int[] nums, res; // 「计算右侧小于当前元素的个数」
+
+  private void divide(int[] idx, int[] tmp, int lo, int hi) {
+    if (lo >= hi) return;
     int mid = lo + (hi - lo) / 2;
-    divide(nums, lo, mid, idx, tmp, res);
-    divide(nums, mid + 1, hi, idx, tmp, res);
-    if (nums[idx[mid]] <= nums[idx[mid + 1]]) return;
-    merge(nums, lo, mid, hi, idx, tmp, res);
+    divide(idx, tmp, lo, mid);
+    divide(idx, tmp, mid + 1, hi);
+    if (nums[idx[mid]] > nums[idx[mid + 1]]) merge(idx, tmp, lo, mid, hi);
   }
 
-  private void merge(int[] nums, int p1, int end1, int end2, int[] idx, int[] tmp, int[] res) {
-    for (int i = p1; i <= end2; i++) tmp[i] = idx[i];
+  private void merge(int[] idx, int[] tmp, int p1, int end1, int end2) {
+    if (end2 > p1) System.arraycopy(idx, p1, tmp, p1, end2 - p1 + 1);
     int p2 = end1 + 1;
     for (int i = p1; i <= end2; i++) {
-      if (p1 == end1 + 1) idx[i] = tmp[p2++];
-      else if (p2 == end2 + 1) {
-        idx[i] = tmp[p1++];
-        res[idx[i]] += end2 - end1;
-      } else if (nums[tmp[p1]] <= nums[tmp[p2]]) {
-        idx[i] = tmp[p1++];
-        res[idx[i]] += p2 - end1 - 1;
-      } else if (nums[tmp[p1]] > nums[tmp[p2]]) idx[i] = tmp[p2++];
+      int i1 = tmp[p1], i2 = tmp[p2]; // TODO 处理越界
+      if (p1 == end1 + 1) {
+        idx[i] = i2;
+        p2 += 1;
+      } else if (p2 == end2 + 1) {
+        idx[i] = i1;
+        p1 += 1;
+        res[i1] += end2 - end1;
+      } else if (nums[i1] <= nums[i2]) {
+        idx[i] = i1;
+        p1 += 1;
+        res[i1] += p2 - end1 - 1;
+      } else if (nums[i1] > nums[i2]) {
+        idx[i] = i2;
+        p2 += 1;
+      }
     }
   }
 
@@ -843,7 +853,7 @@ class DichotomyClassic extends DefaultArray {
   }
 
   /**
-   * 寻找旋转排序数组中的最小值，无重复，比较边界
+   * 寻找旋转排序数组中的最小值，比较边界
    *
    * <p>扩展1，找最大，可复用本题，参考「山脉数组的顶峰索引」
    *
@@ -1881,7 +1891,7 @@ class PreSum {
    *
    * <p>此处入队索引，而「滑动窗口的最大值」是值
    *
-   * <p>TODO 需要找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
+   * <p>分别找到索引 x & y 使得 prefix[y]-prefix[x]>=k 且 y-x 最小
    *
    * <p>参考
    * https://leetcode.cn/problems/shortest-subarray-with-sum-at-least-k/solution/he-zhi-shao-wei-k-de-zui-duan-zi-shu-zu-by-leetcod/
@@ -1896,11 +1906,11 @@ class PreSum {
     int len = nums.length, minLen = len + 1;
     long[] preSum = new long[len + 1];
     for (int i = 0; i < len; i++) preSum[i + 1] = preSum[i] + nums[i];
-    Deque<Integer> mq = new ArrayDeque();
+    Deque<Integer> mq = new ArrayDeque<>();
     for (int i = 0; i < len + 1; i++) {
       long sum = preSum[i];
-      while (!mq.isEmpty() && sum <= preSum[mq.peekLast()]) mq.pollLast();
-      while (!mq.isEmpty() && sum >= k + preSum[mq.peekFirst()])
+      while (!mq.isEmpty() && preSum[mq.peekLast()] >= sum) mq.pollLast();
+      while (!mq.isEmpty() && sum - preSum[mq.peekFirst()] >= k)
         minLen = Math.min(minLen, i - mq.pollFirst());
       mq.offerLast(i);
     }

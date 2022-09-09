@@ -126,8 +126,7 @@ public class TTree {
 
   private void dfs12(TreeNode root, int num) {
     if (root == null) return;
-    // 题设不会越界
-    int cur = num * 10 + root.val;
+    int cur = num * 10 + root.val; // 题设不会越界
     if (root.left == null && root.right == null) {
       res3 += cur;
       return;
@@ -460,72 +459,40 @@ class DDFS {
    * @return list list
    */
   public List<Integer> distanceK(TreeNode root, TreeNode target, int k) {
-    List<Integer> vers = new ArrayList();
     if (root != null) {
-      // 题设节点数有限，值互异
-      Map<Integer, TreeNode> parents = new HashMap(500);
-      collectParents(root, parents);
-      // 递归时避免重复，在递归前比较目标结点是否与来源结点相同
-      dfs17(target, null, k, parents, vers);
+      collectParents(root);
+      dfs17(target, null, k);
     }
     return vers;
   }
 
-  private void collectParents(TreeNode root, Map<Integer, TreeNode> parents) {
+  private final Map<Integer, TreeNode> parents = new HashMap(500);
+
+  private final List<Integer> vers = new ArrayList();
+
+  private void collectParents(TreeNode root) {
     if (root.left != null) {
       parents.put(root.left.val, root);
-      collectParents(root.left, parents);
+      collectParents(root.left);
     }
     if (root.right != null) {
       parents.put(root.right.val, root);
-      collectParents(root.right, parents);
+      collectParents(root.right);
     }
   }
 
-  private void dfs17(
-      TreeNode root, TreeNode from, int dist, Map<Integer, TreeNode> parents, List<Integer> vers) {
+  private void dfs17(TreeNode root, TreeNode from, int dist) {
     if (root == null) return;
     if (dist == 0) {
       vers.add(root.val);
       return;
     }
     dist -= 1;
-    if (root.left != from) dfs17(root.left, root, dist, parents, vers);
-    if (root.right != from) dfs17(root.right, root, dist, parents, vers);
-    if (parents.get(root.val) != from) dfs17(parents.get(root.val), root, dist, parents, vers);
+    // from 避免递归重复
+    if (root.left != from) dfs17(root.left, root, dist);
+    if (root.right != from) dfs17(root.right, root, dist);
+    if (parents.get(root.val) != from) dfs17(parents.get(root.val), root, dist);
   }
-
-  /**
-   * 不同岛屿的数量
-   *
-   * <p>测试 https://www.lintcode.com/problem/860
-   *
-   * @param grid the grid
-   * @return the int
-   */
-  //  public int numberofDistinctIslands(int[][] grid) {
-  //    Set<String> paths = new HashSet<>();
-  //    for (int r = 0; r < grid.length; r++) {
-  //      for (int c = 0; c < grid[0].length; c++) {
-  //        if (grid[r][c] != 1) continue;
-  //        StringBuilder path = new StringBuilder();
-  //        dfs5(grid, r, c, path, 0);
-  //        paths.add(path.toString());
-  //      }
-  //    }
-  //    return paths.size();
-  //  }
-  //
-  //  private void dfs5(int[][] grid, int r, int c, StringBuilder sb, int dir) {
-  //    if (!inArea(grid, r, c) || grid[r][c] == 0) return;
-  //    grid[r][c] = 0;
-  //    sb.append(dir).append(",");
-  //    dfs5(grid, r - 1, c, sb, 1);
-  //    dfs5(grid, r + 1, c, sb, 2);
-  //    dfs5(grid, r, c - 1, sb, 3);
-  //    dfs5(grid, r, c + 1, sb, 4);
-  //    sb.append(-dir).append(",");
-  //  }
 
   /**
    * 被围绕的区域，填充所有被 X 围绕的 O，因此标记和边界联通的 O 路径即可。
@@ -559,6 +526,38 @@ class DDFS {
       dfs16(board, nr, nc);
     }
   }
+
+  /**
+   * 不同岛屿的数量
+   *
+   * <p>测试 https://www.lintcode.com/problem/860
+   *
+   * @param grid the grid
+   * @return the int
+   */
+  //  public int numberofDistinctIslands(int[][] grid) {
+  //    Set<String> paths = new HashSet<>();
+  //    for (int r = 0; r < grid.length; r++) {
+  //      for (int c = 0; c < grid[0].length; c++) {
+  //        if (grid[r][c] != 1) continue;
+  //        StringBuilder path = new StringBuilder();
+  //        dfs5(grid, r, c, path, 0);
+  //        paths.add(path.toString());
+  //      }
+  //    }
+  //    return paths.size();
+  //  }
+  //
+  //  private void dfs5(int[][] grid, int r, int c, StringBuilder sb, int dir) {
+  //    if (!inArea(grid, r, c) || grid[r][c] == 0) return;
+  //    grid[r][c] = 0;
+  //    sb.append(dir).append(",");
+  //    dfs5(grid, r - 1, c, sb, 1);
+  //    dfs5(grid, r + 1, c, sb, 2);
+  //    dfs5(grid, r, c - 1, sb, 3);
+  //    dfs5(grid, r, c + 1, sb, 4);
+  //    sb.append(-dir).append(",");
+  //  }
 
   /**
    * 最长同值路径，找到任意起点的一条路径，所有结点值一致
@@ -687,8 +686,7 @@ class BBSTInorder {
    */
   public void recoverTree(TreeNode root) {
     Deque<TreeNode> stack = new ArrayDeque<>();
-    TreeNode pre = new TreeNode(Integer.MIN_VALUE), cur = root;
-    TreeNode n1 = null, n2 = null;
+    TreeNode pre = new TreeNode(Integer.MIN_VALUE), cur = root, n1 = null, n2 = null;
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
@@ -746,39 +744,24 @@ class BBSTInorder {
   public class BSTIterator {
     private final Deque<TreeNode> stack = new ArrayDeque<>();
 
-    /**
-     * Instantiates a new Bst iterator.
-     *
-     * @param root the root
-     */
     public BSTIterator(TreeNode root) {
       fillLeft(root);
     }
 
-    /**
-     * Next int.
-     *
-     * @return the int
-     */
     public int next() {
       TreeNode nxt = stack.pollLast();
       fillLeft(nxt.right);
       return nxt.val;
     }
 
-    private void fillLeft(TreeNode node) {
-      TreeNode cur = node;
+    private void fillLeft(TreeNode root) {
+      TreeNode cur = root;
       while (cur != null) {
         stack.offerLast(cur);
         cur = cur.left;
       }
     }
 
-    /**
-     * Has next boolean.
-     *
-     * @return the boolean
-     */
     public boolean hasNext() {
       return !stack.isEmpty();
     }
