@@ -105,16 +105,6 @@ public class SString extends DefaultSString {
     return res.toString();
   }
 
-  // ASCII coding
-  private char getChar(int num) {
-    return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
-  }
-
-  // ASCII 允许相减
-  private int getInt(char num) {
-    return '0' <= num && num <= '9' ? num - '0' : num - 'a' + 10;
-  }
-
   /**
    * 比较版本号，逐个区间计数
    *
@@ -150,6 +140,16 @@ public class SString extends DefaultSString {
     for (char ch : chs) counter[ch - 'a'] += 1;
     for (char ch : chs) if (counter[ch - 'a'] == 1) return ch;
     return ' ';
+  }
+
+  // ASCII coding
+  private char getChar(int num) {
+    return num <= 9 ? (char) (num + '0') : (char) (num - 10 + 'a');
+  }
+
+  // ASCII 允许相减
+  private int getInt(char num) {
+    return '0' <= num && num <= '9' ? num - '0' : num - 'a' + 10;
   }
 
   /**
@@ -288,6 +288,32 @@ class WWindow {
   }
 
   /**
+   * 最大连续1的个数III，返回最长子数组，最多可转换 k 个 0
+   *
+   * <p>统计窗口内 0 的个数，翻转所有扩窗的值为 1，次数上限后再缩窗
+   *
+   * <p>参考
+   * https://leetcode.cn/problems/max-consecutive-ones-iii/solution/fen-xiang-hua-dong-chuang-kou-mo-ban-mia-f76z/
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public int longestOnes(int[] nums, int k) {
+    int maxLen = 0, lo = 0, hi = 0;
+    while (hi < nums.length) {
+      if (nums[hi] == 0) k -= 1;
+      while (k < 0) {
+        if (nums[lo] == 0) k += 1;
+        lo += 1;
+      }
+      maxLen = Math.max(maxLen, hi - lo + 1);
+      hi += 1;
+    }
+    return maxLen;
+  }
+
+  /**
    * 至多包含K个不同字符的最长子串，类似「最小覆盖子串」
    *
    * <p>测试 https://www.lintcode.com/problem/386/
@@ -318,32 +344,6 @@ class WWindow {
   }
 
   /**
-   * 最大连续1的个数III，返回最长子数组，最多可转换 k 个 0
-   *
-   * <p>统计窗口内 0 的个数，翻转所有扩窗的值为 1，次数上限后再缩窗
-   *
-   * <p>参考
-   * https://leetcode.cn/problems/max-consecutive-ones-iii/solution/fen-xiang-hua-dong-chuang-kou-mo-ban-mia-f76z/
-   *
-   * @param nums
-   * @param k
-   * @return
-   */
-  public int longestOnes(int[] nums, int k) {
-    int maxLen = 0, lo = 0, hi = 0;
-    while (hi < nums.length) {
-      if (nums[hi] == 0) k -= 1;
-      while (k < 0) {
-        if (nums[lo] == 0) k += 1;
-        lo += 1;
-      }
-      maxLen = Math.max(maxLen, hi - lo + 1);
-      hi += 1;
-    }
-    return maxLen;
-  }
-
-  /**
    * 滑动窗口的最大值，单调队列，offer & max & poll
    *
    * @param nums the nums
@@ -352,7 +352,7 @@ class WWindow {
    */
   public int[] maxSlidingWindow(int[] nums, int k) {
     int[] winMaxes = new int[nums.length - k + 1];
-    Deque<Integer> mq = new ArrayDeque<>();
+    Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < nums.length; i++) {
       int add = nums[i];
       while (!mq.isEmpty() && add > mq.peekLast()) mq.pollLast();
@@ -380,13 +380,19 @@ class WWindow {
    * @return
    */
   public int longestSubarray(int[] nums, int limit) {
-    Deque<Integer> maxMQ = new ArrayDeque<>(), minMQ = new ArrayDeque<>();
+    Deque<Integer> maxMQ = new LinkedList<>(), minMQ = new LinkedList<>();
     int lo = 0, hi = 0, maxLen = 0;
     while (hi < nums.length) {
       int add = nums[hi];
-      while (!minMQ.isEmpty() && add <= nums[minMQ.peekLast()]) minMQ.pollLast();
+      while (!minMQ.isEmpty()) {
+        if (nums[minMQ.peekLast()] < add) break;
+        minMQ.pollLast();
+      }
       minMQ.offerLast(hi);
-      while (!maxMQ.isEmpty() && add >= nums[maxMQ.peekLast()]) maxMQ.pollLast();
+      while (!maxMQ.isEmpty()) {
+        if (nums[maxMQ.peekLast()] > add) break;
+        maxMQ.pollLast();
+      }
       maxMQ.offerLast(hi);
       while (Math.abs(nums[maxMQ.peekFirst()] - nums[minMQ.peekFirst()]) > limit) {
         lo += 1;
@@ -402,11 +408,6 @@ class WWindow {
   private static class MonotonicQueue {
     private final Deque<Integer> mq = new LinkedList<>();
 
-    /**
-     * Push.
-     *
-     * @param num the num
-     */
     public void push(int num) {
       while (mq.size() > 0 && mq.getLast() < num) {
         mq.pollLast();
@@ -414,23 +415,11 @@ class WWindow {
       mq.offerLast(num);
     }
 
-    /**
-     * Pop.
-     *
-     * @param num the num
-     */
     public void pop(int num) {
-      if (mq.size() > 0 && mq.getFirst() == num) {
-        mq.removeFirst();
-      }
+      if (mq.size() > 0 && mq.getFirst() == num) mq.removeFirst();
     }
 
-    /**
-     * Max int.
-     *
-     * @return the int
-     */
-    public int max() {
+    public int peek() {
       return mq.getFirst();
     }
   }
@@ -486,41 +475,6 @@ class SStack {
   }
 
   /**
-   * 有效的括号字符串，贪心，或模拟
-   *
-   * <p>维护未匹配的左括号数量可能的上下界，尽可能保证其合法，遍历结束时，所有的左括号都应和右括号匹配即下界为 0
-   *
-   * <p>下界至少为0，且上界不能为负
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/valid-parenthesis-string/solution/gong-shui-san-xie-yi-ti-shuang-jie-dong-801rq/
-   *
-   * @param s the s
-   * @return boolean boolean
-   */
-  public boolean checkValidString(String s) {
-    int minCnt = 0, maxCnt = 0;
-    for (char ch : s.toCharArray()) {
-      if (ch == '(') {
-        minCnt += 1;
-        maxCnt += 1;
-      }
-      if (ch == ')') {
-        minCnt -= 1;
-        maxCnt -= 1;
-      }
-      if (ch == '*') {
-        // 贪心，尽可能匹配右括号
-        minCnt -= 1;
-        maxCnt += 1;
-      }
-      if (minCnt < 0) minCnt = 0;
-      if (minCnt > maxCnt) return false;
-    }
-    return minCnt == 0;
-  }
-
-  /**
    * 简化路径
    *
    * @param path the path
@@ -563,6 +517,40 @@ class SStack {
       }
     }
     return pushTop == 0; // 是否还有未出栈的
+  }
+
+  /**
+   * 有效的括号字符串，贪心，尽可能匹配右括号
+   *
+   * <p>维护未匹配的左括号数量可能的上下界，尽可能保证其合法，遍历结束时，所有的左括号都应和右括号匹配即下界为 0
+   *
+   * <p>下界至少为0，且上界不能为负
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/valid-parenthesis-string/solution/gong-shui-san-xie-yi-ti-shuang-jie-dong-801rq/
+   *
+   * @param s the s
+   * @return boolean boolean
+   */
+  public boolean checkValidString(String s) {
+    int minCnt = 0, maxCnt = 0;
+    for (char ch : s.toCharArray()) {
+      if (ch == '(') {
+        minCnt += 1;
+        maxCnt += 1;
+      }
+      if (ch == ')') {
+        minCnt -= 1;
+        maxCnt -= 1;
+      }
+      if (ch == '*') {
+        minCnt -= 1;
+        maxCnt += 1;
+      }
+      if (minCnt < 0) minCnt = 0;
+      if (minCnt > maxCnt) return false;
+    }
+    return minCnt == 0;
   }
 
   /**
@@ -984,37 +972,6 @@ class DicOrder extends DefaultSString {
       nxt *= 10;
     }
     return cnt;
-  }
-
-  /**
-   * 移掉k位数字，结果数值最小，单调栈 int n = 高位递增」的数，应尽量删低位。;
-   *
-   * <p>123531 这样「高位递增」的数，应尽量n
-   *
-   * <p>432135 这样「高位递减」的数，应尽量删高位，即让高位变小。
-   *
-   * <p>因此，如果当前遍历的数比栈顶大，符合递增，让它入栈。
-   *
-   * <p>TODO 参考
-   * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
-   *
-   * @param num the num
-   * @param k the k
-   * @return string string
-   */
-  public String removeKdigits(String num, int k) {
-    StringBuilder ms = new StringBuilder();
-    for (char ch : num.toCharArray()) {
-      // peekLast & pollLast
-      while (k > 0 && !ms.isEmpty() && ms.charAt(ms.length() - 1) > ch) {
-        ms.setLength(ms.length() - 1);
-        k -= 1;
-      }
-      if (ch == '0' && ms.isEmpty()) continue;
-      ms.append(ch);
-    }
-    String res = ms.substring(0, Math.max(ms.length() - k, 0));
-    return res.length() == 0 ? "0" : res;
   }
 
   /**

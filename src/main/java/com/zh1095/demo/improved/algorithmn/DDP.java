@@ -542,35 +542,7 @@ class Path {
       }
     }
     return dp[col - 1];
-    //    int rows = grid.length, cols = grid[0].length;
-    //    int[][] dp = new int[rows][cols];
-    //    int[] from = new int[rows * cols];
-    //    for (int i = 0; i < rows; i++) {
-    //      for (int j = 0; j < cols; j++) {
-    //        if (i == 0 && j == 0) {
-    //          dp[i][j] = grid[i][j];
-    //        } else {
-    //          // 记录当前分支做的选择，空间复杂度 O(n)，n 为分支总数
-    //          int top = i > 0 ? dp[i - 1][j] + grid[i][j] : Integer.MAX_VALUE,
-    //              left = j > 0 ? dp[i][j - 1] + grid[i][j] : Integer.MAX_VALUE;
-    //          dp[i][j] = Math.min(top, left);
-    //          // encoding 的具体实现保证唯一约束该分支即可
-    //          from[encoding(i, j)] = top < left ? encoding(i - 1, j) : encoding(i, j - 1);
-    //        }
-    //      }
-    //    }
-    //    int idx = encoding(rows - 1, cols - 1); // 从「结尾」开始在 from[] 找「上一步」
-    //    int[][] path = new int[rows + cols][2]; // 逆序添加路径点
-    //    path[rows + cols - 1] = new int[] {rows - 1, cols - 1};
-    //    for (int i = 1; i < rows + cols; i++) {
-    //      path[rows + cols - 1 - i] = deconding(from[idx]);
-    //      idx = from[idx];
-    //    }
-    //    return dp[rows - 1][cols - 1];
   }
-
-  //    private int[] deconding(int cols, int idx) { return new int[] {idx / cols, idx % cols}; }
-  //    private int encoding(int cols, int x, int y) { return x * cols + y; }
 
   /**
    * 三角形的最小路径和，bottom to up
@@ -583,9 +555,6 @@ class Path {
   public int minimumTotal(List<List<Integer>> triangle) {
     int len = triangle.get(triangle.size() - 1).size();
     int[] dp = new int[len + 1];
-    // a
-    // b c
-    // d e f
     for (int r = len - 1; r > -1; r--) {
       for (int c = 0; c <= r; c++) {
         dp[c] = triangle.get(r).get(c) + Math.min(dp[c + 1], dp[c]);
@@ -779,6 +748,37 @@ class Path {
     int skip = Math.max(l[0], l[1]) + Math.max(r[0], r[1]), settle = l[0] + r[0] + root.val;
     return new int[] {skip, settle};
   }
+
+  // 「最小路径和」输出路径
+  //  private int getPath(int[][] grid) {
+  //    int rows = grid.length, cols = grid[0].length;
+  //    int[][] dp = new int[rows][cols];
+  //    int[] from = new int[rows * cols];
+  //    for (int i = 0; i < rows; i++) {
+  //      for (int j = 0; j < cols; j++) {
+  //        if (i == 0 && j == 0) {
+  //          dp[i][j] = grid[i][j];
+  //        } else {
+  //          // 记录当前分支做的选择，空间复杂度 O(n)，n 为分支总数
+  //          int top = i > 0 ? dp[i - 1][j] + grid[i][j] : Integer.MAX_VALUE,
+  //              left = j > 0 ? dp[i][j - 1] + grid[i][j] : Integer.MAX_VALUE;
+  //          dp[i][j] = Math.min(top, left);
+  //          // encoding 的具体实现保证唯一约束该分支即可
+  //          from[encoding(i, j)] = top < left ? encoding(i - 1, j) : encoding(i, j - 1);
+  //        }
+  //      }
+  //    }
+  //    int idx = encoding(rows - 1, cols - 1); // 从「结尾」开始在 from[] 找「上一步」
+  //    int[][] path = new int[rows + cols][2]; // 逆序添加路径点
+  //    path[rows + cols - 1] = new int[] {rows - 1, cols - 1};
+  //    for (int i = 1; i < rows + cols; i++) {
+  //      path[rows + cols - 1 - i] = deconding(from[idx]);
+  //      idx = from[idx];
+  //    }
+  //    return dp[rows - 1][cols - 1];
+  //  }
+  //    private int[] deconding(int cols, int idx) { return new int[] {idx / cols, idx % cols}; }
+  //    private int encoding(int cols, int x, int y) { return x * cols + y; }
 }
 
 /** 最优解，状态压缩 & 双指针，所有需要打印路径的题型，基本都涉及回溯 */
@@ -1105,9 +1105,9 @@ class CCount {
 /** 划分或分割，背包，贪心，回溯，二分 */
 class Split {
   /**
-   * 划分字母区间，贪心，返回可划分的子串上限，同一种字母只能在一个子串内
+   * 划分字母区间，类似「最大交换」贪心，返回可划分的子串上限，同一种字母只能在一个子串内
    *
-   * <p>类似「最大交换」参考
+   * <p>参考
    * https://leetcode.cn/problems/partition-labels/solution/python-jiu-zhe-quan-guo-zui-cai-you-hua-dai-ma-by-/
    */
   public List<Integer> partitionLabels(String s) {
@@ -1137,7 +1137,6 @@ class Split {
    * @return list list
    */
   public List<List<String>> partition(String s) {
-    List<List<String>> paths = new ArrayList<>();
     int len = s.length();
     // isPalindrome[i][j] 表示 s[i][j] 是否回文
     boolean[][] isPld = new boolean[len][len];
@@ -1146,6 +1145,7 @@ class Split {
       collect(chs, i, i, isPld);
       collect(chs, i, i + 1, isPld);
     }
+    List<List<String>> paths = new ArrayList<>();
     bt11(s, new ArrayDeque<>(), paths, 0, isPld);
     return paths;
   }
@@ -1166,7 +1166,7 @@ class Split {
       return;
     }
     for (int i = start; i < s.length(); i++) {
-      if (!isPld[start][i]) continue; // [start:i] 区间非回文
+      if (!isPld[start][i]) continue;
       path.offerLast(s.substring(start, i + 1));
       bt11(s, path, res, i + 1, isPld);
       path.pollLast();

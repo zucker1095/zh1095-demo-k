@@ -2,16 +2,6 @@ package com.zh1095.demo.improved.algorithmn;
 
 import java.util.*;
 
-interface MountainArray {
-  default int get(int index) {
-    return 0;
-  }
-
-  default int length() {
-    return 0;
-  }
-}
-
 /**
  * 收集数组相关，包括如下类型，部分查找不到则至 DDP
  *
@@ -301,7 +291,7 @@ class QQuick extends DefaultArray {
    * @param hi the hi
    */
   public void quickSort(int[] nums, int lo, int hi) {
-    if (lo >= hi) return; // 对 [lo:hi] 快排
+    if (lo == hi) return; // 对 [lo:hi] 快排
     int pivotIdx = lo + random.nextInt(hi - lo + 1), pivot = nums[pivotIdx];
     // 下方需要确保虚拟头 <pivot 即 lt=lo 也属于界外，并能够从 cur=lt+1 界内开始遍历
     swap(nums, pivotIdx, lo);
@@ -519,15 +509,14 @@ class HHeap extends DefaultArray {
         pq.offer(p);
         continue;
       }
-      // 判断当前点的距离是否小于堆中的最大距离
       if (pq.comparator().compare(p, pq.peek()) > 0) {
         pq.poll();
         pq.offer(p);
       }
     }
-    int[][] vertexes = new int[K][2];
-    for (int i = 0; i < K; i++) vertexes[i] = pq.poll();
-    return vertexes;
+    int[][] ver = new int[K][2];
+    for (int i = 0; i < K; i++) ver[i] = pq.poll();
+    return ver;
   }
 
   /**
@@ -544,15 +533,14 @@ class HHeap extends DefaultArray {
         new PriorityQueue<>(
             k + 1,
             (o1, o2) -> {
-              return Integer.parseInt(o1[1]) == Integer.parseInt(o2[1])
-                  ? o2[0].compareTo(o1[0])
-                  : Integer.parseInt(o1[1]) - Integer.parseInt(o2[1]);
+              int cnt1 = Integer.parseInt(o1[1]), cnt2 = Integer.parseInt(o2[1]);
+              return cnt1 == cnt2 ? o2[0].compareTo(o1[0]) : cnt1 - cnt2;
             });
     Map<String, Integer> counter = new HashMap<>();
     // 实际运行改用 getOrDefault
     for (String s : strings) counter.put(s, counter.get(s) + 1);
-    for (String str : counter.keySet()) {
-      pq.offer(new String[] {str, counter.get(str).toString()});
+    for (String s : counter.keySet()) {
+      pq.offer(new String[] {s, counter.get(s).toString()});
       if (pq.size() > k) pq.poll();
     }
     String[][] res = new String[k][2];
@@ -877,7 +865,7 @@ class DichotomyClassic extends DefaultArray {
   }
 
   /**
-   * 寻找峰值，返回任意一个峰的索引，比较右邻
+   * 寻找峰值，比较右邻，返回任意一个峰的索引
    *
    * <p>扩展1，需要返回的峰索引满足左右均单调递增，山脉数组的顶峰索引，参下 annotate
    *
@@ -894,60 +882,10 @@ class DichotomyClassic extends DefaultArray {
     }
     return lo; // 碰撞时结束
   }
-
-  /**
-   * 对有序数组找到重复数超过 k 的序列
-   *
-   * <p>二分找到某数出现的首个和最后的索引，再分隔两个数组分别递归求解。
-   *
-   * @param nums
-   * @param k
-   * @return
-   */
-  public List<Integer> findDuplicatesK(int[] nums, int k) {
-    List<Integer> seqs = new ArrayList<>();
-    int[] pos = searchRange(nums, nums[nums.length / 2]);
-    List<Integer> p1 = findDuplicatesK(Arrays.copyOfRange(nums, 0, pos[0]), k),
-        p2 = findDuplicatesK(Arrays.copyOfRange(nums, pos[1], nums.length), k);
-    return seqs;
-  }
-
-  /**
-   * 山脉数组中查找目标值，三段二分，比边界
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/find-in-mountain-array/solution/shi-yong-chao-hao-yong-de-er-fen-fa-mo-ban-python-/
-   *
-   * @param target
-   * @param arr
-   * @return
-   */
-  public int findInMountainArray(int target, MountainArray arr) {
-    int lo = 0, hi = arr.length() - 1;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2;
-      if (arr.get(mid) < arr.get(mid + 1)) lo = mid + 1;
-      else hi = mid;
-    }
-    // 模板同上「二分查找」最终需要检查左边界合法性
-    int peak = lo, idx = search(arr, target, 0, peak, true);
-    return idx != -1 ? idx : search(arr, target, peak + 1, arr.length() - 1, false);
-  }
-
-  private int search(MountainArray arr, int target, int lo, int hi, boolean flag) {
-    target *= flag ? 1 : -1;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2, cur = arr.get(mid) * (flag ? 1 : -1);
-      if (cur < target) lo = mid + 1;
-      if (cur == target) return mid;
-      if (cur > target) hi = mid;
-    }
-    int mid = lo + (hi - lo) / 2, cur = arr.get(mid) * (flag ? 1 : -1);
-    return cur == target ? lo : -1;
-  }
 }
 
-class DichotomyElse extends DefaultArray {
+/** 二分低频题型 */
+class DichotomyElse extends DichotomyClassic {
   /**
    * 搜索二维矩阵，确保每行的首个大于前一行的最后一个
    *
@@ -1014,6 +952,87 @@ class DichotomyElse extends DefaultArray {
   }
 
   /**
+   * 爱吃香蕉的珂珂
+   *
+   * @param piles
+   * @param H
+   * @return
+   */
+  public int minEatingSpeed(int[] piles, int H) {
+    int max = 1;
+    for (int p : piles) max = Math.max(max, p);
+    int lo = 1, hi = max;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2, sum = 0;
+      for (int p : piles) sum += (p + mid - 1) / mid;
+      if (sum > H) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  /**
+   * 山脉数组中查找目标值，三段二分，比边界
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/find-in-mountain-array/solution/shi-yong-chao-hao-yong-de-er-fen-fa-mo-ban-python-/
+   *
+   * @param target
+   * @param arr
+   * @return
+   */
+  public int findInMountainArray(int target, MountainArray arr) {
+    int lo = 0, hi = arr.length() - 1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2;
+      if (arr.get(mid) < arr.get(mid + 1)) lo = mid + 1;
+      else hi = mid;
+    }
+    // 模板同上「二分查找」最终需要检查左边界合法性
+    int peak = lo, idx = search(arr, target, 0, peak, true);
+    return idx != -1 ? idx : search(arr, target, peak + 1, arr.length() - 1, false);
+  }
+
+  private int search(MountainArray arr, int target, int lo, int hi, boolean flag) {
+    target *= flag ? 1 : -1;
+    while (lo < hi) {
+      int mid = lo + (hi - lo) / 2, cur = arr.get(mid) * (flag ? 1 : -1);
+      if (cur < target) lo = mid + 1;
+      if (cur == target) return mid;
+      if (cur > target) hi = mid;
+    }
+    int mid = lo + (hi - lo) / 2, cur = arr.get(mid) * (flag ? 1 : -1);
+    return cur == target ? lo : -1;
+  }
+
+  /**
+   * 和为s的连续正数序列，输出所有和为 target 的连续正整数序列，至少两个元素
+   *
+   * <p>TODO 参考
+   * https://leetcode-cn.com/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/solution/shi-yao-shi-hua-dong-chuang-kou-yi-ji-ru-he-yong-h/
+   *
+   * @param target
+   * @return
+   */
+  public int[][] findContinuousSequence(int target) {
+    List<int[]> seqs = new ArrayList<int[]>();
+    int lo = 1, hi = 2;
+    while (lo < hi) {
+      // 区间求和公式
+      int sum = (lo + hi) * (hi - lo + 1) / 2;
+      if (sum < target) hi += 1;
+      if (sum > target) lo += 1;
+      if (sum == target) {
+        int[] seq = new int[hi - lo + 1];
+        for (int i = lo; i <= hi; i++) seq[i - lo] = i;
+        seqs.add(seq);
+        lo += 1;
+      }
+    }
+    return seqs.toArray(new int[seqs.size()][]);
+  }
+
+  /**
    * 有序数组中的单一元素，无序也适用
    *
    * <p>假设所有数字都成对，那么所有数字的下标必定同时偶数和奇数，因此比对 nums[mid]
@@ -1037,55 +1056,6 @@ class DichotomyElse extends DefaultArray {
   }
 
   /**
-   * 和为s的连续正数序列，输出所有和为 target 的连续正整数序列，至少两个元素
-   *
-   * <p>TODO 参考
-   * https://leetcode-cn.com/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/solution/shi-yao-shi-hua-dong-chuang-kou-yi-ji-ru-he-yong-h/
-   *
-   * @param target
-   * @return
-   */
-  public int[][] findContinuousSequence(int target) {
-    List<int[]> seqs = new ArrayList<int[]>();
-    int lo = 1, hi = 2;
-    while (lo < hi) {
-      // 区间求和公式
-      int sum = (lo + hi) * (hi - lo + 1) / 2;
-      if (sum < target) hi += 1;
-      if (sum == target) {
-        int[] ans = new int[hi - lo + 1];
-        for (int i = lo; i <= hi; i++) {
-          ans[i - lo] = i;
-        }
-        seqs.add(ans);
-        lo += 1;
-      }
-      if (sum > target) lo += 1;
-    }
-    return seqs.toArray(new int[seqs.size()][]);
-  }
-
-  /**
-   * 爱吃香蕉的珂珂
-   *
-   * @param piles
-   * @param H
-   * @return
-   */
-  public int minEatingSpeed(int[] piles, int H) {
-    int maxVal = 1;
-    for (int p : piles) maxVal = Math.max(maxVal, p);
-    int lo = 1, hi = maxVal;
-    while (lo < hi) {
-      int mid = lo + (hi - lo) / 2, sum = 0;
-      for (int p : piles) sum += (p + mid - 1) / mid;
-      if (sum > H) lo = mid + 1;
-      else hi = mid;
-    }
-    return lo;
-  }
-
-  /**
    * 切割木头，参考 https://mp.weixin.qq.com/s/FQma0bdAWbzLMmCKhZRk7w
    *
    * @param nums
@@ -1102,6 +1072,23 @@ class DichotomyElse extends DefaultArray {
       else hi = mid - 1;
     }
     return 0;
+  }
+
+  /**
+   * 对有序数组找到重复数超过 k 的序列
+   *
+   * <p>二分找到某数出现的首个和最后的索引，再分隔两个数组分别递归求解。
+   *
+   * @param nums
+   * @param k
+   * @return
+   */
+  public List<Integer> findDuplicatesK(int[] nums, int k) {
+    List<Integer> seqs = new ArrayList<>();
+    int[] pos = searchRange(nums, nums[nums.length / 2]);
+    List<Integer> p1 = findDuplicatesK(Arrays.copyOfRange(nums, 0, pos[0]), k),
+        p2 = findDuplicatesK(Arrays.copyOfRange(nums, pos[1], nums.length), k);
+    return seqs;
   }
 }
 
@@ -1551,7 +1538,7 @@ class PreSum {
     int len = nums.length, minLen = len + 1;
     long[] preSum = new long[len + 1];
     for (int i = 0; i < len; i++) preSum[i + 1] = preSum[i] + nums[i];
-    Deque<Integer> mq = new ArrayDeque<>();
+    Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < len + 1; i++) {
       long sum = preSum[i];
       while (!mq.isEmpty() && preSum[mq.peekLast()] >= sum) mq.pollLast();
@@ -1689,6 +1676,37 @@ class PreSum {
  * <p>递增利用波谷剔除栈中的波峰，留下波谷，反之，波峰
  */
 class MonotonicStack {
+  /**
+   * 移掉k位数字，结果数值最小，单调栈 int n = 高位递增」的数，应尽量删低位。;
+   *
+   * <p>123531 这样「高位递增」的数，应尽量n
+   *
+   * <p>432135 这样「高位递减」的数，应尽量删高位，即让高位变小。
+   *
+   * <p>因此，如果当前遍历的数比栈顶大，符合递增，让它入栈。
+   *
+   * <p>TODO 参考
+   * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
+   *
+   * @param num the num
+   * @param k the k
+   * @return string string
+   */
+  public String removeKdigits(String num, int k) {
+    StringBuilder ms = new StringBuilder();
+    for (char ch : num.toCharArray()) {
+      // peekLast & pollLast
+      while (k > 0 && !ms.isEmpty() && ms.charAt(ms.length() - 1) > ch) {
+        ms.setLength(ms.length() - 1);
+        k -= 1;
+      }
+      if (ch == '0' && ms.isEmpty()) continue;
+      ms.append(ch);
+    }
+    String res = ms.substring(0, Math.max(ms.length() - k, 0));
+    return res.length() == 0 ? "0" : res;
+  }
+
   /**
    * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
    *
@@ -1846,7 +1864,7 @@ class MonotonicStack {
 /** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，仅一个重复，[1:n] 映射至 [0,n-1]，类似「环形链表II」
+   * 寻找重复数，仅一个重复，类似「环形链表II」nums[i] -> i+1
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/
@@ -1874,7 +1892,7 @@ class DDuplicate extends DefaultArray {
   }
 
   /**
-   * 数组中重复的数据，多个重复，至多两次，返回所有重复数，[1:n] 映射至 [0,n-1]
+   * 数组中重复的数据，多个重复，至多两次，返回所有重复数，nums[i] -> i+1
    *
    * <p>原地哈希，重复会命中同一索引，nums[nums[i]-1]*=-1，类似缺失的第一个整数
    *
@@ -1882,17 +1900,42 @@ class DDuplicate extends DefaultArray {
    * @return list list
    */
   public List<Integer> findDuplicates(int[] nums) {
-    List<Integer> duplicates = new ArrayList<>();
+    List<Integer> dup = new ArrayList<>();
     for (int n : nums) {
-      int idx = (n < 0 ? -n : n) - 1;
-      if (nums[idx] < 0) duplicates.add(idx + 1); // visite num marked
-      else nums[idx] *= -1; // mark num
+      int home = (n < 0 ? -n : n) - 1;
+      if (nums[home] < 0) dup.add(home + 1);
+      else nums[home] *= -1;
     }
-    return duplicates;
+    return dup;
   }
 
   /**
-   * 数组中重复的数字，多个重复，返回任一，区间 [0,len-1]
+   * 缺失的第一个正数，原地哈希，nums[i] -> i+1
+   *
+   * <p>缺失会命中错误索引，nums[nums[i]-1]!=nums[i]，类似数组中重复的数据
+   *
+   * @param nums the nums
+   * @return int int
+   */
+  public int firstMissingPositive(int[] nums) {
+    int len = nums.length;
+    for (int i = 0; i < len; i++) {
+      // 下标 i 是否被置于正确的数 nums[i]-1
+      while (0 < nums[i] && nums[i] < len + 1) {
+        int home = nums[i] - 1;
+        if (nums[i] == nums[home]) break;
+        swap(nums, i, home);
+      }
+    }
+    for (int i = 0; i < len; i++) {
+      if (nums[i] == i + 1) continue;
+      return i + 1;
+    }
+    return len + 1; // 无缺失
+  }
+
+  /**
+   * 数组中重复的数字，多个重复，返回任一，区间 [0,len-1]，nums[i] -> i
    *
    * <p>原地哈希，i 需要命中 nums[i]，即将整个数组排序，理应是 nums[i]=i
    *
@@ -1902,33 +1945,12 @@ class DDuplicate extends DefaultArray {
   public int findRepeatNumber(int[] nums) {
     for (int i = 0; i < nums.length; i++) {
       while (nums[i] != i) {
-        if (nums[i] == nums[nums[i]]) return nums[i];
-        swap(nums, i, nums[i]);
-      }
-    }
-    return -1;
-  }
-
-  /**
-   * 缺失的第一个正数
-   *
-   * <p>原地哈希，缺失会命中错误索引，nums[nums[i]-1]!=nums[i]，类似数组中重复的数据
-   *
-   * @param nums the nums
-   * @return int int
-   */
-  public int firstMissingPositive(int[] nums) {
-    int len = nums.length;
-    for (int i = 0; i < len; i++) {
-      // 不断判断 i 位置上被放入正确的数 nums[i]-1
-      while (0 < nums[i] && nums[i] < len + 1) {
-        int home = nums[i] - 1;
-        if (nums[i] == nums[home]) break;
+        int home = nums[i];
+        if (nums[i] == nums[home]) return home;
         swap(nums, i, home);
       }
     }
-    for (int i = 0; i < len; i++) if (nums[i] != i + 1) return i + 1;
-    return len + 1; // 无缺失
+    return -1;
   }
 }
 
@@ -2243,5 +2265,15 @@ abstract class DefaultArray {
       lo += 1;
       hi -= 1;
     }
+  }
+}
+
+interface MountainArray {
+  default int get(int index) {
+    return 0;
+  }
+
+  default int length() {
+    return 0;
   }
 }

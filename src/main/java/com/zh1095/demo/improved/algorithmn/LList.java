@@ -74,18 +74,15 @@ public class LList {
    * @return
    */
   public Node copyRandomList(Node head) {
-    // 1.在每个原节点后面创建一个新节点
     Node cur = head;
     while (cur != null) {
-      Node newNode = new Node(cur.val);
-      newNode.next = cur.next;
-      cur.next = newNode;
-      cur = newNode.next;
+      Node copy = new Node(cur.val);
+      copy.next = cur.next;
+      cur.next = copy;
+      cur = cur.next.next;
     }
-    // 2.逐一设置新节点的随机节点
     cur = head;
-    while (cur != null && cur.next != null) {
-      // 保证 DAG
+    while (cur != null) {
       if (cur.random != null) cur.next.random = cur.random.next;
       cur = cur.next.next;
     }
@@ -117,6 +114,23 @@ public class LList {
   }
 
   /**
+   * 链表中倒数第k个节点
+   *
+   * @param head
+   * @param k
+   * @return
+   */
+  public ListNode getKthFromEnd(ListNode head, int k) {
+    ListNode lo = head, hi = head;
+    for (int i = 0; i < k; i++) hi = hi.next;
+    while (hi != null) {
+      hi = hi.next;
+      lo = lo.next;
+    }
+    return lo;
+  }
+
+  /**
    * 链表中的下一个更大节点，单调栈
    *
    * <p>TODO 参考
@@ -139,23 +153,6 @@ public class LList {
     }
     for (int i : ms) nodes.set(i, 0);
     return nodes.stream().mapToInt(i -> i).toArray();
-  }
-
-  /**
-   * 链表中倒数第k个节点
-   *
-   * @param head
-   * @param k
-   * @return
-   */
-  public ListNode getKthFromEnd(ListNode head, int k) {
-    ListNode lo = head, hi = head;
-    for (int i = 0; i < k; i++) hi = hi.next;
-    while (hi != null) {
-      hi = hi.next;
-      lo = lo.next;
-    }
-    return lo;
   }
 
   private class Node {
@@ -373,13 +370,6 @@ class MergeList extends LList {
       if (cur.next != null) pq.offer(cur.next);
     }
     return dummy.next;
-    //    return (lists.length == 0) ? null : divide(lists, 0, lists.length - 1);
-  }
-
-  private ListNode divide(ListNode[] lists, int lo, int hi) {
-    if (lo == hi) return lists[lo];
-    int mid = lo + (hi - lo) / 2;
-    return mergeTwoLists(divide(lists, lo, mid), divide(lists, mid + 1, hi));
   }
 }
 
@@ -463,18 +453,19 @@ class ReorderList extends LList {
    */
   public ListNode partition(ListNode head, int x) {
     ListNode ltDummy = new ListNode(), gteDummy = new ListNode();
-    ListNode ltHead = ltDummy, gteHead = gteDummy;
-    for (ListNode cur = head; cur != null; cur = cur.next) {
+    ListNode lt = ltDummy, gte = gteDummy, cur = head;
+    while (cur != null) {
       if (cur.val < x) {
-        ltHead.next = cur;
-        ltHead = ltHead.next;
+        lt.next = cur;
+        lt = lt.next;
       } else {
-        gteHead.next = cur;
-        gteHead = gteHead.next;
+        gte.next = cur;
+        gte = gte.next;
       }
+      cur = cur.next;
     }
-    ltHead.next = gteDummy.next;
-    gteHead.next = null;
+    lt.next = gteDummy.next;
+    gte.next = null;
     return ltDummy.next;
   }
 

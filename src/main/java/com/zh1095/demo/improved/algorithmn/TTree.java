@@ -273,9 +273,8 @@ class Build {
      * @return the string
      */
     public String serialize(TreeNode root) {
-      return root == null
-          ? NULL
-          : root.val + "," + serialize(root.left) + "," + serialize(root.right);
+      if (root == null) return NULL;
+      return root.val + "," + serialize(root.left) + "," + serialize(root.right);
       //      if (root == null) return NULL;
       //      StringBuilder str = new StringBuilder();
       //      str.append(root.val);
@@ -303,7 +302,7 @@ class Build {
     private TreeNode dfs21(String[] nodes) {
       if (idx > nodes.length - 1) return null;
       String v = nodes[idx++];
-      //      String cnt = vals[idx++];
+      //      int cnt = Integer.valueOf(nodes[idx++]);
       if (v.equals(NULL)) return null;
       TreeNode root = new TreeNode(Integer.parseInt(v));
       root.left = dfs21(nodes);
@@ -328,9 +327,6 @@ class Build {
  * <p>因此后者为避免 loop 不需要回溯，比如下方 grid[i][j]=2 后不需要再恢复
  */
 class DDFS {
-  /** The Directions. */
-  protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-
   /**
    * 路径总和III，返回路径总数，但从任意点出发，题设值不重复，前缀和
    *
@@ -599,6 +595,7 @@ class DDFS {
     dfs22(n, k, factorial, 0, path, new boolean[n + 1]);
     return path.toString();
   }
+
   // 已经选择了几个数字，其值恰好等于这一步需要确定的下标位置
   private void dfs22(
       int n, int k, int[] factorial, int start, StringBuilder path, boolean[] visited) {
@@ -616,6 +613,8 @@ class DDFS {
       return;
     }
   }
+
+  protected final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
   protected boolean inArea(char[][] board, int i, int j) {
     return 0 <= i && i < board.length && 0 <= j && j < board[0].length;
@@ -1763,8 +1762,9 @@ class BacktrackingSearch extends DDFS {
     recStack[r][c] = true;
     for (int[] dir : DIRECTIONS) {
       int nX = r + dir[0], nY = c + dir[1];
-      if (!inArea(board, nX, nY) || recStack[nX][nY]) continue;
-      if (bt8(board, nX, nY, word, start + 1, recStack)) return true;
+      if (inArea(board, nX, nY)
+          && !recStack[nX][nY]
+          && bt8(board, nX, nY, word, start + 1, recStack)) return true;
     }
     recStack[r][c] = false;
     return false;
@@ -1913,35 +1913,28 @@ class BacktrackingElse extends DDFS {
     return res;
   }
 
+  private final List<String> res = new ArrayList<>();
+
+  private final StringBuilder path = new StringBuilder();
+
+  private final Set<String> visited = new HashSet<>();
+
   private void bt14(char[] chs, int start, int cl, int cr, int dl, int dr) {
     if (cr > cl || dl < 0 || dr < 0) return;
-    String cur = path.toString() + '#' + start;
-    if (visited.contains(cur)) return;
-    visited.add(cur);
+    String key2Path = path.toString() + '#' + start;
+    if (visited.contains(key2Path)) return;
+    visited.add(key2Path);
     if (start == chs.length) {
       if (dl == 0 && dr == 0) res.add(path.toString());
       return;
     }
-    char ch = chs[start];
-    start += 1;
-    if (ch == '(') {
-      bt14(chs, start, cl, cr, dl - 1, dr);
-      cl += 1;
-    }
-    if (ch == ')') {
-      bt14(chs, start, cl, cr, dl, dr - 1);
-      cr += 1;
-    }
+    char ch = chs[start++];
+    if (ch == '(') bt14(chs, start, cl++, cr, dl - 1, dr);
+    if (ch == ')') bt14(chs, start, cl, cr++, dl, dr - 1);
     path.append(ch);
     bt14(chs, start, cl, cr, dl, dr);
     path.delete(path.length() - 1, path.length());
   }
-
-  private List<String> res = new ArrayList<>();
-
-  private StringBuilder path = new StringBuilder();
-
-  private final Set<String> visited = new HashSet<>();
 
   /**
    * 验证IP地址
