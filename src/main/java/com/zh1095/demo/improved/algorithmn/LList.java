@@ -293,6 +293,27 @@ class ReverseList extends LList {
 /** 收集合并相关 */
 class MergeList extends LList {
   /**
+   * 合并k个有序链表，大顶堆/分治 up-to-bottom
+   *
+   * <p>下方「排序链表」则为 bottom-to-up
+   *
+   * @param lists the lists
+   * @return the list node
+   */
+  public ListNode mergeKLists(ListNode[] lists) {
+    if (lists == null || lists.length == 0) return null;
+    Queue<ListNode> pq = new PriorityQueue<>(lists.length, (n1, n2) -> n1.val - n2.val);
+    for (ListNode h : lists) if (h != null) pq.offer(h);
+    ListNode dummy = new ListNode(), cur = dummy;
+    while (!pq.isEmpty()) {
+      cur.next = pq.poll();
+      cur = cur.next;
+      if (cur.next != null) pq.offer(cur.next);
+    }
+    return dummy.next;
+  }
+
+  /**
    * 两数相加，本质即外排，考虑进位即可
    *
    * <p>模板保持 mergeTwoLists & addStrings & addTwoNumbers 一致
@@ -347,27 +368,6 @@ class MergeList extends LList {
       cur.next = dummy.next; // 头插
       dummy.next = cur;
       carry = tmp / 10;
-    }
-    return dummy.next;
-  }
-
-  /**
-   * 合并k个有序链表，大顶堆/分治 up-to-bottom
-   *
-   * <p>下方「排序链表」则为 bottom-to-up
-   *
-   * @param lists the lists
-   * @return the list node
-   */
-  public ListNode mergeKLists(ListNode[] lists) {
-    if (lists == null || lists.length == 0) return null;
-    Queue<ListNode> pq = new PriorityQueue<>(lists.length, (n1, n2) -> n1.val - n2.val);
-    for (ListNode h : lists) if (h != null) pq.offer(h);
-    ListNode dummy = new ListNode(), cur = dummy;
-    while (!pq.isEmpty()) {
-      cur.next = pq.poll();
-      cur = cur.next;
-      if (cur.next != null) pq.offer(cur.next);
     }
     return dummy.next;
   }

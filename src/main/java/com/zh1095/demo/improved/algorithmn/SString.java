@@ -720,30 +720,50 @@ class SSubString {
   }
 
   /**
-   * 至少有k个重复字符的最长子串，同个字符的个数。
-   *
-   * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
+   * 验证回文串，忽略空格与大小写，两侧聚拢
    *
    * @param s the s
-   * @param k the k
-   * @return int
+   * @return boolean boolean
    */
-  public int longestSubstring(String s, int k) {
-    if (s.length() < k) return 0;
-    int[] counter = new int[26];
+  public boolean isPalindrome(String s) {
     char[] chs = s.toCharArray();
-    for (char ch : chs) counter[ch - 'a'] += 1;
-    for (char ch : chs) {
-      if (counter[ch - 'a'] >= k) continue;
-      int maxLen = 0;
-      for (String seg : s.split(String.valueOf(ch)))
-        maxLen = Math.max(maxLen, longestSubstring(seg, k));
-      return maxLen;
+    int lo = 0, hi = s.length() - 1;
+    while (lo < hi) {
+      while (lo < hi && !Character.isLetterOrDigit(chs[lo])) lo += 1;
+      while (lo < hi && !Character.isLetterOrDigit(chs[hi])) hi -= 1;
+      if (lo >= hi) break;
+      if (Character.toLowerCase(chs[lo]) != Character.toLowerCase(chs[hi])) return false;
+      lo += 1;
+      hi -= 1;
     }
-    return s.length();
+    return true;
+  }
+
+  /**
+   * 验证回文字符串II
+   *
+   * @param s
+   * @return
+   */
+  public boolean validPalindrome(String s) {
+    char[] chs = s.toCharArray();
+    int lo = 0, hi = chs.length - 1;
+    while (lo < hi) {
+      // 右边减一或左边加一
+      if (chs[lo] != chs[hi]) return isPalindrome(chs, lo, hi - 1) || isPalindrome(chs, lo + 1, hi);
+      lo += 1;
+      hi -= 1;
+    }
+    return true;
+  }
+
+  private boolean isPalindrome(char[] s, int lo, int hi) {
+    while (lo < hi) {
+      if (s[lo] != s[hi]) return false;
+      lo += 1;
+      hi -= 1;
+    }
+    return true;
   }
 
   /**
@@ -790,50 +810,30 @@ class SSubString {
   }
 
   /**
-   * 验证回文串，忽略空格与大小写，两侧聚拢
+   * 至少有k个重复字符的最长子串，同个字符的个数。
+   *
+   * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
    *
    * @param s the s
-   * @return boolean boolean
+   * @param k the k
+   * @return int
    */
-  public boolean isPalindrome(String s) {
+  public int longestSubstring(String s, int k) {
+    if (s.length() < k) return 0;
+    int[] counter = new int[26];
     char[] chs = s.toCharArray();
-    int lo = 0, hi = s.length() - 1;
-    while (lo < hi) {
-      while (lo < hi && !Character.isLetterOrDigit(chs[lo])) lo += 1;
-      while (lo < hi && !Character.isLetterOrDigit(chs[hi])) hi -= 1;
-      if (lo >= hi) break;
-      if (Character.toLowerCase(chs[lo]) != Character.toLowerCase(chs[hi])) return false;
-      lo += 1;
-      hi -= 1;
+    for (char ch : chs) counter[ch - 'a'] += 1;
+    for (char ch : chs) {
+      if (counter[ch - 'a'] >= k) continue;
+      int maxLen = 0;
+      for (String seg : s.split(String.valueOf(ch)))
+        maxLen = Math.max(maxLen, longestSubstring(seg, k));
+      return maxLen;
     }
-    return true;
-  }
-
-  /**
-   * 验证回文字符串II
-   *
-   * @param s
-   * @return
-   */
-  public boolean validPalindrome(String s) {
-    char[] chs = s.toCharArray();
-    int lo = 0, hi = chs.length - 1;
-    while (lo < hi) {
-      // 两种情况，右边减一，或左边加一
-      if (chs[lo] != chs[hi]) return isPalindrome(chs, lo, hi - 1) || isPalindrome(chs, lo + 1, hi);
-      lo += 1;
-      hi -= 1;
-    }
-    return true;
-  }
-
-  private boolean isPalindrome(char[] s, int lo, int hi) {
-    while (lo < hi) {
-      if (s[lo] != s[hi]) return false;
-      lo += 1;
-      hi -= 1;
-    }
-    return true;
+    return s.length();
   }
 
   /**
@@ -1000,18 +1000,18 @@ class DicOrder extends DefaultSString {
     //    strs.sort((s1, s2) -> (s1 + s2).compareTo(s2 + s1));
     StringBuilder maxNum = new StringBuilder();
     for (String n : strs) maxNum.append(n);
-    // 「最大数」需要去除前导零，因为可能有 02>20
+    // 「最大数」需去除前导零，如 02>20
     int start = 0;
     while (start < nums.length - 1 && maxNum.charAt(start) == '0') start += 1;
     return maxNum.substring(start);
   }
 
   /**
-   * 最大交换，只交换一次任意两位的数，使其结果的数值是所有方案中最大的
+   * 最大交换，类似「划分字母区间」只交换一次任意两位的数，使其结果的数值是所有方案中最大的
    *
    * <p>贪心，将较高位的 n 与后面 m 交换，需满足 m>n 且 m 尽可能靠后
    *
-   * <p>TODO 类似「划分字母区间」参考
+   * <p>参考
    * https://leetcode-cn.com/problems/maximum-swap/solution/2021316-zui-da-jiao-huan-quan-chang-zui-ery0x/
    *
    * @param num
@@ -1022,10 +1022,10 @@ class DicOrder extends DefaultSString {
     // 收集每个数字最后出现的索引
     int[] upperBounds = new int[10];
     for (int i = 0; i < chs.length; i++) upperBounds[chs[i] - '0'] = i;
-    // 查找首个值更大、位更高的数字
-    for (int i = 0; i < chs.length; i++) { // 自高位顺序遍历
-      for (int n = 9; n > chs[i] - '0'; n--) { // 值
-        if (upperBounds[n] <= i) continue; // 位
+    // 查找首个值更大、索引更高
+    for (int i = 0; i < chs.length; i++) {
+      for (int n = 9; n > chs[i] - '0'; n--) {
+        if (upperBounds[n] <= i) continue;
         swap(chs, i, upperBounds[n]);
         return Integer.parseInt(chs.toString());
       }

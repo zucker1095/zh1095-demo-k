@@ -285,12 +285,11 @@ class SubSequence extends DefaultArray {
     for (int i = 1; i <= l1; i++) {
       for (int j = 1; j <= l2; j++) {
         char s = sChs[i - 1], p = pChs[j - 1];
-        // 能匹配
         if (p == s || p == '.') dp[i][j] = dp[i - 1][j - 1];
         if (p == '*') {
+          dp[i][j] = dp[i][j - 2];
           char pre = pChs[j - 2];
-          if (pre == s || pre == '.') dp[i][j] = dp[i][j - 2] || dp[i - 1][j];
-          else dp[i][j] = dp[i][j - 2];
+          if (pre == s || pre == '.') dp[i][j] = dp[i][j] || dp[i - 1][j];
         }
       }
     }
@@ -300,7 +299,7 @@ class SubSequence extends DefaultArray {
      or dp[i][j] = dp[i][j-1] // 单个字符匹配的情况
      or dp[i][j] = dp[i][j-2] // 没有匹配的情况
     */
-    return dp[sChs.length][pChs.length];
+    return dp[l1][l2];
   }
 
   private boolean wildcard(char[] sChs, char[] pChs) {
@@ -335,17 +334,8 @@ class SubSequence extends DefaultArray {
 }
 
 /**
- * 子数组，连续，子序列，不连续，即子数组相当于连续子序列
- *
- * <p>连续子区间可考虑前缀和，常搭配哈希表，因为希望遍历得到前缀和的时候，一边遍历一边记住结果，参考 https://leetcode-cn.com/circle/discuss/SrePlc/
- *
- * <p>最长上升子序列(LIS):Longest Increasing Subsequence
- *
- * <p>最长连续序列(LCTS):Longest Consecutive Sequence
- *
- * <p>最长连续递增序列(LCIS):Longest Continuous Increasing Subsequence
- *
- * <p>最长公共子序列(LCMS):Longest Common Subsequence
+ * 子数组相当于连续子序列，连续子区间可考虑前缀和，常搭配哈希表，因为希望遍历得到前缀和的时候，一边遍历一边记住结果，参考
+ * https://leetcode-cn.com/circle/discuss/SrePlc/
  *
  * @author cenghui
  */
@@ -415,65 +405,6 @@ class SubArray {
       maxLen = Math.max(maxLen, curLen);
     }
     return maxLen;
-  }
-
-  /**
-   * 单词拆分，wordDict 是否可组合为 s，可重复使用
-   *
-   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 至少其一匹配，比如 wordDict=["apple", "pen", "code"]
-   *
-   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
-   *
-   * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
-   *
-   * <p>扩展 1，返回拆分结果，参考 II
-   *
-   * @param s the s
-   * @param wordDict the word dict
-   * @return boolean boolean
-   */
-  public boolean wordBreak(String s, List<String> wordDict) {
-    // 记录最长的单词，下方 [j:i-1] 过长，无法用单词补足，可省略
-    int len = s.length(), maxLen = 0;
-    wordSet = new HashSet(wordDict);
-    //    for (String w : wordDict) {
-    //      wordSet.add(w);
-    //      maxLen = Math.max(maxLen, w.length());
-    //    }
-    boolean[] dp = new boolean[len + 1];
-    dp[0] = true;
-    // [0:hi-1] -> [0:lo-1] & [lo:hi-1]
-    for (int hi = 1; hi < len + 1; hi++) {
-      for (int lo = hi; lo > -1; lo--) {
-        //        if (lo + maxLen < hi) break;
-        if (dp[lo] && wordSet.contains(s.substring(lo, hi))) {
-          dp[hi] = true;
-          break;
-        }
-      }
-    }
-    return dp[len];
-    // 返回拆分结果
-    //    List<String> res = new ArrayList<>();
-    //    if (dp[len]) bt17(s, len - 1, dp, new ArrayDeque<>(), res);
-    //    return res;
-  }
-
-  private Set<String> wordSet;
-
-  private void bt17(String s, int start, boolean[] dp, Deque<String> path, List<String> res) {
-    if (start == -1) {
-      res.add(String.join(" ", path));
-      return;
-    }
-    for (int i = start; i > -1; i--) {
-      String suffix = s.substring(i, start + 1);
-      if (wordSet.contains(suffix) && dp[i]) {
-        path.offerFirst(suffix);
-        bt17(s, i - 1, dp, path, res);
-        path.pollFirst();
-      }
-    }
   }
 
   /**
@@ -701,29 +632,6 @@ class Path {
     return cur;
   }
 
-  // https://blog.csdn.net/Chenguanxixixi/article/details/119540929
-  private int[] getPath(int[] nums) {
-    int len = nums.length;
-    int[] dp = new int[len], path = new int[len];
-    if (len == 1) dp[0] = nums[0];
-    else if (len == 2) dp[0] = Math.max(nums[0], nums[1]);
-    else {
-      dp[0] = nums[0];
-      dp[1] = Math.max(nums[0], nums[1]);
-      for (int j = 2; j < len; j++) {
-        dp[j] = Math.max(dp[j - 2] + nums[j], dp[j - 1]);
-      }
-    }
-    int idx = Arrays.binarySearch(dp, dp[len - 1]), i = 0;
-    path[i] = idx + 1;
-    while (dp[idx] > nums[idx]) {
-      idx = Arrays.binarySearch(dp, dp[idx] - nums[idx]);
-      i += 1;
-      path[i] = idx + 1;
-    }
-    return path;
-  }
-
   // 循环数组
   private int rob2(int[] nums) {
     int len = nums.length;
@@ -779,6 +687,29 @@ class Path {
   //  }
   //    private int[] deconding(int cols, int idx) { return new int[] {idx / cols, idx % cols}; }
   //    private int encoding(int cols, int x, int y) { return x * cols + y; }
+
+  // 「打家劫舍」https://blog.csdn.net/Chenguanxixixi/article/details/119540929
+  private int[] getPath(int[] nums) {
+    int len = nums.length;
+    int[] dp = new int[len], path = new int[len];
+    if (len == 1) dp[0] = nums[0];
+    else if (len == 2) dp[0] = Math.max(nums[0], nums[1]);
+    else {
+      dp[0] = nums[0];
+      dp[1] = Math.max(nums[0], nums[1]);
+      for (int j = 2; j < len; j++) {
+        dp[j] = Math.max(dp[j - 2] + nums[j], dp[j - 1]);
+      }
+    }
+    int idx = Arrays.binarySearch(dp, dp[len - 1]), i = 0;
+    path[i] = idx + 1;
+    while (dp[idx] > nums[idx]) {
+      idx = Arrays.binarySearch(dp, dp[idx] - nums[idx]);
+      i += 1;
+      path[i] = idx + 1;
+    }
+    return path;
+  }
 }
 
 /** 最优解，状态压缩 & 双指针，所有需要打印路径的题型，基本都涉及回溯 */
@@ -844,7 +775,6 @@ class Optimal {
 
   // 有限次
   private int maxProfitI(int[] prices) {
-    // 以限两次为例
     int buy1 = Integer.MIN_VALUE, sell1 = 0, buy2 = Integer.MIN_VALUE, sell2 = 0;
     for (int p : prices) {
       buy1 = Math.max(buy1, -p); // max(不买，买了) 第一次买
@@ -872,16 +802,16 @@ class Optimal {
     int buy = Integer.MIN_VALUE, sell = 0;
     //    int lock = 0; // 表示无法交易的时候
     for (int p : prices) {
+      // 因为能够多次买卖，所以每天都要尝试能否更优解
+      buy = Math.max(buy, sell - p);
+      sell = Math.max(sell, buy + p);
+      // 手续费
+      //      buy = Math.max(buy, sell - p - fee);
       // 冷冻期
       //      int preBuy = buy, preSell = sell;
       //      buy = Math.max(preBuy, lock - p);
       //      sell = Math.max(preSell, preBuy + p);
       //      lock = preSell;
-      // 因为能够多次买卖，所以每天都要尝试能否更优解
-      buy = Math.max(buy, sell - p);
-      sell = Math.max(sell, buy + p);
-      // 手续费
-      //        buy = Math.max(buy, sell - p - fee);
     }
     return sell;
   }
@@ -1105,6 +1035,65 @@ class CCount {
 /** 划分或分割，背包，贪心，回溯，二分 */
 class Split {
   /**
+   * 单词拆分，wordDict 是否可组合为 s，可重复使用
+   *
+   * <p>dp[i] 表示 s[0:i-1] 位是否可被 wordDict 至少其一匹配，比如 wordDict=["apple", "pen", "code"]
+   *
+   * <p>则 s="applepencode" 有递推关系 dp[8]=dp[5]+check("pen")
+   *
+   * <p>参考 https://leetcode.cn/problems/word-break/solution/dan-ci-chai-fen-by-leetcode-solution/
+   *
+   * <p>扩展 1，返回拆分结果，参考 II
+   *
+   * @param s the s
+   * @param wordDict the word dict
+   * @return boolean boolean
+   */
+  public boolean wordBreak(String s, List<String> wordDict) {
+    // 记录最长的单词，下方 [j:i-1] 过长，无法用单词补足，可省略
+    int len = s.length(), maxLen = 0;
+    wordSet = new HashSet(wordDict);
+    //    for (String w : wordDict) {
+    //      wordSet.add(w);
+    //      maxLen = Math.max(maxLen, w.length());
+    //    }
+    boolean[] dp = new boolean[len + 1];
+    dp[0] = true;
+    // [0:hi-1] -> [0:lo-1] & [lo:hi-1]
+    for (int hi = 1; hi < len + 1; hi++) {
+      for (int lo = hi; lo > -1; lo--) {
+        //        if (lo + maxLen < hi) break;
+        if (dp[lo] && wordSet.contains(s.substring(lo, hi))) {
+          dp[hi] = true;
+          break;
+        }
+      }
+    }
+    return dp[len];
+    // 返回拆分结果
+    //    List<String> res = new ArrayList<>();
+    //    if (dp[len]) bt17(s, len - 1, dp, new ArrayDeque<>(), res);
+    //    return res;
+  }
+
+  private Set<String> wordSet;
+
+  private void bt17(String s, int start, boolean[] dp, Deque<String> path, List<String> res) {
+    if (start == -1) {
+      res.add(String.join(" ", path));
+      return;
+    }
+    for (int i = start; i > -1; i--) {
+      String suffix = s.substring(i, start + 1);
+      if (wordSet.contains(suffix) && dp[i]) {
+        path.offerFirst(suffix);
+        bt17(s, i - 1, dp, path, res);
+        path.pollFirst();
+      }
+    }
+  }
+
+  /**
    * 划分字母区间，类似「最大交换」贪心，返回可划分的子串上限，同一种字母只能在一个子串内
    *
    * <p>参考
@@ -1326,10 +1315,10 @@ class OptimalElse {
   public int numSquares(int n) {
     int[] dp = new int[n + 1];
     for (int i = 1; i <= n; i++) {
-      dp[i] = i; // 至少全由 1 组成，即 worst case
+      dp[i] = i;
       for (int j = 1; j * j <= i; j++) {
-        int sum = i - j * j;
-        dp[i] = Math.min(dp[i], dp[sum] + 1);
+        int d = j * j;
+        dp[i] = Math.min(dp[i], 1 + dp[i - d]);
       }
     }
     return dp[n];

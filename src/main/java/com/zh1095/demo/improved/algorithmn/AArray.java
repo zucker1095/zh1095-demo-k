@@ -1760,7 +1760,7 @@ class MonotonicStack {
     int[] hs = new int[len + 2];
     System.arraycopy(heights, 0, hs, 1, len);
     Deque<Integer> ms = new ArrayDeque<>(); // 保存索引
-    for (int i = 0; i < hs.length; i++) maxArea = pushAndReturn(hs, i, maxArea, ms);
+    for (int i = 0; i < hs.length; i++) maxArea = pushAndMax(hs, i, maxArea, ms);
     return maxArea;
   }
 
@@ -1779,11 +1779,11 @@ class MonotonicStack {
     for (char[] row : matrix) {
       Deque<Integer> ms = new ArrayDeque<>();
       for (int i = 0; i < hs.length; i++) {
-        if (i > 0 && i < len + 1) { // 哨兵内
+        if (0 < i && i < len + 1) {
           if (row[i - 1] == '1') hs[i] += 1;
           else hs[i] = 0;
         }
-        maxArea = pushAndReturn(hs, i, maxArea, ms);
+        maxArea = pushAndMax(hs, i, maxArea, ms);
       }
     }
     return maxArea;
@@ -1791,10 +1791,10 @@ class MonotonicStack {
 
   // 放入单调递减栈，比较的是在 hs 内的取值，并返回更新后的最大面积
   // 面积的高为 hs[pollLast] 宽为弹出后与 i 的距离
-  private int pushAndReturn(int[] hs, int i, int maxArea, Deque<Integer> ms) {
+  private int pushAndMax(int[] hs, int i, int maxArea, Deque<Integer> ms) {
     while (!ms.isEmpty() && hs[ms.peekLast()] > hs[i]) {
-      int cur = ms.pollLast(), pre = ms.peekLast();
-      maxArea = Math.max(maxArea, (i - pre - 1) * hs[cur]);
+      int pre1 = ms.pollLast(), pre2 = ms.peekLast(), len = i - pre2 - 1;
+      maxArea = Math.max(maxArea, len * hs[pre1]);
     }
     ms.offerLast(i);
     return maxArea;
@@ -1864,7 +1864,7 @@ class MonotonicStack {
 /** 重复，原地哈希 */
 class DDuplicate extends DefaultArray {
   /**
-   * 寻找重复数，仅一个重复，类似「环形链表II」nums[i] -> i+1
+   * 寻找重复数，[1,n] 仅一个重复，类似「环形链表II」nums[i] -> i+1
    *
    * <p>参考
    * https://leetcode-cn.com/problems/find-the-duplicate-number/solution/kuai-man-zhi-zhen-de-jie-shi-cong-damien_undoxie-d/

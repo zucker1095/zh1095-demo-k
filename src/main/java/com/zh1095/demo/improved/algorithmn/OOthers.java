@@ -743,9 +743,9 @@ class MMath {
    * @return int int
    */
   public int mySqrt(int x) {
-    if (x == 0 || x == 1) return x;
+    if (x < 2) return x;
     int lo = 1, hi = x / 2;
-    while (lo < hi) { // upper
+    while (lo < hi) { // upperBound
       int mid = lo + (hi - lo + 1) / 2;
       if (mid <= x / mid) lo = mid;
       else hi = mid - 1;
@@ -864,24 +864,25 @@ class MMath {
    * @param de 分母
    * @return
    */
-  public String fractionToDecimal(int num, int de) {
-    if (num * de < 0) return '-' + fractionToDecimal(Math.abs(num), Math.abs(de));
+  public String fractionToDecimal(int numerator, int denominator) {
+    long num = numerator, de = denominator;
+    if (num % de == 0) return String.valueOf(num / de);
+    if (num * de < 0) return '-' + fractionToDecimal((int) Math.abs(num), (int) Math.abs(de));
+    Map<Long, Integer> de2Idx = new HashMap<>();
     StringBuilder res = new StringBuilder();
     res.append(num / de);
-    res.append(".");
-    Map<Long, Integer> de2LoIdx = new HashMap<>();
-    for (long n = num % de; n != 0; n %= de) {
-      // 出现过相同的余数说明开始出现循环小数
-      if (de2LoIdx.containsKey(n)) {
-        res.insert(de2LoIdx.get(n), "(");
-        res.append(")");
+    res.append('.');
+    long n = num % de;
+    while (n != 0) {
+      if (de2Idx.containsKey(n)) {
+        res.insert(de2Idx.get(n), "(");
+        res.append(')');
         break;
       }
-      // 记录每一个余数对应到结果中的位置
-      de2LoIdx.put(n, res.length());
-      // 模拟除法的过程
+      de2Idx.put(n, res.length());
       n *= 10;
       res.append(n / de);
+      n %= de;
     }
     return res.toString();
   }

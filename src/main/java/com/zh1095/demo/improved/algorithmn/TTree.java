@@ -836,9 +836,8 @@ class BBSTDFS {
    */
   public boolean verifyPostorder(int[] postorder) {
     Deque<Integer> ms = new ArrayDeque<>();
-    // 表示上一个根节点的元素，最后一个元素可以看成无穷大节点的左孩子
     int pre = Integer.MAX_VALUE;
-    // 逆向遍历即翻转的先序遍历
+    // 翻转的前序遍历
     for (int i = postorder.length - 1; i > -1; i--) {
       int cur = postorder[i];
       if (cur > pre) return false;
@@ -986,8 +985,6 @@ class Postorder {
     return solo;
   }
 
-  private int diameter = 0; // 「二叉树的直径」
-
   /**
    * 二叉树的直径，即最长路径，后序，类似「二叉树的最大路径和」
    *
@@ -1000,6 +997,8 @@ class Postorder {
     singleSide2(root);
     return diameter - 1;
   }
+
+  private int diameter = 0; // 「二叉树的直径」
 
   private int singleSide2(TreeNode root) {
     if (root == null) return 0;
@@ -1599,12 +1598,13 @@ class BacktrackingCombinatorics {
       int[] nums, Deque<Integer> path, List<List<Integer>> res, int start, int target) {
     if (target == 0) res.add(new ArrayList<>(path));
     for (int i = start; i < nums.length; i++) {
-      if (nums[i] > target) break;
-      path.offerLast(nums[i]);
-      bt2(nums, path, res, i, target - nums[i]);
+      int n = nums[i];
+      if (n > target) break;
       // 不可选重复则跳过，且当前路径下一步选下一个元素
       //      if (i > start && candidates[i - 1] == candidates[i]) continue;
-      //      bt2(candidates, path, res, i + 1, target - candidates[i]);
+      path.offerLast(n);
+      bt2(nums, path, res, i, target - n);
+      //      bt2(candidates, path, res, i + 1, target - n);
       path.pollLast();
     }
   }
