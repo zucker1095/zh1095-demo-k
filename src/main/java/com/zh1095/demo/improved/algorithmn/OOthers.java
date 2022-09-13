@@ -776,6 +776,9 @@ class MMath {
 
   // 特判零次幂 & 递归二分 & 判断剩余幂
   private double quickMulti(double x, int n) {
+    if (n == 0) return 1;
+    double dou = Math.pow(quickMulti(x, n / 2), 2);
+    return dou * (n % 2 == 0 ? 1 : x);
     //    double res = 1.0, y = x;
     //    while (n > 0) {
     //      if (n % 2 == 1) res *= y;
@@ -783,9 +786,6 @@ class MMath {
     //      n /= 2;
     //    }
     //    return res;
-    if (n == 0) return 1;
-    double dou = Math.pow(quickMulti(x, n / 2), 2);
-    return dou * (n % 2 == 0 ? 1 : x);
   }
 
   /**

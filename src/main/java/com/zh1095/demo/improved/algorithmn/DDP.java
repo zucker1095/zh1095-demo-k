@@ -29,8 +29,7 @@ class SubSequence extends DefaultArray {
     int len = nums.length, end = 0;
     // tail[i] 表示长度为 i+1 的所有上升子序列的结尾的最小数字，如 3465 中 tail[1]=4
     int[] tails = new int[len];
-    // dp[i] 表示以 i 结尾的 LIS 用于求路径
-    //    int[] dp = new int[len];
+    //    int[] dp = new int[len]; // dp[i] 表示以 i 结尾的 LIS 用于求路径
     tails[0] = nums[0];
     // dp[0] = 1;
     for (int n : nums) {
@@ -426,19 +425,19 @@ class SubArray {
    * @return int
    */
   public int findTargetSumWays(int[] nums, int target) {
-    int sum = 0;
+    int sum = target;
     for (int n : nums) sum += n;
-    if ((target + sum) % 2 != 0) return 0;
-    int maxCapacity = (target + sum) / 2;
-    if (maxCapacity < 0) maxCapacity *= -1;
-    int[] dp = new int[maxCapacity + 1];
+    if (sum % 2 != 0) return 0;
+    int maxCap = sum / 2;
+    if (maxCap < 0) maxCap *= -1;
+    int[] dp = new int[maxCap + 1];
     dp[0] = 1;
     for (int volume : nums) {
-      for (int cap = maxCapacity; cap >= volume; cap--) {
+      for (int cap = maxCap; cap >= volume; cap--) {
         dp[cap] += dp[cap - volume];
       }
     }
-    return dp[maxCapacity];
+    return dp[maxCap];
   }
 }
 
@@ -1063,14 +1062,12 @@ class Split {
     for (int hi = 1; hi < len + 1; hi++) {
       for (int lo = hi; lo > -1; lo--) {
         //        if (lo + maxLen < hi) break;
-        if (dp[lo] && wordSet.contains(s.substring(lo, hi))) {
-          dp[hi] = true;
-          break;
-        }
+        dp[hi] = dp[lo] && wordSet.contains(s.substring(lo, hi));
+        if (dp[hi]) break;
       }
     }
     return dp[len];
-    // 返回拆分结果
+    // II 返回拆分结果
     //    List<String> res = new ArrayList<>();
     //    if (dp[len]) bt17(s, len - 1, dp, new ArrayDeque<>(), res);
     //    return res;
@@ -1246,18 +1243,18 @@ class Split {
   public boolean canPartition(int[] nums) {
     int sum = 0;
     for (int n : nums) sum += n;
-    if ((sum & 1) == 1) return false;
-    int maxCapacity = sum / 2;
-    boolean[] dp = new boolean[maxCapacity + 1];
+    if (sum % 2 != 0) return false;
+    int maxCap = sum / 2;
+    boolean[] dp = new boolean[maxCap + 1];
     dp[0] = true;
-    if (nums[0] <= maxCapacity) dp[nums[0]] = true;
+    if (nums[0] <= maxCap) dp[nums[0]] = true;
     for (int i = 1; i < nums.length; i++) {
-      for (int j = maxCapacity; nums[i] <= j; j--) {
-        if (dp[maxCapacity]) return true;
+      for (int j = maxCap; nums[i] <= j; j--) {
+        if (dp[maxCap]) return true;
         dp[j] = dp[j] || dp[j - nums[i]];
       }
     }
-    return dp[maxCapacity];
+    return dp[maxCap];
   }
 
   /**

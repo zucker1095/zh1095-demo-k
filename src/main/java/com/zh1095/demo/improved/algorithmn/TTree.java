@@ -370,9 +370,10 @@ class DDFS {
     int cnt = 0;
     for (int i = 0; i < grid.length; i++) {
       for (int j = 0; j < grid[0].length; j++) {
-        if (grid[i][j] != '1') continue;
-        dfs1(grid, i, j);
-        cnt += 1;
+        if (grid[i][j] == '1') {
+          dfs1(grid, i, j);
+          cnt += 1;
+        }
       }
     }
     return cnt;
@@ -491,7 +492,9 @@ class DDFS {
   }
 
   /**
-   * 被围绕的区域，填充所有被 X 围绕的 O，因此标记和边界联通的 O 路径即可。
+   * 被围绕的区域，填充所有被 X 围绕的 O，路径：边 O -> # -> O 并 O -> X
+   *
+   * <p>先分别从四个边开始标记 O 的点，再将所有 O 标回 X，最后将被标记的改回 O
    *
    * <p>参考
    * https://leetcode.cn/problems/surrounded-regions/solution/bfsdi-gui-dfsfei-di-gui-dfsbing-cha-ji-by-ac_pipe/
@@ -636,7 +639,7 @@ class BBSTInorder {
   public boolean isValidBST(TreeNode root) {
     Deque<TreeNode> stack = new ArrayDeque<>();
     TreeNode cur = root;
-    double pre = -Double.MAX_VALUE; // Integer.MIN_VALUE 即可，此处仅为通过官方测试
+    double pre = -Double.MAX_VALUE; // 最小值即可，此处仅为通过官方测试
     while (cur != null || !stack.isEmpty()) {
       while (cur != null) {
         stack.offerLast(cur);
@@ -769,9 +772,6 @@ class BBSTInorder {
 
 /** 二叉搜索树，深搜为主 */
 class BBSTDFS {
-  // 「二叉搜索树与双向链表」中序中当前遍历的上个节点 & 链表头节点，后者不变。
-  private TreeNode head, pre;
-
   /**
    * 二叉搜索树与双向链表/将二叉搜索树转换为排序的双向链表，双向链表，即补充叶节点的指针，中序
    *
@@ -783,11 +783,13 @@ class BBSTDFS {
   public TreeNode treeToDoublyList(TreeNode root) {
     if (root == null) return null;
     dfs7(root);
-    // 此时 pre 指向尾，连接首尾
-    head.left = pre;
     pre.right = head;
+    head.left = pre;
     return head;
   }
+
+  // 「二叉搜索树与双向链表」中序中当前遍历的上个节点 & 链表头节点，后者不变。
+  private TreeNode head, pre;
 
   // 左中右，尾插，每次只处理前驱即左子树
   private void dfs7(TreeNode root) {

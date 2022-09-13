@@ -86,14 +86,8 @@ public class LList {
       if (cur.random != null) cur.next.random = cur.random.next;
       cur = cur.next.next;
     }
-    // 3.分离
     Node dummy = new Node(-1), lo = dummy, hi = head;
-    while (hi != null) {
-      lo.next = hi.next;
-      lo = lo.next;
-      hi.next = lo.next;
-      hi = hi.next;
-    }
+    merge2(lo, hi);
     return dummy.next;
   }
 
@@ -153,6 +147,34 @@ public class LList {
     }
     for (int i : ms) nodes.set(i, 0);
     return nodes.stream().mapToInt(i -> i).toArray();
+  }
+
+  protected void merge1(ListNode l1, ListNode l2) {
+    while (l1 != null && l2 != null) {
+      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
+      l1.next = l2;
+      l1 = l1Nxt;
+      l2.next = l1;
+      l2 = l2Nxt;
+    }
+  }
+
+  protected void merge2(ListNode lo, ListNode hi) {
+    while (hi != null && hi.next != null) {
+      lo.next = hi.next;
+      lo = lo.next;
+      hi.next = lo.next;
+      hi = hi.next;
+    }
+  }
+
+  protected void merge2(Node lo, Node hi) {
+    while (hi != null && hi.next != null) {
+      lo.next = hi.next;
+      lo = lo.next;
+      hi.next = lo.next;
+      hi = hi.next;
+    }
   }
 
   private class Node {
@@ -386,14 +408,7 @@ class ReorderList extends LList {
     // 偶数个节点返回前一个
     ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
     mid.next = null;
-    l2 = reverseList(l2);
-    while (l1 != null && l2 != null) { // 尾插
-      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
-      l1.next = l2;
-      l1 = l1Nxt;
-      l2.next = l1;
-      l2 = l2Nxt;
-    }
+    merge1(l1, reverseList(l2)); // 尾插
   }
 
   /**
@@ -424,7 +439,7 @@ class ReorderList extends LList {
    */
   public ListNode oddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode evenHead = head.next, oddTail = splitOddTail(head);
+    ListNode oddTail = splitOddTail(head), evenHead = head.next;
     oddTail.next = evenHead;
     return head;
   }
@@ -432,14 +447,8 @@ class ReorderList extends LList {
   // 分离奇偶链表，并返回奇链表的尾
   private ListNode splitOddTail(ListNode head) {
     if (head == null) return null;
-    ListNode odd = head, even = head.next;
-    while (even != null && even.next != null) {
-      odd.next = even.next;
-      odd = odd.next;
-      even.next = odd.next;
-      even = even.next;
-    }
-    return odd;
+    merge2(head, head);
+    return head;
   }
 
   /**

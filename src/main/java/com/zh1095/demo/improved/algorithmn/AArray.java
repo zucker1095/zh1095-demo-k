@@ -752,12 +752,8 @@ class DichotomyClassic extends DefaultArray {
   // 扩展1，求第 k 小参下 annotate
   private int getLargestElement(int[] nums1, int[] nums2, int k) {
     int p1 = nums1.length - 1, p2 = nums2.length - 1;
-    //    int p1 = 0, p2 = 0;
     while (p1 > -1 && p2 > -1 && k > 1) {
-      //    while (p1 < l1 && p2 < l2 && k > 1) {
       int mid = k / 2, nxt1 = 1 + Math.max(p1 - mid, -1), nxt2 = 1 + Math.max(p2 - mid, -1);
-      //          nxt1 = Math.min(p1 + mid, l1) - 1,
-      //          nxt2 = Math.min(p2 + mid, l2) - 1;
       if (nums1[nxt1] < nums2[nxt2]) {
         k -= p2 - nxt2 + 1;
         p2 = nxt2 - 1;
@@ -765,17 +761,21 @@ class DichotomyClassic extends DefaultArray {
         k -= p1 - nxt1 + 1;
         p1 = nxt1 - 1;
       }
-      //      if (nums1[nxt1] < nums2[nxt2]) {
-      //        ranking -= (nxt1 - p1 + 1);
-      //        p1 = nxt1 + 1;
-      //      } else {
-      //        ranking -= (nxt2 - p2 + 1);
-      //        p2 = nxt2 + 1;
-      //      }
     }
     if (p1 == -1) return nums2[p2 - k + 1];
     if (p2 == -1) return nums1[p1 - k + 1];
     return Math.max(nums1[p1], nums2[p2]);
+    //    int p1 = 0, p2 = 0;
+    //    while (p1 < l1 && p2 < l2 && k > 1) {
+    //      int mid = k / 2, nxt1 = Math.min(p1 + mid, l1) - 1, nxt2 = Math.min(p2 + mid, l2) - 1;
+    //      if (nums1[nxt1] < nums2[nxt2]) {
+    //        ranking -= (nxt1 - p1 + 1);
+    //        p1 = nxt1 + 1;
+    //      } else {
+    //        ranking -= (nxt2 - p2 + 1);
+    //        p2 = nxt2 + 1;
+    //      }
+    //    }
     //    if (p1 == l1) return nums2[p2 + k - 1];
     //    if (p2 == l2) return nums1[p1 + k - 1];
     //    return Math.min(nums1[p1], nums2[p2]);
@@ -1102,10 +1102,12 @@ class Interval {
    */
   public int[][] merge(int[][] intervals) {
     Arrays.sort(intervals, (v1, v2) -> v1[0] - v2[0]);
-    int[][] res = new int[intervals.length][2];
-    int idx = -1;
-    for (int[] itv : intervals) {
-      if (idx == -1 || itv[0] > res[idx][1]) res[++idx] = itv;
+    int idx = 0, len = intervals.length;
+    int[][] res = new int[len][2];
+    res[0] = intervals[0];
+    for (int i = 1; i < len; i++) {
+      int[] itv = intervals[i];
+      if (itv[0] > res[idx][1]) res[++idx] = itv;
       else res[idx][1] = Math.max(res[idx][1], itv[1]);
     }
     return Arrays.copyOf(res, idx + 1);
@@ -1677,13 +1679,7 @@ class PreSum {
  */
 class MonotonicStack {
   /**
-   * 移掉k位数字，结果数值最小，单调栈 int n = 高位递增」的数，应尽量删低位。;
-   *
-   * <p>123531 这样「高位递增」的数，应尽量n
-   *
-   * <p>432135 这样「高位递减」的数，应尽量删高位，即让高位变小。
-   *
-   * <p>因此，如果当前遍历的数比栈顶大，符合递增，让它入栈。
+   * 移掉k位数字，结果数值最小，单调栈
    *
    * <p>TODO 参考
    * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
@@ -1695,9 +1691,8 @@ class MonotonicStack {
   public String removeKdigits(String num, int k) {
     StringBuilder ms = new StringBuilder();
     for (char ch : num.toCharArray()) {
-      // peekLast & pollLast
       while (k > 0 && !ms.isEmpty() && ms.charAt(ms.length() - 1) > ch) {
-        ms.setLength(ms.length() - 1);
+        ms.deleteCharAt(ms.length() - 1);
         k -= 1;
       }
       if (ch == '0' && ms.isEmpty()) continue;
@@ -2222,7 +2217,6 @@ class Traversal extends DefaultArray {
   }
 }
 
-/** 提供一些数组的通用方法 */
 abstract class DefaultArray {
   protected int lowerBound(int[] nums, int lo, int hi, int target) {
     if (lo > hi) return -1;

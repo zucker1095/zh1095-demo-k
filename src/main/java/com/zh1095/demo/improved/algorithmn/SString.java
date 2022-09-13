@@ -202,16 +202,15 @@ class WWindow {
    * @return the int
    */
   public int lengthOfLongestSubstring(String s) {
-    // ASCII 表总长
-    int[] window = new int[128];
+    int[] window = new int[128]; // ASCII 表总长
     int maxLen = 1, lo = 0, hi = 0;
     while (hi < s.length()) {
       char add = s.charAt(hi);
       window[add] += 1;
       while (window[add] > 1) {
         char out = s.charAt(lo);
-        window[out] -= 1;
         lo += 1;
+        window[out] -= 1;
       }
       maxLen = Math.max(maxLen, hi - lo + 1);
       hi += 1;
@@ -241,9 +240,9 @@ class WWindow {
           end = hi;
         }
         char out = s.charAt(lo);
+        lo += 1;
         needle[out] += 1;
         if (needle[out] >= 1) cnt += 1;
-        lo += 1;
       }
       hi += 1;
     }
@@ -357,8 +356,8 @@ class WWindow {
       int add = nums[i];
       while (!mq.isEmpty() && add > mq.peekLast()) mq.pollLast();
       mq.offerLast(add);
-      if (i < k - 1) continue;
       int outIdx = i - k + 1, max = mq.peekFirst();
+      if (outIdx < 0) continue;
       if (nums[outIdx] == max) mq.pollFirst();
       winMaxes[outIdx] = max;
     }
@@ -403,25 +402,6 @@ class WWindow {
       hi += 1;
     }
     return maxLen;
-  }
-
-  private static class MonotonicQueue {
-    private final Deque<Integer> mq = new LinkedList<>();
-
-    public void push(int num) {
-      while (mq.size() > 0 && mq.getLast() < num) {
-        mq.pollLast();
-      }
-      mq.offerLast(num);
-    }
-
-    public void pop(int num) {
-      if (mq.size() > 0 && mq.getFirst() == num) mq.removeFirst();
-    }
-
-    public int peek() {
-      return mq.getFirst();
-    }
   }
 }
 
@@ -1357,7 +1337,7 @@ class WWord extends DefaultSString {
  * <p>str to num: multiply by multiple which the char represtants starting from the low order
  */
 class CConvert extends DefaultSString {
-  private final char[] CHARS = "0123456789ABCDEF".toCharArray();
+  private final char[] CHARs = "0123456789ABCDEF".toCharArray();
 
   /**
    * 数字转换为十六进制数，即十进制互转，上方为十六进制转换为数字
@@ -1372,7 +1352,7 @@ class CConvert extends DefaultSString {
     StringBuilder res = new StringBuilder();
     long cur = num < 0 ? (long) (Math.pow(2, 32) + num) : num;
     while (cur > 0) {
-      res.append(CHARS[(int) (cur % 16)]); // 取余
+      res.append(CHARs[(int) (cur % 16)]); // 取余
       cur /= 16; // 除以
     }
     // 10->16
@@ -1418,9 +1398,6 @@ class CConvert extends DefaultSString {
    * @return string string
    */
   public String intToRoman(int num) {
-    // 保证遍历有序
-    final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
-    final String[] ROMANs = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
     StringBuilder roman = new StringBuilder();
     int cur = num;
     for (int i = 0; i < NUMs.length; i++) {
@@ -1433,6 +1410,12 @@ class CConvert extends DefaultSString {
     }
     return roman.toString();
   }
+
+  // 保证遍历有序
+  private final int[] NUMs = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+  private final String[] ROMANs = {
+    "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"
+  };
 
   /**
    * Excel表列序号，26 转十进制，类似罗马数字转整数
@@ -1457,28 +1440,29 @@ class CConvert extends DefaultSString {
    * @return int int
    */
   public int romanToInt(String s) {
-    Map<Character, Integer> mapping =
-        new HashMap<>() {
-          {
-            put('I', 1);
-            put('V', 5);
-            put('X', 10);
-            put('L', 50);
-            put('C', 100);
-            put('D', 500);
-            put('M', 1000);
-          }
-        };
     int sum = 0;
     char[] chs = s.toCharArray();
     for (int i = 0; i < chs.length; i++) {
-      int add = mapping.get(chs[i]);
+      int cur = rom2num.get(chs[i]);
       // IV 与 VI 否则常规的做法是累加即可
-      if (i < chs.length - 1 && add < mapping.get(chs[i + 1])) sum -= add;
-      else sum += add;
+      if (i < chs.length - 1 && rom2num.get(chs[i + 1]) > cur) sum -= cur;
+      else sum += cur;
     }
     return sum;
   }
+
+  private final Map<Character, Integer> rom2num =
+      new HashMap<>() {
+        {
+          put('I', 1);
+          put('V', 5);
+          put('X', 10);
+          put('L', 50);
+          put('C', 100);
+          put('D', 500);
+          put('M', 1000);
+        }
+      };
 
   /**
    * IPv4 与无符号十进制互转
@@ -1524,7 +1508,7 @@ class CConvert extends DefaultSString {
       num *= -1;
     }
     while (num != 0) {
-      res.append(CHARS[num % radix]);
+      res.append(CHARs[num % radix]);
       num /= radix;
     }
     if (ngt) res.append("-");
