@@ -149,25 +149,6 @@ public class LList {
     return nodes.stream().mapToInt(i -> i).toArray();
   }
 
-  protected void merge1(ListNode l1, ListNode l2) {
-    while (l1 != null && l2 != null) {
-      ListNode l1Nxt = l1.next, l2Nxt = l2.next;
-      l1.next = l2;
-      l1 = l1Nxt;
-      l2.next = l1;
-      l2 = l2Nxt;
-    }
-  }
-
-  protected void merge2(ListNode lo, ListNode hi) {
-    while (hi != null && hi.next != null) {
-      lo.next = hi.next;
-      lo = lo.next;
-      hi.next = lo.next;
-      hi = hi.next;
-    }
-  }
-
   protected void merge2(Node lo, Node hi) {
     while (hi != null && hi.next != null) {
       lo.next = hi.next;
@@ -409,6 +390,25 @@ class ReorderList extends LList {
     ListNode l1 = head, mid = middleNode(head), l2 = mid.next;
     mid.next = null;
     merge1(l1, reverseList(l2)); // 尾插
+  }
+
+  protected void merge1(ListNode l1, ListNode l2) {
+    while (l1 != null && l2 != null) {
+      ListNode nxt1 = l1.next, nxt2 = l2.next;
+      l1.next = l2;
+      l1 = nxt1;
+      l2.next = l1;
+      l2 = nxt2;
+    }
+  }
+
+  protected void merge2(ListNode lo, ListNode hi) {
+    while (hi != null && hi.next != null) {
+      lo.next = hi.next;
+      lo = lo.next;
+      hi.next = lo.next;
+      hi = hi.next;
+    }
   }
 
   /**

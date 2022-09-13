@@ -124,9 +124,9 @@ public class TTree {
 
   private int res3 = 0; // 「求根节点到叶节点数字之和」
 
-  private void dfs12(TreeNode root, int num) {
+  private void dfs12(TreeNode root, int pre) {
     if (root == null) return;
-    int cur = num * 10 + root.val; // 题设不会越界
+    int cur = pre * 10 + root.val; // 题设不会越界
     if (root.left == null && root.right == null) {
       res3 += cur;
       return;
@@ -521,7 +521,7 @@ class DDFS {
     board[r][c] = '#';
     for (int[] dir : DIRECTIONS) {
       int nr = r + dir[0], nc = c + dir[1];
-      if (!inArea(board, nr, nc) || board[nr][nc] != '0') continue;
+      if (!inArea(board, nr, nc) || board[nr][nc] != 'O') continue;
       dfs16(board, nr, nc);
     }
   }

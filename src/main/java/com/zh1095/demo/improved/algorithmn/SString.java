@@ -464,7 +464,7 @@ class SStack {
     Deque<String> stack = new ArrayDeque<>();
     for (String seg : path.split("/")) {
       if (seg.equals("") || seg.equals(".")) continue;
-      else if (seg.equals("..")) stack.pollLast();
+      if (seg.equals("..")) stack.pollLast();
       else stack.offerLast(seg);
     }
     StringBuilder res = new StringBuilder();
@@ -927,9 +927,9 @@ class DicOrder extends DefaultSString {
    */
   public int findKthNumber(int n, int k) {
     int lo = 1, hi = n; // 前缀为 1
-    k -= 1;
-    while (k > 0) { // 字典序最小即起点为 1
-      int cnt = count(lo, hi);
+    k -= 1; // 字典序最小即起点为 1
+    while (k > 0) {
+      int cnt = countRange(lo, hi);
       if (cnt > k) { // DFS
         lo *= 10;
         k -= 1;
@@ -942,11 +942,11 @@ class DicOrder extends DefaultSString {
   }
 
   // DFS lo 为根的树，统计至 hi 的个数
-  private int count(int lo, int hi) {
-    // 下一个前缀峰头，而且不断向下层遍历乘 10 可能会溢出
+  private int countRange(int lo, int hi) {
+    // 下一个兄弟节点，DFS 可能溢出
     long cur = lo, nxt = lo + 1;
     int cnt = 0;
-    while (cur <= hi) { // 逐层
+    while (cur <= hi) {
       cnt += Math.min(hi + 1, nxt) - cur;
       cur *= 10;
       nxt *= 10;
@@ -1007,7 +1007,7 @@ class DicOrder extends DefaultSString {
       for (int n = 9; n > chs[i] - '0'; n--) {
         if (upperBounds[n] <= i) continue;
         swap(chs, i, upperBounds[n]);
-        return Integer.parseInt(chs.toString());
+        return Integer.parseInt(new String(chs));
       }
     }
     return num;

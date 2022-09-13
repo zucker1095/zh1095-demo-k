@@ -740,9 +740,8 @@ class DichotomyClassic extends DefaultArray {
    * @return double double
    */
   public double findMedianSortedArrays(int[] nums1, int[] nums2) {
-    int l1 = nums1.length, l2 = nums2.length;
-    int top = (l1 + l2 + 1) / 2, topMore = (l1 + l2 + 2) / 2;
-    return (getLargestElement(nums1, nums2, top) + getLargestElement(nums1, nums2, topMore)) * 0.5;
+    int len = nums1.length + nums2.length, top = (len + 1) / 2, topMore = (len + 2) / 2;
+    return 0.5 * (getLargestElement(nums1, nums2, top) + getLargestElement(nums1, nums2, topMore));
     // 将偶数和奇数的情况合并，奇数则求两次同样的 k
     //    return (getkSmallElement(nums1, 0, l1 - 1, nums2, 0, l2 - 1, top)
     //            + getkSmallElement(nums1, 0, l1 - 1, nums2, 0, l2 - 1, topMore))
@@ -811,7 +810,7 @@ class DichotomyClassic extends DefaultArray {
   }
 
   /**
-   * 搜索旋转排序数组，比较边界，有序的一边的边界值可能等于目标值
+   * 搜索旋转排序数组，比较边界，右边界 -> 依次 mid+1 & hi
    *
    * <p>将数组一分为二，其中一定有一个是有序的，另一个可能是有序，此时有序部分用二分法查找，无序部分再一分为二，其中一个一定有序，另一个可能有序
    *
@@ -1207,6 +1206,23 @@ class Interval {
       }
     }
     return minWin;
+  }
+
+  /**
+   * 两地调度，贪心
+   *
+   * @param costs
+   * @return
+   */
+  public int twoCitySchedCost(int[][] costs) {
+    Arrays.sort(
+        costs,
+        (o1, o2) -> {
+          return (o1[0] - o1[1]) - (o2[0] - o2[1]);
+        });
+    int total = 0, len = costs.length / 2;
+    for (int i = 0; i < len; ++i) total += costs[i][0] + costs[i + len][1];
+    return total;
   }
 }
 
@@ -1679,10 +1695,10 @@ class PreSum {
  */
 class MonotonicStack {
   /**
-   * 移掉k位数字，结果数值最小，单调栈
+   * 移掉k位数字，结果数值最小，单调栈，因为栈顶的数属于高位，删掉它，小的顶上，高位变小，效果好于低位变小。
    *
    * <p>TODO 参考
-   * https://leetcode.cn/problems/remove-k-digits/solution/yi-zhao-chi-bian-li-kou-si-dao-ti-ma-ma-zai-ye-b-5/
+   * https://leetcode.cn/problems/remove-k-digits/solution/wei-tu-jie-dan-diao-zhan-dai-ma-jing-jian-402-yi-d/
    *
    * @param num the num
    * @param k the k

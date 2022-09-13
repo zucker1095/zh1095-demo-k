@@ -37,6 +37,7 @@ class SubSequence extends DefaultArray {
         tails[++end] = n;
         // dp[i] = end + 1;
       } else {
+        // 注意不能返回 -1
         tails[lowerBound(tails, 0, end, n)] = n;
         // dp[i] = lo + 1;
       }
