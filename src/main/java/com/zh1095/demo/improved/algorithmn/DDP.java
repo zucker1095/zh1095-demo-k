@@ -864,12 +864,12 @@ class Optimal {
     for (int r = 0; r < row; r++) {
       int topLeft = 0;
       for (int c = 0; c < col; c++) {
-        int nxt = dp[c + 1];
+        int tmp = dp[c + 1];
         // 类似木桶短边 matrix[i][j] 为右下角组成的最大面积受限于左上，上边与左侧的 0
         if (matrix[r][c] == '0') dp[c + 1] = 0;
         else dp[c + 1] = 1 + Math.min(topLeft, Math.min(dp[c], dp[c + 1]));
         maxSide = Math.max(maxSide, dp[c + 1]);
-        topLeft = nxt;
+        topLeft = tmp;
       }
     }
     return maxSide * maxSide;
@@ -894,8 +894,7 @@ class Optimal {
         dp[i] = Math.min(dp[i], 1 + dp[i - c]);
       }
     }
-    if (dp[amount] == amount + 1) return -1;
-    return dp[amount];
+    return dp[amount] == amount + 1 ? -1 : dp[amount];
   }
 
   /**
@@ -911,24 +910,24 @@ class Optimal {
   public int candy(int[] ratings) {
     int len = ratings.length, r = 1, minCnt = 0;
     int[] l = new int[len];
-    l[0] = 1;
+    Arrays.fill(l, 1);
     for (int i = 1; i < len; i++) {
       //      if (i == 0 && ratings[0] > ratings[len - 1]) {
       //        l[i] = l[len - 1] + 1;
       //        continue;
       //      }
-      l[i] = ratings[i] > ratings[i - 1] ? 1 + l[i - 1] : 1;
+      if (ratings[i] > ratings[i - 1]) l[i] += l[i - 1];
     }
     minCnt += Math.max(l[len - 1], r);
-    for (int i = len - 2; i > -1; i--) {
+    for (int i = len - 2; i >= 0; i--) {
       //      if (i == len - 1 && ratings[0] < ratings[i]) {
       //        r += 1;
       //        continue;
       //      }
-      r = ratings[i] > ratings[i + 1] ? 1 + r : 1;
+      if (ratings[i] > ratings[i + 1]) r += 1;
+      else r = 1;
       minCnt += Math.max(l[i], r);
     }
-    minCnt += Math.max(l[len - 1], r);
     return minCnt;
   }
 }

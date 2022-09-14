@@ -392,6 +392,7 @@ class ReorderList extends LList {
     merge1(l1, reverseList(l2)); // 尾插
   }
 
+  // 两个链表依次合并，因此要保存
   protected void merge1(ListNode l1, ListNode l2) {
     while (l1 != null && l2 != null) {
       ListNode nxt1 = l1.next, nxt2 = l2.next;
@@ -401,7 +402,7 @@ class ReorderList extends LList {
       l2 = nxt2;
     }
   }
-
+  // 同一个链表间隔连接，因此快慢指针不需要保存
   protected void merge2(ListNode lo, ListNode hi) {
     while (hi != null && hi.next != null) {
       lo.next = hi.next;
