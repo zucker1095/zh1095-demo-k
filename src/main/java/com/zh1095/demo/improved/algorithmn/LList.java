@@ -440,9 +440,19 @@ class ReorderList extends LList {
    */
   public ListNode oddEvenList(ListNode head) {
     if (head == null) return null;
-    ListNode oddTail = splitOddTail(head), evenHead = head.next;
-    oddTail.next = evenHead;
+    ListNode lo = head, evenHead = head.next, hi = evenHead;
+    while (hi != null && hi.next != null) {
+      lo.next = hi.next;
+      lo = lo.next;
+      hi.next = lo.next;
+      hi = hi.next;
+    }
+    lo.next = evenHead;
     return head;
+    //    if (head == null) return null;
+    //    ListNode oddTail = splitOddTail(head), evenHead = head.next;
+    //    oddTail.next = evenHead;
+    //    return head;
   }
 
   // 分离奇偶链表，并返回奇链表的尾

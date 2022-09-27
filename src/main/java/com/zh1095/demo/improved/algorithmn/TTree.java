@@ -1204,6 +1204,11 @@ class BBFS {
    * @return tree node
    */
   public TreeNode invertTree(TreeNode root) {
+    //    if (root == null) return null;
+    //    TreeNode tmp = root.left;
+    //    root.left = invertTree(root.right);
+    //    root.right = invertTree(tmp);
+    //    return root;
     Queue<TreeNode> queue = new LinkedList<>();
     if (root != null) queue.offer(root);
     while (!queue.isEmpty()) {
@@ -1457,8 +1462,7 @@ class MultiTrees {
   public boolean isSameTree(TreeNode r1, TreeNode r2) {
     //    if (r1 == null && r2 == null) return true;
     //    if (r1 == null || r2 == null) return false;
-    //    if (r1.val != r2.val) return false;
-    //    return isSameTree(r1.left, r2.left) && isSameTree(r1.right, r2.right);
+    //    return r1.val == r2.val && isSameTree(r1.left, r2.left) && isSameTree(r1.right, r2.right);
     Queue<TreeNode> queue = new LinkedList();
     queue.offer(r1);
     queue.offer(r2);

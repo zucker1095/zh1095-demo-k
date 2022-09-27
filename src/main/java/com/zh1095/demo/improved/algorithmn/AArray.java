@@ -1559,7 +1559,9 @@ class PreSum {
     Deque<Integer> mq = new LinkedList<>();
     for (int i = 0; i < len + 1; i++) {
       long sum = preSum[i];
+      // 递减队列
       while (!mq.isEmpty() && preSum[mq.peekLast()] >= sum) mq.pollLast();
+      // 更新出队
       while (!mq.isEmpty() && sum - preSum[mq.peekFirst()] >= k)
         minLen = Math.min(minLen, i - mq.pollFirst());
       mq.offerLast(i);
@@ -1687,7 +1689,7 @@ class PreSum {
 }
 
 /**
- * 单调栈用于求左或右首个更大的元素，单调队列用于求区间极值
+ * 底123顶 递减 321 递增，单调栈用于求左或右首个更大的元素，单调队列用于求区间极值
  *
  * <p>单调栈允许移除首个元素，即是单调队列，后者操作上被称为双端队列
  *
@@ -1695,7 +1697,7 @@ class PreSum {
  */
 class MonotonicStack {
   /**
-   * 移掉k位数字，结果数值最小，单调栈，因为栈顶的数属于高位，删掉它，小的顶上，高位变小，效果好于低位变小。
+   * 移掉k位数字，结果数值最小，递减栈，因为栈顶的数属于高位，删掉它，小的顶上，高位变小，效果好于低位变小。
    *
    * <p>TODO 参考
    * https://leetcode.cn/problems/remove-k-digits/solution/wei-tu-jie-dan-diao-zhan-dai-ma-jing-jian-402-yi-d/
@@ -1719,7 +1721,7 @@ class MonotonicStack {
   }
 
   /**
-   * 每日温度，单调栈，递减，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
+   * 每日温度，递增栈，即找到右边首个更大的数，与下方「下一个更大元素II」框架基本一致
    *
    * @param tem the t
    * @return int [ ]
@@ -1738,7 +1740,7 @@ class MonotonicStack {
   }
 
   /**
-   * 下一个更大元素II，单调栈，题设循环数组因此下方取索引均需取余
+   * 下一个更大元素II，递增栈，题设循环数组因此下方取索引均需取余
    *
    * @param nums the nums
    * @return int [ ]
@@ -1749,15 +1751,15 @@ class MonotonicStack {
     int[] res = new int[len];
     Arrays.fill(res, -1);
     for (int i = 0; i < 2 * len; i++) {
-      int n = nums[i % len];
+      int idx = i % len, n = nums[idx];
       while (!ms.isEmpty() && n > nums[ms.peekLast()]) res[ms.pollLast()] = n;
-      ms.offerLast(i % len);
+      ms.offerLast(idx);
     }
     return res;
   }
 
   /**
-   * 柱状图中最大的矩形，即区间最小数乘区间和的最大值
+   * 柱状图中最大的矩形，即区间最小数乘区间和的最大值，递减栈
    *
    * <p>TODO 参考 https://mp.weixin.qq.com/s/UFv7pt_djjZoK_gzUBrRXA 与
    * https://leetcode-cn.com/problems/largest-rectangle-in-histogram/solution/zhao-liang-bian-di-yi-ge-xiao-yu-ta-de-zhi-by-powc/
