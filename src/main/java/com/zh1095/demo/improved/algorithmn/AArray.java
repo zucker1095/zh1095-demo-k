@@ -631,8 +631,9 @@ class MMerge extends DefaultArray {
     if (end2 > p1) System.arraycopy(nums, p1, tmp, p1, end2 - p1 + 1);
     int curCnt = 0, p2 = end1 + 1;
     for (int i = p1; i <= end2; i++) {
-      if (p1 == end1 + 1) nums[i] = tmp[p2++];
-      else if (p2 == end2 + 1) nums[i] = tmp[p1++];
+      if (p1 > end1 + 1) nums[i] = tmp[p2++];
+      else if (p2 > end2 + 1) nums[i] = tmp[p1++];
+      // 注意：这里是 <= ，保证稳定性
       else if (tmp[p1] <= tmp[p2]) nums[i] = tmp[p1++];
       else if (tmp[p1] > tmp[p2]) {
         nums[i] = tmp[p2++];
@@ -653,9 +654,9 @@ class MMerge extends DefaultArray {
     nums = _nums;
     res = new int[len];
     // 索引数组，归并回去时方便知道是哪个下标的元素
-    int[] tmp = new int[len], idx = new int[len];
+    int[] idxTmp = new int[len], idx = new int[len];
     for (int i = 0; i < len; i++) idx[i] = i;
-    divide(idx, tmp, 0, len - 1);
+    divide(idx, idxTmp, 0, len - 1);
     List<Integer> ans = new ArrayList<>();
     for (int i = 0; i < len; i++) ans.add(res[i]);
     return ans;
@@ -663,33 +664,28 @@ class MMerge extends DefaultArray {
 
   private int[] nums, res; // 「计算右侧小于当前元素的个数」
 
-  private void divide(int[] idx, int[] tmp, int lo, int hi) {
+  private void divide(int[] idx, int[] idxTmp, int lo, int hi) {
     if (lo >= hi) return;
     int mid = lo + (hi - lo) / 2;
-    divide(idx, tmp, lo, mid);
-    divide(idx, tmp, mid + 1, hi);
-    if (nums[idx[mid]] > nums[idx[mid + 1]]) merge(idx, tmp, lo, mid, hi);
+    divide(idx, idxTmp, lo, mid);
+    divide(idx, idxTmp, mid + 1, hi);
+    if (nums[idx[mid]] > nums[idx[mid + 1]]) merge(idx, idxTmp, lo, mid, hi);
   }
 
-  private void merge(int[] idx, int[] tmp, int p1, int end1, int end2) {
-    if (end2 > p1) System.arraycopy(idx, p1, tmp, p1, end2 - p1 + 1);
+  private void merge(int[] idx, int[] idxTmp, int p1, int end1, int end2) {
+    if (end2 > p1) System.arraycopy(idx, p1, idxTmp, p1, end2 - p1 + 1);
     int p2 = end1 + 1;
     for (int i = p1; i <= end2; i++) {
-      int i1 = tmp[p1], i2 = tmp[p2]; // TODO 处理越界
-      if (p1 == end1 + 1) {
-        idx[i] = i2;
-        p2 += 1;
-      } else if (p2 == end2 + 1) {
-        idx[i] = i1;
-        p1 += 1;
-        res[i1] += end2 - end1;
-      } else if (nums[i1] <= nums[i2]) {
-        idx[i] = i1;
-        p1 += 1;
-        res[i1] += p2 - end1 - 1;
-      } else if (nums[i1] > nums[i2]) {
-        idx[i] = i2;
-        p2 += 1;
+      if (p1 > end1) {
+        idx[i] = idxTmp[p2++];
+      } else if (p2 > end2) {
+        idx[i] = idxTmp[p1++];
+        res[idx[i]] += (end2 - end1);
+      } else if (nums[idxTmp[p1]] <= nums[idxTmp[p2]]) {
+        idx[i] = idxTmp[p1++];
+        res[idx[i]] += (p2 - end1 - 1);
+      } else {
+        idx[i] = idxTmp[p2++];
       }
     }
   }

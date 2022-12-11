@@ -472,6 +472,118 @@ class SStack {
     return res.length() == 0 ? "/" : res.toString();
   }
 
+  // 基本计算器
+  private int countLetter(char[] chs) {
+    //    int[] counter = new int[26];
+    int sign = 1, res = 0;
+    Deque<Integer> opStack = new ArrayDeque<>();
+    opStack.offerLast(sign);
+    for (int i = 0; i < chs.length; i++) {
+      char ch = chs[i];
+      if (ch == '(') opStack.offerLast(sign);
+      if (ch == ')') opStack.pollLast();
+      if (ch == '+') sign = opStack.peekLast();
+      if (ch == '-') sign = -opStack.peekLast();
+      //      if (ch >= 'a' && ch <= 'z') counter[ch - 'a'] += sign;
+      if (ch >= '0' && ch <= '9') {
+        long num = 0;
+        while (i < chs.length && Character.isDigit(chs[i])) {
+          num = num * 10 + chs[i] - '0';
+          i += 1;
+        }
+        i -= 1;
+        res += sign * num;
+      }
+    }
+    return res;
+    //    return counter;
+  }
+
+  /**
+   * 基本计算器II，思路类似「字符串解码」
+   *
+   * <p>单栈存放 oprations 参考
+   * https://leetcode.cn/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-leetcode-solution-jvir/
+   *
+   * <p>不包含括号，则参考
+   * https://leetcode.cn/problems/basic-calculator-ii/solution/ji-ben-ji-suan-qi-ii-by-leetcode-solutio-cm28/
+   *
+   * <p>扩展1，同时有括号与五种运算符，才使用双栈，否则建议单栈即可，前者参考 https://leetcode.cn/submissions/detail/318542073/
+   *
+   * @param s the s
+   * @return int int
+   */
+  public int calculate(String s) {
+    char[] chs = s.toCharArray();
+    Deque<Integer> numStack = new ArrayDeque<>();
+    int n = 0, len = chs.length;
+    char op = '+';
+    for (int i = 0; i < len; i++) {
+      char ch = chs[i];
+      if (Character.isDigit(ch)) n = n * 10 + (ch - '0');
+      if (i == len - 1 || (!Character.isDigit(ch) && ch != ' ')) {
+        if (op == '+') numStack.offerLast(n);
+        if (op == '-') numStack.offerLast(-n);
+        if (op == '*') numStack.offerLast(numStack.pollLast() * n);
+        if (op == '/') numStack.offerLast(numStack.pollLast() / n);
+        n = 0;
+        op = ch;
+      }
+    }
+    int sum = 0;
+    for (int num : numStack) sum += num;
+    return sum;
+  }
+
+  /**
+   * 判断两个字符串是否含义一致，二者只包含 (,),+,-,a-z 且保证字母不会连续，即合法的多元一次表达式
+   *
+   * <p>只有加减与括号，则展开括号并单栈暂存运算符即可，代码模板参下「基本计算器」
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-wo-yao-chu-qu-luan-nae94/
+   *
+   * @param s1 the s 1
+   * @param s2 the s 2
+   * @return boolean
+   */
+  //  public boolean isSame(String s1, String s2) {
+  //    int[] counter1 = countLetter(s1.toCharArray()), counter2 = countLetter(s2.toCharArray());
+  //    for (int i = 0; i < 26; i++) {
+  //      if (counter1[i] != counter2[i]) return false;
+  //    }
+  //    return true;
+  //  }
+
+  /**
+   * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
+   *
+   * <p>recursion 参考「基本计算器」
+   *
+   * @param s the s
+   * @return string string
+   */
+  public String decodeString(String s) {
+    int cnt = 0;
+    StringBuilder str = new StringBuilder();
+    Deque<Integer> cntStack = new ArrayDeque<>();
+    Deque<String> strStack = new ArrayDeque<>();
+    for (char ch : s.toCharArray()) {
+      if (ch == '[') {
+        cntStack.offerLast(cnt);
+        strStack.offerLast(str.toString());
+        cnt = 0;
+        str.delete(0, str.length());
+      } else if (ch == ']') {
+        int preCnt = cntStack.pollLast();
+        String preStr = strStack.pollLast();
+        str = new StringBuilder(preStr + str.toString().repeat(preCnt));
+      } else if (ch >= '0' && ch <= '9') cnt = cnt * 10 + (ch - '0');
+      else str.append(ch);
+    }
+    return str.toString();
+  }
+
   /**
    * 验证栈序列，无重复，贪心，原地模拟
    *
@@ -534,117 +646,6 @@ class SStack {
   }
 
   /**
-   * 字符串解码，如 3[a]2[bc] to aaabcbc，类似压缩字符串 & 原子的数量
-   *
-   * <p>recursion 参考「基本计算器」
-   *
-   * @param s the s
-   * @return string string
-   */
-  public String decodeString(String s) {
-    int cnt = 0;
-    StringBuilder str = new StringBuilder();
-    Deque<Integer> cntStack = new ArrayDeque<>();
-    Deque<String> strStack = new ArrayDeque<>();
-    for (char ch : s.toCharArray()) {
-      if (ch == '[') {
-        cntStack.offerLast(cnt);
-        strStack.offerLast(str.toString());
-        cnt = 0;
-        str.delete(0, str.length());
-      } else if (ch == ']') {
-        int preCnt = cntStack.pollLast();
-        String preStr = strStack.pollLast();
-        str = new StringBuilder(preStr + str.toString().repeat(preCnt));
-      } else if (ch >= '0' && ch <= '9') cnt = cnt * 10 + (ch - '0');
-      else str.append(ch);
-    }
-    return str.toString();
-  }
-
-  /**
-   * 基本计算器II，思路类似「字符串解码」
-   *
-   * <p>单栈存放 oprations 参考
-   * https://leetcode.cn/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-leetcode-solution-jvir/
-   *
-   * <p>不包含括号，则参考
-   * https://leetcode.cn/problems/basic-calculator-ii/solution/ji-ben-ji-suan-qi-ii-by-leetcode-solutio-cm28/
-   *
-   * <p>扩展1，同时有括号与五种运算符，才使用双栈，否则建议单栈即可，前者参考 https://leetcode.cn/submissions/detail/318542073/
-   *
-   * @param s the s
-   * @return int int
-   */
-  public int calculate(String s) {
-    char[] chs = s.toCharArray();
-    Deque<Integer> numStack = new ArrayDeque<>();
-    int n = 0, len = chs.length;
-    char op = '+';
-    for (int i = 0; i < len; i++) {
-      char ch = chs[i];
-      if (Character.isDigit(ch)) n = n * 10 + (ch - '0');
-      if ((!Character.isDigit(ch) && ch != ' ') || i == len - 1) {
-        if (op == '+') numStack.offerLast(n);
-        if (op == '-') numStack.offerLast(-n);
-        if (op == '*') numStack.offerLast(numStack.pollLast() * n);
-        if (op == '/') numStack.offerLast(numStack.pollLast() / n);
-        n = 0;
-        op = ch;
-      }
-    }
-    int sum = 0;
-    for (int num : numStack) sum += num;
-    return sum;
-  }
-
-  /**
-   * 判断两个字符串是否含义一致，二者只包含 (,),+,-,a-z 且保证字母不会连续，即合法的多元一次表达式
-   *
-   * <p>只有加减与括号，则展开括号并单栈暂存运算符即可，代码模板参下「基本计算器II」
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/basic-calculator/solution/ji-ben-ji-suan-qi-by-wo-yao-chu-qu-luan-nae94/
-   *
-   * @param s1 the s 1
-   * @param s2 the s 2
-   * @return boolean
-   */
-  public boolean isSame(String s1, String s2) {
-    int[] counter1 = countLetter(s1.toCharArray()), counter2 = countLetter(s2.toCharArray());
-    for (int i = 0; i < 26; i++) {
-      if (counter1[i] != counter2[i]) return false;
-    }
-    return true;
-  }
-
-  private int[] countLetter(char[] chs) {
-    int[] counter = new int[26];
-    int sign = 1;
-    Deque<Integer> opStack = new ArrayDeque<>();
-    opStack.offerLast(sign);
-    for (int i = 0; i < chs.length; i++) {
-      char ch = chs[i];
-      if (ch == '(') opStack.offerLast(sign);
-      if (ch == ')') opStack.pollLast();
-      if (ch == '+') sign = opStack.peekLast();
-      if (ch == '-') sign = -opStack.peekLast();
-      if (ch >= 'a' && ch <= 'z') counter[ch - 'a'] += sign;
-      // 基本计算器
-      //      if (ch >= '0' && ch <= '9') {
-      //        long num = 0;
-      //        while (i < chs.length && Character.isDigit(chs[i])) {
-      //          num = num * 10 + chs[i] - '0';
-      //          i += 1;
-      //        }
-      //        i -= 1;
-      //        res += sign * num;
-      //      }
-    }
-    return counter;
-  }
-
-  /**
    * 移除无效的括号
    *
    * <p>当遇到左括号时，确认栈中左括号数量 <= 栈中右括号数量 + 尚未遍历的右括号数量
@@ -697,6 +698,33 @@ class SSubString {
       }
     }
     return ref;
+  }
+
+  /**
+   * 至少有k个重复字符的最长子串，同个字符的个数。
+   *
+   * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
+   *
+   * <p>参考
+   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
+   *
+   * @param s the s
+   * @param k the k
+   * @return int
+   */
+  public int longestSubstring(String s, int k) {
+    if (s.length() < k) return 0;
+    int[] counter = new int[26];
+    char[] chs = s.toCharArray();
+    for (char ch : chs) counter[ch - 'a'] += 1;
+    for (char ch : chs) {
+      if (counter[ch - 'a'] >= k) continue;
+      int maxLen = 0;
+      for (String seg : s.split(String.valueOf(ch)))
+        maxLen = Math.max(maxLen, longestSubstring(seg, k));
+      return maxLen;
+    }
+    return s.length();
   }
 
   /**
@@ -787,33 +815,6 @@ class SSubString {
       }
     }
     return cnt;
-  }
-
-  /**
-   * 至少有k个重复字符的最长子串，同个字符的个数。
-   *
-   * <p>分治，按字符统计个数后，用频率小于 k 的字符分割 s，再逐串判断递归判断。
-   *
-   * <p>参考
-   * https://leetcode-cn.com/problems/longest-substring-with-at-least-k-repeating-characters/solution/jie-ben-ti-bang-zhu-da-jia-li-jie-di-gui-obla/
-   *
-   * @param s the s
-   * @param k the k
-   * @return int
-   */
-  public int longestSubstring(String s, int k) {
-    if (s.length() < k) return 0;
-    int[] counter = new int[26];
-    char[] chs = s.toCharArray();
-    for (char ch : chs) counter[ch - 'a'] += 1;
-    for (char ch : chs) {
-      if (counter[ch - 'a'] >= k) continue;
-      int maxLen = 0;
-      for (String seg : s.split(String.valueOf(ch)))
-        maxLen = Math.max(maxLen, longestSubstring(seg, k));
-      return maxLen;
-    }
-    return s.length();
   }
 
   /**
